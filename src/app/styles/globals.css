@@ -1,0 +1,248 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Pure, Comfortable Light Mode Backgrounds */
+    --background: 0 0% 100%;
+    /* Pure White */
+    --foreground: 222 47% 11%;
+    /* Slate 900 for high crisp contrast */
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* The "Details": Vibrant Emerald Green */
+    --primary: 160 84% 39%;
+    /* Emerald 600 */
+    --primary-foreground: 210 40% 98%;
+
+    /* Soft Slate for secondary interactive elements */
+    --secondary: 210 40% 96.1%;
+    /* Slate 100 */
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    /* Supporting Green for success states/accents */
+    --accent: 152 69% 41%;
+    /* Emerald 500 */
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --info: 217 91% 60%; /* Blue 500 */
+    --info-foreground: 210 40% 98%;
+
+    --warning: 38 92% 50%; /* Amber 500 */
+    --warning-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 160 84% 39%;
+    /* Emerald 600 Focus Rings */
+
+    --radius: 0.75rem;
+
+    /* Sidebar: Defaults to Primary Green with White text */
+    --sidebar-background: 160 84% 39%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 210 40% 98%;
+    --sidebar-primary-foreground: 160 84% 39%;
+    --sidebar-accent: 160 84% 35%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 160 84% 35%;
+    /* Subtle separation */
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* Deep, comfortable dark mode (Slate/Space) */
+    --background: 222 47% 11%;
+    /* Slate 900 */
+    --foreground: 210 40% 98%;
+    /* Slate 50 */
+
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+
+    /* The "Details" in Dark Mode: Emerald 500 for better glow/contrast */
+    --primary: 152 69% 41%;
+    --primary-foreground: 210 40% 98%;
+    /* Dark text on bright buttons */
+
+    --secondary: 217 33% 17%;
+    /* Slate 800 */
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    /* Slate 400 */
+
+    --accent: 152 69% 41%;
+    /* Emerald 500 */
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --info: 217 91% 60%;
+    --info-foreground: 210 40% 98%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 210 40% 98%;
+
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 152 69% 41%;
+    /* Emerald 500 Focus Rings */
+
+    /* Sidebar Specific Variables (Dark Mode) */
+    --sidebar-background: 220 20% 12%;
+    /* Deep charcoal for sidebar */
+    --sidebar-foreground: 210 40% 92%;
+    --sidebar-primary: 152 69% 41%;
+    /* Emerald accent */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 16% 18%;
+    /* Slightly lighter charcoal for hover */
+    --sidebar-accent-foreground: 210 40% 92%;
+    --sidebar-border: 220 16% 18%;
+    --sidebar-ring: 152 69% 41%;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family:
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Roboto,
+      "Helvetica Neue",
+      Arial,
+      "Noto Sans",
+      sans-serif,
+      "Apple Color Emoji",
+      "Segoe UI Emoji",
+      "Segoe UI Symbol",
+      "Noto Color Emoji";
+    transition-property:
+      color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+  }
+}
+
+
+/* ========================================
+   Animated Sea Background (Login Page)
+   ======================================== */
+
+/* Wave animations - different speeds for parallax effect */
+.animate-wave-back {
+  animation: sea-moveLeft 45s linear infinite;
+}
+.animate-wave-mid {
+  animation: sea-moveLeft 35s linear infinite;
+}
+.animate-wave-front {
+  animation: sea-moveLeft 20s linear infinite;
+}
+.animate-wave-ripple {
+  animation: sea-moveLeft 18s linear infinite;
+}
+
+/* Boat bobbing */
+.animate-boat {
+  animation: sea-bobbing 6s ease-in-out infinite;
+  transform-origin: center center;
+}
+
+/* Birds flying */
+.animate-birds {
+  animation: sea-fly 60s linear infinite;
+}
+
+/* Stars / Fireflies twinkling */
+.animate-twinkle {
+  animation: sea-twinkle 4s ease-in-out infinite alternate;
+}
+.animate-twinkle-delay-1 {
+  animation: sea-twinkle 5s ease-in-out infinite alternate;
+  animation-delay: -2s;
+}
+.animate-twinkle-delay-2 {
+  animation: sea-twinkle 3s ease-in-out infinite alternate;
+  animation-delay: -1s;
+}
+
+@keyframes sea-moveLeft {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-1920px);
+  }
+}
+
+@keyframes sea-bobbing {
+  0% {
+    transform: translate(400px, 760px) rotate(-1deg);
+  }
+  50% {
+    transform: translate(400px, 745px) rotate(1.5deg);
+  }
+  100% {
+    transform: translate(400px, 760px) rotate(-1deg);
+  }
+}
+
+@keyframes sea-fly {
+  0% {
+    transform: translate(-200px, 100px) scale(0.8);
+  }
+  100% {
+    transform: translate(2100px, -50px) scale(0.6);
+  }
+}
+
+@keyframes sea-twinkle {
+  0% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 0.9;
+    transform: scale(1.2);
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+}

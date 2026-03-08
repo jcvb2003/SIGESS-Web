@@ -1,0 +1,61 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+dist-ssr/
+*.tsbuildinfo
+
+# Environment variables (Critically Sensitive)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+! .env.example
+.env.example
+
+# Supabase & Runner
+.supabase/
+scripts/*.local.ts
+scripts/fix-*.ts
+scripts/audit-*.ts
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+Thumbs.db
+
+# Planning / Documentation  
+.planejamento
+C:\Users\José Carlos\.gemini\antigravity\brain/*
+walkthrough*.md
+task.md
+implementation_plan*.md
+
+
+.agents
+.claude
+.kiro
+.trae
+.vscode
+.windsurf
+.windsurf\skills
