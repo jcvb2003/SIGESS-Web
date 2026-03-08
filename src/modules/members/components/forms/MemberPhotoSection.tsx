@@ -1,0 +1,1 @@
+// MemberPhotoSection.tsx

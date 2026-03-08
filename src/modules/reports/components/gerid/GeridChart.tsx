@@ -1,0 +1,1 @@
+// GeridChart.tsx

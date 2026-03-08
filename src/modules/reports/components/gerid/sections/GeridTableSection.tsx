@@ -1,0 +1,1 @@
+// GeridTableSection.tsx

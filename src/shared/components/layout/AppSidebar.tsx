@@ -1,0 +1,257 @@
+import { Link, useLocation } from 'react-router-dom'
+import {
+  Home,
+  Users,
+  UserPlus,
+  FileText,
+  BarChart2,
+  Settings,
+  LogOut,
+  Menu,
+  Fish,
+  Sun,
+  Moon
+} from 'lucide-react'
+import { cn } from '@/shared/lib/utils'
+import { Button } from '@/shared/components/ui/button'
+import { useAuth } from '@/modules/auth/context/authContextStore'
+import { useTheme } from 'next-themes'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/shared/components/ui/sheet'
+import { useState } from 'react'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/components/ui/tooltip'
+import { useMobile } from '@/shared/hooks/useMobile'
+
+const NAV_ITEMS = [
+  { title: 'Início', href: '/dashboard', icon: Home },
+  { title: 'Sócios', href: '/members', icon: Users },
+  { title: 'Cadastro', href: '/registration', icon: UserPlus },
+  { title: 'Documentos', href: '/documents', icon: FileText },
+  { title: 'Relatórios', href: '/reports', icon: BarChart2 },
+  { title: 'Configurações', href: '/settings', icon: Settings },
+]
+
+type SidebarContentProps = {
+  isCollapsed: boolean
+  pathname: string
+  theme: string | undefined
+  setTheme: (theme: string) => void
+  onNavigate: () => void
+  onSignOut: () => void
+}
+
+function SidebarContent({
+  isCollapsed,
+  pathname,
+  theme,
+  setTheme,
+  onNavigate,
+  onSignOut,
+}: SidebarContentProps) {
+  return (
+    <div className="flex h-full flex-col bg-primary text-primary-foreground transition-all duration-300 ease-in-out overflow-hidden">
+      <div
+        className={cn(
+          "flex h-20 items-center px-4 transition-all duration-300 shrink-0",
+          isCollapsed && "justify-center"
+        )}
+      >
+        <Link to="/dashboard" className="flex items-center gap-3 group overflow-hidden">
+          <div className="flex h-10 w-10 min-w-[2.5rem] items-center justify-center rounded-xl bg-primary-foreground/20 text-primary-foreground transition-all group-hover:bg-primary-foreground group-hover:text-primary shadow-sm">
+            <Fish className="h-6 w-6" />
+          </div>
+          <div
+            className={cn(
+              "flex flex-col transition-opacity duration-300",
+              isCollapsed ? "opacity-0 w-0 hidden" : "opacity-100 w-auto"
+            )}
+          >
+            <span className="font-bold text-xl tracking-tight leading-none text-primary-foreground whitespace-nowrap">
+              SIGESS
+            </span>
+          </div>
+        </Link>
+      </div>
+
+      <div className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-3 scrollbar-none">
+        <nav className="space-y-1">
+          {NAV_ITEMS.map((item, index) => {
+            const isActive =
+              pathname === item.href ||
+              (item.href !== '/dashboard' && pathname.startsWith(`${item.href}/`))
+
+            const LinkContent = (
+              <Link
+                to={item.href}
+                onClick={onNavigate}
+                className={cn(
+                  "flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition-all whitespace-nowrap relative overflow-hidden group mx-1 my-1",
+                  isActive
+                    ? "bg-background text-primary shadow-md"
+                    : "text-primary-foreground/80 hover:bg-primary-foreground/20 hover:text-primary-foreground"
+                )}
+              >
+                <item.icon
+                  className={cn(
+                    "h-[18px] w-[18px] shrink-0 transition-transform duration-200 group-hover:scale-110",
+                    isActive ? "text-primary" : "text-primary-foreground/80 group-hover:text-primary-foreground"
+                  )}
+                />
+                <span
+                  className={cn(
+                    "transition-all duration-300 origin-left",
+                    isCollapsed ? "w-0 opacity-0 translate-x-[-10px]" : "w-auto opacity-100 translate-x-0"
+                  )}
+                >
+                  {item.title}
+                </span>
+                {isActive && !isCollapsed && (
+                  <div className="absolute right-3 w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                )}
+              </Link>
+            )
+
+            if (isCollapsed) {
+              return (
+                <TooltipProvider key={index} delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>{LinkContent}</TooltipTrigger>
+                    <TooltipContent
+                      side="right"
+                      className="font-medium ml-4 bg-foreground text-background border-none shadow-xl"
+                    >
+                      {item.title}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )
+            }
+
+            return <div key={index}>{LinkContent}</div>
+          })}
+        </nav>
+      </div>
+
+      <div
+        className={cn(
+          "p-4 flex flex-col gap-2 transition-all duration-300 shrink-0",
+          isCollapsed ? "items-center justify-center" : ""
+        )}
+      >
+        <Button
+          variant="ghost"
+          className={cn(
+            "w-full gap-3 text-primary-foreground/80 hover:text-white hover:bg-primary-foreground/20 transition-all whitespace-nowrap rounded-xl h-12",
+            isCollapsed ? "justify-center px-0 w-10 mx-auto" : "justify-start px-4"
+          )}
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        >
+          {theme === 'dark' ? (
+            <Sun className="h-[18px] w-[18px] shrink-0" />
+          ) : (
+            <Moon className="h-[18px] w-[18px] shrink-0" />
+          )}
+          <span
+            className={cn(
+              "transition-all duration-300 font-semibold",
+              isCollapsed ? "opacity-0 w-0 hidden" : "opacity-100 w-auto"
+            )}
+          >
+            Tema {theme === 'dark' ? 'Claro' : 'Escuro'}
+          </span>
+        </Button>
+        <Button
+          variant="ghost"
+          className={cn(
+            "w-full gap-3 text-primary-foreground/80 hover:text-white hover:bg-destructive/90 transition-all whitespace-nowrap rounded-xl h-12",
+            isCollapsed ? "justify-center px-0 w-10 mx-auto" : "justify-start px-4"
+          )}
+          onClick={onSignOut}
+        >
+          <LogOut className="h-[18px] w-[18px] shrink-0" />
+          <span
+            className={cn(
+              "transition-all duration-300 font-semibold",
+              isCollapsed ? "opacity-0 w-0 hidden" : "opacity-100 w-auto"
+            )}
+          >
+            Sair
+          </span>
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+interface AppSidebarProps {
+  isHovered?: boolean
+  onMouseEnter?: () => void
+  onMouseLeave?: () => void
+}
+
+export function AppSidebar({ isHovered = false, onMouseEnter, onMouseLeave }: AppSidebarProps) {
+  const { pathname } = useLocation()
+  const { signOut } = useAuth()
+  const { theme, setTheme } = useTheme()
+
+  const isMobile = useMobile()
+  const [open, setOpen] = useState(false)
+
+  const isCollapsed = !isMobile && !isHovered
+
+  if (isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="icon" className="fixed top-4 left-4 z-40 lg:hidden shrink-0 text-foreground bg-background/50 backdrop-blur-md rounded-full border border-border/50 shadow-sm">
+            <Menu className="h-6 w-6" />
+            <span className="sr-only">Menu</span>
+          </Button>
+        </SheetTrigger>
+        {/* Usamos bg-primary no SheetContent para manter a identidade visual */}
+        <SheetContent side="left" className="p-0 w-72 border-r-0 bg-primary h-full">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Menu de Navegação</SheetTitle>
+          </SheetHeader>
+          <SidebarContent
+            isCollapsed={isCollapsed}
+            pathname={pathname}
+            theme={theme}
+            setTheme={setTheme}
+            onNavigate={() => setOpen(false)}
+            onSignOut={signOut}
+          />
+        </SheetContent>
+      </Sheet>
+    )
+  }
+
+  return (
+    <div
+      className={cn(
+        "hidden lg:flex flex-col h-screen sticky top-0 z-50 transition-all duration-300 ease-in-out p-4",
+        isHovered ? "w-72" : "w-[6.5rem]"
+      )}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
+      <div className={cn(
+        "flex-1 flex flex-col rounded-[24px] shadow-2xl border border-white/10 overflow-hidden bg-primary transition-all duration-300 ease-in-out w-full"
+      )}>
+        <SidebarContent
+          isCollapsed={isCollapsed}
+          pathname={pathname}
+          theme={theme}
+          setTheme={setTheme}
+          onNavigate={() => undefined}
+          onSignOut={signOut}
+        />
+      </div>
+    </div>
+  )
+}

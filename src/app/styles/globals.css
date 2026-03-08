@@ -1,0 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Pure, Comfortable Light Mode Backgrounds */
+    --background: 0 0% 100%;
+    /* Pure White */
+    --foreground: 222 47% 11%;
+    /* Slate 900 for high crisp contrast */
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* The "Details": Vibrant Emerald Green */
+    --primary: 160 84% 39%;
+    /* Emerald 600 */
+    --primary-foreground: 210 40% 98%;
+
+    /* Soft Slate for secondary interactive elements */
+    --secondary: 210 40% 96.1%;
+    /* Slate 100 */
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    /* Supporting Green for success states/accents */
+    --accent: 152 69% 41%;
+    /* Emerald 500 */
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 160 84% 39%;
+    /* Emerald 600 Focus Rings */
+
+    --radius: 0.75rem;
+
+    /* Sidebar: Clean, white, blending with the background */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    /* Subtle separation */
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* Deep, comfortable dark mode (Slate/Space) */
+    --background: 222 47% 11%;
+    /* Slate 900 */
+    --foreground: 210 40% 98%;
+    /* Slate 50 */
+
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+
+    /* The "Details" in Dark Mode: Emerald 500 for better glow/contrast */
+    --primary: 152 69% 41%;
+    --primary-foreground: 210 40% 98%;
+    /* Dark text on bright buttons */
+
+    --secondary: 217 33% 17%;
+    /* Slate 800 */
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    /* Slate 400 */
+
+    --accent: 152 69% 41%;
+    /* Emerald 500 */
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 152 69% 41%;
+    /* Emerald 500 Focus Rings */
+
+    /* Sidebar Specific Variables (Dark Mode) */
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased font-sans transition-colors duration-300;
+  }
+}
+
+/* Base custom utility for a luxurious gradient on primary buttons/details */
+@layer utilities {
+  .bg-primary {
+    @apply bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] border-0 text-[hsl(var(--primary-foreground))] hover:opacity-90 transition-opacity;
+  }
+}

@@ -1,0 +1,1 @@
+// serviceResponse.ts

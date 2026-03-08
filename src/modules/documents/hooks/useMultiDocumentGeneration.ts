@@ -1,0 +1,1 @@
+// useMultiDocumentGeneration.ts
