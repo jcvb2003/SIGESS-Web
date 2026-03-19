@@ -15,7 +15,13 @@ const toNullableString = (value: unknown): string | null => {
   if (value === null || value === undefined) {
     return null;
   }
-  return typeof value === "object" ? JSON.stringify(value) : String(value);
+  if (typeof value === "string") {
+    return value;
+  }
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  return JSON.stringify(value);
 };
 export class DuplicateCpfError extends Error {
   code = "DUPLICATE_CPF";
@@ -34,21 +40,6 @@ export class LimitExceededError extends Error {
 }
 export const memberService = {
   async create(input: MemberRegistrationForm): Promise<void> {
-    const { count: currentCount } = await this.countMembers();
-    const { data: userData } = await supabase.auth.getUser();
-    
-    if (userData.user) {
-      const { data: userMetadata } = await supabase
-        .from("User")
-        .select("max_socios")
-        .eq("id", userData.user.id)
-        .maybeSingle();
-        
-      if (userMetadata?.max_socios && currentCount >= userMetadata.max_socios) {
-        throw new LimitExceededError(`Limite de ${userMetadata.max_socios} sócios atingido.`);
-      }
-    }
-
     const payload = toMemberInsertPayload(input);
     const { error } = await supabase.from("socios").insert(payload);
     if (error) {
@@ -94,7 +85,7 @@ export const memberService = {
     let query = supabase
       .from("socios")
       .select(
-        "id, codigo_do_socio, nome, cpf, data_de_admissao, situacao, codigo_localidade, data_de_nascimento",
+        "id, codigo_do_socio, nome, cpf, data_de_admissao, situacao, codigo_localidade, data_de_nascimento, fotos(foto_url)",
         {
           count: "exact",
         },
@@ -133,7 +124,7 @@ export const memberService = {
       }
       const month = birthMonth.padStart(2, "0");
       const filteredItems = (data || []).filter((item) => {
-        const record = item as Record<string, unknown>;
+        const record = item as unknown as { data_de_nascimento: string | null };
         const dob = record.data_de_nascimento;
         if (!dob || typeof dob !== "string") return false;
         return dob.includes(`-${month}-`);
@@ -141,7 +132,16 @@ export const memberService = {
       const total = filteredItems.length;
       const pagedItems = filteredItems.slice(from, to + 1);
       const items = pagedItems.map((item) => {
-        const record = item as Record<string, unknown>;
+        const record = item as unknown as {
+          id: string;
+          codigo_do_socio: string | null;
+          nome: string | null;
+          cpf: string | null;
+          data_de_admissao: string | null;
+          situacao: string | null;
+          codigo_localidade: string | null;
+          fotos: { foto_url: string }[] | null;
+        };
         return {
           id: String(record.id),
           codigo_do_socio: toNullableString(record.codigo_do_socio),
@@ -150,6 +150,7 @@ export const memberService = {
           data_de_admissao: toNullableString(record.data_de_admissao),
           situacao: toNullableString(record.situacao),
           codigo_localidade: toNullableString(record.codigo_localidade),
+          foto_url: record.fotos?.[0]?.foto_url ?? null,
         };
       });
       return {
@@ -164,7 +165,16 @@ export const memberService = {
       throw error;
     }
     const items = (data || []).map((item) => {
-      const record = item as Record<string, unknown>;
+      const record = item as unknown as {
+        id: string;
+        codigo_do_socio: string | null;
+        nome: string | null;
+        cpf: string | null;
+        data_de_admissao: string | null;
+        situacao: string | null;
+        codigo_localidade: string | null;
+        fotos: { foto_url: string }[] | null;
+      };
       return {
         id: String(record.id),
         codigo_do_socio: toNullableString(record.codigo_do_socio),
@@ -173,6 +183,7 @@ export const memberService = {
         data_de_admissao: toNullableString(record.data_de_admissao),
         situacao: toNullableString(record.situacao),
         codigo_localidade: toNullableString(record.codigo_localidade),
+        foto_url: record.fotos?.[0]?.foto_url ?? null,
       };
     });
     return {

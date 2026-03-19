@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { useForm, DefaultValues } from "react-hook-form";
+import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/shared/components/ui/form";
+import { memberQueryKeys } from "../../queryKeys";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,6 +47,7 @@ export function RegistrationForm({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [memberCount, setMemberCount] = useState<number | null>(null);
   const { metadata } = useUserMetadata();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const isEditMode = !!memberId;
   const form = useForm<MemberRegistrationSchemaType, undefined, MemberRegistrationSchemaType>({
@@ -119,6 +122,10 @@ export function RegistrationForm({
       }
       
       form.reset(initialMemberRegistrationForm);
+      
+      // Invalidate members query to ensure the list is updated
+      queryClient.invalidateQueries({ queryKey: memberQueryKeys.all });
+      
       onSuccess?.();
       navigate("/members");
     } catch (err: unknown) {

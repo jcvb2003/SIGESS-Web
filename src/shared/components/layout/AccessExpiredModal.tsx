@@ -7,13 +7,13 @@ import {
   DialogFooter,
 } from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
-import { Lock, Mail, MessageSquare } from "lucide-react";
+import { Lock, MessageSquare } from "lucide-react";
 
 interface AccessExpiredModalProps {
-  open: boolean;
+  readonly open: boolean;
 }
 
-export function AccessExpiredModal({ open }: AccessExpiredModalProps) {
+export function AccessExpiredModal({ open }: Readonly<AccessExpiredModalProps>) {
   if (!open) return null;
 
   return (
@@ -40,18 +40,10 @@ export function AccessExpiredModal({ open }: AccessExpiredModalProps) {
         <DialogFooter className="flex flex-col sm:flex-row gap-3 mt-4">
           <Button 
             className="flex-1 gap-2" 
-            onClick={() => window.open("https://wa.me/5589999999999", "_blank")} // Placeholder Zap
+            onClick={() => window.open("https://wa.me/5591993193461", "_blank")}
           >
             <MessageSquare className="h-4 w-4" />
-            WhatsApp
-          </Button>
-          <Button 
-            variant="outline" 
-            className="flex-1 gap-2"
-            onClick={() => window.location.href = "mailto:suporte@sigess.com.br"}
-          >
-            <Mail className="h-4 w-4" />
-            E-mail
+            Clique para falar no WhatsApp
           </Button>
         </DialogFooter>
       </DialogContent>

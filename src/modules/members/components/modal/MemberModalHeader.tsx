@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { MemberRegistrationForm } from "../../types/member.types";
 import { MemberStatusBadge } from "../MemberStatusBadge";
 import { User, Loader2, Copy, KeyRound, CalendarDays } from "lucide-react";
@@ -13,11 +14,27 @@ import {
 interface MemberModalHeaderProps {
   member: MemberRegistrationForm;
 }
-export function MemberModalHeader({ member }: MemberModalHeaderProps) {
-  const { photoUrl, isLoading } = usePhotoManager({
-    cpf: member.cpf,
-    initialPhotoUrl: member.fotos?.[0]?.foto_url,
-  });
+
+function MemberAvatar({
+  member,
+  photoUrl,
+  isLoading,
+}: Readonly<{
+  member: MemberRegistrationForm;
+  photoUrl: string | null;
+  isLoading: boolean;
+}>) {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [prevPhotoUrl, setPrevPhotoUrl] = useState(photoUrl);
+
+  // Reset image loaded state when photoUrl changes without useEffect to avoid cascading renders
+  if (photoUrl !== prevPhotoUrl) {
+    setPrevPhotoUrl(photoUrl);
+    setImageLoaded(false);
+  }
+
+  const showSpinner = isLoading || (!!photoUrl && !imageLoaded);
+
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -26,7 +43,36 @@ export function MemberModalHeader({ member }: MemberModalHeaderProps) {
       .join("")
       .toUpperCase();
   };
-  const AvatarContent = (
+
+  const renderAvatarContent = () => {
+    if (showSpinner) {
+      return (
+        <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin text-muted-foreground" />
+      );
+    }
+
+    if (photoUrl) {
+      return (
+        <img
+          src={photoUrl}
+          alt={member.nome}
+          className="h-full w-full object-cover"
+          onLoad={() => setImageLoaded(true)}
+        />
+      );
+    }
+
+    return (
+      <div className="flex flex-col items-center gap-0.5 sm:gap-1 text-muted-foreground">
+        <User className="h-5 w-5 sm:h-8 sm:w-8 opacity-40" />
+        <span className="text-[10px] sm:text-sm font-bold tracking-wide">
+          {getInitials(member.nome)}
+        </span>
+      </div>
+    );
+  };
+
+  const Content = (
     <div
       className={`
         relative h-14 w-11 sm:h-[6.5rem] sm:w-[5rem] rounded-lg sm:rounded-xl overflow-hidden
@@ -37,48 +83,51 @@ export function MemberModalHeader({ member }: MemberModalHeaderProps) {
         ${photoUrl ? "cursor-pointer hover:opacity-90 hover:shadow-lg transition-all" : ""}
       `}
     >
-      {isLoading ? (
-        <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin text-muted-foreground" />
-      ) : photoUrl ? (
-        <img
-          src={photoUrl}
-          alt={member.nome}
-          className="h-full w-full object-cover"
-        />
-      ) : (
-        <div className="flex flex-col items-center gap-0.5 sm:gap-1 text-muted-foreground">
-          <User className="h-5 w-5 sm:h-8 sm:w-8 opacity-40" />
-          <span className="text-[10px] sm:text-sm font-bold tracking-wide">
-            {getInitials(member.nome)}
-          </span>
-        </div>
-      )}
+      {renderAvatarContent()}
     </div>
   );
+
+  return (
+    <Dialog>
+      {photoUrl ? (
+        <DialogTrigger asChild>{Content}</DialogTrigger>
+      ) : (
+        Content
+      )}
+
+      {photoUrl && (
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-transparent border-none shadow-none">
+          <DialogTitle className="sr-only">Foto de {member.nome}</DialogTitle>
+          <div className="flex items-center justify-center">
+            <img
+              src={photoUrl}
+              alt={`Foto de ${member.nome}`}
+              className="max-h-[80vh] w-full object-contain rounded-xl"
+            />
+          </div>
+        </DialogContent>
+      )}
+    </Dialog>
+  );
+}
+
+export function MemberModalHeader({
+  member,
+}: Readonly<MemberModalHeaderProps>) {
+  const { photoUrl, isLoading } = usePhotoManager({
+    cpf: member.cpf,
+    initialPhotoUrl: member.fotos?.[0]?.foto_url,
+  });
+
   return (
     <div className="relative flex flex-row items-center sm:items-stretch gap-3 sm:gap-5 pb-3 sm:pb-5 border-b border-border/40">
       <div className="absolute inset-0 bg-gradient-to-r from-primary/[0.03] via-transparent to-primary/[0.02] rounded-t-lg pointer-events-none" />
 
-      <Dialog>
-        {photoUrl ? (
-          <DialogTrigger asChild>{AvatarContent}</DialogTrigger>
-        ) : (
-          AvatarContent
-        )}
-
-        {photoUrl && (
-          <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-transparent border-none shadow-none">
-            <DialogTitle className="sr-only">Foto de {member.nome}</DialogTitle>
-            <div className="flex items-center justify-center">
-              <img
-                src={photoUrl}
-                alt={`Foto de ${member.nome}`}
-                className="max-h-[80vh] w-full object-contain rounded-xl"
-              />
-            </div>
-          </DialogContent>
-        )}
-      </Dialog>
+      <MemberAvatar
+        member={member}
+        photoUrl={photoUrl}
+        isLoading={isLoading}
+      />
 
       <div className="relative flex flex-col items-start justify-center gap-1 sm:gap-2 flex-1 min-w-0">
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-3">
@@ -103,7 +152,7 @@ export function MemberModalHeader({ member }: MemberModalHeaderProps) {
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigator.clipboard.writeText(member.cpf!);
+                  navigator.clipboard.writeText(member.cpf);
                   toast.success("CPF copiado para área de transferência!");
                 }}
                 className="p-1 rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-muted transition-colors"

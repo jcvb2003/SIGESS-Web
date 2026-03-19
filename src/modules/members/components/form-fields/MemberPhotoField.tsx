@@ -25,7 +25,7 @@ export function MemberPhotoField() {
     stagedDelete,
     deletePhoto,
   } = usePhotoManager({ cpf });
-  
+
   const { setValue } = useFormContext();
   const photoUrl = useWatch({ control, name: "photoPreviewUrl" }) || managerPhotoUrl;
 
@@ -105,51 +105,74 @@ export function MemberPhotoField() {
     fileInputRef.current?.click();
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      triggerFileInput();
+    }
+  };
+
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-primary/60" />
+        </div>
+      );
+    }
+
+    if (photoUrl) {
+      return (
+        <>
+          <img
+            src={photoUrl}
+            alt="Foto do sócio"
+            className="h-full w-full object-cover"
+          />
+
+          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-3">
+            <Camera className="h-6 w-6 text-white" />
+            <button
+              type="button"
+              className="absolute top-1 right-1 p-1.5 bg-destructive/90 hover:bg-destructive rounded-full text-white transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                deletePhoto();
+              }}
+              title="Excluir foto"
+              aria-label="Excluir foto"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </>
+      );
+    }
+
+    return (
+      <div className="h-full flex flex-col items-center justify-center gap-2 px-3">
+        <div className="rounded-full bg-muted p-2.5">
+          <ImagePlus className="h-5 w-5 text-muted-foreground/60" />
+        </div>
+        <span className="text-[10px] text-muted-foreground/50 text-center leading-tight">
+          Foto <br />
+          (3x4/jpge/jpg/png)
+        </span>
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col items-center gap-2">
-      <div
-        className="group relative w-[7.5rem] h-[9.5rem] rounded-lg border border-dashed border-border hover:border-primary/40 bg-muted/30 hover:bg-muted/50 overflow-hidden cursor-pointer transition-all duration-200"
+      <button
+        type="button"
+        className="group relative w-[7.5rem] h-[9.5rem] rounded-lg border border-dashed border-border hover:border-primary/40 bg-muted/30 hover:bg-muted/50 overflow-hidden cursor-pointer transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
         onClick={triggerFileInput}
+        onKeyDown={handleKeyDown}
+        aria-label={photoUrl ? "Alterar foto do sócio" : "Adicionar foto do sócio"}
       >
-        {isLoading ? (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Loader2 className="h-6 w-6 animate-spin text-primary/60" />
-          </div>
-        ) : photoUrl ? (
-          <>
-            <img
-              src={photoUrl}
-              alt="Foto do sócio"
-              className="h-full w-full object-cover"
-            />
-
-            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-3">
-              <Camera className="h-6 w-6 text-white" />
-              <button
-                type="button"
-                className="absolute top-1 right-1 p-1.5 bg-destructive/90 hover:bg-destructive rounded-full text-white transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  deletePhoto();
-                }}
-                title="Excluir foto"
-                aria-label="Excluir foto"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </>
-        ) : (
-          <div className="h-full flex flex-col items-center justify-center gap-2 px-3">
-            <div className="rounded-full bg-muted p-2.5">
-              <ImagePlus className="h-5 w-5 text-muted-foreground/60" />
-            </div>
-            <span className="text-[10px] text-muted-foreground/50 text-center leading-tight">
-              Clique para adicionar foto
-            </span>
-          </div>
-        )}
-      </div>
+        {renderContent()}
+      </button>
 
       <input
         type="file"

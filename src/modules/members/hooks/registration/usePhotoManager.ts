@@ -16,7 +16,7 @@ export function usePhotoManager({
   );
   const [stagedFile, setStagedFile] = useState<File | null>(null);
   const [stagedDelete, setStagedDelete] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(!!cpf);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {

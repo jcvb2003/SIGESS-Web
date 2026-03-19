@@ -90,6 +90,7 @@ export interface MemberListItem {
   data_de_admissao: string | null;
   situacao: string | null;
   codigo_localidade?: string | null;
+  foto_url?: string | null;
 }
 export interface MembersResult {
   items: MemberListItem[];

@@ -566,9 +566,11 @@ export type TablesUpdate<
     : never
 
 export type Enums<
-  DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
+  DefaultSchemaEnumNameOrOptions extends [keyof DefaultSchema["Enums"]] extends [
+    never,
+  ]
+    ? { schema: keyof DatabaseWithoutInternals }
+    : keyof DefaultSchema["Enums"] | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -583,9 +585,13 @@ export type Enums<
     : never
 
 export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
+  PublicCompositeTypeNameOrOptions extends [
+    keyof DefaultSchema["CompositeTypes"],
+  ] extends [never]
+    ? { schema: keyof DatabaseWithoutInternals }
+    :
+        | keyof DefaultSchema["CompositeTypes"]
+        | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
