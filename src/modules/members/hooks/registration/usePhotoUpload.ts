@@ -1,1 +1,0 @@
-// usePhotoUpload.ts

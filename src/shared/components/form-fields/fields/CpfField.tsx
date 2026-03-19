@@ -1,18 +1,15 @@
-
-import { Control, FieldValues, Path } from "react-hook-form"
-import { TextField } from "./TextField"
-import { masks } from "@/shared/utils/masks"
-
+import { Control, FieldValues, Path } from "react-hook-form";
+import { TextField } from "./TextField";
+import { masks } from "@/shared/utils/masks/inputMasks";
 interface CpfFieldProps<T extends FieldValues> {
-  control: Control<T>
-  name: Path<T>
-  label?: string
-  placeholder?: string
-  description?: string
-  className?: string
-  readOnly?: boolean
+  control: Control<T>;
+  name: Path<T>;
+  label?: string;
+  placeholder?: string;
+  description?: string;
+  className?: string;
+  readOnly?: boolean;
 }
-
 export function CpfField<T extends FieldValues>({
   control,
   name,
@@ -33,5 +30,5 @@ export function CpfField<T extends FieldValues>({
       readOnly={readOnly}
       mask={masks.cpf}
     />
-  )
+  );
 }

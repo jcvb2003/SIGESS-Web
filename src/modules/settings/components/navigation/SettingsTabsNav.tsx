@@ -1,6 +1,10 @@
-import { TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
-import { Settings as SettingsIcon, Building, Database, KeyRound } from 'lucide-react'
-
+import { TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
+import {
+  Settings as SettingsIcon,
+  Building,
+  Database,
+  KeyRound,
+} from "lucide-react";
 export function SettingsTabsNav() {
   return (
     <TabsList>
@@ -21,5 +25,5 @@ export function SettingsTabsNav() {
         <span className="hidden sm:inline">Senhas</span>
       </TabsTrigger>
     </TabsList>
-  )
+  );
 }

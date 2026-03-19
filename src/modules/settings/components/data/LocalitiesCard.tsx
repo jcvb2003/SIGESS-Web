@@ -1,91 +1,114 @@
-import { useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
-import { MapPin, Plus, Edit, Trash } from 'lucide-react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
-import { Button } from '@/shared/components/ui/button'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/components/ui/table'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/shared/components/ui/dialog'
-import { Input } from '@/shared/components/ui/input'
-import { settingsService } from '../../services/settingsService'
-import type { Locality } from '../../types/settings.types'
-
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { MapPin, Plus, Edit, Trash } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/shared/components/ui/card";
+import { Button } from "@/shared/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/shared/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/shared/components/ui/dialog";
+import { Input } from "@/shared/components/ui/input";
+import { settingsService } from "../../services/settingsService";
+import type { Locality } from "../../types/settings.types";
 export function LocalitiesCard() {
-  const queryClient = useQueryClient()
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingLocality, setEditingLocality] = useState<Locality | null>(null)
-  const [name, setName] = useState('')
-
+  const queryClient = useQueryClient();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingLocality, setEditingLocality] = useState<Locality | null>(null);
+  const [name, setName] = useState("");
   const localitiesQuery = useQuery({
-    queryKey: ['settings', 'localities'],
-    queryFn: () => settingsService.getLocalities(),
-    staleTime: 1000 * 60 * 5,
-  })
-
+    queryKey: ["settings", "localities"],
+    queryFn: async () => {
+      const { data, error } = await settingsService.getLocalities();
+      if (error) throw error;
+      return data;
+    },
+  });
   const saveMutation = useMutation({
-    mutationFn: (values: { id?: string; name: string }) => settingsService.saveLocality(values),
+    mutationFn: async (values: { id?: string; name: string }) => {
+      const { error } = await settingsService.saveLocality(values);
+      if (error) throw error;
+    },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['settings', 'localities'] })
-      toast.success('Localidade salva com sucesso.')
-      setEditingLocality(null)
-      setName('')
+      await queryClient.invalidateQueries({
+        queryKey: ["settings", "localities"],
+      });
+      toast.success("Localidade salva com sucesso.");
+      setEditingLocality(null);
+      setName("");
     },
     onError: (error: unknown) => {
       const message =
         error instanceof Error && error.message
           ? error.message
-          : 'Erro ao salvar localidade.'
-      toast.error(message)
+          : "Erro ao salvar localidade.";
+      toast.error(message);
     },
-  })
-
+  });
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => settingsService.deleteLocality(id),
+    mutationFn: async (id: string) => {
+      const { error } = await settingsService.deleteLocality(id);
+      if (error) throw error;
+    },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['settings', 'localities'] })
-      toast.success('Localidade excluída com sucesso.')
+      await queryClient.invalidateQueries({
+        queryKey: ["settings", "localities"],
+      });
+      toast.success("Localidade excluída com sucesso.");
     },
     onError: (error: unknown) => {
       const message =
         error instanceof Error && error.message
           ? error.message
-          : 'Erro ao excluir localidade.'
-      toast.error(message)
+          : "Erro ao excluir localidade.";
+      toast.error(message);
     },
-  })
-
-  const localities = localitiesQuery.data ?? []
-
+  });
+  const localities = localitiesQuery.data ?? [];
   const handleOpenDialog = () => {
-    setIsDialogOpen(true)
-    setEditingLocality(null)
-    setName('')
-  }
-
+    setIsDialogOpen(true);
+    setEditingLocality(null);
+    setName("");
+  };
   const handleEdit = (locality: Locality) => {
-    setEditingLocality(locality)
-    setName(locality.name)
-    setIsDialogOpen(true)
-  }
-
+    setEditingLocality(locality);
+    setName(locality.name);
+    setIsDialogOpen(true);
+  };
   const handleSave = async () => {
     await saveMutation.mutateAsync({
       id: editingLocality?.id,
       name,
-    })
-  }
-
+    });
+  };
   const handleDelete = async (id: string) => {
-    const confirmed = window.confirm('Tem certeza que deseja excluir esta localidade?')
+    const confirmed = globalThis.confirm(
+      "Tem certeza que deseja excluir esta localidade?",
+    );
     if (!confirmed) {
-      return
+      return;
     }
-
-    await deleteMutation.mutateAsync(id)
-  }
-
-  const isLoading = localitiesQuery.isLoading || localitiesQuery.isFetching
-
+    await deleteMutation.mutateAsync(id);
+  };
+  const isLoading = localitiesQuery.isLoading || localitiesQuery.isFetching;
   return (
     <>
       <Card className="border-border/50 shadow-sm h-full">
@@ -95,20 +118,25 @@ export function LocalitiesCard() {
             Localidades
           </CardTitle>
           <CardDescription>
-            Cadastre e organize as comunidades e regiões atendidas pelo sindicato.
+            Cadastre e organize as comunidades e regiões atendidas pelo
+            sindicato.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3 border-t border-border/10 pt-4">
           <div className="flex items-center justify-between text-sm text-muted-foreground">
-            {isLoading ? (
-              <span>Carregando localidades...</span>
-            ) : localities.length === 0 ? (
+            {isLoading && <span>Carregando localidades...</span>}
+            {!isLoading && localities.length === 0 && (
               <span>Nenhuma localidade cadastrada ainda.</span>
-            ) : (
+            )}
+            {!isLoading && localities.length > 0 && (
               <span>{localities.length} localidades cadastradas.</span>
             )}
           </div>
-          <Button variant="outline" className="justify-start gap-2" onClick={handleOpenDialog}>
+          <Button
+            variant="outline"
+            className="justify-start gap-2"
+            onClick={handleOpenDialog}
+          >
             <Plus className="h-4 w-4" />
             Gerenciar Localidades
           </Button>
@@ -118,9 +146,12 @@ export function LocalitiesCard() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{editingLocality ? 'Editar Localidade' : 'Gerenciar Localidades'}</DialogTitle>
+            <DialogTitle>
+              {editingLocality ? "Editar Localidade" : "Gerenciar Localidades"}
+            </DialogTitle>
             <DialogDescription>
-              Cadastre, edite e remova localidades utilizadas no cadastro de sócios.
+              Cadastre, edite e remova localidades utilizadas no cadastro de
+              sócios.
             </DialogDescription>
           </DialogHeader>
 
@@ -136,14 +167,19 @@ export function LocalitiesCard() {
                 <TableBody>
                   {localities.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={2} className="py-6 text-sm text-muted-foreground text-center">
+                      <TableCell
+                        colSpan={2}
+                        className="py-6 text-sm text-muted-foreground text-center"
+                      >
                         Nenhuma localidade cadastrada.
                       </TableCell>
                     </TableRow>
                   ) : (
                     localities.map((locality) => (
                       <TableRow key={locality.id}>
-                        <TableCell className="text-sm">{locality.name}</TableCell>
+                        <TableCell className="text-sm">
+                          {locality.name}
+                        </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
                             <Button
@@ -158,8 +194,12 @@ export function LocalitiesCard() {
                               variant="ghost"
                               size="sm"
                               className="text-destructive hover:text-destructive"
-                              onClick={() => handleDelete(locality.id)}
-                              disabled={deleteMutation.isPending}
+                              onClick={() =>
+                                locality.id && handleDelete(locality.id)
+                              }
+                              disabled={
+                                deleteMutation.isPending || !locality.id
+                              }
                             >
                               <Trash className="w-4 h-4" />
                             </Button>
@@ -183,8 +223,10 @@ export function LocalitiesCard() {
                   id="locality-name"
                   placeholder="Nome da localidade"
                   value={name}
-                  onChange={(event) => setName(event.target.value.toUpperCase())}
-                  style={{ textTransform: 'uppercase' }}
+                  onChange={(event) =>
+                    setName(event.target.value.toUpperCase())
+                  }
+                  style={{ textTransform: "uppercase" }}
                 />
               </div>
             </div>
@@ -195,8 +237,8 @@ export function LocalitiesCard() {
               <Button
                 type="button"
                 onClick={() => {
-                  setEditingLocality({ id: '', name: '', code: '' })
-                  setName('')
+                  setEditingLocality({ id: "", name: "", code: "" });
+                  setName("");
                 }}
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -210,21 +252,29 @@ export function LocalitiesCard() {
                   type="button"
                   variant="outline"
                   onClick={() => {
-                    setEditingLocality(null)
-                    setName('')
+                    setEditingLocality(null);
+                    setName("");
                   }}
                   disabled={saveMutation.isPending}
                 >
                   Cancelar
                 </Button>
-                <Button type="button" onClick={handleSave} disabled={saveMutation.isPending || !name.trim()}>
-                  {editingLocality.id ? 'Atualizar' : 'Adicionar'}
+                <Button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={saveMutation.isPending || !name.trim()}
+                >
+                  {editingLocality.id ? "Atualizar" : "Adicionar"}
                 </Button>
               </>
             )}
 
             {!editingLocality && (
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}
+              >
                 Fechar
               </Button>
             )}
@@ -232,5 +282,5 @@ export function LocalitiesCard() {
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

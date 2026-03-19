@@ -1,5 +1,4 @@
-
-import { Control, FieldValues, Path } from "react-hook-form"
+import { Control, FieldValues, Path } from "react-hook-form";
 import {
   FormControl,
   FormDescription,
@@ -7,32 +6,30 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/shared/components/ui/form"
+} from "@/shared/components/ui/form";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/shared/components/ui/select"
-
+} from "@/shared/components/ui/select";
+import { useFieldBackgroundColors } from "@/shared/hooks/useFieldBackgroundColors";
 export interface SelectOption {
-  label: string
-  value: string
+  label: string;
+  value: string;
 }
-
 interface SelectFieldProps<T extends FieldValues> {
-  control: Control<T>
-  name: Path<T>
-  label: string
-  placeholder?: string
-  description?: string
-  options: SelectOption[]
-  className?: string
-  disabled?: boolean
-  onChange?: (value: string) => void
+  control: Control<T>;
+  name: Path<T>;
+  label: string;
+  placeholder?: string;
+  description?: string;
+  options: SelectOption[];
+  className?: string;
+  disabled?: boolean;
+  onChange?: (value: string) => void;
 }
-
 export function SelectField<T extends FieldValues>({
   control,
   name,
@@ -44,6 +41,8 @@ export function SelectField<T extends FieldValues>({
   disabled,
   onChange,
 }: SelectFieldProps<T>) {
+  const { getFieldBackgroundColor } = useFieldBackgroundColors();
+  const bgColor = getFieldBackgroundColor(name);
   return (
     <FormField
       control={control}
@@ -53,15 +52,15 @@ export function SelectField<T extends FieldValues>({
           <FormLabel>{label}</FormLabel>
           <Select
             onValueChange={(value) => {
-              field.onChange(value)
-              onChange?.(value)
+              field.onChange(value);
+              onChange?.(value);
             }}
             defaultValue={field.value}
             value={field.value}
             disabled={disabled}
           >
             <FormControl>
-              <SelectTrigger>
+              <SelectTrigger className={bgColor}>
                 <SelectValue placeholder={placeholder} />
               </SelectTrigger>
             </FormControl>
@@ -78,5 +77,5 @@ export function SelectField<T extends FieldValues>({
         </FormItem>
       )}
     />
-  )
+  );
 }

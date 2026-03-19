@@ -1,39 +1,36 @@
-import { Avatar, AvatarFallback } from '@/shared/components/ui/avatar'
-
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 interface MemberBasicInfoCellProps {
-  name: string | null
-  code: string | null
+  name: string | null;
+  code: string | null;
 }
-
 const getInitials = (name: string | null) => {
   if (!name) {
-    return '?'
+    return "?";
   }
-
-  const parts = name.trim().split(/\s+/)
-
+  const parts = name.trim().split(/\s+/);
   if (parts.length === 1) {
-    return parts[0].slice(0, 2).toUpperCase()
+    return parts[0].slice(0, 2).toUpperCase();
   }
-
-  const first = parts[0].charAt(0)
-  const last = parts[parts.length - 1].charAt(0)
-
-  return `${first}${last}`.toUpperCase()
-}
-
+  const first = parts[0].charAt(0);
+  const last = parts[parts.length - 1].charAt(0);
+  return `${first}${last}`.toUpperCase();
+};
 export function MemberBasicInfoCell({ name, code }: MemberBasicInfoCellProps) {
   return (
-    <div className="flex items-center gap-3">
-      <Avatar className="h-10 w-10 border border-border">
-        <AvatarFallback className="bg-primary/10 text-primary">{getInitials(name)}</AvatarFallback>
+    <div className="flex items-center gap-2 md:gap-3">
+      <Avatar className="hidden md:flex h-10 w-10 border border-border">
+        <AvatarFallback className="bg-primary/10 text-primary text-sm">
+          {getInitials(name)}
+        </AvatarFallback>
       </Avatar>
       <div className="flex flex-col">
-        <span className="font-medium">{name || 'Sem nome'}</span>
-        <span className="text-xs text-muted-foreground">
-          {code ? `Matrícula: ${code}` : 'Matrícula não informada'}
+        <span className="font-medium text-xs md:text-sm">
+          {name || "Sem nome"}
+        </span>
+        <span className="hidden md:block text-[10px] md:text-xs text-muted-foreground">
+          {code ? `Matrícula: ${code}` : "Matrícula não informada"}
         </span>
       </div>
     </div>
-  )
+  );
 }

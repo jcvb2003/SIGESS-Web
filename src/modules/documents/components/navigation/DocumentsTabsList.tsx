@@ -1,1 +1,0 @@
-// DocumentsTabsList.tsx

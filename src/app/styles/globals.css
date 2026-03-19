@@ -37,6 +37,9 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
+    --info: 217 91% 60%; /* Blue 500 */
+    --info-foreground: 210 40% 98%;
+
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 160 84% 39%;
@@ -89,36 +92,158 @@
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
+    --info: 217 91% 60%;
+    --info-foreground: 210 40% 98%;
+
     --border: 217 33% 17%;
     --input: 217 33% 17%;
     --ring: 152 69% 41%;
     /* Emerald 500 Focus Rings */
 
     /* Sidebar Specific Variables (Dark Mode) */
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-background: 220 20% 12%;
+    /* Deep charcoal for sidebar */
+    --sidebar-foreground: 210 40% 92%;
+    --sidebar-primary: 152 69% 41%;
+    /* Emerald accent */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 220 16% 18%;
+    /* Slightly lighter charcoal for hover */
+    --sidebar-accent-foreground: 210 40% 92%;
+    --sidebar-border: 220 16% 18%;
+    --sidebar-ring: 152 69% 41%;
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
   }
 
   body {
-    @apply bg-background text-foreground antialiased font-sans transition-colors duration-300;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family:
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Roboto,
+      "Helvetica Neue",
+      Arial,
+      "Noto Sans",
+      sans-serif,
+      "Apple Color Emoji",
+      "Segoe UI Emoji",
+      "Segoe UI Symbol",
+      "Noto Color Emoji";
+    transition-property:
+      color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
   }
 }
 
 /* Base custom utility for a luxurious gradient on primary buttons/details */
 @layer utilities {
-  .bg-primary {
-    @apply bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] border-0 text-[hsl(var(--primary-foreground))] hover:opacity-90 transition-opacity;
+  .bg-primary-gradient {
+    background-image: linear-gradient(
+      to right,
+      hsl(var(--primary)),
+      hsl(var(--accent))
+    );
+    border: 0;
+    color: hsl(var(--primary-foreground));
+    transition: opacity 0.2s ease;
+  }
+
+  .bg-primary-gradient:hover {
+    opacity: 0.9;
+  }
+}
+
+/* ========================================
+   Animated Sea Background (Login Page)
+   ======================================== */
+
+/* Wave animations - different speeds for parallax effect */
+.animate-wave-back {
+  animation: sea-moveLeft 45s linear infinite;
+}
+.animate-wave-mid {
+  animation: sea-moveLeft 35s linear infinite;
+}
+.animate-wave-front {
+  animation: sea-moveLeft 20s linear infinite;
+}
+.animate-wave-ripple {
+  animation: sea-moveLeft 18s linear infinite;
+}
+
+/* Boat bobbing */
+.animate-boat {
+  animation: sea-bobbing 6s ease-in-out infinite;
+  transform-origin: center center;
+}
+
+/* Birds flying */
+.animate-birds {
+  animation: sea-fly 60s linear infinite;
+}
+
+/* Stars / Fireflies twinkling */
+.animate-twinkle {
+  animation: sea-twinkle 4s ease-in-out infinite alternate;
+}
+.animate-twinkle-delay-1 {
+  animation: sea-twinkle 5s ease-in-out infinite alternate;
+  animation-delay: -2s;
+}
+.animate-twinkle-delay-2 {
+  animation: sea-twinkle 3s ease-in-out infinite alternate;
+  animation-delay: -1s;
+}
+
+@keyframes sea-moveLeft {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-1920px);
+  }
+}
+
+@keyframes sea-bobbing {
+  0% {
+    transform: translate(400px, 760px) rotate(-1deg);
+  }
+  50% {
+    transform: translate(400px, 745px) rotate(1.5deg);
+  }
+  100% {
+    transform: translate(400px, 760px) rotate(-1deg);
+  }
+}
+
+@keyframes sea-fly {
+  0% {
+    transform: translate(-200px, 100px) scale(0.8);
+  }
+  100% {
+    transform: translate(2100px, -50px) scale(0.6);
+  }
+}
+
+@keyframes sea-twinkle {
+  0% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 0.9;
+    transform: scale(1.2);
   }
 }

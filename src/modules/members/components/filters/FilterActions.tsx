@@ -1,10 +1,8 @@
-import { Button } from '@/shared/components/ui/button'
-
+import { Button } from "@/shared/components/ui/button";
 interface FilterActionsProps {
-  onClear: () => void
-  onApply: () => void
+  onClear: () => void;
+  onApply: () => void;
 }
-
 export function FilterActions({ onClear, onApply }: FilterActionsProps) {
   return (
     <>
@@ -15,5 +13,5 @@ export function FilterActions({ onClear, onApply }: FilterActionsProps) {
         Aplicar filtros
       </Button>
     </>
-  )
+  );
 }

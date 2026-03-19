@@ -1,79 +1,72 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
-import { Input } from '@/shared/components/ui/input'
-import { Label } from '@/shared/components/ui/label'
-import { EntitySettings } from '../../types/settings.types'
-
-interface EntityAddressProps {
-  entity?: EntitySettings
-}
-
-export function EntityAddress({ entity }: EntityAddressProps) {
+import { useFormContext } from "react-hook-form";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/shared/components/ui/card";
+import { TextField } from "@/shared/components/form-fields/fields/TextField";
+import { CepField } from "@/shared/components/form-fields/fields/CepField";
+import { StateSelect } from "@/shared/components/form-fields/fields/StateSelect";
+import { EntityFormData } from "../../hooks/useEntityValidation";
+export function EntityAddress() {
+  const { control } = useFormContext<EntityFormData>();
   return (
     <Card className="border-border/50 shadow-sm">
       <CardHeader>
         <CardTitle className="text-base">Endereço</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
-          <div className="space-y-2">
-            <Label htmlFor="entity-street">Logradouro</Label>
-            <Input
-              id="entity-street"
-              name="street"
-              placeholder="Rua, avenida, travessa..."
-              defaultValue={entity?.street ?? ''}
-            />
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="md:col-span-1">
+            <CepField control={control} name="cep" />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="entity-number">Número</Label>
-            <Input
-              id="entity-number"
-              name="number"
-              placeholder="S/N"
-              defaultValue={entity?.number ?? ''}
+          <div className="md:col-span-2">
+            <TextField
+              control={control}
+              name="street"
+              label="Logradouro"
+              placeholder="Rua, Avenida, etc."
             />
           </div>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
-          <div className="space-y-2">
-            <Label htmlFor="entity-district">Bairro</Label>
-            <Input
-              id="entity-district"
+          <div className="md:col-span-1">
+            <TextField
+              control={control}
+              name="number"
+              label="Número"
+              placeholder="123"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <TextField
+              control={control}
               name="district"
+              label="Bairro"
               placeholder="Bairro"
-              defaultValue={entity?.district ?? ''}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="entity-city">Cidade</Label>
-            <Input
-              id="entity-city"
-              name="city"
-              placeholder="Cidade"
-              defaultValue={entity?.city ?? ''}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="entity-uf">UF</Label>
-            <Input
-              id="entity-uf"
-              name="state"
-              placeholder="UF"
-              maxLength={2}
-              defaultValue={entity?.state ?? ''}
             />
           </div>
         </div>
-        <div className="space-y-2 md:max-w-xs">
-          <Label htmlFor="entity-cep">CEP</Label>
-          <Input
-            id="entity-cep"
-            name="cep"
-            placeholder="00000-000"
-            defaultValue={entity?.cep ?? ''}
-          />
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="md:col-span-2">
+            <TextField
+              control={control}
+              name="city"
+              label="Cidade"
+              placeholder="Nome da cidade"
+            />
+          </div>
+          <div className="md:col-span-1">
+            <StateSelect
+              control={control}
+              name="state"
+              label="UF"
+              placeholder="UF"
+            />
+          </div>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

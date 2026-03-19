@@ -1,1 +1,0 @@
-// GeridFiltersSection.tsx

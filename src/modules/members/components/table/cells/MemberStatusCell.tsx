@@ -1,9 +1,11 @@
-import { MemberStatusBadge } from '../../MemberStatusBadge'
-
+import { MemberStatusBadge } from "../../MemberStatusBadge";
 interface MemberStatusCellProps {
-  status: string | null
+  status: string | null;
 }
-
 export function MemberStatusCell({ status }: MemberStatusCellProps) {
-  return <MemberStatusBadge status={status} />
+  return (
+    <div className="flex justify-center">
+      <MemberStatusBadge status={status} />
+    </div>
+  );
 }

@@ -1,73 +1,70 @@
-# React + TypeScript + Vite
+# SIGESS
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicação web (React + Vite + TypeScript) do **SIGESS**, com autenticação e dados via **Supabase**. Este README é voltado para **usuário final técnico do cliente** (instalação, configuração e implantação).
 
-Currently, two official plugins are available:
+## Requisitos
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Node.js**: 18+ (recomendado 20+)
+- **NPM**: compatível com a versão do Node instalada
 
-## React Compiler
+## Configuração (variáveis de ambiente)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Crie um arquivo `.env` na raiz do projeto com as variáveis abaixo:
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+VITE_SUPABASE_URL=https://<seu-projeto>.supabase.co
+VITE_SUPABASE_ANON_KEY=<sua-anon-key>
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+- **VITE_SUPABASE_URL**: URL do projeto no Supabase
+- **VITE_SUPABASE_ANON_KEY**: chave pública (anon/publishable) do Supabase usada no frontend
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Executar em ambiente local (desenvolvimento)
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Instalar dependências:
+
+```bash
+npm install
 ```
+
+Iniciar servidor local:
+
+```bash
+npm run dev
+```
+
+Por padrão, o Vite disponibiliza o sistema em `http://localhost:5173`.
+
+## Build para produção
+
+Gerar build:
+
+```bash
+npm run build
+```
+
+Os arquivos finais serão gerados em `dist/`.
+
+Testar o build localmente:
+
+```bash
+npm run preview
+```
+
+## Implantação (produção)
+
+O SIGESS é entregue como **site estático**. Publique o conteúdo de `dist/` em um servidor web (ex.: Nginx/Apache/IIS) com suporte a **SPA fallback**:
+
+- **Regra recomendada**: qualquer rota inexistente deve retornar `index.html` (para o roteamento do `react-router-dom` funcionar em refresh e links diretos).
+
+## PWA / cache
+
+O projeto utiliza PWA (via `vite-plugin-pwa`) com cache para chamadas do Supabase (REST) e objetos públicos do Storage. Em ambientes com proxy/CDN, valide:
+
+- **Cache e headers**: não bloquear o service worker e permitir atualização automática.
+- **Tamanho de assets**: existe limite de cache de 5 MB por arquivo para precache.
+
+## Solução de problemas (rápido)
+
+- **Tela em branco / erros no console ao abrir**: confirme se o `.env` existe e se `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` estão corretos.
+- **Erro ao acessar rota direto pela URL (404 no servidor)**: falta configurar o **SPA fallback** para `index.html` no servidor.

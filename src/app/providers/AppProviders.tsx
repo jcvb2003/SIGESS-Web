@@ -1,11 +1,20 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { Toaster } from 'sonner'
-import { AuthProvider } from '@/modules/auth/context/AuthContext'
-import { ThemeProvider } from 'next-themes'
-
-const queryClient = new QueryClient()
-
-export function AppProviders({ children }: { children: React.ReactNode }) {
+import { useState, type ReactNode } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "sonner";
+import { AuthProvider } from "@/modules/auth/context/AuthContext";
+import { ThemeProvider } from "next-themes";
+export function AppProviders({ children }: { children: ReactNode }) {
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 5 * 60 * 1000,
+            refetchOnWindowFocus: false,
+          },
+        },
+      }),
+  );
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <QueryClientProvider client={queryClient}>
@@ -15,5 +24,5 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
         </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
-  )
+  );
 }

@@ -1,37 +1,47 @@
-import { FormEvent, useState } from 'react'
-import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card'
-import { Input } from '@/shared/components/ui/input'
-import { Label } from '@/shared/components/ui/label'
-import { Button } from '@/shared/components/ui/button'
-import { usePasswordChange } from '../../hooks/usePasswordChange'
-
+import { useForm, FormProvider } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/shared/components/ui/card";
+import { TextField } from "@/shared/components/form-fields/fields/TextField";
+import { Button } from "@/shared/components/ui/button";
+import { usePasswordChange } from "../../hooks/usePasswordChange";
+const passwordChangeSchema = z
+  .object({
+    currentPassword: z.string().min(1, "A senha atual é obrigatória"),
+    newPassword: z
+      .string()
+      .min(6, "A nova senha deve ter no mínimo 6 caracteres"),
+    confirmPassword: z.string().min(1, "Confirmação de senha é obrigatória"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "As senhas não conferem",
+    path: ["confirmPassword"],
+  });
+type PasswordChangeFormData = z.infer<typeof passwordChangeSchema>;
 export function PasswordChangeForm() {
-  const { changePassword, isLoading } = usePasswordChange()
-  const [mismatchError, setMismatchError] = useState<string | null>(null)
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-
-    const formData = new FormData(event.currentTarget)
-    const currentPassword = String(formData.get('currentPassword') ?? '')
-    const newPassword = String(formData.get('newPassword') ?? '')
-    const confirmPassword = String(formData.get('confirmPassword') ?? '')
-
-    if (newPassword !== confirmPassword) {
-      setMismatchError('A confirmação de senha não confere.')
-      return
-    }
-
-    setMismatchError(null)
-
+  const { changePassword, isLoading } = usePasswordChange();
+  const methods = useForm<PasswordChangeFormData>({
+    resolver: zodResolver(passwordChangeSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
+  const onSubmit = async (data: PasswordChangeFormData) => {
     await changePassword({
-      currentPassword,
-      newPassword,
-    })
-
-    event.currentTarget.reset()
-  }
-
+      currentPassword: data.currentPassword,
+      newPassword: data.newPassword,
+    });
+    methods.reset();
+  };
   return (
     <Card className="border-border/50 shadow-sm">
       <CardHeader>
@@ -40,49 +50,50 @@ export function PasswordChangeForm() {
           Defina uma nova senha de acesso para o usuário atualmente autenticado.
         </CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4 border-t border-border/10">
-          <div className="space-y-2">
-            <Label htmlFor="current-password">Senha atual</Label>
-            <Input
-              id="current-password"
-              name="currentPassword"
-              type="password"
-              autoComplete="current-password"
+      <FormProvider {...methods}>
+        <form onSubmit={methods.handleSubmit(onSubmit)}>
+          <CardContent className="space-y-4 border-t border-border/10">
+            <input
+              type="text"
+              autoComplete="username"
+              name="username"
+              aria-hidden="true"
+              className="hidden"
+              tabIndex={-1}
             />
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="new-password">Nova senha</Label>
-              <Input
-                id="new-password"
+              <TextField
+                control={methods.control}
+                name="currentPassword"
+                label="Senha atual"
+                type="password"
+                autoComplete="current-password"
+              />
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <TextField
+                control={methods.control}
                 name="newPassword"
+                label="Nova senha"
                 type="password"
                 autoComplete="new-password"
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm-password">Confirmar nova senha</Label>
-              <Input
-                id="confirm-password"
+              <TextField
+                control={methods.control}
                 name="confirmPassword"
+                label="Confirmar nova senha"
                 type="password"
                 autoComplete="new-password"
               />
-              {mismatchError && (
-                <p className="text-xs text-destructive mt-1">
-                  {mismatchError}
-                </p>
-              )}
             </div>
-          </div>
-        </CardContent>
-        <CardFooter className="flex justify-end gap-2">
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? 'Salvando...' : 'Salvar nova senha'}
-          </Button>
-        </CardFooter>
-      </form>
+          </CardContent>
+          <CardFooter className="flex justify-end gap-2">
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Salvando..." : "Salvar nova senha"}
+            </Button>
+          </CardFooter>
+        </form>
+      </FormProvider>
     </Card>
-  )
+  );
 }

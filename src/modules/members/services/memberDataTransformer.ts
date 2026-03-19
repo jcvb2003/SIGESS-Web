@@ -1,90 +1,75 @@
-
-import { MemberRegistrationForm } from '../types/member.types'
-
-/**
- * Remove caracteres invisíveis como quebras de linha, tabulações e espaços extras
- */
+import {
+  EscolaridadeValue,
+  MemberRegistrationForm,
+  SituacaoValue,
+  SocioInsert,
+  SocioRow,
+} from "../types/member.types";
 function cleanInvisibleCharacters(value?: string | null): string {
-  if (!value || typeof value !== 'string') return '';
-  
+  if (!value || typeof value !== "string") return "";
   return value
-    .replace(/[\n\r\t]+/g, ' ')     // Substitui quebras de linha, retorno de carro e tabulações por espaço simples
-    .replace(/\s+/g, ' ')           // Remove múltiplos espaços consecutivos
-    .trim();                        // Remove espaços no início e fim
+    .replaceAll(/[\n\r\t]+/g, " ")
+    .replaceAll(/\s+/g, " ")
+    .trim();
 }
-
-/**
- * Converte para maiúsculo ou string vazia, removendo caracteres invisíveis
- */
 function toUpperOrEmpty(value?: string | null): string | null {
   const cleaned = cleanInvisibleCharacters(value);
   return cleaned ? cleaned.toUpperCase() : null;
 }
-
-/**
- * Converte para minúsculo ou string vazia, removendo caracteres invisíveis
- */
 function toLowerOrEmpty(value?: string | null): string | null {
   const cleaned = cleanInvisibleCharacters(value);
   return cleaned ? cleaned.toLowerCase() : null;
 }
-
-/**
- * Formata CPF para o formato 000.000.000-00
- */
 function formatCPF(cpf: string): string {
-  if (!cpf) return '';
-  
+  if (!cpf) return "";
   const cleaned = cleanInvisibleCharacters(cpf);
-  const numbers = cleaned.replace(/\D/g, '');
-  
+  const numbers = cleaned.replaceAll(/\D/g, "");
   if (numbers.length === 11) {
     return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(6, 9)}-${numbers.slice(9, 11)}`;
   }
-  
   return numbers;
 }
-
-/**
- * Formata telefone para o padrão legado (XX)XXXXX-XXXX ou (XX)XXXX-XXXX
- */
 function formatPhoneForStorage(phone: string): string | null {
   if (!phone) return null;
-  
   const cleaned = cleanInvisibleCharacters(phone);
-  const numbers = cleaned.replace(/\D/g, '');
-  
+  const numbers = cleaned.replaceAll(/\D/g, "");
   if (numbers.length === 11) {
     return `(${numbers.slice(0, 2)})${numbers.slice(2, 7)}-${numbers.slice(7)}`;
   }
-  
   if (numbers.length === 10) {
     return `(${numbers.slice(0, 2)})${numbers.slice(2, 6)}-${numbers.slice(6)}`;
   }
-  
   return cleaned || null;
 }
-
-/**
- * Formata CEP para o padrão 00000-000
- */
 function formatCEP(cep: string): string | null {
   if (!cep) return null;
-  
   const cleaned = cleanInvisibleCharacters(cep);
-  const numbers = cleaned.replace(/\D/g, '');
-  
+  const numbers = cleaned.replaceAll(/\D/g, "");
   if (numbers.length === 8) {
     return `${numbers.slice(0, 5)}-${numbers.slice(5)}`;
   }
-  
   return cleaned || null;
 }
-
-export function toMemberInsertPayload(input: MemberRegistrationForm) {
+function formatNIT(value?: string | null): string | null {
+  if (!value) return null;
+  const onlyNumbers = value.replaceAll(/\D/g, "");
+  if (onlyNumbers.length !== 11) return cleanInvisibleCharacters(value) || null;
+  return `${onlyNumbers.slice(0, 3)}.${onlyNumbers.slice(3, 8)}.${onlyNumbers.slice(8, 10)}-${onlyNumbers.slice(10)}`;
+}
+function formatCAEPF(value?: string | null): string | null {
+  if (!value) return null;
+  const onlyNumbers = value.replaceAll(/\D/g, "");
+  if (onlyNumbers.length !== 14) return cleanInvisibleCharacters(value) || null;
+  return `${onlyNumbers.slice(0, 3)}.${onlyNumbers.slice(3, 6)}.${onlyNumbers.slice(6, 9)}/${onlyNumbers.slice(9, 12)}-${onlyNumbers.slice(12, 14)}`;
+}
+export function toMemberInsertPayload(
+  input: MemberRegistrationForm,
+): SocioInsert {
   return {
     codigo_do_socio: cleanInvisibleCharacters(input.codigoDoSocio) || null,
-    codigo_localidade: input.codigoLocalidade ? Number(input.codigoLocalidade) : null,
+    codigo_localidade: input.codigoLocalidade
+      ? String(input.codigoLocalidade)
+      : null,
     nome: toUpperOrEmpty(input.nome),
     apelido: toUpperOrEmpty(input.apelido),
     cpf: formatCPF(input.cpf),
@@ -104,7 +89,7 @@ export function toMemberInsertPayload(input: MemberRegistrationForm) {
     cep: formatCEP(input.cep),
     telefone: formatPhoneForStorage(input.telefone),
     email: toLowerOrEmpty(input.email),
-    estado_civil: toUpperOrEmpty(input.estadoCivil),
+    estado_civil: cleanInvisibleCharacters(input.estadoCivil) || null,
     alfabetizado: toUpperOrEmpty(input.alfabetizado),
     rg: cleanInvisibleCharacters(input.rg) || null,
     ssp: toUpperOrEmpty(input.ufRg),
@@ -112,63 +97,96 @@ export function toMemberInsertPayload(input: MemberRegistrationForm) {
     titulo: cleanInvisibleCharacters(input.tituloEleitor) || null,
     zona: cleanInvisibleCharacters(input.zonaEleitoral) || null,
     secao: cleanInvisibleCharacters(input.secaoEleitoral) || null,
-    caepf: cleanInvisibleCharacters(input.caepf) || null,
-    pis: cleanInvisibleCharacters(input.pis) || null,
+    caepf: formatCAEPF(input.caepf),
     cei: cleanInvisibleCharacters(input.cei) || null,
-    nit: cleanInvisibleCharacters(input.nit) || null,
+    nit: formatNIT(input.nit),
     emb_rgp: cleanInvisibleCharacters(input.rgp) || null,
     emissao_rgp: input.emissaoRgp || null,
     rgp_uf: toUpperOrEmpty(input.ufRgp),
-    situacao: input.situacao || '1 - ATIVO',
-    situacao_mpa: input.situacaoMpa || null,
+    situacao: input.situacao || "ATIVO",
     senhagov_inss: input.senhaGovInss || null,
     observacoes: input.observacoes || null,
-  }
+    escolaridade: toUpperOrEmpty(input.escolaridade),
+  } as SocioInsert;
 }
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function fromMemberRecord(record: any): MemberRegistrationForm {
+export function fromMemberRecord(
+  record: SocioRow & {
+    fotos?: unknown;
+  },
+): MemberRegistrationForm {
+  const getString = (value: unknown): string =>
+    typeof value === "string" ? value : "";
+  const parseSituacao = (value: unknown): SituacaoValue => {
+    const parsed = getString(value) as SituacaoValue;
+    return parsed || "ATIVO";
+  };
+  const photos = Array.isArray(record.fotos)
+    ? record.fotos
+        .map((photo) => {
+          if (!photo || typeof photo !== "object") return null;
+          const typedPhoto = photo as Record<string, unknown>;
+          return {
+            foto_url: getString(typedPhoto.foto_url) || getString(typedPhoto.url),
+          };
+        })
+        .filter(
+          (
+            item,
+          ): item is {
+            foto_url: string;
+          } => !!item && !!item.foto_url,
+        )
+    : null;
   return {
-    codigoDoSocio: record.codigo_do_socio || '',
-    codigoLocalidade: record.codigo_localidade ? String(record.codigo_localidade) : '',
-    nome: record.nome || '',
-    apelido: record.apelido || '',
-    cpf: record.cpf || '',
-    dataDeNascimento: record.data_de_nascimento || '',
-    dataDeAdmissao: record.data_de_admissao || '',
-    sexo: record.sexo || 'MASCULINO',
-    pai: record.pai || '',
-    mae: record.mae || '',
-    nacionalidade: record.nacionalidade || '',
-    naturalidade: record.naturalidade || '',
-    ufNaturalidade: record.uf_naturalidade || '',
-    endereco: record.endereco || '',
-    numero: record.num || '',
-    bairro: record.bairro || '',
-    cidade: record.cidade || '',
-    uf: record.uf || '',
-    cep: record.cep || '',
-    telefone: record.telefone || '',
-    email: record.email || '',
-    estadoCivil: record.estado_civil || '',
-    alfabetizado: record.alfabetizado || '',
-    rg: record.rg || '',
-    ufRg: record.ssp || '', // Mapeando ssp de volta para ufRg
-    dataExpedicaoRg: record.dt_expedicao_rg || '',
-    tituloEleitor: record.titulo || '',
-    zonaEleitoral: record.zona || '',
-    secaoEleitoral: record.secao || '',
-    caepf: record.caepf || '',
-    pis: record.pis || '',
-    cei: record.cei || '',
-    nit: record.nit || '',
-    rgp: record.emb_rgp || '',
-    emissaoRgp: record.emissao_rgp || '',
-    ufRgp: record.rgp_uf || '',
-    situacao: record.situacao || '',
-    situacaoMpa: record.situacao_mpa || '',
-    observacoes: record.observacoes || '',
-    senhaGovInss: record.senhagov_inss || '',
-    fotos: record.fotos || null,
-  }
+    codigoDoSocio: getString(record.codigo_do_socio),
+    codigoLocalidade: record.codigo_localidade
+      ? String(record.codigo_localidade)
+      : "",
+    nome: getString(record.nome),
+    apelido: getString(record.apelido),
+    cpf: getString(record.cpf),
+    dataDeNascimento: getString(record.data_de_nascimento),
+    dataDeAdmissao: getString(record.data_de_admissao),
+    sexo:
+      (getString(record.sexo) as MemberRegistrationForm["sexo"]) || "MASCULINO",
+    pai: getString(record.pai),
+    mae: getString(record.mae),
+    nacionalidade: getString(record.nacionalidade),
+    naturalidade: getString(record.naturalidade),
+    ufNaturalidade: getString(record.uf_naturalidade),
+    endereco: getString(record.endereco),
+    numero: getString(record.num),
+    bairro: getString(record.bairro),
+    cidade: getString(record.cidade),
+    uf: getString(record.uf),
+    cep: getString(record.cep),
+    telefone: getString(record.telefone),
+    email: getString(record.email),
+    estadoCivil:
+      (getString(
+        record.estado_civil,
+      ) as MemberRegistrationForm["estadoCivil"]) || "Solteiro(a)",
+    alfabetizado:
+      (getString(
+        record.alfabetizado,
+      ) as MemberRegistrationForm["alfabetizado"]) || "",
+    rg: getString(record.rg),
+    ufRg: getString(record.ssp),
+    dataExpedicaoRg: getString(record.dt_expedicao_rg),
+    tituloEleitor: getString(record.titulo),
+    zonaEleitoral: getString(record.zona),
+    secaoEleitoral: getString(record.secao),
+    caepf: getString(record.caepf),
+    cei: getString(record.cei),
+    nit: getString(record.nit),
+    rgp: getString(record.emb_rgp),
+    emissaoRgp: getString(record.emissao_rgp),
+    ufRgp: getString(record.rgp_uf),
+    situacao: parseSituacao(record.situacao),
+    observacoes: getString(record.observacoes),
+    senhaGovInss: getString(record.senhagov_inss),
+    escolaridade: getString(record.escolaridade) as EscolaridadeValue | "",
+    fotos: photos,
+    photoDelete: false,
+  };
 }

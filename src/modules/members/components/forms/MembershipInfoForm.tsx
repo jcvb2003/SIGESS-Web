@@ -1,95 +1,81 @@
-
-import { useFormContext } from "react-hook-form"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card"
-import { TextField } from "@/shared/components/form-fields/fields/TextField"
-import { DateField } from "@/shared/components/form-fields/fields/DateField"
-import { SelectField } from "@/shared/components/form-fields/fields/SelectField"
-import { TextareaField } from "@/shared/components/form-fields/fields/TextareaField"
-import { useLocalitiesData } from "@/modules/settings/hooks/useLocalitiesData"
-import { masks } from "@/shared/utils/masks"
-
+import { useFormContext } from "react-hook-form";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/shared/components/ui/card";
+import { TextField } from "@/shared/components/form-fields/fields/TextField";
+import { DateField } from "@/shared/components/form-fields/fields/DateField";
+import { SelectField } from "@/shared/components/form-fields/fields/SelectField";
+import { TextareaField } from "@/shared/components/form-fields/fields/TextareaField";
+import { masks } from "@/shared/utils/masks/inputMasks";
+import { MemberPhotoField } from "../form-fields/MemberPhotoField";
+import { ClipboardList } from "lucide-react";
 export function MembershipInfoForm() {
-  const { control } = useFormContext()
-  const { localities, loading } = useLocalitiesData()
-
-  const localityOptions = localities.map((locality) => ({
-    label: `${locality.code} - ${locality.name}`,
-    value: locality.code,
-  }))
-
+  const { control } = useFormContext();
   const situationOptions = [
-    { label: "ATIVO", value: "1 - ATIVO" },
-    { label: "APOSENTADO", value: "2 - APOSENTADO" },
-    { label: "FALECIDO", value: "3 - FALECIDO" },
-    { label: "TRANSFERIDO", value: "4 - TRANSFERIDO" },
-    { label: "CANCELADO", value: "5 - CANCELADO" },
-    { label: "SUSPENSO", value: "6 - SUSPENSO" },
-  ]
-
-  const situationMpaOptions = [
     { label: "ATIVO", value: "ATIVO" },
+    { label: "APOSENTADO", value: "APOSENTADO" },
+    { label: "FALECIDO", value: "FALECIDO" },
+    { label: "TRANSFERIDO", value: "TRANSFERIDO" },
+    { label: "CANCELADO", value: "CANCELADO" },
     { label: "SUSPENSO", value: "SUSPENSO" },
-  ]
-
+  ];
   return (
-    <Card className="border-border/50 shadow-sm">
-      <CardHeader>
-        <CardTitle className="text-base">Informações de registro</CardTitle>
+    <Card className="border-border/40 shadow-sm overflow-hidden">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-2 text-base font-semibold">
+          <ClipboardList className="h-4.5 w-4.5 text-primary/70" />
+          Informações de Registro
+        </CardTitle>
         <CardDescription>
           Código de registro, filiação e vinculação do sócio à entidade.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-3">
-          <TextField
-            control={control}
-            name="codigoDoSocio"
-            label="Código do sócio"
-            placeholder="Número de registro"
-            mask={masks.numbers}
-          />
 
-          <DateField
-            control={control}
-            name="dataDeAdmissao"
-            label="Data de filiação"
-          />
+      <CardContent className="space-y-6">
+        <div className="flex flex-col sm:flex-row gap-6">
+          <div className="flex justify-center sm:justify-start shrink-0">
+            <MemberPhotoField />
+          </div>
 
-          <SelectField
-            control={control}
-            name="codigoLocalidade"
-            label="Localidade"
-            placeholder={loading ? "Carregando..." : "Selecione a localidade"}
-            options={localityOptions}
-            disabled={loading}
-          />
-        </div>
+          <div className="flex-1 space-y-4">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+              <TextField
+                control={control}
+                name="codigoDoSocio"
+                label="Número de Registro"
+                placeholder="Número de registro do sócio"
+                mask={masks.numbers}
+              />
+              <DateField
+                control={control}
+                name="dataDeAdmissao"
+                label="Data de Cadastro"
+              />
+            </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <SelectField
-            control={control}
-            name="situacao"
-            label="Situação"
-            placeholder="Selecione a situação"
-            options={situationOptions}
-          />
-
-          <SelectField
-            control={control}
-            name="situacaoMpa"
-            label="Situação MPA"
-            placeholder="Selecione a situação MPA"
-            options={situationMpaOptions}
-          />
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+              <SelectField
+                control={control}
+                name="situacao"
+                label="Situação"
+                placeholder="Selecione a situação"
+                options={situationOptions}
+              />
+            </div>
+          </div>
         </div>
 
         <TextareaField
-            control={control}
-            name="observacoes"
-            label="Observações"
-            placeholder="Observações gerais sobre o cadastro"
+          control={control}
+          name="observacoes"
+          label="Observações"
+          placeholder="Observações sobre o sócio"
         />
       </CardContent>
     </Card>
-  )
+  );
 }

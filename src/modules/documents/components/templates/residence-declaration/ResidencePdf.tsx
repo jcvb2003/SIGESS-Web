@@ -1,1 +1,0 @@
-// ResidencePdf.tsx

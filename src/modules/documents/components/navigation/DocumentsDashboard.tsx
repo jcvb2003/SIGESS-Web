@@ -1,77 +1,243 @@
-import { useState } from "react"
-import { DefesoRequestDocument } from "../templates/defeso-request/DefesoRequestDocument"
-import { useDocumentMember } from "../../context/DocumentMemberContext"
-import { Card } from "@/shared/components/ui/card"
-import { Button } from "@/shared/components/ui/button"
-import { FileText, Gavel } from "lucide-react"
-import { WitnessDialog } from "../modals/WitnessDialog"
-import { toast } from "sonner"
-
+import { useState } from "react";
+import { DefesoRequestDocument } from "../templates/defeso-request/DefesoRequestDocument";
+import { useDocumentMember } from "../../context/useDocumentMember";
+import { Button } from "@/shared/components/ui/button";
+import { FileText, Gavel, Loader2, Search, ChevronRight } from "lucide-react";
+import { WitnessDialog } from "../modals/WitnessDialog";
+import { toast } from "sonner";
+import { usePdfTemplates } from "../../hooks/usePdfTemplates";
+import { pdfService } from "../../services/pdf/pdfService";
+import { processSimpleStatementData } from "../../services/pdf/pdfDataProcessor";
+import { useEntityData } from "@/shared/hooks/useEntityData";
+import { MemberSelect } from "../member-selector/MemberSelect";
+import { DocumentTemplate } from "@/modules/settings/types/settings.types";
 export function DocumentsDashboard() {
-  const { selectedMember } = useDocumentMember()
-  const [activeModal, setActiveModal] = useState<'residence' | 'representation' | null>(null)
-
+  const { selectedMember, fullMemberData } = useDocumentMember();
+  const { entity } = useEntityData();
+  const [activeModal, setActiveModal] = useState<
+    "residence" | "representation" | null
+  >(null);
+  const {
+    residenceTemplates,
+    representationTemplates,
+    defesoTemplates,
+    isLoading: isLoadingTemplates,
+  } = usePdfTemplates();
   if (!selectedMember) {
     return (
-      <Card className="p-8 text-center text-muted-foreground bg-muted/10 border-dashed">
-        Selecione um sócio acima para visualizar os modelos de documentos disponíveis.
-      </Card>
-    )
+      <MemberSelect>
+        <div className="flex items-center gap-4 p-4 border rounded-lg bg-card text-card-foreground shadow-sm mt-4 hover:bg-muted/50 transition-colors cursor-pointer group">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
+            <Search className="h-6 w-6" />
+          </div>
+          <div className="flex-1 flex flex-col items-start gap-1">
+            <h3 className="font-semibold text-lg">Buscar Sócio</h3>
+            <p className="text-sm text-muted-foreground">
+              Clique para pesquisar por nome, CPF ou matrícula
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="shrink-0 text-muted-foreground group-hover:text-primary transition-colors"
+          >
+            <ChevronRight className="h-6 w-6" />
+          </Button>
+        </div>
+      </MemberSelect>
+    );
   }
-
-  const handleGenerateResidence = (witnesses?: { witness1: { name: string, cpf: string }, witness2: { name: string, cpf: string } }) => {
-    console.log("Gerando Declaração de Residência", { witnesses })
-    toast.success("Declaração de Residência gerada com sucesso!")
-    // Aqui virá a lógica real de geração de PDF
+  const handleGenerateResidence = async (data: {
+    witnesses?: {
+      witness1: {
+        name: string;
+        cpf: string;
+        rg: string;
+      };
+      witness2: {
+        name: string;
+        cpf: string;
+        rg: string;
+      };
+    };
+    modelId?: string;
+    documentDate?: string;
+  }) => {
+    if (!fullMemberData || !data.modelId) {
+      toast.error("Dados incompletos para geração do documento.");
+      return;
+    }
+    const model = residenceModels.find((m) => m.id === data.modelId);
+    if (!model || !model.fileUrl) {
+      toast.error("Modelo inválido.");
+      return;
+    }
+    const toastId = toast.loading("Gerando Declaração de Residência...");
+    try {
+      const witnessData: Record<string, string> = {};
+      if (data.witnesses) {
+        if (data.witnesses.witness1) {
+          witnessData["nome_testemunha1"] = data.witnesses.witness1.name || "";
+          witnessData["cpf_testemunha1"] = data.witnesses.witness1.cpf || "";
+          witnessData["rg_testemunha1"] = data.witnesses.witness1.rg || "";
+        }
+        if (data.witnesses.witness2) {
+          witnessData["nome_testemunha2"] = data.witnesses.witness2.name || "";
+          witnessData["cpf_testemunha2"] = data.witnesses.witness2.cpf || "";
+          witnessData["rg_testemunha2"] = data.witnesses.witness2.rg || "";
+        }
+      }
+      const dataMap = processSimpleStatementData(
+        fullMemberData,
+        entity ?? null,
+        witnessData,
+        data.documentDate,
+      );
+      const success = await pdfService.generatePdfDocument(
+        model as unknown as DocumentTemplate,
+        dataMap,
+        `declaracao_residencia_${fullMemberData.cpf}.pdf`,
+      );
+      if (success) {
+        toast.success("Declaração de Residência gerada com sucesso!", {
+          id: toastId,
+        });
+      } else {
+        toast.dismiss(toastId);
+      }
+    } catch (error) {
+      toast.error("Erro ao gerar documento.", { id: toastId });
+      console.error(error);
+    }
+  };
+  const handleGenerateRepresentation = async (data: {
+    witnesses?: {
+      witness1: {
+        name: string;
+        cpf: string;
+        rg: string;
+      };
+      witness2: {
+        name: string;
+        cpf: string;
+        rg: string;
+      };
+    };
+    modelId?: string;
+    documentDate?: string;
+  }) => {
+    if (!fullMemberData || !data.modelId) {
+      toast.error("Dados incompletos para geração do documento.");
+      return;
+    }
+    const model = representationModels.find((m) => m.id === data.modelId);
+    if (!model || !model.fileUrl) {
+      toast.error("Modelo inválido.");
+      return;
+    }
+    const toastId = toast.loading("Gerando Termo de Representação...");
+    try {
+      const witnessData: Record<string, string> = {};
+      if (data.witnesses) {
+        if (data.witnesses.witness1) {
+          witnessData["nome_testemunha1"] = data.witnesses.witness1.name || "";
+          witnessData["cpf_testemunha1"] = data.witnesses.witness1.cpf || "";
+          witnessData["rg_testemunha1"] = data.witnesses.witness1.rg || "";
+        }
+        if (data.witnesses.witness2) {
+          witnessData["nome_testemunha2"] = data.witnesses.witness2.name || "";
+          witnessData["cpf_testemunha2"] = data.witnesses.witness2.cpf || "";
+          witnessData["rg_testemunha2"] = data.witnesses.witness2.rg || "";
+        }
+      }
+      const dataMap = processSimpleStatementData(
+        fullMemberData,
+        entity ?? null,
+        witnessData,
+        data.documentDate,
+      );
+      const success = await pdfService.generatePdfDocument(
+        model as unknown as DocumentTemplate,
+        dataMap,
+        `termo_representacao_${fullMemberData.cpf}.pdf`,
+      );
+      if (success) {
+        toast.success("Termo de Representação gerado com sucesso!", {
+          id: toastId,
+        });
+      } else {
+        toast.dismiss(toastId);
+      }
+    } catch (error) {
+      toast.error("Erro ao gerar documento.", { id: toastId });
+      console.error(error);
+    }
+  };
+  const residenceModels = residenceTemplates;
+  const representationModels = representationTemplates;
+  const defesoModels = defesoTemplates;
+  if (isLoadingTemplates) {
+    return (
+      <div className="flex h-40 w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
-
-  const handleGenerateRepresentation = (witnesses?: { witness1: { name: string, cpf: string }, witness2: { name: string, cpf: string } }) => {
-    console.log("Gerando Termo de Representação", { witnesses })
-    toast.success("Termo de Representação gerado com sucesso!")
-    // Aqui virá a lógica real de geração de PDF
-  }
-
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Button 
-          variant="outline" 
-          className="h-24 flex flex-col items-center justify-center gap-2 hover:bg-muted/50 border-dashed" 
-          onClick={() => setActiveModal('residence')}
+      <div className="grid grid-cols-2 gap-4">
+        <Button
+          variant="outline"
+          className="h-auto min-h-24 py-4 flex flex-col items-center justify-center gap-2 hover:bg-muted/50 border-dashed text-center whitespace-normal"
+          onClick={() => setActiveModal("residence")}
+          disabled={residenceModels.length === 0}
         >
-          <FileText className="h-8 w-8 text-muted-foreground" />
-          <span className="font-medium">Declaração de Residência</span>
+          <FileText className="h-8 w-8 text-muted-foreground shrink-0" />
+          <span className="font-medium text-sm sm:text-base leading-tight">
+            Declaração de Residência
+          </span>
+          {residenceModels.length === 0 && (
+            <span className="text-xs text-muted-foreground">(Sem modelos)</span>
+          )}
         </Button>
-        
-        <Button 
-          variant="outline" 
-          className="h-24 flex flex-col items-center justify-center gap-2 hover:bg-muted/50 border-dashed" 
-          onClick={() => setActiveModal('representation')}
+
+        <Button
+          variant="outline"
+          className="h-auto min-h-24 py-4 flex flex-col items-center justify-center gap-2 hover:bg-muted/50 border-dashed text-center whitespace-normal"
+          onClick={() => setActiveModal("representation")}
+          disabled={representationModels.length === 0}
         >
-          <Gavel className="h-8 w-8 text-muted-foreground" />
-          <span className="font-medium">Termo de Representação</span>
+          <Gavel className="h-8 w-8 text-muted-foreground shrink-0" />
+          <span className="font-medium text-sm sm:text-base leading-tight">
+            Termo de Representação
+          </span>
+          {representationModels.length === 0 && (
+            <span className="text-xs text-muted-foreground">(Sem modelos)</span>
+          )}
         </Button>
-      </div>
-      
-      <div className="bg-card border rounded-xl p-6 shadow-sm">
-        <DefesoRequestDocument />
       </div>
 
-      <WitnessDialog 
-        open={activeModal === 'residence'} 
+      <div className="bg-card border rounded-xl p-6 shadow-sm">
+        <DefesoRequestDocument availableModels={defesoModels} />
+      </div>
+
+      <WitnessDialog
+        open={activeModal === "residence"}
         onOpenChange={(open) => !open && setActiveModal(null)}
         title="Declaração de Residência"
-        description="Preencha os dados das testemunhas caso necessário para a Declaração de Residência."
+        description="Selecione o modelo e preencha os dados das testemunhas caso necessário."
         onConfirm={handleGenerateResidence}
+        availableModels={residenceModels}
       />
 
-      <WitnessDialog 
-        open={activeModal === 'representation'} 
+      <WitnessDialog
+        open={activeModal === "representation"}
         onOpenChange={(open) => !open && setActiveModal(null)}
         title="Termo de Representação"
-        description="Preencha os dados das testemunhas caso necessário para o Termo de Representação."
+        description="Selecione o modelo e preencha os dados das testemunhas caso necessário."
         onConfirm={handleGenerateRepresentation}
+        availableModels={representationModels}
       />
     </div>
-  )
+  );
 }

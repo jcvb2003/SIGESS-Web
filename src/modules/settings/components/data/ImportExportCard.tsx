@@ -1,8 +1,13 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
-import { FileSpreadsheet } from 'lucide-react'
-import { ImportDialog } from './dialogs/ImportDialog'
-import { ExportDialog } from './dialogs/ExportDialog'
-
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/shared/components/ui/card";
+import { FileSpreadsheet } from "lucide-react";
+import { ImportDialog } from "./dialogs/ImportDialog";
+import { ExportDialog } from "./dialogs/ExportDialog";
 export function ImportExportCard() {
   return (
     <Card className="border-border/50 shadow-sm h-full">
@@ -20,5 +25,5 @@ export function ImportExportCard() {
         <ExportDialog />
       </CardContent>
     </Card>
-  )
+  );
 }

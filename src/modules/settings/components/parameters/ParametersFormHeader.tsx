@@ -1,14 +1,20 @@
-import { CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card'
-import { Settings as SettingsIcon } from 'lucide-react'
-import { Button } from '@/shared/components/ui/button'
-
+import {
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/shared/components/ui/card";
+import { Settings as SettingsIcon } from "lucide-react";
+import { Button } from "@/shared/components/ui/button";
 interface ParametersFormHeaderProps {
-  onSave?: () => void
-  isSaving?: boolean
-  isDisabled?: boolean
+  onSave?: () => void;
+  isSaving?: boolean;
+  isDisabled?: boolean;
 }
-
-export function ParametersFormHeader({ onSave, isSaving, isDisabled }: ParametersFormHeaderProps) {
+export function ParametersFormHeader({
+  onSave,
+  isSaving,
+  isDisabled,
+}: ParametersFormHeaderProps) {
   return (
     <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div className="flex items-center gap-3">
@@ -16,15 +22,23 @@ export function ParametersFormHeader({ onSave, isSaving, isDisabled }: Parameter
           <SettingsIcon className="h-4 w-4" />
         </div>
         <div>
-          <CardTitle className="text-lg">Parâmetros de Defeso e Publicação</CardTitle>
+          <CardTitle className="text-lg">
+            Parâmetros de Defeso e Publicação
+          </CardTitle>
           <CardDescription>
-            Configure períodos de defeso, dados de publicação e área de pesca usados nos documentos.
+            Configure períodos de defeso, dados de publicação e área de pesca
+            usados nos documentos.
           </CardDescription>
         </div>
       </div>
-      <Button type="submit" onClick={onSave} className="mt-2 md:mt-0" disabled={isDisabled}>
-        {isSaving ? 'Salvando...' : 'Salvar alterações'}
+      <Button
+        type="submit"
+        onClick={onSave}
+        className="mt-2 md:mt-0"
+        disabled={isDisabled}
+      >
+        {isSaving ? "Salvando..." : "Salvar alterações"}
       </Button>
     </CardHeader>
-  )
+  );
 }

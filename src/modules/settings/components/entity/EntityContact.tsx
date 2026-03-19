@@ -1,13 +1,15 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
-import { Input } from '@/shared/components/ui/input'
-import { Label } from '@/shared/components/ui/label'
-import { EntitySettings } from '../../types/settings.types'
-
-interface EntityContactProps {
-  entity?: EntitySettings
-}
-
-export function EntityContact({ entity }: EntityContactProps) {
+import { useFormContext } from "react-hook-form";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/shared/components/ui/card";
+import { TextField } from "@/shared/components/form-fields/fields/TextField";
+import { PhoneField } from "@/shared/components/form-fields/fields/PhoneField";
+import { EntityFormData } from "../../hooks/useEntityValidation";
+export function EntityContact() {
+  const { control } = useFormContext<EntityFormData>();
   return (
     <Card className="border-border/50 shadow-sm">
       <CardHeader>
@@ -15,36 +17,29 @@ export function EntityContact({ entity }: EntityContactProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="entity-phone-1">Telefone principal</Label>
-            <Input
-              id="entity-phone-1"
-              name="phone1"
-              placeholder="(00) 0000-0000"
-              defaultValue={entity?.phone1 ?? ''}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="entity-phone-2">Telefone secundário</Label>
-            <Input
-              id="entity-phone-2"
-              name="phone2"
-              placeholder="(00) 0 0000-0000"
-              defaultValue={entity?.phone2 ?? ''}
-            />
-          </div>
+          <PhoneField
+            control={control}
+            name="phone1"
+            label="Telefone principal"
+            placeholder="(00) 0000-0000"
+          />
+          <PhoneField
+            control={control}
+            name="phone2"
+            label="Telefone secundário"
+            placeholder="(00) 0 0000-0000"
+          />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="entity-email">E-mail institucional</Label>
-          <Input
-            id="entity-email"
+          <TextField
+            control={control}
             name="email"
-            type="email"
+            label="E-mail institucional"
             placeholder="contato@exemplo.org"
-            defaultValue={entity?.email ?? ''}
+            type="email"
           />
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

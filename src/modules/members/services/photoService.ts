@@ -1,111 +1,100 @@
-
-import { supabase } from '@/shared/lib/supabase/client'
-
+import { supabase } from "@/shared/lib/supabase/client";
+import { ServiceResponse } from "@/shared/services/base/serviceResponse";
 export const photoService = {
-  /**
-   * Obtém a URL da foto do sócio
-   * Adiciona timestamp para evitar cache do navegador quando a foto é atualizada
-   */
   async getPhotoUrl(cpf: string): Promise<string | null> {
-    if (!cpf) return null
-
-    // Remove caracteres não numéricos do CPF para garantir consistência
-    const cleanCpf = cpf.replace(/\D/g, '')
-
+    if (!cpf) return null;
+    const cleanCpf = cpf.replaceAll(/\D/g, "");
+    let formattedCpf = cleanCpf;
+    if (cleanCpf.length === 11) {
+      formattedCpf = `${cleanCpf.slice(0, 3)}.${cleanCpf.slice(3, 6)}.${cleanCpf.slice(6, 9)}-${cleanCpf.slice(9, 11)}`;
+    }
     try {
-      // Busca o registro na tabela de fotos apenas para confirmar existência
       const { data, error } = await supabase
-        .from('fotos')
-        .select('cpf')
-        .eq('cpf', cleanCpf)
-        .maybeSingle()
-
+        .from("fotos")
+        .select("foto_url")
+        .in("cpf", [cleanCpf, formattedCpf])
+        .limit(1)
+        .maybeSingle();
       if (error) {
-        console.error('Erro ao buscar foto:', error)
-        return null
+        console.error("Erro ao buscar foto:", error);
+        return null;
       }
-
-      // Se não encontrar registro, não tem foto
-      if (!data) return null
-
-      // Constrói a URL pública manualmente
-      const fileName = `${cleanCpf}.jpg`
-      const { data: publicUrlData } = supabase.storage
-        .from('fotos_socios')
-        .getPublicUrl(fileName)
-        
-      if (!publicUrlData.publicUrl) return null
-
-      // Retorna a URL direta (sem cache busting por timestamp pois não temos updated_at)
-      return publicUrlData.publicUrl
+      const url = data?.foto_url;
+      return typeof url === "string" ? url : null;
     } catch (error) {
-      console.error('Erro inesperado ao buscar foto:', error)
-      return null
+      console.error("Erro inesperado ao buscar foto:", error);
+      return null;
     }
   },
-
-  /**
-   * Faz upload da foto do sócio
-   */
-  async uploadPhoto(file: File, cpf: string): Promise<string | null> {
-    if (!cpf) throw new Error('CPF é obrigatório')
-    
-    const cleanCpf = cpf.replace(/\D/g, '')
-    const fileName = `${cleanCpf}.jpg`
-
-    // 1. Upload para o Storage
-    const { error: uploadError } = await supabase.storage
-      .from('fotos_socios')
-      .upload(fileName, file, {
-        upsert: true,
-        contentType: 'image/jpeg',
-        cacheControl: '0' // Evita cache no CDN
-      })
-
-    if (uploadError) throw uploadError
-
-    // 2. Obtém a URL pública
-    const { data: publicUrlData } = supabase.storage
-      .from('fotos_socios')
-      .getPublicUrl(fileName)
-
-    if (!publicUrlData.publicUrl) throw new Error('Erro ao gerar URL pública')
-
-    // 3. Atualiza a tabela de fotos (apenas registra o CPF)
-    const { error: dbError } = await supabase
-      .from('fotos')
-      .upsert({ 
-        cpf: cleanCpf
-      }, { onConflict: 'cpf' })
-
-    if (dbError) throw dbError
-
-    // Retorna a URL com timestamp atual para forçar atualização imediata na UI
-    return `${publicUrlData.publicUrl}?t=${Date.now()}`
+  async uploadPhoto(file: File, cpf: string): Promise<ServiceResponse<string>> {
+    try {
+      if (!cpf) return { data: null, error: new Error("CPF é obrigatório") };
+      const cleanCpf = cpf.replaceAll(/\D/g, "");
+      const formattedCpf = cleanCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+      const fileName = `${cleanCpf}.jpg`;
+      const { error: uploadError } = await supabase.storage
+        .from("fotos")
+        .upload(fileName, file, {
+          upsert: true,
+          contentType: "image/jpeg",
+          cacheControl: "0",
+        });
+      if (uploadError) {
+        console.error("Erro ao fazer upload da foto:", uploadError);
+        return { data: null, error: uploadError };
+      }
+      const { data: publicUrlData } = supabase.storage
+        .from("fotos")
+        .getPublicUrl(fileName);
+      if (!publicUrlData.publicUrl)
+        return { data: null, error: new Error("Erro ao gerar URL pública") };
+      const { error: dbError } = await supabase.from("fotos").upsert(
+        {
+          cpf: formattedCpf,
+          foto_url: publicUrlData.publicUrl,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "cpf" },
+      );
+      if (dbError) {
+        console.error("Erro ao atualizar tabela de fotos:", dbError);
+        return { data: null, error: dbError };
+      }
+      return {
+        data: `${publicUrlData.publicUrl}?t=${Date.now()}`,
+        error: null,
+      };
+    } catch (error) {
+      console.error("Erro inesperado ao fazer upload da foto:", error);
+      return { data: null, error: error as Error };
+    }
   },
-
-  /**
-   * Remove a foto do sócio
-   */
-  async deletePhoto(cpf: string): Promise<void> {
-    if (!cpf) return
-    
-    const cleanCpf = cpf.replace(/\D/g, '')
-    const fileName = `${cleanCpf}.jpg`
-
-    // 1. Remove do Storage
-    const { error: storageError } = await supabase.storage
-      .from('fotos_socios')
-      .remove([fileName])
-
-    if (storageError) console.error('Erro ao remover do storage:', storageError)
-
-    // 2. Remove da tabela
-    const { error: dbError } = await supabase
-      .from('fotos')
-      .delete()
-      .eq('cpf', cleanCpf)
-
-    if (dbError) throw dbError
-  }
-}
+  async deletePhoto(cpf: string): Promise<ServiceResponse<void>> {
+    try {
+      if (!cpf) return { data: null, error: null };
+      const cleanCpf = cpf.replaceAll(/\D/g, "");
+      const fileName = `${cleanCpf}.jpg`;
+      const { error: storageError } = await supabase.storage
+        .from("fotos")
+        .remove([fileName]);
+      if (storageError)
+        console.error("Erro ao remover do storage:", storageError);
+      let formattedCpf = cleanCpf;
+      if (cleanCpf.length === 11) {
+        formattedCpf = `${cleanCpf.slice(0, 3)}.${cleanCpf.slice(3, 6)}.${cleanCpf.slice(6, 9)}-${cleanCpf.slice(9, 11)}`;
+      }
+      const { error: dbError } = await supabase
+        .from("fotos")
+        .delete()
+        .in("cpf", [cleanCpf, cpf, formattedCpf]);
+      if (dbError) {
+        console.error("Erro ao remover da tabela de fotos:", dbError);
+        return { data: null, error: dbError };
+      }
+      return { data: null, error: null };
+    } catch (error) {
+      console.error("Erro inesperado ao deletar foto:", error);
+      return { data: null, error: error as Error };
+    }
+  },
+};

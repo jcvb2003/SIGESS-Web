@@ -1,7 +1,5 @@
-
-import { Control, FieldValues, Path } from "react-hook-form"
-import { SelectField } from "./SelectField"
-
+import { Control, FieldValues, Path } from "react-hook-form";
+import { SelectField } from "./SelectField";
 const states = [
   { value: "AC", label: "AC" },
   { value: "AL", label: "AL" },
@@ -30,17 +28,15 @@ const states = [
   { value: "SP", label: "SP" },
   { value: "SE", label: "SE" },
   { value: "TO", label: "TO" },
-]
-
+];
 interface StateSelectProps<T extends FieldValues> {
-  control: Control<T>
-  name: Path<T>
-  label?: string
-  placeholder?: string
-  className?: string
-  disabled?: boolean
+  control: Control<T>;
+  name: Path<T>;
+  label?: string;
+  placeholder?: string;
+  className?: string;
+  disabled?: boolean;
 }
-
 export function StateSelect<T extends FieldValues>({
   control,
   name,
@@ -59,5 +55,5 @@ export function StateSelect<T extends FieldValues>({
       className={className}
       disabled={disabled}
     />
-  )
+  );
 }

@@ -1,1 +1,0 @@
-// SearchTypeHint.tsx

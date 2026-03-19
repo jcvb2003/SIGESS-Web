@@ -1,5 +1,4 @@
-
-import { Control, FieldValues, Path } from "react-hook-form"
+import { Control, FieldValues, Path } from "react-hook-form";
 import {
   FormControl,
   FormDescription,
@@ -7,19 +6,19 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/shared/components/ui/form"
-import { Textarea } from "@/shared/components/ui/textarea"
-
+} from "@/shared/components/ui/form";
+import { Textarea } from "@/shared/components/ui/textarea";
+import { useFieldBackgroundColors } from "@/shared/hooks/useFieldBackgroundColors";
 interface TextareaFieldProps<T extends FieldValues> {
-  control: Control<T>
-  name: Path<T>
-  label: string
-  placeholder?: string
-  description?: string
-  className?: string
-  readOnly?: boolean
+  control: Control<T>;
+  name: Path<T>;
+  label: string;
+  placeholder?: string;
+  description?: string;
+  className?: string;
+  readOnly?: boolean;
+  autoUppercase?: boolean;
 }
-
 export function TextareaField<T extends FieldValues>({
   control,
   name,
@@ -28,7 +27,10 @@ export function TextareaField<T extends FieldValues>({
   description,
   className,
   readOnly,
+  autoUppercase,
 }: TextareaFieldProps<T>) {
+  const { getFieldBackgroundColor } = useFieldBackgroundColors();
+  const bgColor = getFieldBackgroundColor(name);
   return (
     <FormField
       control={control}
@@ -42,6 +44,13 @@ export function TextareaField<T extends FieldValues>({
               placeholder={placeholder}
               readOnly={readOnly}
               value={field.value || ""}
+              className={`${bgColor} ${autoUppercase ? "uppercase" : ""}`.trim()}
+              onChange={(e) => {
+                const value = autoUppercase
+                  ? e.target.value.toUpperCase()
+                  : e.target.value;
+                field.onChange(value);
+              }}
             />
           </FormControl>
           {description && <FormDescription>{description}</FormDescription>}
@@ -49,5 +58,5 @@ export function TextareaField<T extends FieldValues>({
         </FormItem>
       )}
     />
-  )
+  );
 }

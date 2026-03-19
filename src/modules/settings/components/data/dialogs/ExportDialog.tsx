@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,29 +6,24 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/shared/components/ui/dialog'
-import { Button } from '@/shared/components/ui/button'
-import { FileSpreadsheet, FileText, Download, Printer } from 'lucide-react'
-import { useDataImportExport } from '../../../hooks/useDataManagement'
-
+} from "@/shared/components/ui/dialog";
+import { Button } from "@/shared/components/ui/button";
+import { FileSpreadsheet, FileText, Download, Printer } from "lucide-react";
+import { useDataImportExport } from "../../../hooks/useDataManagement";
 interface ExportDialogProps {
-  trigger?: React.ReactNode
+  trigger?: React.ReactNode;
 }
-
 export function ExportDialog({ trigger }: ExportDialogProps) {
-  const [open, setOpen] = useState(false)
-  const { isExporting, exportToCsv, exportToXlsx } = useDataImportExport()
-
+  const [open, setOpen] = useState(false);
+  const { isExporting, exportToCsv, exportToXlsx } = useDataImportExport();
   const handleExportCsv = async () => {
-    await exportToCsv()
-    setOpen(false)
-  }
-
+    await exportToCsv();
+    setOpen(false);
+  };
   const handleExportXlsx = async () => {
-    await exportToXlsx()
-    setOpen(false)
-  }
-
+    await exportToXlsx();
+    setOpen(false);
+  };
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -96,5 +91,5 @@ export function ExportDialog({ trigger }: ExportDialogProps) {
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
