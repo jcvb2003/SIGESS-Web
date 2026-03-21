@@ -66,7 +66,11 @@ export function MemberDetailsModal({
   };
 
   const renderContent = () => {
-    if (isLoading) return <MemberDetailsSkeleton />;
+    // Enquanto carrega ou se não houver membro/id e não houver erro, mostra o skeleton.
+    // Isso evita o flash da tela de erro ao fechar o modal (quando memberId e member se tornam null).
+    if (isLoading || (!member && !error)) {
+      return <MemberDetailsSkeleton />;
+    }
 
     if (error || !member) {
       return (

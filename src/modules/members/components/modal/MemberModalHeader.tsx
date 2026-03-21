@@ -33,7 +33,7 @@ function MemberAvatar({
     setImageLoaded(false);
   }
 
-  const showSpinner = isLoading || (!!photoUrl && !imageLoaded);
+  const showSpinner = !imageLoaded && (isLoading || !!photoUrl);
 
   const getInitials = (name: string) => {
     return name
@@ -45,30 +45,34 @@ function MemberAvatar({
   };
 
   const renderAvatarContent = () => {
-    if (showSpinner) {
+    // Se não há foto e terminou de carregar o metadado, mostra as iniciais imediatamente
+    if (!photoUrl && !isLoading) {
       return (
-        <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin text-muted-foreground" />
-      );
-    }
-
-    if (photoUrl) {
-      return (
-        <img
-          src={photoUrl}
-          alt={member.nome}
-          className="h-full w-full object-cover"
-          onLoad={() => setImageLoaded(true)}
-        />
+        <div className="flex flex-col items-center gap-0.5 sm:gap-1 text-muted-foreground">
+          <User className="h-5 w-5 sm:h-8 sm:w-8 opacity-40" />
+          <span className="text-[10px] sm:text-sm font-bold tracking-wide">
+            {getInitials(member.nome)}
+          </span>
+        </div>
       );
     }
 
     return (
-      <div className="flex flex-col items-center gap-0.5 sm:gap-1 text-muted-foreground">
-        <User className="h-5 w-5 sm:h-8 sm:w-8 opacity-40" />
-        <span className="text-[10px] sm:text-sm font-bold tracking-wide">
-          {getInitials(member.nome)}
-        </span>
-      </div>
+      <>
+        {showSpinner && (
+          <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin text-muted-foreground" />
+        )}
+        {photoUrl && (
+          <img
+            src={photoUrl}
+            alt={member.nome}
+            onLoad={() => setImageLoaded(true)}
+            className={`h-full w-full object-cover transition-opacity duration-300 ${
+              imageLoaded ? "opacity-100" : "opacity-0 absolute"
+            }`}
+          />
+        )}
+      </>
     );
   };
 

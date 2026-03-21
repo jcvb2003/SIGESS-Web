@@ -7,14 +7,17 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/shared/components/ui/tabs";
+import { Loader2 } from "lucide-react";
 
 export function MemberDetailsSkeleton() {
   return (
     <>
       <DialogHeader className="px-5 sm:px-6 pt-5 sm:pt-6 pb-0">
         <div className="relative flex flex-row items-center sm:items-stretch gap-3 sm:gap-5 pb-3 sm:pb-5 border-b border-border/40">
-          {/* Avatar Skeleton */}
-          <Skeleton className="h-14 w-11 sm:h-[6.5rem] sm:w-[5rem] rounded-lg sm:rounded-xl shrink-0" />
+          {/* Avatar Skeleton with Spinner */}
+          <div className="h-14 w-11 sm:h-[6.5rem] sm:w-[5rem] rounded-lg sm:rounded-xl shrink-0 bg-muted/60 flex items-center justify-center border-2 border-border/10">
+            <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin text-muted-foreground/30" />
+          </div>
           
           <div className="flex flex-col items-start justify-center gap-1 sm:gap-2 flex-1">
             {/* Name Skeleton */}
