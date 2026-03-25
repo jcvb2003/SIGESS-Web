@@ -60,7 +60,9 @@ CREATE TABLE public."User" (
     id uuid NOT NULL PRIMARY KEY,
     email text,
     "createdAt" timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    role text DEFAULT 'user'::text
+    role text DEFAULT 'user'::text,
+    acesso_expira_em timestamp with time zone,
+    max_socios integer DEFAULT 5
 );
 
 CREATE TABLE public.templates (
@@ -232,7 +234,7 @@ VALUES ('fotos', 'fotos', true, NULL)
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO storage.buckets (id, name, public, file_size_limit) 
-VALUES ('documents', 'documents', true, 5242880)
+VALUES ('documentos', 'documentos', true, 5242880)
 ON CONFLICT (id) DO NOTHING;
 
 -- 7. STORAGE POLICIES
@@ -247,8 +249,8 @@ CREATE POLICY "Acesso total para usuários autenticados 1m4ctr_1" ON storage.obj
 CREATE POLICY "Acesso total para usuários autenticados 1m4ctr_2" ON storage.objects FOR UPDATE TO authenticated USING (bucket_id = 'fotos');
 CREATE POLICY "Acesso total para usuários autenticados 1m4ctr_3" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'fotos');
 
--- documents bucket policies
-CREATE POLICY "Acesso total para usuários autenticados flreew_0" ON storage.objects FOR UPDATE TO authenticated USING (bucket_id = 'documents');
-CREATE POLICY "Acesso total para usuários autenticados flreew_1" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'documents');
-CREATE POLICY "Acesso total para usuários autenticados flreew_2" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'documents');
-CREATE POLICY "Acesso total para usuários autenticados flreew_3" ON storage.objects FOR SELECT TO authenticated USING (bucket_id = 'documents');
+-- documentos bucket policies
+CREATE POLICY "Acesso total para usuários autenticados flreew_0" ON storage.objects FOR UPDATE TO authenticated USING (bucket_id = 'documentos');
+CREATE POLICY "Acesso total para usuários autenticados flreew_1" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'documentos');
+CREATE POLICY "Acesso total para usuários autenticados flreew_2" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'documentos');
+CREATE POLICY "Acesso total para usuários autenticados flreew_3" ON storage.objects FOR SELECT TO authenticated USING (bucket_id = 'documentos');

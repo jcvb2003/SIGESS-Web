@@ -11,7 +11,7 @@ import {
 const ENTITY_TABLE = "entidade";
 const PARAMETERS_TABLE = "parametros";
 const DOCUMENT_TEMPLATES_TABLE = "templates";
-const DOCUMENT_TEMPLATES_BUCKET = "documents";
+const DOCUMENT_TEMPLATES_BUCKET = "documentos";
 const LOCALITIES_TABLE = "localidades";
 const toStringValue = (value: unknown, fallback = ""): string => {
   if (value === null || value === undefined) {
