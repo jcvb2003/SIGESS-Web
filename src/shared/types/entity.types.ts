@@ -17,6 +17,8 @@ export interface EntitySettings {
   pole: string;
   foundation: string;
   county: string;
+  presidentName: string;
+  presidentCpf: string;
 }
 export const defaultEntitySettings: EntitySettings = {
   id: undefined,
@@ -37,4 +39,6 @@ export const defaultEntitySettings: EntitySettings = {
   pole: "",
   foundation: "",
   county: "",
+  presidentName: "",
+  presidentCpf: "",
 };

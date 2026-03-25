@@ -34,6 +34,8 @@ export type Database = {
           numero: string | null
           polo: string | null
           uf: string | null
+          nome_do_presidente: string | null
+          cpf_do_presidente: string | null
         }
         Insert: {
           bairro?: string | null
@@ -54,6 +56,8 @@ export type Database = {
           numero?: string | null
           polo?: string | null
           uf?: string | null
+          nome_do_presidente?: string | null
+          cpf_do_presidente?: string | null
         }
         Update: {
           bairro?: string | null
@@ -74,6 +78,8 @@ export type Database = {
           numero?: string | null
           polo?: string | null
           uf?: string | null
+          nome_do_presidente?: string | null
+          cpf_do_presidente?: string | null
         }
         Relationships: []
       }

@@ -32,6 +32,8 @@ export function EntityForm() {
       pole: "",
       foundation: "",
       county: "",
+      presidentName: "",
+      presidentCpf: "",
     },
   });
   useEffect(() => {
@@ -54,6 +56,8 @@ export function EntityForm() {
         pole: entity.pole || "",
         foundation: entity.foundation || "",
         county: entity.county || "",
+        presidentName: entity.presidentName || "",
+        presidentCpf: entity.presidentCpf || ""
       });
     }
   }, [entity, methods]);
@@ -77,6 +81,8 @@ export function EntityForm() {
       pole: data.pole ?? "",
       foundation: data.foundation ?? "",
       county: data.county ?? "",
+      presidentName: data.presidentName ?? "",
+      presidentCpf: data.presidentCpf ?? "",
     };
     await saveEntity(values);
   };

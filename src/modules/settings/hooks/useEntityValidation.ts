@@ -12,11 +12,15 @@ export const entitySchema = z.object({
   cep: z.string().optional(),
   phone1: z.string().optional(),
   phone2: z.string().optional(),
-  email: z.string().email("Email inválido").optional().or(z.literal("")),
+  email: z.string().optional().refine((val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+    message: "Email inválido",
+  }),
   federation: z.string().optional(),
   confederation: z.string().optional(),
   pole: z.string().optional(),
   foundation: z.string().optional(),
   county: z.string().optional(),
+  presidentName: z.string().optional(),
+  presidentCpf: z.string().optional(),
 });
 export type EntityFormData = z.infer<typeof entitySchema>;

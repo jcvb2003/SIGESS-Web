@@ -51,6 +51,20 @@ export function EntityInstitutional() {
             placeholder="Comarca"
           />
         </div>
+        <div className="grid gap-4 md:grid-cols-2 border-t pt-4 mt-4">
+          <TextField
+            control={control}
+            name="presidentName"
+            label="Nome do Presidente"
+            placeholder="Nome completo do presidente"
+          />
+          <TextField
+            control={control}
+            name="presidentCpf"
+            label="CPF do Presidente"
+            placeholder="000.000.000-00"
+          />
+        </div>
       </CardContent>
     </Card>
   );

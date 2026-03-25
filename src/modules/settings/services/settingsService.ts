@@ -17,7 +17,9 @@ const toStringValue = (value: unknown, fallback = ""): string => {
   if (value === null || value === undefined) {
     return fallback;
   }
-  return String(value);
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  return fallback;
 };
 export const settingsService = {
   async getEntity(): Promise<ServiceResponse<EntitySettings>> {
@@ -57,6 +59,8 @@ export const settingsService = {
           foundation: toStringValue(data.fundacao),
           county: toStringValue(data.comarca),
           number: toStringValue(data.numero),
+          presidentName: toStringValue(data.nome_do_presidente),
+          presidentCpf: toStringValue(data.cpf_do_presidente),
         }
         : null,
       error: null,
@@ -86,6 +90,8 @@ export const settingsService = {
         polo: settings.pole,
         fundacao: settings.foundation,
         comarca: settings.county,
+        nome_do_presidente: settings.presidentName,
+        cpf_do_presidente: settings.presidentCpf,
       })
       .select()
       .single();
@@ -180,21 +186,13 @@ export const settingsService = {
       .upsert(payload, { onConflict: "id" });
     if (error) {
       console.error("Erro ao salvar parâmetros:", error);
-      const normalizedError =
-        error instanceof Error
-          ? error
-          : new Error(
-            typeof error === "object" && error !== null && "message" in error
-              ? String(
-                (
-                  error as {
-                    message?: unknown;
-                  }
-                ).message ?? "Erro ao salvar parâmetros.",
-              )
-              : "Erro ao salvar parâmetros.",
-          );
-      return { data: null, error: normalizedError };
+      let errorMessage = "Erro ao salvar parâmetros.";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === "object" && error !== null && "message" in error) {
+        errorMessage = String((error as { message: unknown }).message);
+      }
+      return { data: null, error: new Error(errorMessage) };
     }
     return this.getParameters();
   },
@@ -265,18 +263,19 @@ export const settingsService = {
         const record = item as Record<string, unknown>;
         return {
           id: String(record.id),
-          name: String(record.name ?? ""),
-          documentType: String(record.document_type ?? ""),
-          filePath: String(record.file_path ?? ""),
-          fileUrl: String(record.file_url ?? ""),
+          name: toStringValue(record.name),
+          documentType: toStringValue(record.document_type),
+          filePath: toStringValue(record.file_path),
+          fileUrl: toStringValue(record.file_url),
           fileSize: Number(record.file_size ?? 0),
-          contentType: String(record.content_type ?? ""),
-          createdAt: record.created_at ? String(record.created_at) : "",
-          fontConfigurations: record.font_configurations
-            ? typeof record.font_configurations === "string"
+          contentType: toStringValue(record.content_type),
+          createdAt: record.created_at ? toStringValue(record.created_at) : "",
+          fontConfigurations: (() => {
+            if (!record.font_configurations) return undefined;
+            return typeof record.font_configurations === "string"
               ? record.font_configurations
-              : JSON.stringify(record.font_configurations)
-            : undefined,
+              : JSON.stringify(record.font_configurations);
+          })(),
         };
       });
       return { data: templates, error: null };
@@ -351,7 +350,7 @@ export const settingsService = {
       return { data: null, error: uploadError };
     }
     const { data: publicUrlData } = storage.getPublicUrl(uploadData.path);
-    const fileUrl = publicUrlData.publicUrl as string;
+    const fileUrl = publicUrlData.publicUrl;
     const { data, error } = await supabase
       .from(DOCUMENT_TEMPLATES_TABLE)
       .insert({
@@ -375,15 +374,15 @@ export const settingsService = {
     return {
       data: {
         id: String(record.id),
-        name: String(record.name ?? ""),
-        documentType: String(record.document_type ?? ""),
-        filePath: String(record.file_path ?? ""),
-        fileUrl: String(record.file_url ?? ""),
+        name: toStringValue(record.name),
+        documentType: toStringValue(record.document_type),
+        filePath: toStringValue(record.file_path),
+        fileUrl: toStringValue(record.file_url),
         fileSize: Number(record.file_size ?? 0),
-        contentType: String(record.content_type ?? ""),
-        createdAt: record.created_at ? String(record.created_at) : "",
+        contentType: toStringValue(record.content_type),
+        createdAt: record.created_at ? toStringValue(record.created_at) : "",
         fontConfigurations: record.font_configurations
-          ? String(record.font_configurations)
+          ? toStringValue(record.font_configurations)
           : undefined,
       },
       error: null,
