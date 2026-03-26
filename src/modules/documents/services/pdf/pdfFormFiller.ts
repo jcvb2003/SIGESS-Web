@@ -8,11 +8,7 @@ import {
 import { findField } from "./fieldFinder/fieldFinder";
 import { FieldFontConfig } from "./fontExtraction/fontExtractor";
 import { getFont } from "./fontConfiguration/fontConfig";
-import {
-  getPdfFieldMappingsRequerimento,
-  getPdfFieldMappingsResidencia,
-  getPdfFieldMappingsTermoRepresentacao,
-} from "./pdfFieldMappings";
+import { getPdfFieldMappings } from "./pdfFieldMappings";
 async function applyFieldConfig(
   field: PDFTextField,
   pdfDoc: PDFDocument,
@@ -45,83 +41,59 @@ async function applyFieldConfig(
     }
   }
 }
+async function processPdfField(
+  field: PDFTextField | PDFCheckBox,
+  value: string,
+  pdfDoc?: PDFDocument,
+  fieldConfigurations?: FieldFontConfig[],
+): Promise<boolean> {
+  try {
+    if (field instanceof PDFTextField) {
+      field.setText(value);
+      if (pdfDoc && fieldConfigurations) {
+        await applyFieldConfig(field, pdfDoc, fieldConfigurations);
+      }
+    } else if (field instanceof PDFCheckBox) {
+      if (value === "true" || value === "1" || value.toLowerCase() === "sim") {
+        field.check();
+      } else {
+        field.uncheck();
+      }
+    }
+    return true;
+  } catch (e) {
+    console.warn(`Erro ao preencher campo ${field.getName()}`, e);
+    return false;
+  }
+}
+
 export async function fillPdfForm(
   form: PDFForm,
   data: Record<string, string>,
-  fileName: string,
   pdfDoc?: PDFDocument,
   fieldConfigurations?: FieldFontConfig[],
 ): Promise<number> {
-  let mapping: Record<string, string[]> = {};
-  if (fileName.toLowerCase().includes("requerimento_defeso")) {
-    mapping = getPdfFieldMappingsRequerimento();
-  } else if (fileName.toLowerCase().includes("declaracao_residencia")) {
-    mapping = getPdfFieldMappingsResidencia();
-  } else if (fileName.toLowerCase().includes("termo_representacao")) {
-    mapping = getPdfFieldMappingsTermoRepresentacao();
-  }
+  const mapping = getPdfFieldMappings();
   let filledCount = 0;
-  const hasMapping = Object.keys(mapping).length > 0;
-  if (hasMapping) {
-    for (const [dataKey, possibleFieldNames] of Object.entries(mapping)) {
-      const value = data[dataKey];
-      if (!value) continue;
-      for (const pdfFieldName of possibleFieldNames) {
-        const field = findField(form, pdfFieldName);
-        if (field) {
-          try {
-            if (field instanceof PDFTextField) {
-              field.setText(value);
-              if (pdfDoc && fieldConfigurations) {
-                await applyFieldConfig(field, pdfDoc, fieldConfigurations);
-              }
-            } else if (field instanceof PDFCheckBox) {
-              if (
-                value === "true" ||
-                value === "1" ||
-                value.toLowerCase() === "sim"
-              ) {
-                field.check();
-              } else {
-                field.uncheck();
-              }
-            }
-            filledCount++;
-            break;
-          } catch (e) {
-            console.warn(`Erro ao preencher campo mapeado ${pdfFieldName}`, e);
-          }
-        }
-      }
-    }
-  } else {
-    for (const [key, value] of Object.entries(data)) {
-      if (!value) continue;
-      const field = findField(form, key);
-      if (field) {
-        try {
-          if (field instanceof PDFTextField) {
-            field.setText(value);
-            if (pdfDoc && fieldConfigurations) {
-              await applyFieldConfig(field, pdfDoc, fieldConfigurations);
-            }
-          } else if (field instanceof PDFCheckBox) {
-            if (
-              value === "true" ||
-              value === "1" ||
-              value.toLowerCase() === "sim"
-            ) {
-              field.check();
-            } else {
-              field.uncheck();
-            }
-          }
-          filledCount++;
-        } catch (e) {
-          console.warn(`Erro ao preencher campo genérico ${key}`, e);
-        }
-      }
+
+  for (const [dataKey, fieldNames] of Object.entries(mapping)) {
+    const value = data[dataKey];
+    if (!value) continue;
+
+    const pdfFieldName = fieldNames[0];
+    const field = findField(form, pdfFieldName);
+    if (!field) continue;
+
+    const success = await processPdfField(
+      field,
+      value,
+      pdfDoc,
+      fieldConfigurations,
+    );
+    if (success) {
+      filledCount++;
     }
   }
+
   return filledCount;
 }

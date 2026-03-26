@@ -26,80 +26,61 @@ export function processDocumentData(
   const dia = String(today.getDate()).padStart(2, "0");
   const mes = String(today.getMonth() + 1).padStart(2, "0");
   const ano = String(today.getFullYear());
+  const entityStreet = entity?.street || "";
+  const entityNumber = entity?.number ? `, ${entity.number}` : "";
+
+  let enderecoCompleto = member.endereco || "";
+  if (member.num || member.numero) {
+    enderecoCompleto += `, ${member.num || member.numero}`;
+  }
+  if (member.bairro) {
+    enderecoCompleto += ` - ${member.bairro}`;
+  }
+
   const map: Record<string, string> = {
+    // Membro / Requerente
     nome: member.nome || "",
-    nome_completo: member.nome || "",
     cpf: member.cpf || "",
     rg: member.rg || "",
-    data_nascimento: dataNascimento,
-    dtnascimento: dataNascimento,
     dtnasc: dataNascimento,
-    rgp: member.rgp || "",
+    data_filiacao: member.data_de_admissao ? formatDate(member.data_de_admissao) : "",
+    mae: member.mae || "",
     nit: member.nit || "",
     cei: member.cei || "",
     endereco: member.endereco || "",
-    logradouro: member.endereco || "",
+    endereco_completo: enderecoCompleto,
     num: member.num || member.numero || "",
-    numero: member.num || member.numero || "",
     complemento: "",
     bairro: member.bairro || "",
     cidade: member.cidade || "",
-    municipio: member.cidade || "",
     uf: member.uf || "",
-    "UF de residência": member.uf || "",
     cep: member.cep || "",
-    CEP: member.cep || "",
     telefone: member.telefone || "",
-    celular: member.telefone || "",
-    matricula: member.codigo_do_socio || "",
-    Matrícula: member.codigo_do_socio || "",
-    endereco_completo: `${member.endereco || ""}, ${member.num || member.numero || ""} - ${member.bairro || ""}, ${member.cidade || ""}/${member.uf || ""}`,
-    data_atual: dataAtual,
-    data: dataAtual,
-    local: member.cidade || "",
-    local_assinatura: `${member.cidade || ""} - ${member.uf || ""}`,
-    Email: member.email || "",
+    email: member.email || "",
+    estado_civil: member.estado_civil || "",
+
+    // Dados auxiliares (não mapeados diretamente a campos de PDF)
     dia: dia,
     mes: mes,
     ano: ano,
-    estado_civil: member.estado_civil || "",
-    mae: member.mae || "",
-    nome_mae: member.mae || "",
-    pai: member.pai || "",
-    nome_pai: member.pai || "",
     nacionalidade: member.nacionalidade || "",
     naturalidade: member.naturalidade || "",
     escolaridade: member.escolaridade || "",
-    observacoes: member.observacoes || "",
-    nome_abreviado: entity?.shortName || entity?.name || "",
-    cnpj: entity?.cnpj || "",
-    nome_entidade: entity?.name || "",
-    Nome: member.nome || "",
-    NomeCompleto: member.nome || "",
-    RGP: member.rgp || "",
-    NIT: member.nit || "",
-    Endereco: member.endereco || "",
-    Logradouro: member.endereco || "",
-    Numero: member.num || member.numero || "",
-    Bairro: member.bairro || "",
-    Cidade: member.cidade || "",
-    Municipio: member.cidade || "",
-    Telefone: member.telefone || "",
-    Celular: member.telefone || "",
-    Matricula: member.codigo_do_socio || "",
-    outorgante: member.nome || "",
-    outorgante_cpf: member.cpf || "",
-    outorgante_rg: member.rg || "",
-    outorgante_endereco: `${member.endereco || ""}, ${member.num || member.numero || ""} - ${member.bairro || ""}, ${member.cidade || ""}/${member.uf || ""}`,
-    declarada: member.nome || "",
-    declarada_cpf: member.cpf || "",
-    declarada_rg: member.rg || "",
-    residente: member.nome || "",
+
+    // Entidade Administrativa
+    entidade_nome: entity?.name || "",
+    entidade_cnpj: entity?.cnpj || "",
+    entidade_endereco: `${entityStreet}${entityNumber}`,
+    entidade_cidade: entity?.city || "",
+    nome_presidente: entity?.presidentName || "",
+    cpf_presidente: entity?.presidentCpf || "",
+
+    // Embarcação / RGP
     emb_rgp: member.emb_rgp || member.rgp || "",
-    "Número do RGP": member.emb_rgp || member.rgp || "",
     rgp_uf: member.rgp_uf || member.uf_rgp || member.uf || "",
-    rgp_data: dataRgp,
     data_rgp: dataRgp,
+
+    // Defeso / Portarias
     nrpub: additionalData["publicationNumber"] || "",
     dtpub: additionalData["publicationDate"]
       ? formatDate(additionalData["publicationDate"])
@@ -118,24 +99,11 @@ export function processDocumentData(
       ? formatDate(additionalData["defeso2End"])
       : "",
     especie_proibidas: additionalData["defesoSpecies"] || "",
-    "Número da Portaria": additionalData["publicationNumber"] || "",
-    "Data da publicação da portaria": additionalData["publicationDate"]
-      ? formatDate(additionalData["publicationDate"])
-      : "",
-    "Início do Primeiro Período": additionalData["defeso1Start"]
-      ? formatDate(additionalData["defeso1Start"])
-      : "",
-    "Fim do Primeiro Período": additionalData["defeso1End"]
-      ? formatDate(additionalData["defeso1End"])
-      : "",
-    "Início do segundo período": additionalData["defeso2Start"]
-      ? formatDate(additionalData["defeso2Start"])
-      : "",
-    "Fim do segundo período": additionalData["defeso2End"]
-      ? formatDate(additionalData["defeso2End"])
-      : "",
-    "Espécies proibidas": additionalData["defesoSpecies"] || "",
-    Área: additionalData["fishingArea"] || "",
+
+    // Assinatura e Local
+    local_assinatura: `${member.cidade || ""} - ${member.uf || ""}`,
+    data_atual: dataAtual,
+    data: dataAtual,
   };
   return { ...map, ...additionalData };
 }

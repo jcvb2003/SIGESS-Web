@@ -27,6 +27,7 @@ export function EntityAddress() {
               name="street"
               label="Logradouro"
               placeholder="Rua, Avenida, etc."
+              autoUppercase={true}
             />
           </div>
         </div>
@@ -45,6 +46,7 @@ export function EntityAddress() {
               name="district"
               label="Bairro"
               placeholder="Bairro"
+              autoUppercase={true}
             />
           </div>
         </div>
@@ -55,6 +57,7 @@ export function EntityAddress() {
               name="city"
               label="Cidade"
               placeholder="Nome da cidade"
+              autoUppercase={true}
             />
           </div>
           <div className="md:col-span-1">

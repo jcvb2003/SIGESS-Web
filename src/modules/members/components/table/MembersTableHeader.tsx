@@ -9,7 +9,7 @@ interface MembersTableHeaderProps {
 export function MembersTableHeader({
   sortConfig,
   onSort,
-}: MembersTableHeaderProps) {
+}: Readonly<MembersTableHeaderProps>) {
   const getSortIcon = (field: string) => {
     if (sortConfig.field !== field)
       return <ArrowUpDown className="ml-1 h-3 w-3" />;
@@ -43,7 +43,7 @@ export function MembersTableHeader({
           onClick={() => onSort("data_de_admissao")}
         >
           <div className="flex items-center">
-            Data de admissão {getSortIcon("data_de_admissao")}
+            Data de filiação {getSortIcon("data_de_admissao")}
           </div>
         </TableHead>
         <TableHead className="px-1 py-1 md:px-6 md:py-4 whitespace-nowrap">

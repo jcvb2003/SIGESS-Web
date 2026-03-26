@@ -53,7 +53,7 @@ export function MembershipInfoForm() {
               <DateField
                 control={control}
                 name="dataDeAdmissao"
-                label="Data de Cadastro"
+                label="Data de filiação"
               />
             </div>
 

@@ -39,8 +39,8 @@ class PdfFontExtractor {
       return null;
     }
   }
-  private fontConfigCache = new Map<string, FontConfiguration>();
-  private fieldConfigCache = new Map<string, FieldFontConfig>();
+  private readonly fontConfigCache = new Map<string, FontConfiguration>();
+  private readonly fieldConfigCache = new Map<string, FieldFontConfig>();
   public clearCache(): void {
     this.fontConfigCache.clear();
     this.fieldConfigCache.clear();
@@ -89,7 +89,7 @@ class PdfFontExtractor {
     const cleanFontName = fontName
       .toLowerCase()
       .trim()
-      .replace(/[^a-z0-9\-_]/g, "");
+      .replaceAll(/[^a-z0-9\-_]/g, "");
     if (cleanFontName.length === 0) {
       this.warn(
         "Nome da fonte vazio após limpeza, usando helvetica como padrão",
@@ -99,7 +99,7 @@ class PdfFontExtractor {
     return cleanFontName;
   }
   private validateFontSize(fontSize: number): number {
-    if (typeof fontSize !== "number" || isNaN(fontSize) || fontSize <= 0) {
+    if (typeof fontSize !== "number" || Number.isNaN(fontSize) || fontSize <= 0) {
       this.warn("Tamanho da fonte inválido, usando 12 como padrão");
       return 12;
     }
@@ -161,7 +161,7 @@ class PdfFontExtractor {
         fontNames.add("Courier");
       }
       this.log("Fontes encontradas:", [...fontNames]);
-      return [...fontNames].sort();
+      return [...fontNames].sort((a, b) => a.localeCompare(b));
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "erro desconhecido";
@@ -253,8 +253,8 @@ class PdfFontExtractor {
       this.warn("Default Appearance não encontrado");
       return this.validateFontName("");
     }
-    const fontMatch = defaultAppearance.match(/\/(\w+)\s+[\d.]+\s+Tf/);
-    if (fontMatch && fontMatch[1]) {
+    const fontMatch = /\/(\w+)\s+[\d.]+\s+Tf/.exec(defaultAppearance);
+    if (fontMatch?.[1]) {
       const extractedFont = fontMatch[1];
       this.log(`Nome da fonte extraído: ${extractedFont}`);
       return this.validateFontName(extractedFont);
@@ -273,9 +273,9 @@ class PdfFontExtractor {
       this.warn("Default Appearance não encontrado");
       return this.validateFontSize(12);
     }
-    const sizeMatch = defaultAppearance.match(/\/\w+\s+([\d.]+)\s+Tf/);
-    if (sizeMatch && sizeMatch[1]) {
-      const extractedSize = parseFloat(sizeMatch[1]);
+    const sizeMatch = /\/\w+\s+([\d.]+)\s+Tf/.exec(defaultAppearance);
+    if (sizeMatch?.[1]) {
+      const extractedSize = Number.parseFloat(sizeMatch[1]);
       this.log(`Tamanho da fonte extraído: ${extractedSize}`);
       return this.validateFontSize(extractedSize);
     }
@@ -298,7 +298,7 @@ class PdfFontExtractor {
         const qValue =
           typeof quadding === "number"
             ? quadding
-            : parseInt(quadding.toString());
+            : Number.parseInt(quadding.toString(), 10);
         let alignment: string;
         switch (qValue) {
           case 0:

@@ -53,7 +53,7 @@ export const pdfService = {
       const fields = form.getFields();
       const fieldNames = fields.map((f) => f.getName());
       console.log("Campos disponíveis no PDF:", fieldNames);
-      const filledCount = await fillPdfForm(form, data, fileName);
+      const filledCount = await fillPdfForm(form, data);
       if (filledCount === 0) {
         console.warn(
           "Nenhum campo do formulário foi preenchido automaticamente.",

@@ -21,12 +21,14 @@ export function EntityInstitutional() {
             name="federation"
             label="Federação"
             placeholder="Nome da federação"
+            autoUppercase={true}
           />
           <TextField
             control={control}
             name="confederation"
             label="Confederação"
             placeholder="Nome da confederação"
+            autoUppercase={true}
           />
         </div>
         <div className="grid gap-4 md:grid-cols-2">
@@ -35,6 +37,7 @@ export function EntityInstitutional() {
             name="pole"
             label="Polo"
             placeholder="Polo"
+            autoUppercase={true}
           />
           <TextField
             control={control}
@@ -49,6 +52,7 @@ export function EntityInstitutional() {
             name="county"
             label="Comarca"
             placeholder="Comarca"
+            autoUppercase={true}
           />
         </div>
         <div className="grid gap-4 md:grid-cols-2 border-t pt-4 mt-4">
@@ -57,6 +61,7 @@ export function EntityInstitutional() {
             name="presidentName"
             label="Nome do Presidente"
             placeholder="Nome completo do presidente"
+            autoUppercase={true}
           />
           <TextField
             control={control}

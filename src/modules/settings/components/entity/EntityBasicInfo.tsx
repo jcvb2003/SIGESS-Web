@@ -22,12 +22,14 @@ export function EntityBasicInfo() {
             name="name"
             label="Nome completo da entidade"
             placeholder="Nome do sindicato"
+            autoUppercase={true}
           />
           <TextField
             control={control}
             name="shortName"
             label="Nome abreviado"
             placeholder="Sigla / abreviação"
+            autoUppercase={true}
           />
         </div>
         <div className="space-y-2 md:max-w-sm">
