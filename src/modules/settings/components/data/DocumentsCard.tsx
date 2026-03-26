@@ -78,6 +78,9 @@ export function DocumentsCard() {
       setSelectedFile(null);
       setName("");
       setDocumentType("");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     },
     onError: (error: unknown) => {
       const message =
