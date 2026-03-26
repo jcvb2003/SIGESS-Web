@@ -20,6 +20,8 @@ const DocumentsPage = lazy(() => import("@/pages/Documents"));
 const ReportsPage = lazy(() => import("@/pages/Reports"));
 const SettingsPage = lazy(() => import("@/pages/Settings"));
 const NotFoundPage = lazy(() => import("@/pages/NotFound"));
+const PasswordPage = lazy(() => import("@/pages/Password"));
+
 function PublicRoute() {
   const { session, loading } = useAuth();
   if (loading) {
@@ -29,7 +31,7 @@ function PublicRoute() {
       </div>
     );
   }
-  return !session ? <Outlet /> : <Navigate to="/dashboard" replace />;
+  return session ? <Navigate to="/dashboard" replace /> : <Outlet />;
 }
 const router = createBrowserRouter([
   {
@@ -43,6 +45,10 @@ const router = createBrowserRouter([
       {
         path: "/auth",
         element: <LoginPage />,
+      },
+      {
+        path: "/password",
+        element: <PasswordPage />,
       },
     ],
   },

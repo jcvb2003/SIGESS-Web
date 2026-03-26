@@ -54,6 +54,15 @@ export const authService = {
     }
     return { data: null, error: null };
   },
+  async resetPassword(email: string): Promise<ServiceResponse<void>> {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${typeof globalThis === 'undefined' ? '' : globalThis.location.origin}/password`,
+    });
+    if (error) {
+      return { data: null, error };
+    }
+    return { data: null, error: null };
+  },
   async createUser(
     email: string,
     password: string,
@@ -63,12 +72,10 @@ export const authService = {
       session: Session | null;
     }>
   > {
-    void email;
-    void password;
     return {
       data: null,
       error: new Error(
-        "Criação de usuário deve ocorrer no backend com credenciais administrativas.",
+        `Criação de usuário deve ocorrer no backend para o email ${email} e senha ${password ? 'fornecida' : ''}.`,
       ),
     };
   },
