@@ -18,6 +18,99 @@ BEGIN
 END;
 $function$;
 
+CREATE OR REPLACE FUNCTION public.check_member_limit()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+DECLARE
+    v_max_socios INTEGER;
+    v_current_count INTEGER;
+BEGIN
+    -- Obter o limite do usuário autenticado atual
+    SELECT max_socios INTO v_max_socios
+    FROM public."User"
+    WHERE id = auth.uid();
+
+    -- Se não houver limite definido, permite por padrão
+    IF v_max_socios IS NULL THEN
+        RETURN NEW;
+    END IF;
+
+    -- Contar membros atuais
+    SELECT count(*) INTO v_current_count FROM public.socios;
+
+    -- Verificar se o limite foi atingido
+    IF v_current_count >= v_max_socios THEN
+        RAISE EXCEPTION 'limite_cadastros: Limite de % sócios atingido.', v_max_socios;
+    END IF;
+
+    RETURN NEW;
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION public.generate_next_codigo_localidade()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+  max_code_val integer;
+  next_code text;
+BEGIN
+  -- Find the maximum current code, treating it as integer
+  -- regexp_replace removes any non-numeric characters just in case
+  SELECT COALESCE(MAX(NULLIF(regexp_replace(codigo_localidade, '\D', '', 'g'), '')::integer), 0)
+  INTO max_code_val
+  FROM public.localidades;
+
+  -- Increment and pad to 3 digits (e.g., 1 -> '001', 42 -> '042')
+  next_code := LPAD((max_code_val + 1)::text, 3, '0');
+
+  -- Assign to the new record only if it's currently null or empty
+  IF NEW.codigo_localidade IS NULL OR NEW.codigo_localidade = '' THEN
+    NEW.codigo_localidade := next_code;
+  END IF;
+
+  RETURN NEW;
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION public.handle_delete_user()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+  DELETE FROM public."User" WHERE id = OLD.id;
+  RETURN OLD;
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+  INSERT INTO public."User" (id, email, role)
+  VALUES (NEW.id, NEW.email, 'user');
+  RETURN NEW;
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION public.handle_update_user()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+  UPDATE public."User"
+  SET email = NEW.email
+  WHERE id = NEW.id;
+  RETURN NEW;
+END;
+$function$;
+
 CREATE OR REPLACE FUNCTION public.get_next_cod_req_inss()
  RETURNS text
  LANGUAGE plpgsql
@@ -207,7 +300,33 @@ BEFORE INSERT ON public.requerimentos
 FOR EACH ROW
 EXECUTE FUNCTION public.auto_generate_cod_req_inss();
 
--- 5. RLS POLICIES
+CREATE TRIGGER trigger_generate_codigo_localidade
+BEFORE INSERT ON public.localidades
+FOR EACH ROW
+EXECUTE FUNCTION public.generate_next_codigo_localidade();
+
+CREATE TRIGGER tr_check_member_limit
+BEFORE INSERT ON public.socios
+FOR EACH ROW
+EXECUTE FUNCTION public.check_member_limit();
+
+-- 5. AUTH TRIGGERS (Special schema)
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+
+DROP TRIGGER IF EXISTS on_auth_user_deleted ON auth.users;
+CREATE TRIGGER on_auth_user_deleted
+  AFTER DELETE ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION handle_delete_user();
+
+DROP TRIGGER IF EXISTS on_auth_user_updated ON auth.users;
+CREATE TRIGGER on_auth_user_updated
+  AFTER UPDATE OF email ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION handle_update_user();
+
+-- 6. RLS POLICIES
 ALTER TABLE public."User" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.templates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.entidade ENABLE ROW LEVEL SECURITY;

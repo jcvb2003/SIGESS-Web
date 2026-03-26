@@ -333,7 +333,21 @@ export const settingsService = {
       );
     }
     const storage = supabase.storage.from(DOCUMENT_TEMPLATES_BUCKET);
-    const path = `templates/${Date.now()}-${file.name}`;
+    
+    // Normalizar o nome do arquivo para evitar caracteres especiais e espaços que quebram o Storage
+    const normalizeFileName = (fileName: string) => {
+      return fileName
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "") // Mantemos regex para acentos (faixa de caracteres)
+        .replaceAll(/\s/g, "-") // Substitui espaços por hifen
+        .replace(/[^\w.-]/g, "-") // Limpa caracteres especiais restantes
+        .replace(/-+/g, "-") // Remove hifens duplicados
+        .toLowerCase();
+    };
+
+    const cleanFileName = normalizeFileName(file.name);
+    const path = `templates/${Date.now()}-${cleanFileName}`;
+    
     const { data: uploadData, error: uploadError } = await storage.upload(
       path,
       file,
