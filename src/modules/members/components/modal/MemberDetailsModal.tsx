@@ -140,6 +140,7 @@ export function MemberDetailsModal({
                           "https://servicos.acesso.gov.br/",
                           member.cpf || "",
                           member.senhaGovInss || "",
+                          member.nome || "",
                         )
                       }
                     >
@@ -164,6 +165,7 @@ export function MemberDetailsModal({
                           "https://login.esocial.gov.br/login.aspx",
                           member.cpf || "",
                           member.senhaGovInss || "",
+                          member.nome || "",
                         )
                       }
                     >

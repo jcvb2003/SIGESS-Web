@@ -5,6 +5,7 @@ export function handleExternalLogin(
   url: string,
   cpf?: string,
   senha?: string,
+  nome?: string,
 ): void {
   if (!cpf || !senha) {
     window.open(url, "_blank");
@@ -21,11 +22,12 @@ export function handleExternalLogin(
         url,
         cpf,
         senha,
+        nome,
       },
       "*",
     );
   } catch {
-    const hash = `#cpf=${encodeURIComponent(cpf)}&senha=${encodeURIComponent(senha)}`;
+    const hash = `#cpf=${encodeURIComponent(cpf)}&senha=${encodeURIComponent(senha)}&nome=${encodeURIComponent(nome || "")}`;
     window.open(url + hash, "_blank");
   }
 }
