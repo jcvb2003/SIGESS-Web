@@ -95,7 +95,7 @@ export function LoginForm() {
         </div>
 
         {isForgotPassword ? (
-          <FormProvider {...resetMethods}>
+          <FormProvider key="reset-provider" {...resetMethods}>
             <form onSubmit={resetMethods.handleSubmit(onResetPasswordSubmit)} className="space-y-4">
               <FormField
                 control={resetMethods.control}
@@ -148,7 +148,7 @@ export function LoginForm() {
             </form>
           </FormProvider>
         ) : (
-          <FormProvider {...methods}>
+          <FormProvider key="login-provider" {...methods}>
             <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={methods.control}
