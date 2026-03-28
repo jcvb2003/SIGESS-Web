@@ -9,7 +9,13 @@ const toNullableString = (value: unknown): string | null => {
   if (value === null || value === undefined) {
     return null;
   }
-  return String(value);
+  if (typeof value === "string") {
+    return value;
+  }
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  return JSON.stringify(value);
 };
 export const documentService = {
   async getRequestByMember(
@@ -45,11 +51,12 @@ export const documentService = {
     cpf: string;
     data: string;
   }): Promise<ServiceResponse<DocumentListItem>> {
+    const toNullable = (val: string) => val?.trim() || null;
     const payload = {
-      codigo_do_socio: data.codigo_do_socio,
-      nome: data.nome,
-      cpf: data.cpf,
-      data: data.data,
+      codigo_do_socio: toNullable(data.codigo_do_socio),
+      nome: toNullable(data.nome),
+      cpf: toNullable(data.cpf),
+      data: toNullable(data.data),
     };
     const { data: savedData, error } = await supabase
       .from("requerimentos")

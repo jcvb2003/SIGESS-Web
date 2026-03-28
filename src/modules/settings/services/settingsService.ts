@@ -18,8 +18,14 @@ const toStringValue = (value: unknown, fallback = ""): string => {
     return fallback;
   }
   if (typeof value === "string") return value;
-  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (typeof value === "number" || typeof value === "boolean")
+    return String(value);
   return fallback;
+};
+
+const toNullable = (value: string | undefined | null): string | null => {
+  const trimmed = value?.trim();
+  return trimmed || null;
 };
 export const settingsService = {
   async getEntity(): Promise<ServiceResponse<EntitySettings>> {
@@ -73,25 +79,25 @@ export const settingsService = {
       .from(ENTITY_TABLE)
       .upsert({
         id: settings.id,
-        nome_entidade: settings.name,
-        nome_abreviado: settings.shortName,
-        cnpj: settings.cnpj,
-        endereco: settings.street,
-        numero: settings.number,
-        bairro: settings.district,
-        cidade: settings.city,
-        uf: settings.state,
-        cep: settings.cep,
-        fone: settings.phone1,
-        celular: settings.phone2,
-        email: settings.email,
-        federacao: settings.federation,
-        confederacao: settings.confederation,
-        polo: settings.pole,
-        fundacao: settings.foundation,
-        comarca: settings.county,
-        nome_do_presidente: settings.presidentName,
-        cpf_do_presidente: settings.presidentCpf,
+        nome_entidade: toNullable(settings.name),
+        nome_abreviado: toNullable(settings.shortName),
+        cnpj: toNullable(settings.cnpj),
+        endereco: toNullable(settings.street),
+        numero: toNullable(settings.number),
+        bairro: toNullable(settings.district),
+        cidade: toNullable(settings.city),
+        uf: toNullable(settings.state),
+        cep: toNullable(settings.cep),
+        fone: toNullable(settings.phone1),
+        celular: toNullable(settings.phone2),
+        email: toNullable(settings.email),
+        federacao: toNullable(settings.federation),
+        confederacao: toNullable(settings.confederation),
+        polo: toNullable(settings.pole),
+        fundacao: toNullable(settings.foundation),
+        comarca: toNullable(settings.county),
+        nome_do_presidente: toNullable(settings.presidentName),
+        cpf_do_presidente: toNullable(settings.presidentCpf),
       })
       .select()
       .single();
@@ -171,15 +177,15 @@ export const settingsService = {
     }
     const payload = {
       ...(parameterId ? { id: parameterId } : {}),
-      inicio_pesca1: input.defeso1Start,
-      final_pesca1: input.defeso1End,
-      inicio_pesca2: input.defeso2Start,
-      final_pesca2: input.defeso2End,
-      especies_proibidas: input.defesoSpecies,
-      nr_publicacao: input.publicationNumber,
-      data_publicacao: input.publicationDate,
-      localpesca: input.publicationLocal,
-      local_pesca: input.fishingArea,
+      inicio_pesca1: toNullable(input.defeso1Start),
+      final_pesca1: toNullable(input.defeso1End),
+      inicio_pesca2: toNullable(input.defeso2Start),
+      final_pesca2: toNullable(input.defeso2End),
+      especies_proibidas: toNullable(input.defesoSpecies),
+      nr_publicacao: toNullable(input.publicationNumber),
+      data_publicacao: toNullable(input.publicationDate),
+      localpesca: toNullable(input.publicationLocal),
+      local_pesca: toNullable(input.fishingArea),
     };
     const { error } = await supabase
       .from(PARAMETERS_TABLE)
@@ -218,7 +224,7 @@ export const settingsService = {
       const { error } = await supabase
         .from(LOCALITIES_TABLE)
         .update({
-          nome: normalizedName,
+          nome: normalizedName || null,
         })
         .eq("id", locality.id);
       if (error) {
@@ -228,7 +234,7 @@ export const settingsService = {
       return { data: null, error: null };
     }
     const { error } = await supabase.from(LOCALITIES_TABLE).insert({
-      nome: normalizedName,
+      nome: normalizedName || null,
     });
     if (error) {
       console.error("Erro ao adicionar localidade:", error);
@@ -338,10 +344,10 @@ export const settingsService = {
     const normalizeFileName = (fileName: string) => {
       return fileName
         .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "") // Mantemos regex para acentos (faixa de caracteres)
+        .replaceAll(/[\u0300-\u036f]/g, "") // Mantemos regex para acentos (faixa de caracteres)
         .replaceAll(/\s/g, "-") // Substitui espaços por hifen
-        .replace(/[^\w.-]/g, "-") // Limpa caracteres especiais restantes
-        .replace(/-+/g, "-") // Remove hifens duplicados
+        .replaceAll(/[^\w.-]/g, "-") // Limpa caracteres especiais restantes
+        .replaceAll(/-+/g, "-") // Remove hifens duplicados
         .toLowerCase();
     };
 

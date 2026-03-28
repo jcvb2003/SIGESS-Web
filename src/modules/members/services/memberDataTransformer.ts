@@ -75,7 +75,7 @@ export function toMemberInsertPayload(
     cpf: formatCPF(input.cpf),
     data_de_nascimento: input.dataDeNascimento || null,
     data_de_admissao: input.dataDeAdmissao || null,
-    sexo: input.sexo,
+    sexo: input.sexo || null,
     pai: toUpperOrEmpty(input.pai),
     mae: toUpperOrEmpty(input.mae),
     nacionalidade: toUpperOrEmpty(input.nacionalidade),
