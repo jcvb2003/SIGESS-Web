@@ -11,6 +11,7 @@ import {
   Fish,
   Sun,
   Moon,
+  Wallet,
 } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/components/ui/button";
@@ -36,6 +37,7 @@ const NAV_ITEMS = [
   { title: "Sócios", href: "/members", icon: Users },
   { title: "Cadastro", href: "/registration", icon: UserPlus },
   { title: "Documentos", href: "/documents", icon: Files },
+  { title: "Financeiro", href: "/finance", icon: Wallet },
   { title: "Relatórios", href: "/reports", icon: ChartNoAxesCombined },
   { title: "Configurações", href: "/settings", icon: Settings },
 ];

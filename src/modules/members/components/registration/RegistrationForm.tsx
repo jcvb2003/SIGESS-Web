@@ -19,7 +19,7 @@ import {
   MemberRegistrationForm,
   initialMemberRegistrationForm,
 } from "../../types/member.types";
-import { DuplicateCpfError, memberService } from "../../services/memberService";
+import { DuplicateCpfError, LimitExceededError, memberService } from "../../services/memberService";
 import {
   memberRegistrationSchema,
   MemberRegistrationSchemaType,
@@ -99,6 +99,8 @@ export function RegistrationForm({
     if (err instanceof DuplicateCpfError || errorCode === "DUPLICATE_CPF") {
       toast.error("Já existe um cadastro com este CPF.");
       form.setError("cpf", { type: "manual", message: "CPF já cadastrado" });
+    } else if (err instanceof LimitExceededError || errorCode === "LIMIT_EXCEEDED") {
+      toast.error("Limite de cadastros atingido.");
     } else {
       toast.error("Não foi possível salvar o cadastro. Tente novamente.");
       console.error(err);

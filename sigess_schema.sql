@@ -322,6 +322,7 @@ CREATE POLICY "Allow all for authenticated users" ON public.requerimentos FOR AL
 
 -- Service role can manage users
 CREATE POLICY "Service role can manage users" ON public."User" FOR ALL TO service_role USING (true);
+CREATE POLICY "Allow user to read own User data" ON public."User" FOR SELECT TO authenticated USING (auth.uid() = id);
 
 -- 6. STORAGE BUCKETS
 -- Note: Requires storage schema permissions. If this fails, create buckets manually in Dashboard.
@@ -350,3 +351,173 @@ CREATE POLICY "Acesso total para usuários autenticados flreew_0" ON storage.obj
 CREATE POLICY "Acesso total para usuários autenticados flreew_1" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'documentos');
 CREATE POLICY "Acesso total para usuários autenticados flreew_2" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'documentos');
 CREATE POLICY "Acesso total para usuários autenticados flreew_3" ON storage.objects FOR SELECT TO authenticated USING (bucket_id = 'documentos');
+
+-- 8. TABELAS DO MÓDULO FINANCEIRO
+CREATE TABLE public.parametros_financeiros (
+    id uuid DEFAULT gen_random_uuid() NOT NULL PRIMARY KEY,
+    regime_padrao text DEFAULT 'anuidade'::text CHECK (regime_padrao = ANY (ARRAY['anuidade'::text, 'mensalidade'::text])),
+    dia_vencimento integer DEFAULT 1 CHECK (dia_vencimento >= 1 AND dia_vencimento <= 28),
+    ano_base_cobranca integer DEFAULT 2024,
+    valor_anuidade numeric,
+    valor_mensalidade numeric,
+    valor_inscricao numeric,
+    valor_transferencia numeric,
+    bloquear_inadimplente boolean DEFAULT true,
+    anos_atraso_alerta integer DEFAULT 1,
+    cobra_multa boolean DEFAULT false,
+    percentual_multa numeric,
+    cobra_juros boolean DEFAULT false,
+    percentual_juros_mes numeric,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+
+CREATE TABLE public.tipos_cobranca (
+    id uuid DEFAULT gen_random_uuid() NOT NULL PRIMARY KEY,
+    categoria text CHECK (categoria = ANY (ARRAY['contribuicao'::text, 'cadastro_governamental'::text])),
+    nome text,
+    descricao text,
+    valor_padrao numeric,
+    obrigatoriedade text CHECK (obrigatoriedade = ANY (ARRAY['compulsoria'::text, 'facultativa'::text])),
+    ativo boolean DEFAULT true,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+
+CREATE TABLE public.financeiro_lancamentos (
+    id uuid DEFAULT gen_random_uuid() NOT NULL PRIMARY KEY,
+    socio_cpf text REFERENCES public.socios(cpf),
+    sessao_id uuid DEFAULT gen_random_uuid(),
+    tipo text CHECK (tipo = ANY (ARRAY['anuidade'::text, 'mensalidade'::text, 'inscricao'::text, 'transferencia'::text, 'contribuicao'::text, 'cadastro_governamental'::text])),
+    tipo_cobranca_id uuid REFERENCES public.tipos_cobranca(id),
+    competencia_ano integer,
+    competencia_mes integer CHECK (competencia_mes >= 1 AND competencia_mes <= 12),
+    valor numeric,
+    forma_pagamento text CHECK (forma_pagamento = ANY (ARRAY['dinheiro'::text, 'pix'::text, 'transferencia'::text, 'boleto'::text, 'cartao'::text])),
+    descricao text,
+    status text DEFAULT 'pago'::text CHECK (status = ANY (ARRAY['pago'::text, 'cancelado'::text])),
+    cancelado_em timestamp with time zone,
+    cancelado_por uuid REFERENCES public."User"(id),
+    cancelamento_obs text,
+    registrado_por uuid REFERENCES public."User"(id),
+    data_pagamento date DEFAULT CURRENT_DATE,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+
+CREATE TABLE public.financeiro_cobrancas_geradas (
+    id uuid DEFAULT gen_random_uuid() NOT NULL PRIMARY KEY,
+    tipo_cobranca_id uuid REFERENCES public.tipos_cobranca(id),
+    socio_cpf text REFERENCES public.socios(cpf),
+    valor numeric,
+    data_lancamento date DEFAULT CURRENT_DATE,
+    data_vencimento date,
+    lancamento_id uuid REFERENCES public.financeiro_lancamentos(id),
+    status text DEFAULT 'pendente'::text CHECK (status = ANY (ARRAY['pendente'::text, 'pago'::text, 'cancelado'::text])),
+    cancelado_em timestamp with time zone,
+    cancelado_por uuid REFERENCES public."User"(id),
+    cancelamento_obs text,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+
+CREATE TABLE public.financeiro_dae (
+    id uuid DEFAULT gen_random_uuid() NOT NULL PRIMARY KEY,
+    socio_cpf text REFERENCES public.socios(cpf),
+    tipo_boleto text CHECK (tipo_boleto = ANY (ARRAY['unitario'::text, 'agrupado'::text, 'anual'::text])),
+    competencia_ano integer,
+    competencia_mes integer CHECK (competencia_mes >= 1 AND competencia_mes <= 12),
+    grupo_id uuid,
+    sessao_id uuid,
+    valor numeric,
+    forma_pagamento text CHECK (forma_pagamento = ANY (ARRAY['dinheiro'::text, 'pix'::text, 'transferencia'::text, 'boleto'::text, 'cartao'::text])),
+    boleto_pago boolean DEFAULT false,
+    data_pagamento_boleto date,
+    status text DEFAULT 'pago'::text CHECK (status = ANY (ARRAY['pago'::text, 'cancelado'::text])),
+    registrado_por uuid REFERENCES public."User"(id),
+    data_recebimento date DEFAULT CURRENT_DATE,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+
+CREATE TABLE public.financeiro_config_socio (
+    cpf text NOT NULL PRIMARY KEY REFERENCES public.socios(cpf),
+    regime text CHECK (regime = ANY (ARRAY['anuidade'::text, 'mensalidade'::text])),
+    referencia_vencimento text CHECK (referencia_vencimento = ANY (ARRAY['dia_fixo'::text, 'admissao'::text, 'rgp'::text])),
+    dia_vencimento integer CHECK (dia_vencimento >= 1 AND dia_vencimento <= 28),
+    isento boolean DEFAULT false,
+    motivo_isencao text,
+    liberado_pelo_presidente boolean DEFAULT false,
+    liberacao_observacao text,
+    liberacao_data timestamp with time zone,
+    liberacao_usuario_id uuid REFERENCES public."User"(id),
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+
+CREATE TABLE public.financeiro_historico_regime (
+    id uuid DEFAULT gen_random_uuid() NOT NULL PRIMARY KEY,
+    socio_cpf text REFERENCES public.socios(cpf),
+    regime text CHECK (regime = ANY (ARRAY['anuidade'::text, 'mensalidade'::text])),
+    vigente_desde date,
+    vigente_ate date,
+    alterado_por uuid REFERENCES public."User"(id),
+    observacao text,
+    created_at timestamp with time zone DEFAULT now()
+);
+
+-- 9. RLS DO MÓDULO FINANCEIRO
+ALTER TABLE public.parametros_financeiros ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.tipos_cobranca ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.financeiro_lancamentos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.financeiro_cobrancas_geradas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.financeiro_dae ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.financeiro_config_socio ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.financeiro_historico_regime ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow all for authenticated users" ON public.parametros_financeiros FOR ALL TO authenticated USING (auth.uid() IS NOT NULL) WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "Allow all for authenticated users" ON public.tipos_cobranca FOR ALL TO authenticated USING (auth.uid() IS NOT NULL) WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "Allow all for authenticated users" ON public.financeiro_lancamentos FOR ALL TO authenticated USING (auth.uid() IS NOT NULL) WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "Allow all for authenticated users" ON public.financeiro_cobrancas_geradas FOR ALL TO authenticated USING (auth.uid() IS NOT NULL) WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "Allow all for authenticated users" ON public.financeiro_dae FOR ALL TO authenticated USING (auth.uid() IS NOT NULL) WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "Allow all for authenticated users" ON public.financeiro_config_socio FOR ALL TO authenticated USING (auth.uid() IS NOT NULL) WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "Allow all for authenticated users" ON public.financeiro_historico_regime FOR ALL TO authenticated USING (auth.uid() IS NOT NULL) WITH CHECK (auth.uid() IS NOT NULL);
+
+-- 10. VIEWS FINANCEIRAS
+
+CREATE OR REPLACE VIEW public.v_debitos_socio WITH (security_invoker = on) AS
+ WITH anos AS (
+         SELECT generate_series(( SELECT parametros_financeiros.ano_base_cobranca
+                   FROM parametros_financeiros
+                 LIMIT 1), EXTRACT(year FROM CURRENT_DATE)::integer) AS ano
+        )
+ SELECT s.cpf,
+    s.nome,
+    a.ano,
+    NOT (EXISTS ( SELECT 1
+           FROM financeiro_lancamentos fl
+          WHERE fl.socio_cpf = s.cpf AND fl.tipo = 'anuidade'::text AND fl.competencia_ano = a.ano AND fl.status = 'pago'::text)) AS anuidade_pendente,
+    COALESCE(cfg.isento, false) AS isento,
+    COALESCE(cfg.liberado_pelo_presidente, false) AS liberado
+   FROM socios s
+     CROSS JOIN anos a
+     LEFT JOIN financeiro_config_socio cfg ON cfg.cpf = s.cpf
+     CROSS JOIN parametros_financeiros pf
+  WHERE COALESCE(cfg.regime, pf.regime_padrao) = 'anuidade'::text AND a.ano >= (( SELECT parametros_financeiros.ano_base_cobranca
+           FROM parametros_financeiros
+         LIMIT 1));
+
+CREATE OR REPLACE VIEW public.v_situacao_financeira_socio WITH (security_invoker = on) AS
+ SELECT s.cpf,
+    s.nome,
+    s.situacao AS situacao_associativa,
+    COALESCE(cfg.regime, pf.regime_padrao) AS regime,
+    COALESCE(cfg.isento, false) AS isento,
+    COALESCE(cfg.liberado_pelo_presidente, false) AS liberado_presidente,
+    array_agg(fl.competencia_ano ORDER BY fl.competencia_ano) FILTER (WHERE fl.tipo = 'anuidade'::text AND fl.status = 'pago'::text) AS anuidades_pagas,
+    max(fl.data_pagamento) AS ultimo_pagamento
+   FROM socios s
+     CROSS JOIN parametros_financeiros pf
+     LEFT JOIN financeiro_config_socio cfg ON cfg.cpf = s.cpf
+     LEFT JOIN financeiro_lancamentos fl ON fl.socio_cpf = s.cpf
+  GROUP BY s.cpf, s.nome, s.situacao, cfg.regime, pf.regime_padrao, cfg.isento, cfg.liberado_pelo_presidente;
