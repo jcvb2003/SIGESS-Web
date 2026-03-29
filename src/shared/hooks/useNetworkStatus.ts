@@ -11,8 +11,8 @@ async function checkRealConnectivity(): Promise<boolean> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
 
-    await fetch(`${SUPABASE_URL}/rest/v1/`, {
-      method: "HEAD",
+    await fetch(`${SUPABASE_URL}/auth/v1/settings`, {
+      method: "GET",
       headers: {
         apikey: SUPABASE_ANON_KEY,
       },
