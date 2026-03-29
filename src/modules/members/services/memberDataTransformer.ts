@@ -62,6 +62,12 @@ function formatCAEPF(value?: string | null): string | null {
   if (onlyNumbers.length !== 14) return cleanInvisibleCharacters(value) || null;
   return `${onlyNumbers.slice(0, 3)}.${onlyNumbers.slice(3, 6)}.${onlyNumbers.slice(6, 9)}/${onlyNumbers.slice(9, 12)}-${onlyNumbers.slice(12, 14)}`;
 }
+function formatCEI(value?: string | null): string | null {
+  if (!value) return null;
+  const onlyNumbers = value.replaceAll(/\D/g, "");
+  if (onlyNumbers.length !== 12) return cleanInvisibleCharacters(value) || null;
+  return `${onlyNumbers.slice(0, 2)}.${onlyNumbers.slice(2, 5)}.${onlyNumbers.slice(5, 10)}/${onlyNumbers.slice(10, 12)}`;
+}
 export function toMemberInsertPayload(
   input: MemberRegistrationForm,
 ): SocioInsert {
@@ -98,7 +104,7 @@ export function toMemberInsertPayload(
     zona: cleanInvisibleCharacters(input.zonaEleitoral) || null,
     secao: cleanInvisibleCharacters(input.secaoEleitoral) || null,
     caepf: formatCAEPF(input.caepf),
-    cei: cleanInvisibleCharacters(input.cei) || null,
+    cei: formatCEI(input.cei),
     nit: formatNIT(input.nit),
     emb_rgp: cleanInvisibleCharacters(input.rgp) || null,
     emissao_rgp: input.emissaoRgp || null,
