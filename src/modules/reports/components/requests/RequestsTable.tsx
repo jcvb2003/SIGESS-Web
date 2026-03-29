@@ -95,7 +95,7 @@ export function RequestsTable({
                     </div>
                   </TableCell>
                   <TableCell>{item.cpf}</TableCell>
-                  <TableCell>{item.rgp || item.emb_rgp || "-"}</TableCell>
+                  <TableCell>{item.rgp || item.num_rgp || "-"}</TableCell>
                   <TableCell className="text-right">
                     <Button
                       variant="ghost"

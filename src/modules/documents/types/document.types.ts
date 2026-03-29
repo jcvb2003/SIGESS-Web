@@ -1,6 +1,6 @@
 export interface DocumentListItem {
   id: string;
-  cod_req_inss: string | null;
+  cod_req: string | null;
   data: string | null;
   codigo_do_socio: string | null;
   nome: string | null;
@@ -45,7 +45,7 @@ export interface MemberDatabase {
   cei?: string;
   caepf?: string;
   rgp?: string;
-  emb_rgp?: string;
+  num_rgp?: string;
   uf_rgp?: string;
   situacao?: string;
   codigo_do_socio?: string;

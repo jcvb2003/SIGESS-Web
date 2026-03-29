@@ -1,47 +1,53 @@
 import { supabase } from "@/shared/lib/supabase/client";
 export interface RequestReportItem {
   id: string;
-  cod_req_inss: number | string;
+  cod_req: number | string;
   nome: string;
   cpf: string;
   data_req: string;
   status?: string;
   tipo_requerimento?: string;
-  emb_rgp?: string;
+  num_rgp?: string;
   rgp?: string;
   emissao_rgp?: string;
   protocolo?: string;
-  socio_id?: string | number;
+  socio_id?: string;
 }
+
+function mapRequerimentoToItem(req: { id?: string | number, cod_req?: string | number, cpf?: string | null, data?: string | null, socios?: unknown }): RequestReportItem {
+  const socioObj = req.socios as { id?: string; nome?: string; num_rgp?: string; emissao_rgp?: string } | null;
+  return {
+    id: String(req.id),
+    cod_req: String(req.cod_req || ""),
+    nome: String(socioObj?.nome || ""),
+    cpf: String(req.cpf || ""),
+    data_req: String(req.data || ""),
+    rgp: socioObj?.num_rgp ? String(socioObj.num_rgp) : undefined,
+    emissao_rgp: socioObj?.emissao_rgp ? String(socioObj.emissao_rgp) : undefined,
+    socio_id: socioObj?.id ? String(socioObj.id) : undefined,
+  };
+}
+
 export interface RequestReportResponse {
   data: RequestReportItem[];
   total: number;
 }
-interface SocioData {
-  id: number;
-  cpf: string;
-  emb_rgp: string | null;
-  emissao_rgp: string | null;
+
+async function buildSearchFilters(searchTerm: string): Promise<string> {
+  const isNumber = !Number.isNaN(Number(searchTerm));
+  const like = `%${searchTerm}%`;
+  // Buscar cpfs baseados no nome do socio
+  const { data: matchedSocios } = await supabase.from("socios").select("cpf").or(`nome.ilike.${like}`).limit(100);
+  const cpfsInQuery = matchedSocios?.length ? matchedSocios.map((s: { cpf: string }) => '"' + s.cpf + '"').join(',') : '';
+
+  let orString = '';
+  if (isNumber) orString += `cod_req.eq.${searchTerm},`;
+  orString += `cpf.ilike.${like}`;
+  if (cpfsInQuery) orString += `,cpf.in.(${cpfsInQuery})`;
+
+  return orString;
 }
-const normalizeSociosData = (value: unknown): SocioData[] => {
-  if (!Array.isArray(value)) return [];
-  return value
-    .map((item) => {
-      if (!item || typeof item !== "object") return null;
-      const record = item as Record<string, unknown>;
-      const id = Number(record.id);
-      const cpf = typeof record.cpf === "string" ? record.cpf : "";
-      if (!Number.isFinite(id) || !cpf) return null;
-      return {
-        id,
-        cpf,
-        emb_rgp: typeof record.emb_rgp === "string" ? record.emb_rgp : null,
-        emissao_rgp:
-          typeof record.emissao_rgp === "string" ? record.emissao_rgp : null,
-      };
-    })
-    .filter((item): item is SocioData => item !== null);
-};
+
 export const reportsService = {
   async fetchRequestsReport(
     page: number = 1,
@@ -52,70 +58,22 @@ export const reportsService = {
     const to = from + pageSize - 1;
     let query = supabase
       .from("requerimentos")
-      .select("*", { count: "exact" })
-      .order("cod_req_inss", { ascending: false });
+      .select("id, cod_req, data, cpf, socios!inner(id, nome, num_rgp, emissao_rgp)", { count: "exact" })
+      .order("cod_req", { ascending: false });
+
     if (searchTerm) {
-      const isNumber = !isNaN(Number(searchTerm));
-      if (isNumber) {
-        query = query.or(
-          `cod_req_inss.eq.${searchTerm},protocolo.eq.${searchTerm},cpf.ilike.%${searchTerm}%`,
-        );
-      } else {
-        query = query.or(
-          `nome.ilike.%${searchTerm}%,cpf.ilike.%${searchTerm}%`,
-        );
-      }
+      query = query.or(await buildSearchFilters(searchTerm));
     }
+
     const {
       data: requerimentosData,
       count,
       error: reqError,
     } = await query.range(from, to);
+
     if (reqError) throw reqError;
-    const cpfsSocios =
-      requerimentosData
-        ?.map((req) => req.cpf)
-        .filter((cpf): cpf is string => !!cpf)
-        .filter((value, index, self) => self.indexOf(value) === index) || [];
-    let sociosData: SocioData[] = [];
-    if (cpfsSocios.length > 0) {
-      const { data: socios, error: sociosError } = await supabase
-        .from("socios")
-        .select("id, cpf, emb_rgp, emissao_rgp")
-        .in("cpf", cpfsSocios);
-      if (sociosError) {
-        console.error("Error fetching member details:", sociosError);
-        sociosData = [];
-      } else {
-        sociosData = normalizeSociosData(socios);
-      }
-    }
-    const mergedData = (requerimentosData || []).map((req) => {
-      const socio = sociosData.find((s) => s.cpf === req.cpf);
-      const reqRecord = req as unknown as Record<string, unknown>;
-      const item: RequestReportItem = {
-        id: String(req.id),
-        cod_req_inss: String(req.cod_req_inss || ""),
-        nome: String(req.nome || ""),
-        cpf: String(req.cpf || ""),
-        data_req: String(reqRecord.data_req || req.data || ""),
-        status: reqRecord.status ? String(reqRecord.status) : undefined,
-        tipo_requerimento: reqRecord.tipo_requerimento
-          ? String(reqRecord.tipo_requerimento)
-          : undefined,
-        emb_rgp: req.emb_rgp ? String(req.emb_rgp) : undefined,
-        protocolo: reqRecord.protocolo ? String(reqRecord.protocolo) : undefined,
-        rgp:
-          socio?.emb_rgp || req.emb_rgp || reqRecord.rgp
-            ? String(socio?.emb_rgp || req.emb_rgp || reqRecord.rgp)
-            : undefined,
-        emissao_rgp: socio?.emissao_rgp
-          ? String(socio?.emissao_rgp)
-          : undefined,
-        socio_id: socio?.id ? socio.id : undefined,
-      };
-      return item;
-    });
+
+    const mergedData = (requerimentosData || []).map((req) => mapRequerimentoToItem(req));
     return {
       data: mergedData,
       total: count || 0,
@@ -133,71 +91,23 @@ export const reportsService = {
       const to = from + pageSize - 1;
       let query = supabase
         .from("requerimentos")
-        .select("*", { count: "exact" })
-        .order("cod_req_inss", { ascending: false })
+        .select("id, cod_req, data, cpf, socios!inner(id, nome, num_rgp, emissao_rgp)", { count: "exact" })
+        .order("cod_req", { ascending: false })
         .range(from, to);
+
       if (searchTerm) {
-        const isNumber = !isNaN(Number(searchTerm));
-        if (isNumber) {
-          query = query.or(
-            `cod_req_inss.eq.${searchTerm},protocolo.eq.${searchTerm},cpf.ilike.%${searchTerm}%`,
-          );
-        } else {
-          query = query.or(
-            `nome.ilike.%${searchTerm}%,cpf.ilike.%${searchTerm}%`,
-          );
-        }
+        query = query.or(await buildSearchFilters(searchTerm));
       }
+
       const { data, error } = await query;
+
       if (error) throw error;
+
       if (!data || data.length === 0) {
-        hasMore = false;
         break;
       }
-      const cpfsSocios = data
-        .map((req) => req.cpf)
-        .filter((cpf): cpf is string => !!cpf)
-        .filter((value, index, self) => self.indexOf(value) === index);
-      let sociosData: SocioData[] = [];
-      if (cpfsSocios.length > 0) {
-        const batchSize = 50;
-        for (let i = 0; i < cpfsSocios.length; i += batchSize) {
-          const batch = cpfsSocios.slice(i, i + batchSize);
-          const { data: socios, error: sociosError } = await supabase
-            .from("socios")
-            .select("id, cpf, emb_rgp, emissao_rgp")
-            .in("cpf", batch);
-          if (!sociosError && socios) {
-            sociosData = [...sociosData, ...normalizeSociosData(socios)];
-          }
-        }
-      }
-      const mergedChunk = data.map((req) => {
-        const socio = sociosData.find((s) => s.cpf === req.cpf);
-        const reqRecord = req as unknown as Record<string, unknown>;
-        const item: RequestReportItem = {
-          id: String(req.id),
-          cod_req_inss: String(req.cod_req_inss || ""),
-          nome: String(req.nome || ""),
-          cpf: String(req.cpf || ""),
-          data_req: String(reqRecord.data_req || req.data || ""),
-          status: reqRecord.status ? String(reqRecord.status) : undefined,
-          tipo_requerimento: reqRecord.tipo_requerimento
-            ? String(reqRecord.tipo_requerimento)
-            : undefined,
-          emb_rgp: req.emb_rgp ? String(req.emb_rgp) : undefined,
-          protocolo: reqRecord.protocolo ? String(reqRecord.protocolo) : undefined,
-          rgp:
-            socio?.emb_rgp || req.emb_rgp || reqRecord.rgp
-              ? String(socio?.emb_rgp || req.emb_rgp || reqRecord.rgp)
-              : undefined,
-          emissao_rgp: socio?.emissao_rgp
-            ? String(socio?.emissao_rgp)
-            : undefined,
-          socio_id: socio?.id ? socio.id : undefined,
-        };
-        return item;
-      });
+
+      const mergedChunk = data.map((req) => mapRequerimentoToItem(req));
       allData = [...allData, ...mergedChunk];
       if (data.length < pageSize) {
         hasMore = false;

@@ -170,13 +170,13 @@ export type Database = {
           cei: string | null
           cep: string | null
           cidade: string | null
-          cod_req_inss: string
+          cod_req: string
           codigo_do_socio: string | null
           cpf: string | null
           data: string | null
           dtnasc: string | null
           dtpub: string | null
-          emb_rgp: string | null
+          num_rgp: string | null
           endereco: string | null
           especie_proibidas: string | null
           fim1: string | null
@@ -202,13 +202,13 @@ export type Database = {
           cei?: string | null
           cep?: string | null
           cidade?: string | null
-          cod_req_inss?: string
+          cod_req?: string
           codigo_do_socio?: string | null
           cpf?: string | null
           data?: string | null
           dtnasc?: string | null
           dtpub?: string | null
-          emb_rgp?: string | null
+          num_rgp?: string | null
           endereco?: string | null
           especie_proibidas?: string | null
           fim1?: string | null
@@ -234,13 +234,13 @@ export type Database = {
           cei?: string | null
           cep?: string | null
           cidade?: string | null
-          cod_req_inss?: string
+          cod_req?: string
           codigo_do_socio?: string | null
           cpf?: string | null
           data?: string | null
           dtnasc?: string | null
           dtpub?: string | null
-          emb_rgp?: string | null
+          num_rgp?: string | null
           endereco?: string | null
           especie_proibidas?: string | null
           fim1?: string | null
@@ -278,7 +278,7 @@ export type Database = {
           data_de_nascimento: string | null
           dt_expedicao_rg: string | null
           email: string | null
-          emb_rgp: string | null
+          num_rgp: string | null
           emissao_rgp: string | null
           endereco: string | null
           escolaridade: string | null
@@ -300,6 +300,7 @@ export type Database = {
           situacao: string | null
           ssp: string | null
           telefone: string | null
+          tipo_rgp: string | null
           titulo: string | null
           uf: string | null
           uf_naturalidade: string | null
@@ -321,7 +322,7 @@ export type Database = {
           data_de_nascimento?: string | null
           dt_expedicao_rg?: string | null
           email?: string | null
-          emb_rgp?: string | null
+          num_rgp?: string | null
           emissao_rgp?: string | null
           endereco?: string | null
           escolaridade?: string | null
@@ -343,6 +344,7 @@ export type Database = {
           situacao?: string | null
           ssp?: string | null
           telefone?: string | null
+          tipo_rgp?: string | null
           titulo?: string | null
           uf?: string | null
           uf_naturalidade?: string | null
@@ -364,7 +366,7 @@ export type Database = {
           data_de_nascimento?: string | null
           dt_expedicao_rg?: string | null
           email?: string | null
-          emb_rgp?: string | null
+          num_rgp?: string | null
           emissao_rgp?: string | null
           endereco?: string | null
           escolaridade?: string | null
@@ -386,6 +388,7 @@ export type Database = {
           situacao?: string | null
           ssp?: string | null
           telefone?: string | null
+          tipo_rgp?: string | null
           titulo?: string | null
           uf?: string | null
           uf_naturalidade?: string | null
@@ -469,7 +472,7 @@ export type Database = {
         Args: { schema_name: string; table_name: string }
         Returns: Json
       }
-      get_next_cod_req_inss: { Args: never; Returns: string }
+      get_next_cod_req: { Args: never; Returns: string }
       restore_table_from_backup: {
         Args: {
           backup_table_var: string

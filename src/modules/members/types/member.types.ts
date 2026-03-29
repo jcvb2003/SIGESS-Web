@@ -66,6 +66,7 @@ export interface MemberRegistrationForm {
   cei: string;
   nit: string;
   rgp: string;
+  tipoRgp: "INICIAL" | "PROTOCOLO" | "RECADASTRAMENTO" | "";
   emissaoRgp: string;
   ufRgp: string;
   situacao: SituacaoValue;
@@ -147,6 +148,7 @@ export const initialMemberRegistrationForm: MemberRegistrationForm = {
   cei: "",
   nit: "",
   rgp: "",
+  tipoRgp: "",
   emissaoRgp: "",
   ufRgp: "PA",
   situacao: "ATIVO",

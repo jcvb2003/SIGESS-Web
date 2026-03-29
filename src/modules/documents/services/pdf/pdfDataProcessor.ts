@@ -76,7 +76,7 @@ export function processDocumentData(
     cpf_presidente: entity?.presidentCpf || "",
 
     // Embarcação / RGP
-    emb_rgp: member.emb_rgp || member.rgp || "",
+    num_rgp: member.num_rgp || member.rgp || "",
     rgp_uf: member.rgp_uf || member.uf_rgp || member.uf || "",
     data_rgp: dataRgp,
 

@@ -9,7 +9,7 @@ import {
 import { FileText } from "lucide-react";
 import { InfoItem } from "../shared/InfoItem";
 interface MemberDocumentsSectionProps {
-  member: MemberRegistrationForm;
+  readonly member: MemberRegistrationForm;
 }
 export function MemberDocumentsSection({
   member,
@@ -37,6 +37,7 @@ export function MemberDocumentsSection({
           <InfoItem label="CEI" value={member.cei} />
           <InfoItem label="NIS/NIT/PIS" value={member.nit} />
           <InfoItem label="RGP" value={member.rgp} />
+          <InfoItem label="Tipo RGP" value={member.tipoRgp} />
           <InfoItem label="Emissão RGP" value={formatDate(member.emissaoRgp)} />
           <InfoItem label="UF RGP" value={member.ufRgp} />
         </div>

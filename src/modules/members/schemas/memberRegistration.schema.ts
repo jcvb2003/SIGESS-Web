@@ -172,6 +172,7 @@ export const memberRegistrationSchema = z
     nit: nitSchema,
     cei: optionalStringSchema,
     rgp: optionalStringSchema,
+    tipoRgp: z.enum(["INICIAL", "PROTOCOLO", "RECADASTRAMENTO"]).optional().or(z.literal("")),
     emissaoRgp: optionalDateSchema,
     ufRgp: optionalStringSchema,
     senhaGovInss: optionalStringSchema,

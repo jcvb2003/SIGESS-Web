@@ -111,7 +111,7 @@ BEGIN
 END;
 $function$;
 
-CREATE OR REPLACE FUNCTION public.get_next_cod_req_inss()
+CREATE OR REPLACE FUNCTION public.get_next_cod_req()
  RETURNS text
  LANGUAGE plpgsql
 AS $function$
@@ -122,12 +122,12 @@ BEGIN
     LOCK TABLE requerimentos IN EXCLUSIVE MODE;
     
     SELECT COALESCE(
-        MAX(CAST(cod_req_inss AS INTEGER)), 
+        MAX(CAST(cod_req AS INTEGER)), 
         0
     ) + 1 
     INTO next_code
     FROM requerimentos 
-    WHERE cod_req_inss ~ '^[0-9]+$';
+    WHERE cod_req ~ '^[0-9]+$';
     
     formatted_code := LPAD(next_code::text, 6, '0');
     
@@ -135,13 +135,13 @@ BEGIN
 END;
 $function$;
 
-CREATE OR REPLACE FUNCTION public.auto_generate_cod_req_inss()
+CREATE OR REPLACE FUNCTION public.auto_generate_cod_req()
  RETURNS trigger
  LANGUAGE plpgsql
 AS $function$
 BEGIN
-    IF NEW.cod_req_inss IS NULL OR NEW.cod_req_inss = '' THEN
-        NEW.cod_req_inss := get_next_cod_req_inss();
+    IF NEW.cod_req IS NULL OR NEW.cod_req = '' THEN
+        NEW.cod_req := get_next_cod_req();
     END IF;
     
     RETURN NEW;
@@ -243,7 +243,7 @@ CREATE TABLE public.socios (
     titulo text,
     zona text,
     secao text,
-    emb_rgp text,
+    num_rgp text,
     rgp_uf text,
     nit text,
     cei text,
@@ -253,7 +253,8 @@ CREATE TABLE public.socios (
     sexo text,
     email text,
     senhagov_inss text,
-    observacoes text
+    observacoes text,
+    tipo_rgp text
 );
 
 CREATE TABLE public.fotos (
@@ -263,42 +264,16 @@ CREATE TABLE public.fotos (
 
 CREATE TABLE public.requerimentos (
     id uuid DEFAULT gen_random_uuid() NOT NULL PRIMARY KEY,
-    cod_req_inss text UNIQUE,
+    cod_req text UNIQUE,
     data date,
-    codigo_do_socio text,
-    nome text,
-    dtnasc date,
-    mae text,
-    rg text,
-    cpf text,
-    nit text,
-    pis text,
-    cei text,
-    endereco text,
-    num text,
-    bairro text,
-    cidade text,
-    uf text,
-    cep text,
-    telefone text,
-    nrpub text,
-    dtpub date,
-    area text,
-    inicio1 date,
-    fim1 text,
-    inicio2 text,
-    fim2 text,
-    especie_proibidas text,
-    emb_rgp text,
-	rgp_uf text,
-	situacao_mpa text
+    cpf text REFERENCES public.socios(cpf) ON DELETE CASCADE
 );
 
 -- 4. TRIGGERS
-CREATE TRIGGER trigger_auto_generate_cod_req_inss
+CREATE TRIGGER trigger_auto_generate_cod_req
 BEFORE INSERT ON public.requerimentos
 FOR EACH ROW
-EXECUTE FUNCTION public.auto_generate_cod_req_inss();
+EXECUTE FUNCTION public.auto_generate_cod_req();
 
 CREATE TRIGGER trigger_generate_codigo_localidade
 BEFORE INSERT ON public.localidades

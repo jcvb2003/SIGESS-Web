@@ -45,7 +45,7 @@ export function getPdfFieldMappings(): Record<string, string[]> {
     especie_proibidas: ["Espécies proibidas"],
 
     // Dados de Embarcação / RGP
-    emb_rgp: ["Número do RGP"],
+    num_rgp: ["Número do RGP"],
     rgp_uf: ["UF do RGP"],
     data_rgp: ["Data do RGP"],
     arqueacao_bruta: ["Arqueação bruta"],

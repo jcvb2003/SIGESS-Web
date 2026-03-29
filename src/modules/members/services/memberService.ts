@@ -108,11 +108,11 @@ export const memberService = {
     }
     if (rgpStatus === "with_rgp") {
       query = query
-        .not("emb_rgp", "is", null)
-        .neq("emb_rgp", "")
+        .not("num_rgp", "is", null)
+        .neq("num_rgp", "")
         .not("emissao_rgp", "is", null);
     } else if (rgpStatus === "without_rgp") {
-      query = query.or("emb_rgp.is.null,emb_rgp.eq.,emissao_rgp.is.null");
+      query = query.or("num_rgp.is.null,num_rgp.eq.,emissao_rgp.is.null");
     }
     const sortField = params.orderBy || "nome";
     const ascending = params.orderDirection !== "desc"; // Default to ASC if not 'desc'

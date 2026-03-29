@@ -44,7 +44,7 @@ export default function Reports() {
         Data: item.data_req ? new Date(item.data_req).toLocaleDateString() : "",
         Nome: item.nome,
         CPF: item.cpf,
-        RGP: item.rgp || item.emb_rgp || "",
+        RGP: item.rgp || item.num_rgp || "",
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(excelData);
@@ -86,7 +86,7 @@ export default function Reports() {
         item.data_req ? new Date(item.data_req).toLocaleDateString() : "",
         item.nome,
         item.cpf,
-        item.rgp || item.emb_rgp || "",
+        item.rgp || item.num_rgp || "",
       ]);
 
       autoTable(doc, {

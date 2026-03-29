@@ -13,6 +13,7 @@ import { NitField } from "@/shared/components/form-fields/fields/NitField";
 import { CaepfField } from "@/shared/components/form-fields/fields/CaepfField";
 import { ElectoralZoneField } from "@/shared/components/form-fields/fields/ElectoralZoneField";
 import { ElectoralSectionField } from "@/shared/components/form-fields/fields/ElectoralSectionField";
+import { SelectField } from "@/shared/components/form-fields/fields/SelectField";
 import { masks } from "@/shared/utils/masks/inputMasks";
 import { FileText } from "lucide-react";
 import { Separator } from "@/shared/components/ui/separator";
@@ -101,6 +102,17 @@ export function MemberDocumentsForm() {
               placeholder="RGP"
               maxLength={15}
               autoUppercase
+            />
+            <SelectField
+              control={control}
+              name="tipoRgp"
+              label="Tipo de RGP"
+              placeholder="Selecione"
+              options={[
+                { label: "Inicial", value: "INICIAL" },
+                { label: "Protocolo", value: "PROTOCOLO" },
+                { label: "Recadastramento", value: "RECADASTRAMENTO" },
+              ]}
             />
             <DateField
               control={control}
