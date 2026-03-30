@@ -14,4 +14,8 @@ export const financeQueryKeys = {
     [...financeQueryKeys.all, "memberConfig", cpf] as const,
   financialStatus: (cpf: string, year: number) =>
     [...financeQueryKeys.all, "status", cpf, year] as const,
+  stats: (year: number, month: number) =>
+    [...financeQueryKeys.all, "stats", year, month] as const,
+  tabCounts: (searchTerm: string, year: number, anoBase: number) =>
+    [...financeQueryKeys.all, "tabCounts", searchTerm, year, anoBase] as const,
 };

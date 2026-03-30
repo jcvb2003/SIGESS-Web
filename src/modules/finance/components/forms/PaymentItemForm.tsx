@@ -19,10 +19,12 @@ import {
 } from "lucide-react";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { cn } from "@/shared/lib/utils";
-import type { 
-  PaymentType, 
-  FinanceLancamento, 
-  PaymentSessionItem 
+import { PaymentTypeSelector, type SelectedCharge } from "../shared/PaymentTypeSelector";
+import type {
+  PaymentType,
+  FinanceLancamento,
+  PaymentSessionItem,
+  ChargeType,
 } from "../../types/finance.types";
 
 const MONTH_LABELS = [
@@ -44,29 +46,37 @@ export interface ExtraFeeItem extends PaymentSessionItem {
   uid: string;
 }
 
+// Re-export for PaymentSessionDialog
+export type { SelectedCharge };
+
 interface PaymentItemFormProps {
   readonly currentYear: number;
   readonly anoBase: number;
   readonly valorAnuidade: number;
   readonly lancamentos: FinanceLancamento[];
   readonly isLoadingStatement: boolean;
-  
+
   readonly paymentCategory: "anuidade" | "mensalidade";
   readonly onPaymentCategoryChange: (category: "anuidade" | "mensalidade") => void;
-  
+
   readonly selectedYears: number[];
   readonly onToggleYear: (year: number) => void;
-  
+
   readonly selectedMonths: number[];
   readonly onToggleMonth: (month: number) => void;
-  
+
   readonly selectedYearForMensalidade: number;
   readonly onYearForMensalidadeChange: (year: number) => void;
-  
+
   readonly extraFees: ExtraFeeItem[];
   readonly onAddExtraFee: (type: PaymentType) => void;
   readonly onRemoveExtraFee: (uid: string) => void;
   readonly onFeeValueChange: (uid: string, value: string) => void;
+
+  readonly selectedCharges: SelectedCharge[];
+  readonly onToggleCharge: (chargeType: ChargeType) => void;
+  readonly onChargeValueChange: (uid: string, rawValue: string) => void;
+  readonly onRemoveCharge: (uid: string) => void;
 }
 
 export function PaymentItemForm({
@@ -87,6 +97,10 @@ export function PaymentItemForm({
   onAddExtraFee,
   onRemoveExtraFee,
   onFeeValueChange,
+  selectedCharges,
+  onToggleCharge,
+  onChargeValueChange,
+  onRemoveCharge,
 }: PaymentItemFormProps) {
   // Mapa de pagamentos já realizados (Memoizado para performance)
   const paidYears = useMemo(() => {
@@ -354,6 +368,14 @@ export function PaymentItemForm({
           </div>
         )}
       </div>
+
+      {/* Charge Types (Contribuições e Cadastros Governamentais) */}
+      <PaymentTypeSelector
+        selected={selectedCharges}
+        onToggle={onToggleCharge}
+        onValueChange={onChargeValueChange}
+        onRemove={onRemoveCharge}
+      />
     </div>
   );
 }

@@ -16,6 +16,7 @@ export interface FinanceDashboardResult {
 export const financeService = {
   /**
    * Busca dados do dashboard financeiro com filtros combinados.
+   * Tab filtering é feito server-side para paginação correta.
    */
   async getDashboard(
     params: FinanceDashboardParams,
@@ -24,7 +25,6 @@ export const financeService = {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
-    // Buscar parâmetros para o ano base
     const { data: settings } = await supabase
       .from("parametros_financeiros")
       .select("ano_base_cobranca")
@@ -32,6 +32,15 @@ export const financeService = {
       .single();
 
     const anoBase = settings?.ano_base_cobranca ?? 2024;
+
+    // Anos que precisam estar pagos para o sócio estar em dia
+    const requiredYears: number[] = [];
+    for (let y = anoBase; y <= year; y++) requiredYears.push(y);
+
+    // Inadimplentes sem anos exigidos = ninguém deve nada
+    if (tab === "inadimplentes" && requiredYears.length === 0) {
+      return { items: [], total: 0 };
+    }
 
     let query = supabase
       .from("v_situacao_financeira_socio")
@@ -45,6 +54,20 @@ export const financeService = {
       query = query.eq("isento", true);
     } else if (tab === "liberados") {
       query = query.eq("liberado_presidente", true);
+    } else if (tab === "em-dia") {
+      query = query
+        .not("isento", "eq", true)
+        .not("liberado_presidente", "eq", true);
+      if (requiredYears.length > 0) {
+        query = query.contains("anuidades_pagas", requiredYears);
+      }
+    } else if (tab === "inadimplentes") {
+      query = query
+        .not("isento", "eq", true)
+        .not("liberado_presidente", "eq", true)
+        .or(
+          `anuidades_pagas.is.null,anuidades_pagas.not.cs.{${requiredYears.join(",")}}`,
+        );
     }
 
     query = query.order("nome", { ascending: true }).range(from, to);
@@ -52,17 +75,107 @@ export const financeService = {
     const { data, error, count } = await query;
     if (error) throw error;
 
-    const items = (data ?? [])
-      .map((row) => toMemberFinancialSummary(row, year, anoBase))
-      .filter((item) => {
-        if (tab === "em-dia") return item.status === "ok";
-        if (tab === "inadimplentes") return item.status === "overdue";
-        return true;
-      });
+    const items = (data ?? []).map((row) =>
+      toMemberFinancialSummary(row, year, anoBase),
+    );
+
+    return { items, total: count ?? 0 };
+  },
+
+  /**
+   * Retorna contagens por aba para os badges do dashboard.
+   */
+  async getTabCounts(
+    searchTerm: string,
+    year: number,
+    anoBase: number,
+  ): Promise<Record<string, number>> {
+    const requiredYears: number[] = [];
+    for (let y = anoBase; y <= year; y++) requiredYears.push(y);
+
+    const buildBase = () => {
+      let q = supabase
+        .from("v_situacao_financeira_socio")
+        .select("cpf", { count: "exact", head: true });
+      if (searchTerm) {
+        q = q.or(`nome.ilike.%${searchTerm}%,cpf.ilike.%${searchTerm}%`);
+      }
+      return q;
+    };
+
+    const emDiaQuery = () => {
+      let q = buildBase()
+        .not("isento", "eq", true)
+        .not("liberado_presidente", "eq", true);
+      if (requiredYears.length > 0) {
+        q = q.contains("anuidades_pagas", requiredYears);
+      }
+      return q;
+    };
+
+    const inadimplentesQuery = () => {
+      if (requiredYears.length === 0) return Promise.resolve({ count: 0, error: null });
+      return buildBase()
+        .not("isento", "eq", true)
+        .not("liberado_presidente", "eq", true)
+        .or(
+          `anuidades_pagas.is.null,anuidades_pagas.not.cs.{${requiredYears.join(",")}}`,
+        );
+    };
+
+    const [todos, isentos, liberados, emDia, inadimplentes] = await Promise.all([
+      buildBase(),
+      buildBase().eq("isento", true),
+      buildBase().eq("liberado_presidente", true),
+      emDiaQuery(),
+      inadimplentesQuery(),
+    ]);
 
     return {
-      items,
-      total: count ?? 0,
+      todos: todos.count ?? 0,
+      "em-dia": emDia.count ?? 0,
+      inadimplentes: inadimplentes.count ?? 0,
+      liberados: liberados.count ?? 0,
+      isentos: isentos.count ?? 0,
+    };
+  },
+
+  /**
+   * Retorna arrecadação do mês e DAE pendente para os SummaryCards.
+   * DAE pendente = registros com status=pago mas boleto_pago=false.
+   */
+  async getMonthlyStats(
+    year: number,
+    month: number,
+  ): Promise<{ arrecadado: number; qtdPagamentos: number; daePendente: number }> {
+    const firstDay = `${year}-${String(month).padStart(2, "0")}-01`;
+    const lastDay = new Date(year, month, 0).toLocaleDateString("sv");
+
+    const [lancamentosResult, daeResult] = await Promise.all([
+      supabase
+        .from("financeiro_lancamentos")
+        .select("valor")
+        .eq("status", "pago")
+        .gte("data_pagamento", firstDay)
+        .lte("data_pagamento", lastDay),
+      supabase
+        .from("financeiro_dae")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pago")
+        .eq("boleto_pago", false),
+    ]);
+
+    if (lancamentosResult.error) throw lancamentosResult.error;
+
+    const arrecadado = (lancamentosResult.data ?? []).reduce(
+      (sum, l) => sum + (Number(l.valor) || 0),
+      0,
+    );
+
+    return {
+      arrecadado,
+      qtdPagamentos: lancamentosResult.data?.length ?? 0,
+      daePendente: daeResult.count ?? 0,
     };
   },
 

@@ -16,7 +16,7 @@ import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { formatNumericInput } from "../shared/formatters";
 import { MemberFinancePreview } from "../shared/MemberFinancePreview";
 import { PaymentMethodSelect } from "../shared/PaymentMethodSelect";
-import { PaymentItemForm, type ExtraFeeItem } from "../forms/PaymentItemForm";
+import { PaymentItemForm, type ExtraFeeItem, type SelectedCharge } from "../forms/PaymentItemForm";
 import {
   Loader2,
   Check,
@@ -28,6 +28,7 @@ import type {
   PaymentType,
   PaymentMethod,
   FinancialStatusType,
+  ChargeType,
 } from "../../types/finance.types";
 
 interface PaymentSessionDialogProps {
@@ -58,6 +59,7 @@ export function PaymentSessionDialog({
   const currentYear = new Date().getFullYear();
   const [selectedYearForMensalidade, setSelectedYearForMensalidade] = useState(currentYear);
   const [extraFees, setExtraFees] = useState<ExtraFeeItem[]>([]);
+  const [selectedCharges, setSelectedCharges] = useState<SelectedCharge[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("dinheiro");
   const [paymentDate, setPaymentDate] = useState(
     new Date().toLocaleDateString("sv"), // YYYY-MM-DD local
@@ -143,36 +145,79 @@ export function PaymentSessionDialog({
     ));
   };
 
+  const toggleCharge = (chargeType: ChargeType) => {
+    setSelectedCharges((prev) => {
+      const exists = prev.find((c) => c.chargeType.id === chargeType.id);
+      if (exists) return prev.filter((c) => c.chargeType.id !== chargeType.id);
+      const valor = chargeType.valor_padrao ?? 0;
+      return [
+        ...prev,
+        {
+          chargeType,
+          valor,
+          displayValue: formatNumericInput(valor),
+          uid: crypto.randomUUID(),
+        },
+      ];
+    });
+  };
+
+  const handleChargeValueChange = (uid: string, rawValue: string) => {
+    const digits = rawValue.replaceAll(/\D/g, "");
+    const numericValue = Number(digits) / 100;
+    setSelectedCharges((prev) =>
+      prev.map((c) =>
+        c.uid === uid
+          ? { ...c, valor: numericValue, displayValue: formatNumericInput(numericValue) }
+          : c,
+      ),
+    );
+  };
+
+  const removeCharge = (uid: string) => {
+    setSelectedCharges((prev) => prev.filter((c) => c.uid !== uid));
+  };
+
   const totalAnnuities = selectedYears.length * valorAnuidade;
   const totalMonthly = selectedMonths.length * valorMensalidade;
   const totalFees = extraFees.reduce((sum, item) => sum + (item.valor || 0), 0);
-  const totalValue = (paymentCategory === "anuidade" ? totalAnnuities : totalMonthly) + totalFees;
-  
-  const canConfirm = totalValue > 0 && (
-    (paymentCategory === "anuidade" && selectedYears.length > 0) || 
-    (paymentCategory === "mensalidade" && selectedMonths.length > 0) || 
-    extraFees.length > 0
-  );
+  const totalCharges = selectedCharges.reduce((sum, c) => sum + (c.valor || 0), 0);
+  const totalValue =
+    (paymentCategory === "anuidade" ? totalAnnuities : totalMonthly) +
+    totalFees +
+    totalCharges;
+
+  const canConfirm =
+    totalValue > 0 &&
+    ((paymentCategory === "anuidade" && selectedYears.length > 0) ||
+      (paymentCategory === "mensalidade" && selectedMonths.length > 0) ||
+      extraFees.length > 0 ||
+      selectedCharges.length > 0);
 
   const handleSubmit = async () => {
     if (!socioCpf) return;
 
     const sessaoId = crypto.randomUUID();
     const items: PaymentSessionItem[] = [
-      ...(paymentCategory === "anuidade" 
-        ? selectedYears.map(year => ({
+      ...(paymentCategory === "anuidade"
+        ? selectedYears.map((year) => ({
             tipo: "anuidade" as const,
             competencia_ano: year,
             valor: valorAnuidade,
           }))
-        : selectedMonths.map(month => ({
+        : selectedMonths.map((month) => ({
             tipo: "mensalidade" as const,
             competencia_ano: selectedYearForMensalidade,
             competencia_mes: month,
             valor: valorMensalidade,
-          }))
-      ),
-      ...extraFees.map(({ tipo, valor }) => ({ tipo, valor }))
+          }))),
+      ...extraFees.map(({ tipo, valor }) => ({ tipo, valor })),
+      ...selectedCharges.map(({ chargeType, valor }) => ({
+        tipo: chargeType.categoria as PaymentType,
+        tipo_cobranca_id: chargeType.id,
+        valor,
+        descricao: chargeType.nome,
+      })),
     ];
 
     await paymentMutation.mutateAsync({
@@ -187,6 +232,7 @@ export function PaymentSessionDialog({
     setSelectedYears([]);
     setSelectedMonths([]);
     setExtraFees([]);
+    setSelectedCharges([]);
   };
 
   return (
@@ -243,6 +289,10 @@ export function PaymentSessionDialog({
               onAddExtraFee={addExtraFee}
               onRemoveExtraFee={removeExtraFee}
               onFeeValueChange={handleFeeValueChange}
+              selectedCharges={selectedCharges}
+              onToggleCharge={toggleCharge}
+              onChargeValueChange={handleChargeValueChange}
+              onRemoveCharge={removeCharge}
             />
 
             {/* Payment Method & Date */}

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,12 +7,13 @@ import {
 } from "@/shared/components/ui/dialog";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { Button } from "@/shared/components/ui/button";
-import { Printer, Pencil, Unlock, X } from "lucide-react";
+import { Printer, Pencil, Unlock, X, Settings2 } from "lucide-react";
 import { useMemberStatement } from "../../hooks/data/useMemberStatement";
 import { MemberFinancePreview } from "../shared/MemberFinancePreview";
 import { AnnuitiesSection } from "./sections/AnnuitiesSection";
 import { DAESection } from "./sections/DAESection";
 import { OtherPaymentsSection } from "./sections/OtherPaymentsSection";
+import { MemberFinanceConfigForm } from "../forms/MemberFinanceConfigForm";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import type { FinancialStatusType } from "../../types/finance.types";
 
@@ -35,6 +37,7 @@ export function MemberStatementModal({
   const { lancamentos, daes, isLoading } = useMemberStatement(
     open ? cpf : null,
   );
+  const [configMode, setConfigMode] = useState<"isencao" | "liberacao" | "regime" | null>(null);
 
   const anuidades = lancamentos.filter((l) => l.tipo === "anuidade" && l.status === "pago");
   const daeList = daes.filter((d) => d.status === "pago");
@@ -87,16 +90,46 @@ export function MemberStatementModal({
                 status={memberStatus}
                 regime={memberRegime ?? "Anuidade"}
               >
-                <Button variant="outline" size="sm" className="h-8 pr-3 pl-2.5 text-[11px] font-semibold gap-1.5 border-blue-200 text-blue-700 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setConfigMode(configMode === "isencao" ? null : "isencao")}
+                  className="h-8 pr-3 pl-2.5 text-[11px] font-semibold gap-1.5 border-blue-200 text-blue-700 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all"
+                >
                   <Pencil className="h-3 w-3" />
                   Isenção
                 </Button>
-                <Button variant="outline" size="sm" className="h-8 pr-3 pl-2.5 text-[11px] font-semibold gap-1.5 border-amber-200 text-amber-700 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setConfigMode(configMode === "regime" ? null : "regime")}
+                  className="h-8 pr-3 pl-2.5 text-[11px] font-semibold gap-1.5 border-slate-200 text-slate-600 hover:bg-slate-600 hover:text-white transition-all"
+                >
+                  <Settings2 className="h-3 w-3" />
+                  Regime
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setConfigMode(configMode === "liberacao" ? null : "liberacao")}
+                  className="h-8 pr-3 pl-2.5 text-[11px] font-semibold gap-1.5 border-amber-200 text-amber-700 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all"
+                >
                   <Unlock className="h-3 w-3" />
                   Liberar
                 </Button>
               </MemberFinancePreview>
             </div>
+
+            {/* Config Panel (inline) */}
+            {configMode && cpf && (
+              <div className="mx-6">
+                <MemberFinanceConfigForm
+                  cpf={cpf}
+                  mode={configMode}
+                  onClose={() => setConfigMode(null)}
+                />
+              </div>
+            )}
 
             {/* Content */}
             <div className="px-6 space-y-6">
