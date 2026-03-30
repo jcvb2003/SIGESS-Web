@@ -16,7 +16,6 @@ export interface FinanceDashboardResult {
 export const financeService = {
   /**
    * Busca dados do dashboard financeiro com filtros combinados.
-   * Usa a view v_situacao_financeira_socio para performance.
    */
   async getDashboard(
     params: FinanceDashboardParams,
@@ -38,14 +37,10 @@ export const financeService = {
       .from("v_situacao_financeira_socio")
       .select("*", { count: "exact" });
 
-    // Search filter
     if (searchTerm) {
-      query = query.or(
-        `nome.ilike.%${searchTerm}%,cpf.ilike.%${searchTerm}%`,
-      );
+      query = query.or(`nome.ilike.%${searchTerm}%,cpf.ilike.%${searchTerm}%`);
     }
 
-    // Tab filters
     if (tab === "isentos") {
       query = query.eq("isento", true);
     } else if (tab === "liberados") {
@@ -55,13 +50,11 @@ export const financeService = {
     query = query.order("nome", { ascending: true }).range(from, to);
 
     const { data, error, count } = await query;
-
     if (error) throw error;
 
     const items = (data ?? [])
       .map((row) => toMemberFinancialSummary(row, year, anoBase))
       .filter((item) => {
-        // Client-side filtering for computed status
         if (tab === "em-dia") return item.status === "ok";
         if (tab === "inadimplentes") return item.status === "overdue";
         return true;
@@ -75,7 +68,6 @@ export const financeService = {
 
   /**
    * Registra sessão de pagamento via RPC atômico.
-   * NUNCA fazer múltiplos INSERTs via loop no frontend.
    */
   async createPaymentSession(payload: PaymentSessionPayload): Promise<void> {
     const { error } = await supabase.rpc("register_payment_session", {
@@ -103,6 +95,25 @@ export const financeService = {
     return data ?? [];
   },
 
+  async getPayment(id: string): Promise<FinanceLancamento> {
+    const { data, error } = await supabase
+      .from("financeiro_lancamentos")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async createPayment(data: Partial<FinanceLancamento>): Promise<void> {
+    const { error } = await supabase
+      .from("financeiro_lancamentos")
+      .insert(data as any);
+
+    if (error) throw error;
+  },
+
   /**
    * Busca lançamentos por sessão (para comprovante).
    */
@@ -120,10 +131,7 @@ export const financeService = {
   /**
    * Cancela um lançamento (soft delete com audit trail).
    */
-  async cancelPayment(
-    id: string,
-    observation: string,
-  ): Promise<void> {
+  async cancelPayment(id: string, observation: string): Promise<void> {
     const { error } = await supabase
       .from("financeiro_lancamentos")
       .update({
@@ -131,6 +139,19 @@ export const financeService = {
         cancelado_em: new Date().toISOString(),
         cancelamento_obs: observation,
       })
+      .eq("id", id);
+
+    if (error) throw error;
+  },
+
+  /**
+   * Atualiza campos de um lançamento (Uso interno restrito ou legado). 
+   * Para edições auditáveis, use o fluxo Cancelar + Criar.
+   */
+  async updatePayment(id: string, data: Partial<FinanceLancamento>): Promise<void> {
+    const { error } = await supabase
+      .from("financeiro_lancamentos")
+      .update(data)
       .eq("id", id);
 
     if (error) throw error;

@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { Card } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
-import { Settings, Plus } from "lucide-react";
+import { Settings, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 import { useFinanceDashboard } from "@/modules/finance/hooks/data/useFinanceDashboard";
 import { useFinanceSettings } from "@/modules/finance/hooks/data/useFinanceSettings";
@@ -13,6 +13,7 @@ import { MemberStatementModal } from "@/modules/finance/components/modal/MemberS
 import { PaymentSessionDialog } from "@/modules/finance/components/dialogs/PaymentSessionDialog";
 import { DAEDialog } from "@/modules/finance/components/dialogs/DAEDialog";
 import { FinanceSettingsDialog } from "@/modules/finance/components/dialogs/FinanceSettingsDialog";
+import { FinanceFilterPanel } from "@/modules/finance/components/filters/FinanceFilterPanel";
 import type { FinanceDashboardParams } from "@/modules/finance/types/finance.types";
 
 const TABS: { value: FinanceDashboardParams["tab"]; label: string }[] = [
@@ -29,7 +30,7 @@ const MONTH_NAMES = [
 ];
 
 export default function FinancePage() {
-  const { params, setSearch, setTab, setPage } = useFinanceFilters();
+  const { params, setSearch, setTab, setPage, applyAdvancedFilters, clearAdvancedFilters, hasActiveAdvancedFilters } = useFinanceFilters();
   const { members, total, isLoading } = useFinanceDashboard(params);
   const { settings } = useFinanceSettings();
 
@@ -60,6 +61,9 @@ export default function FinancePage() {
 
   // Settings Dialog
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // Filters Panel
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   // Summary stats (derived from fetched data)
   const stats = useMemo(() => {
@@ -114,19 +118,26 @@ export default function FinancePage() {
           <Button
             variant="outline"
             size="sm"
+            className={cn(
+              "h-9 md:h-10 text-xs font-semibold px-4 border-border/60 hover:bg-muted",
+              hasActiveAdvancedFilters && "border-emerald-300 bg-emerald-50 text-emerald-700"
+            )}
+            onClick={() => setFiltersOpen(true)}
+          >
+            <SlidersHorizontal className="mr-2 h-4 w-4 text-muted-foreground" />
+            Filtros
+            {hasActiveAdvancedFilters && (
+              <span className="ml-1.5 h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            )}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             className="h-9 md:h-10 text-xs font-semibold px-4 border-border/60 hover:bg-muted"
             onClick={() => setSettingsOpen(true)}
           >
             <Settings className="mr-2 h-4 w-4 text-muted-foreground" />
             Configurar
-          </Button>
-          <Button
-            size="sm"
-            className="h-9 md:h-10 text-xs font-bold px-4 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-500/10 transition-all hover:-translate-y-0.5"
-            onClick={() => setPaymentCpf("")}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Registrar Pagamento
           </Button>
         </div>
       </div>
@@ -214,6 +225,8 @@ export default function FinancePage() {
         onOpenChange={(open) => !open && setPaymentCpf(null)}
         socioCpf={paymentCpf}
         socioName={paymentMember?.nome}
+        status={paymentMember?.status}
+        regime={paymentMember?.regime}
       />
 
       {/* DAE Dialog (Repasse) */}
@@ -222,12 +235,33 @@ export default function FinancePage() {
         onOpenChange={(open) => !open && setDaeCpf(null)}
         socioCpf={daeCpf}
         socioName={daeMember?.nome}
+        status={daeMember?.status}
+        regime={daeMember?.regime}
       />
 
       {/* Finance Settings Dialog */}
       <FinanceSettingsDialog
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
+      />
+
+      {/* Finance Filter Panel */}
+      <FinanceFilterPanel
+        open={filtersOpen}
+        onOpenChange={setFiltersOpen}
+        currentFilters={{
+          filterAnnuityOk: params.filterAnnuityOk ?? false,
+          filterAnnuityOverdue: params.filterAnnuityOverdue ?? false,
+          filterDAEPaid: params.filterDAEPaid ?? false,
+          filterDAEPending: params.filterDAEPending ?? false,
+          filterContributionPending: params.filterContributionPending ?? false,
+          filterGovRegistrationPending: params.filterGovRegistrationPending ?? false,
+          filterReleased: params.filterReleased ?? false,
+          filterExempt: params.filterExempt ?? false,
+          year: params.year,
+        }}
+        onApply={applyAdvancedFilters}
+        onClear={clearAdvancedFilters}
       />
     </div>
   );

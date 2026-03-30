@@ -8,7 +8,7 @@ import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { Button } from "@/shared/components/ui/button";
 import { Printer, Pencil, Unlock, X } from "lucide-react";
 import { useMemberStatement } from "../../hooks/data/useMemberStatement";
-import { FinancialStatusBadge } from "../shared/FinancialStatusBadge";
+import { MemberFinancePreview } from "../shared/MemberFinancePreview";
 import { AnnuitiesSection } from "./sections/AnnuitiesSection";
 import { DAESection } from "./sections/DAESection";
 import { OtherPaymentsSection } from "./sections/OtherPaymentsSection";
@@ -42,13 +42,7 @@ export function MemberStatementModal({
     (l) => l.tipo !== "anuidade" && l.status === "pago",
   );
 
-  const initials = memberName
-    ?.split(" ")
-    .filter(Boolean)
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -86,28 +80,13 @@ export function MemberStatementModal({
         <ScrollArea className="flex-1 h-full max-h-[85vh]">
           <div className="py-6 border-none">
             {/* Member Header */}
-            <div className="mx-6 mb-6 flex items-center gap-4 rounded-xl bg-emerald-50/50 p-4 border border-emerald-100/80">
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold text-white shadow-sm ring-2 ring-emerald-100 ring-offset-1">
-                {initials ?? "?"}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-slate-900 leading-tight">{memberName ?? "—"}</p>
-                <div className="mt-1 flex items-center gap-1.5">
-                  <span className="text-sm text-emerald-700/90 font-medium truncate">CPF: {cpf}</span>
-                  <span className="text-[10px] text-emerald-300 opacity-50">|</span>
-                  <span className="text-sm text-emerald-700/90 font-medium">{memberRegime ?? "Anuidade"}</span>
-                  {memberStatus && (
-                    <>
-                      <span className="text-[10px] text-emerald-300">|</span>
-                      <FinancialStatusBadge
-                        status={memberStatus}
-                        className="h-4.5 px-1.5 text-[9px] uppercase tracking-wider"
-                      />
-                    </>
-                  )}
-                </div>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2">
+            <div className="mx-6 mb-6">
+              <MemberFinancePreview
+                name={memberName}
+                cpf={cpf ?? undefined}
+                status={memberStatus}
+                regime={memberRegime ?? "Anuidade"}
+              >
                 <Button variant="outline" size="sm" className="h-8 pr-3 pl-2.5 text-[11px] font-semibold gap-1.5 border-blue-200 text-blue-700 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all">
                   <Pencil className="h-3 w-3" />
                   Isenção
@@ -116,7 +95,7 @@ export function MemberStatementModal({
                   <Unlock className="h-3 w-3" />
                   Liberar
                 </Button>
-              </div>
+              </MemberFinancePreview>
             </div>
 
             {/* Content */}
@@ -151,15 +130,7 @@ export function MemberStatementModal({
                 </>
               )}
 
-              {/* Action Area (Inline Content) */}
-              <div className="pt-6 border-t border-slate-100 mt-6">
-                <Button 
-                  className="w-full h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
-                  onClick={() => onOpenChange(false)}
-                >
-                  FECHAR EXTRATO
-                </Button>
-              </div>
+
             </div>
           </div>
         </ScrollArea>

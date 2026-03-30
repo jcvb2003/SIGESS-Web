@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -6,10 +6,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import {
   Select,
@@ -20,7 +18,8 @@ import {
 } from "@/shared/components/ui/select";
 import { Switch } from "@/shared/components/ui/switch";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
-import { Loader2, Check } from "lucide-react";
+import { Loader2, Check, X } from "lucide-react";
+import { MoneyField } from "../shared/MoneyField";
 import { useFinanceSettings } from "../../hooks/data/useFinanceSettings";
 import { useUpdateFinanceSettings } from "../../hooks/edit/useUpdateMemberConfig";
 import {
@@ -30,71 +29,6 @@ import {
 interface FinanceSettingsDialogProps {
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
-}
-
-/**
- * Utilitário para formatar número enquanto digita (Nubank Style).
- * Exemplo: 1 -> 0,01 | 12 -> 0,12 | 125 -> 1,25
- */
-const formatNubankStyle = (value: number): string => {
-  return new Intl.NumberFormat("pt-BR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
-};
-
-/**
- * Componente de Input Monetário (Máscara Nubank).
- * Gerencia a entrada baseada em dígitos e formatação em tempo real.
- */
-function MoneyField({ 
-  label, 
-  value, 
-  onChange 
-}: { 
-  readonly label: string; 
-  readonly value: number; 
-  readonly onChange: (val: number) => void;
-}) {
-  const [displayValue, setDisplayValue] = useState("");
-
-  // Sincroniza apenas com mudanças externas (reset)
-  useEffect(() => {
-    setDisplayValue(formatNubankStyle(value));
-  }, [value]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Remove tudo que não for dígito
-    const digits = e.target.value.replaceAll(/\D/g, "");
-    
-    // Converte para valor numérico (ex: "125" -> 1.25)
-    const numericValue = Number(digits) / 100;
-    
-    // Atualiza o formulário (número real)
-    onChange(numericValue);
-    
-    // Atualiza o visual (ex: "1,25")
-    setDisplayValue(formatNubankStyle(numericValue));
-  };
-
-  return (
-    <div className="space-y-1.5">
-      <Label className="text-xs font-semibold">{label}</Label>
-      <div className="relative group">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
-          R$
-        </span>
-        <Input
-          type="text"
-          inputMode="numeric"
-          className="h-9 pl-8 text-xs focus-visible:ring-emerald-500"
-          value={displayValue}
-          onChange={handleChange}
-          onFocus={(e) => e.target.select()}
-        />
-      </div>
-    </div>
-  );
 }
 
 export function FinanceSettingsDialog({
@@ -183,11 +117,27 @@ export function FinanceSettingsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] sm:max-w-md p-0 overflow-hidden outline-none">
+      <DialogContent className="max-w-xl p-0 outline-none [&>button]:hidden overflow-hidden">
         <div className="flex flex-col h-full max-h-[90vh] sm:max-h-[85vh] overflow-hidden">
-          <DialogHeader className="p-4 sm:p-6 pb-2 border-b flex-shrink-0">
-            <DialogTitle>Configurações Financeiras</DialogTitle>
-            <p className="text-xs text-muted-foreground mt-1">Parâmetros globais do sistema</p>
+          <DialogHeader className="px-6 pt-6 pb-2 border-b flex-shrink-0">
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle className="text-xl font-bold tracking-tight">
+                  Configurações Financeiras
+                </DialogTitle>
+                <p className="mt-0.5 text-xs text-slate-500 font-medium tracking-tight">
+                  Parâmetros globais do sistema
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 border-slate-200 transition-colors"
+                onClick={() => onOpenChange(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </DialogHeader>
 
           <ScrollArea className="flex-1 px-4 sm:px-6">
@@ -286,19 +236,22 @@ export function FinanceSettingsDialog({
                   )}
                 />
               </div>
+
+              {/* Action Area (Inline - padrão do módulo) */}
+              <div className="flex items-center justify-end gap-2 pt-4 border-t">
+                <Button type="button" variant="outline" onClick={handleClose} className="h-9 text-xs">
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleSubmit(onSubmit)}
+                  disabled={updateMutation.isPending || !isDirty}
+                  className="bg-emerald-600 hover:bg-emerald-700 h-9 text-xs gap-1.5"
+                >
+                  {updateMutation.isPending ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Salvando...</> : <><Check className="h-3.5 w-3.5" /> Salvar</>}
+                </Button>
+              </div>
             </form>
           </ScrollArea>
-
-          <DialogFooter className="p-4 sm:p-6 pt-3 border-t flex-shrink-0">
-            <Button type="button" variant="outline" onClick={handleClose} className="h-9 text-xs">Cancelar</Button>
-            <Button
-              onClick={handleSubmit(onSubmit)}
-              disabled={updateMutation.isPending || !isDirty}
-              className="bg-emerald-600 hover:bg-emerald-700 h-9 text-xs gap-1.5"
-            >
-              {updateMutation.isPending ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Salvando...</> : <><Check className="h-3.5 w-3.5" /> Salvar</>}
-            </Button>
-          </DialogFooter>
         </div>
       </DialogContent>
     </Dialog>

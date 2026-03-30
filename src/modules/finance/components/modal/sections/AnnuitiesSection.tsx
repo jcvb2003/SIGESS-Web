@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { FinancialStatusBadge } from "../../shared/FinancialStatusBadge";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { formatDate } from "@/shared/utils/formatters/dateFormatters";
@@ -9,6 +10,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/shared/components/ui/tooltip";
+import { CancelPaymentDialog } from "../../dialogs/CancelPaymentDialog";
+import { EditLancamentoDialog } from "../../dialogs/EditLancamentoDialog";
+import { useCancelFinanceActions } from "../../../hooks/edit/useCancelFinanceActions";
+import { useUpdateFinanceActions } from "../../../hooks/edit/useUpdateFinanceActions";
 import type { FinanceLancamento } from "../../../types/finance.types";
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
@@ -24,9 +29,26 @@ interface AnnuitiesSectionProps {
 }
 
 export function AnnuitiesSection({ anuidades }: AnnuitiesSectionProps) {
+  const [selectedItem, setSelectedItem] = useState<FinanceLancamento | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  const { cancelPayment } = useCancelFinanceActions();
+  const { updatePayment } = useUpdateFinanceActions();
+
   const sorted = [...anuidades].sort(
     (a, b) => (b.competencia_ano ?? 0) - (a.competencia_ano ?? 0),
   );
+
+  const handleDelete = (item: FinanceLancamento) => {
+    setSelectedItem(item);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleEdit = (item: FinanceLancamento) => {
+    setSelectedItem(item);
+    setIsEditDialogOpen(true);
+  };
 
   return (
     <div>
@@ -66,7 +88,12 @@ export function AnnuitiesSection({ anuidades }: AnnuitiesSectionProps) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50">
+                      <Button
+                         variant="ghost" 
+                         size="icon" 
+                         className="h-7 w-7 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50"
+                         onClick={() => handleEdit(a)}
+                      >
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
                     </TooltipTrigger>
@@ -77,7 +104,12 @@ export function AnnuitiesSection({ anuidades }: AnnuitiesSectionProps) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-red-600 hover:bg-red-50">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7 text-slate-400 hover:text-red-600 hover:bg-red-50"
+                        onClick={() => handleDelete(a)}
+                      >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </TooltipTrigger>
@@ -89,6 +121,40 @@ export function AnnuitiesSection({ anuidades }: AnnuitiesSectionProps) {
           ))}
         </div>
       )}
+
+      {/* Diálogos de Ação */}
+      <CancelPaymentDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        itemId={selectedItem?.id ?? null}
+        itemDescription={selectedItem ? `Excluir Anuidade ${selectedItem.competencia_ano} (${formatCurrency(selectedItem.valor)})` : ""}
+        onConfirm={async (observation) => {
+          if (selectedItem) {
+            await cancelPayment.mutateAsync({ 
+              id: selectedItem.id, 
+              observation 
+            });
+            setIsDeleteDialogOpen(false);
+          }
+        }}
+        isPending={cancelPayment.isPending}
+        title="Cancelar Anuidade"
+      />
+
+      <EditLancamentoDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        lancamento={selectedItem}
+        onConfirm={(data) => {
+          if (selectedItem) {
+            updatePayment.mutate(
+              { id: selectedItem.id, data },
+              { onSuccess: () => setIsEditDialogOpen(false) }
+            );
+          }
+        }}
+        isPending={updatePayment.isPending}
+      />
     </div>
   );
 }

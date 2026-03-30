@@ -1,13 +1,21 @@
-import { FinancialStatusBadge } from "../../shared/FinancialStatusBadge";
-import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
+import { useState } from "react";
+import { 
+  Trash2, 
+  Pencil
+} from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
+import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
+import { FinancialStatusBadge } from "../../shared/FinancialStatusBadge";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/shared/components/ui/tooltip";
+import { CancelPaymentDialog } from "../../dialogs/CancelPaymentDialog";
+import { EditDAEDialog } from "../../dialogs/EditDAEDialog";
+import { useCancelFinanceActions } from "../../../hooks/edit/useCancelFinanceActions";
+import { useUpdateFinanceActions } from "../../../hooks/edit/useUpdateFinanceActions";
 import type { FinanceDAE } from "../../../types/finance.types";
 
 const MONTH_LABELS = [
@@ -20,11 +28,28 @@ interface DAESectionProps {
 }
 
 export function DAESection({ daes }: DAESectionProps) {
+  const [selectedItem, setSelectedItem] = useState<FinanceDAE | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  const { cancelDAE } = useCancelFinanceActions();
+  const { updateDAE } = useUpdateFinanceActions();
+
   const sorted = [...daes].sort((a, b) => {
     const ya = a.competencia_ano * 100 + a.competencia_mes;
     const yb = b.competencia_ano * 100 + b.competencia_mes;
     return yb - ya;
   });
+
+  const handleDelete = (item: FinanceDAE) => {
+    setSelectedItem(item);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleEdit = (item: FinanceDAE) => {
+    setSelectedItem(item);
+    setIsEditDialogOpen(true);
+  };
 
   return (
     <div>
@@ -64,7 +89,12 @@ export function DAESection({ daes }: DAESectionProps) {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-7 w-7 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50"
+                      onClick={() => handleEdit(d)}
+                    >
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
                   </TooltipTrigger>
@@ -75,7 +105,12 @@ export function DAESection({ daes }: DAESectionProps) {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-red-600 hover:bg-red-50">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-7 w-7 text-slate-400 hover:text-red-600 hover:bg-red-50"
+                      onClick={() => handleDelete(d)}
+                    >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </TooltipTrigger>
@@ -86,6 +121,40 @@ export function DAESection({ daes }: DAESectionProps) {
           </div>
         ))}
       </div>
+
+      {/* Diálogo de Ação */}
+      <CancelPaymentDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        itemId={selectedItem?.id ?? null}
+        itemDescription={selectedItem ? `Excluir Repasse DAE: ${MONTH_LABELS[selectedItem.competencia_mes]}/${selectedItem.competencia_ano}` : ""}
+        onConfirm={async (observation) => {
+          if (selectedItem) {
+            await cancelDAE.mutateAsync({ 
+              id: selectedItem.id, 
+              observation 
+            });
+            setIsDeleteDialogOpen(false);
+          }
+        }}
+        isPending={cancelDAE.isPending}
+        title="Cancelar Repasse DAE"
+      />
+
+      <EditDAEDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        dae={selectedItem}
+        onConfirm={(data) => {
+          if (selectedItem) {
+            updateDAE.mutate(
+              { id: selectedItem.id, data },
+              { onSuccess: () => setIsEditDialogOpen(false) }
+            );
+          }
+        }}
+        isPending={updateDAE.isPending}
+      />
     </div>
   );
 }

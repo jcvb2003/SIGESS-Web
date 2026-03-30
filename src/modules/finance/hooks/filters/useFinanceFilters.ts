@@ -7,6 +7,14 @@ const DEFAULT_PARAMS: FinanceDashboardParams = {
   searchTerm: "",
   year: new Date().getFullYear(),
   tab: "todos",
+  filterAnnuityOk: false,
+  filterAnnuityOverdue: false,
+  filterDAEPaid: false,
+  filterDAEPending: false,
+  filterContributionPending: false,
+  filterGovRegistrationPending: false,
+  filterReleased: false,
+  filterExempt: false,
 };
 
 export function useFinanceFilters() {
@@ -28,6 +36,48 @@ export function useFinanceFilters() {
     setParams((prev) => ({ ...prev, year, page: 1 }));
   }, []);
 
+  const applyAdvancedFilters = useCallback(
+    (filters: {
+      filterAnnuityOk: boolean;
+      filterAnnuityOverdue: boolean;
+      filterDAEPaid: boolean;
+      filterDAEPending: boolean;
+      filterContributionPending: boolean;
+      filterGovRegistrationPending: boolean;
+      filterReleased: boolean;
+      filterExempt: boolean;
+      year: number;
+    }) => {
+      setParams((prev) => ({ ...prev, ...filters, page: 1 }));
+    },
+    [],
+  );
+
+  const clearAdvancedFilters = useCallback(() => {
+    setParams((prev) => ({
+      ...prev,
+      filterAnnuityOk: false,
+      filterAnnuityOverdue: false,
+      filterDAEPaid: false,
+      filterDAEPending: false,
+      filterContributionPending: false,
+      filterGovRegistrationPending: false,
+      filterReleased: false,
+      filterExempt: false,
+      page: 1,
+    }));
+  }, []);
+
+  const hasActiveAdvancedFilters =
+    params.filterAnnuityOk ||
+    params.filterAnnuityOverdue ||
+    params.filterDAEPaid ||
+    params.filterDAEPending ||
+    params.filterContributionPending ||
+    params.filterGovRegistrationPending ||
+    params.filterReleased ||
+    params.filterExempt;
+
   const resetFilters = useCallback(() => {
     setParams(DEFAULT_PARAMS);
   }, []);
@@ -38,6 +88,9 @@ export function useFinanceFilters() {
     setTab,
     setPage,
     setYear,
+    applyAdvancedFilters,
+    clearAdvancedFilters,
+    hasActiveAdvancedFilters,
     resetFilters,
   };
 }

@@ -14,7 +14,7 @@ export interface RequestReportItem {
   socio_id?: string;
 }
 
-function mapRequerimentoToItem(req: { id?: string | number, cod_req?: string | number, cpf?: string | null, data?: string | null, socios?: unknown }): RequestReportItem {
+function mapRequerimentoToItem(req: { id?: string | number, cod_req?: string | number | null, cpf?: string | null, data?: string | null, socios?: unknown }): RequestReportItem {
   const socioObj = req.socios as { id?: string; nome?: string; num_rgp?: string; emissao_rgp?: string } | null;
   return {
     id: String(req.id),
@@ -38,7 +38,12 @@ async function buildSearchFilters(searchTerm: string): Promise<string> {
   const like = `%${searchTerm}%`;
   // Buscar cpfs baseados no nome do socio
   const { data: matchedSocios } = await supabase.from("socios").select("cpf").or(`nome.ilike.${like}`).limit(100);
-  const cpfsInQuery = matchedSocios?.length ? matchedSocios.map((s: { cpf: string }) => '"' + s.cpf + '"').join(',') : '';
+  const cpfsInQuery = matchedSocios?.length 
+    ? matchedSocios
+        .map((s: { cpf: string | null }) => s.cpf ? `"${s.cpf}"` : null)
+        .filter(Boolean)
+        .join(',') 
+    : '';
 
   let orString = '';
   if (isNumber) orString += `cod_req.eq.${searchTerm},`;
