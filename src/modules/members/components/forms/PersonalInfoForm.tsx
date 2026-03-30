@@ -135,8 +135,7 @@ export function PersonalInfoForm() {
           />
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-1">
-          {alfabetizado === "SIM" && (
+        <div className={alfabetizado === "SIM" ? "grid gap-4 sm:grid-cols-1" : "hidden"}>
             <SelectField
               control={control}
               name="escolaridade"
@@ -144,7 +143,6 @@ export function PersonalInfoForm() {
               options={escolaridadeOptions}
               placeholder="Selecione"
             />
-          )}
         </div>
       </CardContent>
     </Card>

@@ -189,7 +189,7 @@ export function PaymentItemForm({
             <Calendar className="h-3 w-3 text-emerald-500" />
             {paymentCategory === "anuidade" ? "SELECIONAR ANOS" : "SELECIONAR MESES"}
           </Label>
-          {paymentCategory === "mensalidade" && (
+          <div className={paymentCategory === "mensalidade" ? undefined : "hidden"}>
             <Select
               value={selectedYearForMensalidade.toString()}
               onValueChange={(v) => onYearForMensalidadeChange(Number(v))}
@@ -203,7 +203,7 @@ export function PaymentItemForm({
                 ))}
               </SelectContent>
             </Select>
-          )}
+          </div>
         </div>
         
         <div className={cn(

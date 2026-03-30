@@ -100,8 +100,7 @@ export function WitnessDialog({
 
         <div className="py-4 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {availableModels.length > 0 && (
-              <div className="space-y-2">
+            <div className={availableModels.length > 0 ? "space-y-2" : "hidden"}>
                 <Label htmlFor="model-select">Modelo do Documento</Label>
                 <Select value={resolvedModel} onValueChange={setSelectedModel}>
                   <SelectTrigger id="model-select">
@@ -116,7 +115,6 @@ export function WitnessDialog({
                   </SelectContent>
                 </Select>
               </div>
-            )}
 
             <div className="space-y-2">
               <Label htmlFor="document-date">Data do Documento</Label>

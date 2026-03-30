@@ -1,6 +1,7 @@
 import { useEffect } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -20,6 +21,10 @@ import {
   type ChargeTypeFormValues,
 } from "../../schemas/chargeType.schema";
 import type { ChargeType } from "../../types/finance.types";
+
+// The Zod schema uses `.default(true)` on `ativo`, so the input type
+// (what the form handles) differs from the output type (what Zod produces).
+type ChargeTypeFormInput = z.input<typeof chargeTypeSchema>;
 
 interface ChargeTypeFormProps {
   readonly initial?: ChargeType | null;
@@ -41,8 +46,8 @@ export function ChargeTypeForm({
     watch,
     reset,
     formState: { errors, isDirty },
-  } = useForm<ChargeTypeFormValues>({
-    resolver: zodResolver(chargeTypeSchema),
+  } = useForm<ChargeTypeFormInput>({
+    resolver: zodResolver(chargeTypeSchema) as Resolver<ChargeTypeFormInput>,
     defaultValues: {
       categoria: "contribuicao",
       nome: "",
@@ -68,7 +73,8 @@ export function ChargeTypeForm({
   const categoria = watch("categoria");
 
   const handleFormSubmit = handleSubmit(async (data) => {
-    await onSubmit(data);
+    // After Zod validation, `ativo` is guaranteed to be `boolean` (via default)
+    await onSubmit(data as ChargeTypeFormValues);
   });
 
   return (
@@ -100,8 +106,7 @@ export function ChargeTypeForm({
           )}
         </div>
 
-        {categoria === "contribuicao" && (
-          <div className="space-y-1.5">
+        <div className={categoria === "contribuicao" ? "space-y-1.5" : "hidden"}>
             <Label className="text-xs font-semibold">
               Obrigatoriedade <span className="text-red-500">*</span>
             </Label>
@@ -131,7 +136,6 @@ export function ChargeTypeForm({
               </p>
             )}
           </div>
-        )}
       </div>
 
       <div className="space-y-1.5">
