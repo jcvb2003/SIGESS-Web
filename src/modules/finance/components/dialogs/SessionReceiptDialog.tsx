@@ -10,6 +10,8 @@ import { Printer, X, Fish, Check } from "lucide-react";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { formatDate } from "@/shared/utils/formatters/dateFormatters";
 import type { FinanceLancamento } from "../../types/finance.types";
+import { useEntityData } from "@/shared/hooks/useEntityData";
+import { EntitySettings } from "@/shared/types/entity.types";
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   dinheiro: "Dinheiro",
@@ -34,15 +36,14 @@ interface SessionReceiptDialogProps {
   readonly lancamentos: FinanceLancamento[];
   readonly memberName?: string;
   readonly memberCpf?: string;
-  readonly colonyName?: string;
 }
 
 const ReceiptContent = forwardRef<HTMLDivElement, {
   readonly lancamentos: FinanceLancamento[];
   readonly memberName?: string;
   readonly memberCpf?: string;
-  readonly colonyName?: string;
-}>(function ReceiptContent({ lancamentos, memberName, memberCpf, colonyName }, ref) {
+  readonly entity: EntitySettings | null | undefined;
+}>(function ReceiptContent({ lancamentos, memberName, memberCpf, entity }, ref) {
   if (lancamentos.length === 0) return null;
 
   const firstLancamento = lancamentos[0];
@@ -57,19 +58,29 @@ const ReceiptContent = forwardRef<HTMLDivElement, {
       id="receipt-content"
     >
       {/* Header */}
-      <div className="text-center border-b pb-4">
+      <div className="text-center border-b pb-4 space-y-1">
         <div className="flex justify-center mb-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
-            <Fish className="h-5 w-5" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 shadow-sm">
+            <Fish className="h-6 w-6" />
           </div>
         </div>
-        <h2 className="font-bold text-base">SIGESS</h2>
-        <p className="text-xs text-muted-foreground">
-          {colonyName ?? "Colônia de Pescadores"}
+        <h2 className="font-bold text-lg leading-tight uppercase">
+          {entity?.shortName || entity?.name || "SIGESS"}
+        </h2>
+        {entity?.cnpj && (
+          <p className="text-[10px] text-muted-foreground font-medium">
+            CNPJ: {entity.cnpj}
+          </p>
+        )}
+        <p className="text-[9px] text-muted-foreground leading-relaxed max-w-[240px] mx-auto">
+          {entity?.street &&
+            `${entity.street}, ${entity.number} - ${entity.district}, ${entity.city}/${entity.state}`}
         </p>
-        <p className="text-xs text-muted-foreground mt-1">
-          COMPROVANTE DE PAGAMENTO
-        </p>
+        <div className="mt-2 pt-2 border-t border-dashed border-muted">
+          <p className="text-[10px] font-bold tracking-widest uppercase">
+            Comprovante de Pagamento
+          </p>
+        </div>
       </div>
 
       {/* Member Info */}
@@ -163,8 +174,9 @@ export function SessionReceiptDialog({
   lancamentos,
   memberName,
   memberCpf,
-  colonyName,
 }: SessionReceiptDialogProps) {
+  const { entity } = useEntityData();
+
   const handlePrint = useCallback(() => {
     const content = document.getElementById("receipt-content");
     if (!content) return;
@@ -178,32 +190,65 @@ export function SessionReceiptDialog({
       <head>
         <title>Comprovante de Pagamento</title>
         <style>
+          @page { size: 80mm auto; margin: 0; }
           * { box-sizing: border-box; margin: 0; padding: 0; }
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 24px; max-width: 400px; margin: 0 auto; }
-          .header { text-align: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 16px; }
-          .header h2 { font-size: 16px; font-weight: 700; }
-          .header p { font-size: 11px; color: #64748b; margin-top: 2px; }
-          .section { margin-bottom: 16px; }
-          .section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 8px; }
-          .member-box { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; background: #fafafa; }
-          .member-box .name { font-weight: 600; font-size: 13px; }
-          .member-box .cpf { font-size: 11px; color: #64748b; }
-          .item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #e2e8f0; font-size: 12px; }
+          body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            padding: 5mm; 
+            width: 80mm; 
+            margin: 0;
+            background: #fff;
+            color: #000;
+          }
+          .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 5mm; margin-bottom: 5mm; }
+          .header h2 { font-size: 14pt; font-weight: 800; text-transform: uppercase; margin-bottom: 1mm; }
+          .header p { font-size: 9pt; color: #333; margin-top: 0.5mm; line-height: 1.2; }
+          .section { margin-bottom: 4mm; }
+          .section-title { font-size: 8pt; font-weight: 800; text-transform: uppercase; border-bottom: 1px solid #ddd; margin-bottom: 2mm; padding-bottom: 0.5mm; }
+          .member-box { border: 1px solid #ccc; padding: 3mm; margin-bottom: 4mm; }
+          .member-box .name { font-weight: 700; font-size: 11pt; }
+          .member-box .cpf { font-size: 9pt; }
+          .item { display: flex; justify-content: space-between; padding: 1.5mm 0; border-bottom: 1px dashed #eee; font-size: 10pt; }
           .item:last-child { border-bottom: none; }
-          .total { display: flex; justify-content: space-between; background: #f0fdf4; border: 1px solid #a7f3d0; border-radius: 8px; padding: 10px; font-weight: 700; margin: 12px 0; }
-          .total .label { font-size: 11px; text-transform: uppercase; color: #047857; }
-          .total .value { font-size: 16px; color: #047857; }
-          .details { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px; }
-          .details p { margin: 0; }
-          .details .label { color: #94a3b8; }
-          .details .value { font-weight: 600; }
-          .footer { text-align: center; border-top: 1px solid #e2e8f0; padding-top: 12px; font-size: 10px; color: #94a3b8; }
-          @media print { body { padding: 8px; } }
+          .total { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            border: 2px solid #000; 
+            padding: 3mm; 
+            font-weight: 800; 
+            margin: 5mm 0; 
+          }
+          .total .label { font-size: 9pt; text-transform: uppercase; }
+          .total .value { font-size: 16pt; }
+          .details { display: grid; grid-template-columns: 1fr 1fr; gap: 2mm; font-size: 9pt; }
+          .details div { margin-bottom: 1mm; }
+          .details .label { color: #666; font-size: 8pt; }
+          .details .value { font-weight: 700; display: block; }
+          .footer { 
+            text-align: center; 
+            border-top: 1px solid #000; 
+            padding-top: 4mm; 
+            margin-top: 5mm;
+            font-size: 8pt; 
+            line-height: 1.4;
+          }
+          @media print {
+            body { width: 100%; padding: 3mm; }
+            button, .no-print { display: none; }
+          }
         </style>
       </head>
       <body>
         ${content.innerHTML}
-        <script>window.onload = function() { window.print(); window.close(); }<\/script>
+        <script>
+          window.onload = function() { 
+            setTimeout(() => {
+              window.print(); 
+              window.close(); 
+            }, 500);
+          }
+        </script>
       </body>
       </html>
     `);
@@ -238,12 +283,12 @@ export function SessionReceiptDialog({
           </div>
         </DialogHeader>
 
-        <div className="max-h-[70vh] overflow-y-auto">
+        <div className="max-h-[70vh] overflow-y-auto overflow-x-hidden scrollbar-hide">
           <ReceiptContent
             lancamentos={lancamentos}
             memberName={memberName}
             memberCpf={memberCpf}
-            colonyName={colonyName}
+            entity={entity}
           />
         </div>
       </DialogContent>

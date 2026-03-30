@@ -1,8 +1,15 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { DefesoRequestDocument } from "../templates/defeso-request/DefesoRequestDocument";
 import { useDocumentMember } from "../../context/useDocumentMember";
 import { Button } from "@/shared/components/ui/button";
-import { FileText, Gavel, Loader2, Search, ChevronRight } from "lucide-react";
+import {
+  FileText,
+  Gavel,
+  Loader2,
+  Search,
+  ChevronRight,
+  AlertTriangle,
+} from "lucide-react";
 import { WitnessDialog } from "../modals/WitnessDialog";
 import { toast } from "sonner";
 import { usePdfTemplates } from "../../hooks/usePdfTemplates";
@@ -11,18 +18,55 @@ import { processSimpleStatementData } from "../../services/pdf/pdfDataProcessor"
 import { useEntityData } from "@/shared/hooks/useEntityData";
 import { MemberSelect } from "../member-selector/MemberSelect";
 import { DocumentTemplate } from "@/modules/settings/types/settings.types";
+import { useFinancialStatus } from "@/modules/finance/hooks/data/useFinancialStatus";
+import { useFinanceSettings } from "@/modules/finance/hooks/data/useFinanceSettings";
+import { useMemberConfig } from "@/modules/finance/hooks/data/useMemberConfig";
+import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
+
 export function DocumentsDashboard() {
   const { selectedMember, fullMemberData } = useDocumentMember();
   const { entity } = useEntityData();
   const [activeModal, setActiveModal] = useState<
     "residence" | "representation" | null
   >(null);
+
   const {
     residenceTemplates,
     representationTemplates,
     defesoTemplates,
     isLoading: isLoadingTemplates,
   } = usePdfTemplates();
+
+  // Finance integration
+  const { isOverdue, isLoading: isFinanceLoading } = useFinancialStatus(
+    fullMemberData?.cpf ?? null,
+    new Date().getFullYear(),
+  );
+  const { settings } = useFinanceSettings();
+  const { config } = useMemberConfig(fullMemberData?.cpf ?? null);
+
+  const financialIssues = useMemo(() => {
+    if (!fullMemberData || !settings) return null;
+    if (config?.isento) return null;
+    if (config?.liberado_pelo_presidente) return null;
+
+    if (isOverdue && settings.bloquear_inadimplente) {
+      return {
+        type: "blocking" as const,
+        message: "Sócio inadimplente. Emissão de documentos bloqueada conforme regras da entidade.",
+      };
+    }
+
+    if (isOverdue) {
+      return {
+        type: "warning" as const,
+        message: "Sócio possui pendências financeiras. Recomendável regularizar antes da emissão.",
+      };
+    }
+
+    return null;
+  }, [fullMemberData, settings, config, isOverdue]);
+
   if (!selectedMember) {
     return (
       <MemberSelect>
@@ -47,6 +91,7 @@ export function DocumentsDashboard() {
       </MemberSelect>
     );
   }
+
   const handleGenerateResidence = async (data: {
     witnesses?: {
       witness1: {
@@ -63,11 +108,16 @@ export function DocumentsDashboard() {
     modelId?: string;
     documentDate?: string;
   }) => {
+    if (financialIssues?.type === "blocking") {
+      toast.error(financialIssues.message);
+      return;
+    }
+
     if (!fullMemberData || !data.modelId) {
       toast.error("Dados incompletos para geração do documento.");
       return;
     }
-    const model = residenceModels.find((m) => m.id === data.modelId);
+    const model = (residenceTemplates as any[]).find((m) => m.id === data.modelId);
     if (!model || !model.fileUrl) {
       toast.error("Modelo inválido.");
       return;
@@ -110,6 +160,7 @@ export function DocumentsDashboard() {
       console.error(error);
     }
   };
+
   const handleGenerateRepresentation = async (data: {
     witnesses?: {
       witness1: {
@@ -126,11 +177,16 @@ export function DocumentsDashboard() {
     modelId?: string;
     documentDate?: string;
   }) => {
+    if (financialIssues?.type === "blocking") {
+      toast.error(financialIssues.message);
+      return;
+    }
+
     if (!fullMemberData || !data.modelId) {
       toast.error("Dados incompletos para geração do documento.");
       return;
     }
-    const model = representationModels.find((m) => m.id === data.modelId);
+    const model = (representationTemplates as any[]).find((m) => m.id === data.modelId);
     if (!model || !model.fileUrl) {
       toast.error("Modelo inválido.");
       return;
@@ -173,24 +229,48 @@ export function DocumentsDashboard() {
       console.error(error);
     }
   };
+
   const residenceModels = residenceTemplates;
   const representationModels = representationTemplates;
   const defesoModels = defesoTemplates;
-  if (isLoadingTemplates) {
+
+  if (isLoadingTemplates || isFinanceLoading) {
     return (
       <div className="flex h-40 w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
+
   return (
     <div className="space-y-6">
+      {financialIssues && (
+        <Alert
+          variant={
+            financialIssues.type === "blocking" ? "destructive" : "default"
+          }
+          className={
+            financialIssues.type === "warning"
+              ? "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/20 dark:border-amber-900/30 dark:text-amber-400"
+              : ""
+          }
+        >
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle className="font-bold">Aviso Financeiro</AlertTitle>
+          <AlertDescription className="text-sm">
+            {financialIssues.message}
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="grid grid-cols-2 gap-4">
         <Button
           variant="outline"
           className="h-auto min-h-24 py-4 flex flex-col items-center justify-center gap-2 hover:bg-muted/50 border-dashed text-center whitespace-normal"
           onClick={() => setActiveModal("residence")}
-          disabled={residenceModels.length === 0}
+          disabled={
+            residenceModels.length === 0 || financialIssues?.type === "blocking"
+          }
         >
           <FileText className="h-8 w-8 text-muted-foreground shrink-0" />
           <span className="font-medium text-sm sm:text-base leading-tight">
@@ -205,7 +285,10 @@ export function DocumentsDashboard() {
           variant="outline"
           className="h-auto min-h-24 py-4 flex flex-col items-center justify-center gap-2 hover:bg-muted/50 border-dashed text-center whitespace-normal"
           onClick={() => setActiveModal("representation")}
-          disabled={representationModels.length === 0}
+          disabled={
+            representationModels.length === 0 ||
+            financialIssues?.type === "blocking"
+          }
         >
           <Gavel className="h-8 w-8 text-muted-foreground shrink-0" />
           <span className="font-medium text-sm sm:text-base leading-tight">
@@ -218,7 +301,10 @@ export function DocumentsDashboard() {
       </div>
 
       <div className="bg-card border rounded-xl p-6 shadow-sm">
-        <DefesoRequestDocument availableModels={defesoModels} />
+        <DefesoRequestDocument
+          availableModels={defesoModels}
+          isBlocked={financialIssues?.type === "blocking"}
+        />
       </div>
 
       <WitnessDialog
@@ -241,3 +327,4 @@ export function DocumentsDashboard() {
     </div>
   );
 }
+

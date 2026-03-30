@@ -4,7 +4,6 @@ import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Loader2, Plus, Trash2, Tag } from "lucide-react";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
-import { formatNumericInput } from "./formatters";
 import { cn } from "@/shared/lib/utils";
 import { useChargeTypes } from "../../hooks/data/useChargeTypes";
 import type { ChargeType } from "../../types/finance.types";

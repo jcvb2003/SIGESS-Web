@@ -11,6 +11,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/shared/components/ui/dialog";
+import { useFinancialStatus } from "../../../finance/hooks/data/useFinancialStatus";
+import { FinancialStatusBadge } from "@/modules/finance/components/shared/FinancialStatusBadge";
+
 interface MemberModalHeaderProps {
   member: MemberRegistrationForm;
 }
@@ -118,10 +121,15 @@ function MemberAvatar({
 export function MemberModalHeader({
   member,
 }: Readonly<MemberModalHeaderProps>) {
-  const { photoUrl, isLoading } = usePhotoManager({
+  const { photoUrl, isLoading: photoLoading } = usePhotoManager({
     cpf: member.cpf,
     initialPhotoUrl: member.fotos?.[0]?.foto_url,
   });
+
+  const { isOverdue, isLoading: financeLoading } = useFinancialStatus(
+    member.cpf,
+    new Date().getFullYear(),
+  );
 
   return (
     <div className="relative flex flex-row items-center sm:items-stretch gap-3 sm:gap-5 pb-3 sm:pb-5 border-b border-border/40">
@@ -130,7 +138,7 @@ export function MemberModalHeader({
       <MemberAvatar
         member={member}
         photoUrl={photoUrl}
-        isLoading={isLoading}
+        isLoading={photoLoading}
       />
 
       <div className="relative flex flex-col items-start justify-center gap-1 sm:gap-2 flex-1 min-w-0">
@@ -138,6 +146,12 @@ export function MemberModalHeader({
           <h2 className="text-base sm:text-2xl font-bold tracking-tight text-foreground leading-tight truncate max-w-full">
             {member.nome}
           </h2>
+          {!financeLoading && (
+            <FinancialStatusBadge
+              status={isOverdue ? "overdue" : "ok"}
+              className="text-[10px] uppercase font-bold"
+            />
+          )}
         </div>
 
         <div className="flex flex-row flex-wrap items-center gap-1 sm:gap-4 text-xs sm:text-sm text-muted-foreground">

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -45,6 +46,7 @@ export function MemberDetailsModal({
   onDelete,
   onDocuments,
 }: Readonly<MemberDetailsModalProps>) {
+  const navigate = useNavigate();
   const {
     data: member,
     isLoading,
@@ -63,6 +65,12 @@ export function MemberDetailsModal({
   };
   const handleDocuments = () => {
     if (memberId && member) onDocuments(memberId, member);
+  };
+  const handleFinance = () => {
+    if (member?.cpf) {
+      navigate(`/finance?searchTerm=${member.cpf}`);
+      onOpenChange(false);
+    }
   };
 
   const renderContent = () => {
@@ -187,6 +195,7 @@ export function MemberDetailsModal({
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 onDocuments={handleDocuments}
+                onFinance={handleFinance}
               />
             </div>
           </div>
@@ -213,6 +222,7 @@ export function MemberDetailsModal({
             onEdit={handleEdit}
             onDelete={handleDelete}
             onDocuments={handleDocuments}
+            onFinance={handleFinance}
           />
         </div>
       </>
@@ -231,3 +241,4 @@ export function MemberDetailsModal({
     </Dialog>
   );
 }
+

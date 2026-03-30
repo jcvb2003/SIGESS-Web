@@ -55,6 +55,7 @@ interface DefesoRequestDocumentProps {
     name: string;
     fileUrl?: string;
   }[];
+  isBlocked?: boolean;
 }
 const DataField = ({
   label,
@@ -79,6 +80,7 @@ const DataField = ({
 );
 export function DefesoRequestDocument({
   availableModels = [],
+  isBlocked = false,
 }: DefesoRequestDocumentProps) {
   const { fullMemberData, isLoading: isLoadingMember } = useDocumentMember();
   const { entity } = useEntityData();
@@ -324,7 +326,7 @@ export function DefesoRequestDocument({
             <Button
               variant="default"
               onClick={handleGeneratePdf}
-              disabled={isGenerating || !savedRequest}
+              disabled={isGenerating || !savedRequest || isBlocked}
               className="w-full sm:w-auto"
             >
               {isGenerating ? (

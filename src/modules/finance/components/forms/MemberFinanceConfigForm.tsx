@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { Button } from "@/shared/components/ui/button";
 import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
@@ -37,7 +37,7 @@ export function MemberFinanceConfigForm({
   const { config, isLoading } = useMemberConfig(cpf);
   const { updateConfig, updateRegime } = useUpdateMemberConfig();
 
-  const { control, handleSubmit, reset, watch, formState: { isDirty } } =
+  const { control, handleSubmit, reset, formState: { isDirty } } =
     useForm<ConfigFormValues>({
       defaultValues: {
         isento: false,
@@ -51,13 +51,13 @@ export function MemberFinanceConfigForm({
     if (isLoading) return;
     reset({
       isento: config?.isento ?? false,
-      liberadoPresidente: config?.liberado_presidente ?? false,
+      liberadoPresidente: config?.liberado_pelo_presidente ?? false,
       regime: (config?.regime as "anuidade" | "mensalidade") ?? "anuidade",
       observacao: "",
     });
   }, [config, isLoading, reset]);
 
-  const regime = watch("regime");
+  const regime = useWatch({ control, name: "regime" });
   const regimeAtual = (config?.regime as "anuidade" | "mensalidade") ?? "anuidade";
   const regimeChanged = regime !== regimeAtual;
 
@@ -72,7 +72,7 @@ export function MemberFinanceConfigForm({
     } else if (mode === "liberacao") {
       await updateConfig.mutateAsync({
         cpf,
-        updates: { liberado_presidente: data.liberadoPresidente },
+        updates: { liberado_pelo_presidente: data.liberadoPresidente },
       });
     } else if (mode === "regime") {
       if (regimeChanged) {

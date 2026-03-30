@@ -11,7 +11,6 @@ import "./app/styles/globals.css";
 // This patch silently handles those errors instead of crashing the entire app.
 if (typeof Node !== "undefined") {
   const originalRemoveChild = Node.prototype.removeChild;
-  // @ts-expect-error -- monkey-patching DOM for safety
   Node.prototype.removeChild = function <T extends Node>(child: T): T {
     if (child.parentNode !== this) {
       if (child.parentNode) {
@@ -23,7 +22,6 @@ if (typeof Node !== "undefined") {
   };
 
   const originalInsertBefore = Node.prototype.insertBefore;
-  // @ts-expect-error -- monkey-patching DOM for safety
   Node.prototype.insertBefore = function <T extends Node>(
     newNode: T,
     referenceNode: Node | null,
