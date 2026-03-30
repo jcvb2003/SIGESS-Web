@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -151,6 +152,68 @@ export function FinanceSettingsDialog({
   }
 
   const chargeFormPending = createChargeType.isPending || updateChargeType.isPending;
+
+  const chargesContent = (() => {
+    if (loadingChargeTypes) {
+      return (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground py-4">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          Carregando...
+        </div>
+      );
+    }
+
+    if (chargeTypes.length === 0) {
+      return (
+        <p className="text-xs text-center text-muted-foreground py-8">
+          Nenhum tipo de cobrança cadastrado.
+        </p>
+      );
+    }
+
+    return (
+      <div className="divide-y rounded-lg border overflow-hidden">
+        {chargeTypes.map((ct) => (
+          <div
+            key={ct.id}
+            className={cn(
+              "flex items-center justify-between p-3 bg-white",
+              !ct.ativo && "opacity-50",
+            )}
+          >
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-slate-800 truncate">
+                {ct.nome}
+              </p>
+              <p className="text-[10px] text-muted-foreground capitalize">
+                {ct.categoria === "contribuicao" ? "Contribuição" : "Cadastro Gov."}
+                {ct.obrigatoriedade && ` · ${ct.obrigatoriedade}`}
+                {ct.valor_padrao != null && ` · R$ ${Number(ct.valor_padrao).toFixed(2)}`}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                title={ct.ativo ? "Desativar" : "Ativar"}
+                onClick={() => toggleActive.mutate({ id: ct.id, ativo: !ct.ativo })}
+                className="p-1 text-slate-400 hover:text-emerald-600 transition-colors"
+              >
+                <ToggleLeft className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                title="Editar"
+                onClick={() => setEditingCharge(ct)}
+                className="p-1 text-slate-400 hover:text-blue-600 transition-colors"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  })();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -327,57 +390,7 @@ export function FinanceSettingsDialog({
                     />
                   )}
 
-                  {loadingChargeTypes ? (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground py-4">
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      Carregando...
-                    </div>
-                  ) : chargeTypes.length === 0 ? (
-                    <p className="text-xs text-center text-muted-foreground py-8">
-                      Nenhum tipo de cobrança cadastrado.
-                    </p>
-                  ) : (
-                    <div className="divide-y rounded-lg border overflow-hidden">
-                      {chargeTypes.map((ct) => (
-                        <div
-                          key={ct.id}
-                          className={cn(
-                            "flex items-center justify-between p-3 bg-white",
-                            !ct.ativo && "opacity-50",
-                          )}
-                        >
-                          <div className="min-w-0">
-                            <p className="text-xs font-semibold text-slate-800 truncate">
-                              {ct.nome}
-                            </p>
-                            <p className="text-[10px] text-muted-foreground capitalize">
-                              {ct.categoria === "contribuicao" ? "Contribuição" : "Cadastro Gov."}
-                              {ct.obrigatoriedade && ` · ${ct.obrigatoriedade}`}
-                              {ct.valor_padrao != null && ` · R$ ${Number(ct.valor_padrao).toFixed(2)}`}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <button
-                              type="button"
-                              title={ct.ativo ? "Desativar" : "Ativar"}
-                              onClick={() => toggleActive.mutate({ id: ct.id, ativo: !ct.ativo })}
-                              className="p-1 text-slate-400 hover:text-emerald-600 transition-colors"
-                            >
-                              <ToggleLeft className="h-4 w-4" />
-                            </button>
-                            <button
-                              type="button"
-                              title="Editar"
-                              onClick={() => setEditingCharge(ct)}
-                              className="p-1 text-slate-400 hover:text-blue-600 transition-colors"
-                            >
-                              <Pencil className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  {chargesContent}
                 </div>
               </ScrollArea>
             </TabsContent>
@@ -385,5 +398,6 @@ export function FinanceSettingsDialog({
         </div>
       </DialogContent>
     </Dialog>
+
   );
 }

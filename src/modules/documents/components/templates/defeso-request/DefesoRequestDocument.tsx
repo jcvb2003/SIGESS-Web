@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/shared/components/ui/button";
 import {
   FileDown,
@@ -38,7 +38,6 @@ import { useRequestManagement } from "../../../hooks/useRequestManagement";
 import { DocumentTemplate } from "@/modules/settings/types/settings.types";
 import { usePdfGeneration } from "../../../hooks/usePdfGeneration";
 import { useParametersData } from "@/modules/settings/hooks/useParametersData";
-import { useEffect } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,21 +49,21 @@ import {
   AlertDialogTitle,
 } from "@/shared/components/ui/alert-dialog";
 interface DefesoRequestDocumentProps {
-  availableModels?: {
-    id: string;
-    name: string;
-    fileUrl?: string;
+  readonly availableModels?: {
+    readonly id: string;
+    readonly name: string;
+    readonly fileUrl?: string;
   }[];
-  isBlocked?: boolean;
+  readonly isBlocked?: boolean;
 }
 const DataField = ({
   label,
   value,
   icon: Icon,
 }: {
-  label: string;
-  value: string | null | undefined;
-  icon?: React.ElementType;
+  readonly label: string;
+  readonly value: string | null | undefined;
+  readonly icon?: React.ElementType;
 }) => (
   <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-zinc-50 transition-colors border border-transparent hover:border-zinc-100">
     {Icon && <Icon className="w-4 h-4 mt-0.5 text-primary/60" />}
@@ -109,7 +108,7 @@ export function DefesoRequestDocument({
   const { generatePdf, isGenerating } = usePdfGeneration();
   const resolvedModel = selectedModel || availableModels[0]?.id || "";
   const handleSave = async () => {
-    if (!fullMemberData || !fullMemberData.codigo_do_socio) {
+    if (!fullMemberData?.codigo_do_socio) {
       toast.error("Dados do sócio incompletos (código do sócio ausente).");
       return;
     }
@@ -137,7 +136,7 @@ export function DefesoRequestDocument({
       return;
     }
     const model = availableModels.find((m) => m.id === resolvedModel);
-    if (!model || !model.fileUrl) {
+    if (!model?.fileUrl) {
       toast.error("Modelo inválido ou sem arquivo PDF associado.");
       return;
     }

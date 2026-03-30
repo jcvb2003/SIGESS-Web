@@ -1,4 +1,3 @@
-import { FormEvent } from "react";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { ParametersFormHeader } from "./ParametersFormHeader";
 import { FishingPeriodsSection } from "./FishingPeriodsSection";
@@ -8,7 +7,7 @@ import { SystemParameters } from "../../types/settings.types";
 export function ParametersForm() {
   const { parameters, isLoading, isSaving, saveParameters } =
     useParametersData();
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!parameters) return;
     const formData = new FormData(event.currentTarget);

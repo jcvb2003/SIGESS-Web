@@ -2,11 +2,11 @@ import { Button } from "@/shared/components/ui/button";
 import { Pencil, Trash2, FileText, Wallet } from "lucide-react";
 
 interface MemberModalActionsProps {
-  onEdit: () => void;
-  onDelete: () => void;
-  onDocuments: () => void;
-  onFinance: () => void;
-  variant?: "desktop" | "mobile";
+  readonly onEdit: () => void;
+  readonly onDelete: () => void;
+  readonly onDocuments: () => void;
+  readonly onFinance: () => void;
+  readonly variant?: "desktop" | "mobile";
 }
 
 export function MemberModalActions({
