@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 export function SettingsTabsNav() {
   return (
-    <TabsList>
+    <TabsList className="overflow-x-auto scrollbar-hide w-auto justify-start px-2">
       <TabsTrigger value="dados" className="gap-2">
         <Database className="h-4 w-4" />
         <span className="hidden sm:inline">Dados</span>

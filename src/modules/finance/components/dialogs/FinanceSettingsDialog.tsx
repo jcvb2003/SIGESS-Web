@@ -25,11 +25,24 @@ import {
 } from "@/shared/components/ui/select";
 import { Switch } from "@/shared/components/ui/switch";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
-import { Loader2, Check, X, Plus, Pencil, ToggleLeft } from "lucide-react";
+import {
+  Loader2,
+  Check,
+  X,
+  Plus,
+  Pencil,
+  ToggleLeft,
+  Search,
+  User,
+} from "lucide-react";
 import { MoneyField } from "../shared/MoneyField";
 import { useFinanceSettings } from "../../hooks/data/useFinanceSettings";
 import { useChargeTypes } from "../../hooks/data/useChargeTypes";
 import { useUpdateFinanceSettings, useChargeTypeMutations } from "../../hooks/edit/useUpdateMemberConfig";
+import { useDocumentMemberSearch } from "@/modules/documents/hooks/useDocumentMemberSearch";
+import { MemberFinanceConfigForm } from "../forms/MemberFinanceConfigForm";
+import { Input } from "@/shared/components/ui/input";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import {
   financeSettingsSchema,
   type FinanceSettingsForm,
@@ -53,6 +66,24 @@ export function FinanceSettingsDialog({
   const { createChargeType, updateChargeType, toggleActive } = useChargeTypeMutations();
 
   const [editingCharge, setEditingCharge] = useState<ChargeType | "new" | null>(null);
+
+  // Member Search State
+  const [memberSearch, setMemberSearch] = useState("");
+  const [selectedMemberCpf, setSelectedMemberCpf] = useState<string | null>(null);
+  const { searchMembers, isLoading: isSearchLoading } = useDocumentMemberSearch();
+  const [searchResults, setSearchResults] = useState<Awaited<ReturnType<typeof searchMembers>>>([]);
+
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (memberSearch.length >= 3) {
+        const results = await searchMembers(memberSearch);
+        setSearchResults(results);
+      } else {
+        setSearchResults([]);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [memberSearch, searchMembers]);
 
   const {
     control,
@@ -241,10 +272,13 @@ export function FinanceSettingsDialog({
           </DialogHeader>
 
           <Tabs defaultValue="parametros" className="flex flex-col flex-1 overflow-hidden">
-            <TabsList className="mx-6 mt-3 mb-0 h-9 shrink-0 w-auto justify-start bg-muted/50">
-              <TabsTrigger value="parametros" className="text-xs">Parâmetros</TabsTrigger>
-              <TabsTrigger value="tipos" className="text-xs">Tipos de Cobrança</TabsTrigger>
-            </TabsList>
+            <div className="px-6 py-2 shrink-0">
+              <TabsList>
+                <TabsTrigger value="parametros">Parâmetros</TabsTrigger>
+                <TabsTrigger value="tipos">Tipos de Cobrança</TabsTrigger>
+                <TabsTrigger value="socios">Configuração por Sócio</TabsTrigger>
+              </TabsList>
+            </div>
 
             {/* ── Tab: Parâmetros ── */}
             <TabsContent value="parametros" className="flex-1 overflow-hidden mt-0">
@@ -391,6 +425,115 @@ export function FinanceSettingsDialog({
                   )}
 
                   {chargesContent}
+                </div>
+              </ScrollArea>
+            </TabsContent>
+
+            {/* ── Tab: Configuração por Sócio ── */}
+            <TabsContent value="socios" className="flex-1 overflow-hidden mt-0">
+              <ScrollArea className="h-full px-6">
+                <div className="py-6 space-y-6">
+                  <div>
+                    <Label className="text-xs font-black text-slate-500 uppercase tracking-widest mb-2 block">
+                      Localizar Sócio
+                    </Label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <Input
+                        placeholder="Buscar por nome, CPF ou matrícula..."
+                        className="pl-10 h-11 text-sm bg-white border-slate-200 focus:ring-emerald-500 rounded-xl"
+                        value={memberSearch}
+                        onChange={(e) => setMemberSearch(e.target.value)}
+                      />
+                    </div>
+
+                    {isSearchLoading ? (
+                      <div className="mt-4 flex items-center justify-center py-8 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                        <Loader2 className="h-5 w-5 animate-spin text-emerald-600 mr-2" />
+                        <span className="text-xs text-slate-500 font-medium tracking-tight">Buscando sócios...</span>
+                      </div>
+                    ) : searchResults.length > 0 ? (
+                      <div className="mt-2 divide-y border rounded-xl overflow-hidden bg-white shadow-sm ring-1 ring-slate-100">
+                        {searchResults.map((member) => (
+                          <button
+                            key={member.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedMemberCpf(member.cpf);
+                              setSearchResults([]);
+                              setMemberSearch("");
+                            }}
+                            className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 transition-colors text-left group"
+                          >
+                            <Avatar className="h-8 w-8 border bg-slate-50">
+                              <AvatarFallback className="text-[10px] font-bold text-slate-400 group-hover:text-emerald-600 transition-colors">
+                                {member.nome.substring(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-bold text-slate-700 truncate">{member.nome}</p>
+                              <p className="text-[10px] text-slate-500 font-medium">CPF: {member.cpf}</p>
+                            </div>
+                            <Plus className="h-3.5 w-3.5 text-slate-300 group-hover:text-emerald-500 transition-all group-hover:scale-110" />
+                          </button>
+                        ))}
+                      </div>
+                    ) : memberSearch.length >= 3 && (
+                      <div className="mt-4 text-center py-8 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                        <p className="text-xs text-slate-500 font-medium">Nenhum sócio encontrado para "{memberSearch}"</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {selectedMemberCpf && (
+                    <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                      <div className="flex items-center justify-between mb-4 bg-emerald-50/50 p-3 rounded-xl border border-emerald-100">
+                        <div className="flex items-center gap-2">
+                          <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700">
+                            <User className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-black text-slate-600 uppercase tracking-tighter">Editando Sócio</p>
+                            <p className="text-[10px] font-medium text-emerald-700">CPF: {selectedMemberCpf}</p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedMemberCpf(null)}
+                          className="h-7 text-[10px] uppercase font-bold text-slate-400 hover:text-red-600 transition-colors"
+                        >
+                          Trocar
+                        </Button>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <MemberFinanceConfigForm
+                          cpf={selectedMemberCpf}
+                          mode="isencao"
+                          onClose={() => {}}
+                        />
+                         <MemberFinanceConfigForm
+                          cpf={selectedMemberCpf}
+                          mode="regime"
+                          onClose={() => {}}
+                        />
+                         <MemberFinanceConfigForm
+                          cpf={selectedMemberCpf}
+                          mode="liberacao"
+                          onClose={() => {}}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {!selectedMemberCpf && !memberSearch && (
+                    <div className="flex flex-col items-center justify-center py-20 text-slate-300 opacity-60">
+                      <User className="h-12 w-12 mb-3 stroke-[1px]" />
+                      <p className="text-xs font-bold uppercase tracking-widest">Selecione um sócio acima</p>
+                      <p className="text-[10px] mt-1 font-medium italic">Gerencie isenções, liberações e regimes individuais</p>
+                    </div>
+                  )}
                 </div>
               </ScrollArea>
             </TabsContent>

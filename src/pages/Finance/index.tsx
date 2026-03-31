@@ -41,7 +41,7 @@ export default function FinancePage() {
   const anoBase = settings?.ano_base_cobranca ?? 2024;
 
   // Real stats from DB
-  const { arrecadado, qtdPagamentos, daePendente } = useFinanceStats(currentYear, currentMonth);
+  const { arrecadado, arrecadadoAno, qtdPagamentos, daePendente } = useFinanceStats(currentYear, currentMonth);
   const { counts: tabCounts } = useFinanceTabCounts(params.searchTerm, params.year, anoBase);
 
   // Statement Modal
@@ -119,13 +119,13 @@ export default function FinancePage() {
       {/* Summary Cards */}
       <SummaryCards
         arrecadadoMes={arrecadado}
+        arrecadadoAno={arrecadadoAno}
         qtdPagamentosMes={qtdPagamentos}
         mesLabel={`${MONTH_NAMES[currentMonth]}/${String(currentYear).slice(-2)}`}
+        yearLabel={String(currentYear)}
         inadimplentes={tabCounts.inadimplentes}
         inadimplentes1Ano={0}
         daePendente={daePendente}
-        liberados={tabCounts.liberados}
-        isentos={tabCounts.isentos}
       />
 
       {/* Table Card */}

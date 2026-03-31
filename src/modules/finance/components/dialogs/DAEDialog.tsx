@@ -19,6 +19,8 @@ import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { usePaymentSession } from "../../hooks/edit/usePaymentSession";
 import { useMemberStatement } from "../../hooks/data/useMemberStatement";
+import { useParametersData } from "@/modules/settings/hooks/useParametersData";
+import { isMonthInDefeso } from "../../utils/defesoUtils";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { formatNumericInput } from "../shared/formatters";
 import { MemberFinancePreview } from "../shared/MemberFinancePreview";
@@ -29,6 +31,7 @@ import {
   Calendar,
   X,
   PlusCircle,
+  ShieldAlert,
 } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 import type {
@@ -63,6 +66,7 @@ export function DAEDialog({
   const currentYear = new Date().getFullYear();
   const paymentMutation = usePaymentSession();
   const { daes: historyDaes } = useMemberStatement(open ? socioCpf : null);
+  const { parameters } = useParametersData();
 
   const [valorTotal, setValorTotal] = useState(0);
   const [displayValue, setDisplayValue] = useState("");
@@ -77,26 +81,26 @@ export function DAEDialog({
     new Date().toLocaleDateString("sv"),
   );
 
-  // Mapeia meses já pagos para o ano selecionado
+  // Mapeia meses já pagos para o ano selecionado (ignora cancelados)
   const paidMonthsInYear = useMemo(() => {
     return new Set(
       historyDaes
-        .filter(d => d.competencia_ano === selectedYear)
+        .filter(d => d.competencia_ano === selectedYear && d.status !== "cancelado")
         .map(d => d.competencia_mes)
     );
   }, [historyDaes, selectedYear]);
 
   const toggleMonth = (m: number) => {
-    if (paidMonthsInYear.has(m)) return;
+    if (paidMonthsInYear.has(m) || isMonthInDefeso(m, selectedYear, parameters)) return;
 
     if (selectedMonths.includes(m)) {
       // Regressão: Desmarca o mês e todos os posteriores
       setSelectedMonths(prev => prev.filter(month => month < m));
     } else {
-      // Progressão: Marca todos os meses pendentes até o mês clicado
+      // Progressão: Marca todos os meses pendentes até o mês clicado, respeitando o defeso
       const newSelection: number[] = [];
       for (let i = 1; i <= m; i++) {
-        if (!paidMonthsInYear.has(i)) {
+        if (!paidMonthsInYear.has(i) && !isMonthInDefeso(i, selectedYear, parameters)) {
           newSelection.push(i);
         }
       }
@@ -227,21 +231,24 @@ export function DAEDialog({
                   {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => {
                     const isPaid = paidMonthsInYear.has(m);
                     const isSelected = selectedMonths.includes(m);
+                    const isDefeso = isMonthInDefeso(m, selectedYear, parameters);
 
                     const buttonStyles = cn(
                       "relative flex flex-col items-center justify-center h-14 rounded-xl border-2 transition-all p-1 font-medium select-none text-slate-600",
                       isPaid && "bg-slate-100 border-slate-100 opacity-60 cursor-not-allowed",
-                      !isPaid && isSelected && "bg-emerald-600 border-emerald-600 text-white shadow-md scale-[1.02]",
-                      !isPaid && !isSelected && "bg-white border-slate-100 hover:border-emerald-200 hover:bg-emerald-50/30"
+                      isDefeso && "bg-amber-50 border-amber-100 text-amber-900 cursor-not-allowed",
+                      !isPaid && !isDefeso && isSelected && "bg-emerald-600 border-emerald-600 text-white shadow-md scale-[1.02]",
+                      !isPaid && !isDefeso && !isSelected && "bg-white border-slate-100 hover:border-emerald-200 hover:bg-emerald-50/30"
                     );
 
                     return (
                       <button
                         key={`month-${m}`}
                         type="button"
-                        disabled={isPaid}
+                        disabled={isPaid || isDefeso}
                         onClick={() => toggleMonth(m)}
                         className={buttonStyles}
+                        title={isDefeso ? "Período de Defeso - Emissão bloqueada" : undefined}
                       >
                         <span className="text-xs font-bold leading-tight uppercase tracking-tighter">
                           {MONTH_LABELS[m]}
@@ -251,7 +258,12 @@ export function DAEDialog({
                             <Check className="h-2.5 w-2.5 text-emerald-600" />
                           </div>
                         )}
-                        {isSelected && (
+                        {isDefeso && (
+                          <div className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-100/80">
+                            <ShieldAlert className="h-2.5 w-2.5 text-amber-700" />
+                          </div>
+                        )}
+                        {isSelected && !isDefeso && (
                           <span className="text-[8px] font-bold text-emerald-100 mt-0.5 animate-in zoom-in-50">OK</span>
                         )}
                       </button>

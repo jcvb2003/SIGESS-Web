@@ -10,10 +10,10 @@ import { User, FileText } from "lucide-react";
 export function RegistrationTabs() {
   return (
     <Tabs defaultValue="personal" className="w-full space-y-6">
-      <TabsList className="h-10 overflow-hidden bg-muted/50 border border-border/30">
+      <TabsList>
         <TabsTrigger
           value="personal"
-          className="gap-2 data-[state=active]:shadow-sm"
+          className="gap-2"
         >
           <User className="h-4 w-4" />
           <span className="hidden sm:inline">Dados Pessoais</span>
@@ -21,7 +21,7 @@ export function RegistrationTabs() {
         </TabsTrigger>
         <TabsTrigger
           value="documents"
-          className="gap-2 data-[state=active]:shadow-sm"
+          className="gap-2"
         >
           <FileText className="h-4 w-4" />
           <span className="hidden sm:inline">Documentos</span>

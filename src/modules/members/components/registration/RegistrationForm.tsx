@@ -32,6 +32,7 @@ import { useMemberCodeGenerator } from "../../hooks/registration/useMemberCodeGe
 import { useCpfValidation } from "../../hooks/registration/useCpfValidation";
 import { photoService } from "../../services/photoService";
 import { useUserMetadata } from "@/modules/auth/hooks/useUserMetadata";
+import { useEntityData } from "@/modules/settings/hooks/useEntityData";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
 interface RegistrationFormProps {
@@ -58,6 +59,24 @@ export function RegistrationForm({
 
   useMemberCodeGenerator(form, isEditMode);
   useCpfValidation(form, isEditMode);
+
+  const { entity } = useEntityData();
+
+  useEffect(() => {
+    // Somente preenche automaticamente em modo de criação (!isEditMode)
+    // e se os campos do formulário estiverem vazios
+    if (!isEditMode && entity) {
+      if (!form.getValues("cidade") && entity.city) {
+        form.setValue("cidade", entity.city);
+      }
+      if (!form.getValues("cep") && entity.cep) {
+        form.setValue("cep", entity.cep);
+      }
+      if (!form.getValues("uf") && entity.state) {
+        form.setValue("uf", entity.state);
+      }
+    }
+  }, [isEditMode, entity, form]);
 
   useEffect(() => {
     async function fetchCount() {

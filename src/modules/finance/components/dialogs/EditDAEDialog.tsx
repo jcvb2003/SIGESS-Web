@@ -11,16 +11,13 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import { MoneyField } from "../shared/MoneyField";
-import { Loader2, FileText, X } from "lucide-react";
-import type { FinanceDAE } from "../../types/finance.types";
+import { cn } from "@/shared/lib/utils";
+import { FileText, X, AlertTriangle, Calendar } from "lucide-react";
+import type { FinanceDAE, EditDAEData } from "../../types/finance.types";
+import { useParametersData } from "@/modules/settings/hooks/useParametersData";
+import { isMonthInDefeso } from "../../utils/defesoUtils";
 
 const editDAESchema = z.object({
   valor: z.number().min(0.01, "O valor deve ser maior que zero"),
@@ -34,7 +31,7 @@ interface EditDAEDialogProps {
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
   readonly dae: FinanceDAE | null;
-  readonly onConfirm: (data: Partial<FinanceDAE>) => void;
+  readonly onConfirm: (data: EditDAEData) => void;
   readonly isPending: boolean;
 }
 
@@ -53,9 +50,6 @@ const MONTHS = [
   { value: 12, label: "Dezembro" },
 ];
 
-/**
- * Diálogo para edição de repasses de DAE.
- */
 export function EditDAEDialog({
   open,
   onOpenChange,
@@ -63,10 +57,13 @@ export function EditDAEDialog({
   onConfirm,
   isPending,
 }: EditDAEDialogProps) {
+  const { parameters } = useParametersData();
+
   const {
     control,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<EditDAEForm>({
     resolver: zodResolver(editDAESchema),
@@ -76,6 +73,8 @@ export function EditDAEDialog({
       competencia_ano: new Date().getFullYear(),
     },
   });
+
+  const selectedYear = watch("competencia_ano");
 
   useEffect(() => {
     if (dae && open) {
@@ -88,17 +87,26 @@ export function EditDAEDialog({
   }, [dae, open, reset]);
 
   const onSubmit = (data: EditDAEForm) => {
-    onConfirm(data);
+    onConfirm({
+      valor: data.valor,
+      competencia_mes: data.competencia_mes,
+      competencia_ano: data.competencia_ano,
+      year: data.competencia_ano
+    });
   };
+
+  const buttonLabel = "Salvar Repasse";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md p-0 outline-none [&>button]:hidden overflow-hidden">
-        <DialogHeader className="px-6 pt-6 pb-2 border-b flex-shrink-0">
+      <DialogContent className="p-0 outline-none [&>button]:hidden overflow-hidden transition-all duration-300 max-w-md">
+        <DialogHeader className="px-6 pt-6 pb-2 border-b flex-shrink-0 text-left">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-emerald-600 mb-1">
               <FileText className="h-5 w-5" />
-              <DialogTitle className="text-xl">Editar Repasse DAE</DialogTitle>
+              <DialogTitle className="text-xl font-bold tracking-tight">
+                Editar Repasse DAE
+              </DialogTitle>
             </div>
             <Button
               variant="outline"
@@ -111,23 +119,38 @@ export function EditDAEDialog({
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
-          <Controller
-            control={control}
-            name="valor"
-            render={({ field }) => (
-              <MoneyField
-                label="Valor do Repasse"
-                value={field.value}
-                onChange={field.onChange}
-              />
-            )}
-          />
-          {errors.valor && <p className="text-xs text-red-500">{errors.valor.message}</p>}
+        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5">
+          {/* Ano de Competência - Somente Leitura */}
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+                <Calendar className="h-4 w-4 text-slate-400" />
+              </div>
+              <div>
+                <Label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block leading-none">
+                  Ano de Competência
+                </Label>
+                <p className="text-[10px] text-slate-400 mt-1">Competência original (Não editável)</p>
+              </div>
+            </div>
+            <Controller
+              control={control}
+              name="competencia_ano"
+              render={({ field }) => (
+                <Input 
+                  type="number" 
+                  readOnly
+                  className="h-10 w-24 text-center text-sm font-bold bg-slate-100 border-slate-200 shadow-none cursor-not-allowed opacity-70" 
+                  {...field} 
+                  onChange={(e) => field.onChange(Number(e.target.value))}
+                />
+              )}
+            />
+          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Mês de Competência</Label>
+          <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="space-y-1.5 text-left">
+              <Label className="text-xs font-bold text-slate-600 px-0.5">Mês de Competência</Label>
               <Controller
                 control={control}
                 name="competencia_mes"
@@ -136,61 +159,67 @@ export function EditDAEDialog({
                     value={String(field.value)}
                     onValueChange={(v) => field.onChange(Number(v))}
                   >
-                    <SelectTrigger className="h-9 text-xs">
+                    <SelectTrigger className="h-10 text-sm border-slate-200">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {MONTHS.map((m) => (
-                        <SelectItem key={m.value} value={String(m.value)} className="text-xs">
-                          {m.label}
-                        </SelectItem>
-                      ))}
+                      {MONTHS.map((m) => {
+                        const isDefeso = isMonthInDefeso(m.value, selectedYear, parameters);
+                        return (
+                          <SelectItem 
+                            key={m.value} 
+                            value={String(m.value)} 
+                            className={cn("text-sm", isDefeso && "text-amber-600 bg-amber-50")}
+                            disabled={isDefeso}
+                          >
+                            <div className="flex items-center justify-between w-full gap-2">
+                              {m.label}
+                              {isDefeso && <AlertTriangle className="h-3 w-3" />}
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 )}
               />
             </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Ano de Competência</Label>
-              <Controller
-                control={control}
-                name="competencia_ano"
-                render={({ field }) => (
-                  <Input 
-                    type="number" 
-                    className="h-9 text-xs" 
-                    {...field} 
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                  />
-                )}
-              />
-            </div>
+            <Controller
+              control={control}
+              name="valor"
+              render={({ field }) => (
+                <MoneyField
+                  label="Valor do Repasse"
+                  value={field.value ?? 0}
+                  onChange={field.onChange}
+                />
+              )}
+            />
+            {errors.valor && <p className="text-[10px] text-red-500 font-medium px-1 mt-1">{errors.valor.message}</p>}
           </div>
 
-          <div className="pt-4 flex items-center gap-3">
+          <div className="pt-4 flex items-center gap-3 border-t border-slate-100 mt-2">
             <Button
               type="button"
-              variant="outline"
-              className="flex-1"
+              variant="ghost"
+              className="flex-1 h-11 text-xs font-bold text-slate-500 hover:bg-slate-50"
               onClick={() => onOpenChange(false)}
               disabled={isPending}
             >
-              Cancelar
+              Descartar
             </Button>
             <Button
               type="submit"
-              className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+              className="flex-[2] h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-600/20"
               disabled={isPending}
             >
               {isPending ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Salvando...
+                  <Calendar className="mr-2 h-4 w-4 animate-spin" />
+                  Atualizando...
                 </>
-              ) : (
-                "Salvar Alterações"
-              )}
+              ) : buttonLabel}
             </Button>
           </div>
         </form>

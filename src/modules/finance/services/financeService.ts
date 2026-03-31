@@ -148,17 +148,25 @@ export const financeService = {
   async getMonthlyStats(
     year: number,
     month: number,
-  ): Promise<{ arrecadado: number; qtdPagamentos: number; daePendente: number }> {
-    const firstDay = `${year}-${String(month).padStart(2, "0")}-01`;
-    const lastDay = new Date(year, month, 0).toLocaleDateString("sv");
+  ): Promise<{ arrecadado: number; arrecadadoAno: number; qtdPagamentos: number; daePendente: number }> {
+    const firstDayMonth = `${year}-${String(month).padStart(2, "0")}-01`;
+    const lastDayMonth = new Date(year, month, 0).toLocaleDateString("sv");
+    const firstDayYear = `${year}-01-01`;
+    const lastDayYear = `${year}-12-31`;
 
-    const [lancamentosResult, daeResult] = await Promise.all([
+    const [lancamentosMes, lancamentosAno, daeResult] = await Promise.all([
       supabase
         .from("financeiro_lancamentos")
         .select("valor")
         .eq("status", "pago")
-        .gte("data_pagamento", firstDay)
-        .lte("data_pagamento", lastDay),
+        .gte("data_pagamento", firstDayMonth)
+        .lte("data_pagamento", lastDayMonth),
+      supabase
+        .from("financeiro_lancamentos")
+        .select("valor")
+        .eq("status", "pago")
+        .gte("data_pagamento", firstDayYear)
+        .lte("data_pagamento", lastDayYear),
       supabase
         .from("financeiro_dae")
         .select("id", { count: "exact", head: true })
@@ -166,16 +174,23 @@ export const financeService = {
         .eq("boleto_pago", false),
     ]);
 
-    if (lancamentosResult.error) throw lancamentosResult.error;
+    if (lancamentosMes.error) throw lancamentosMes.error;
+    if (lancamentosAno.error) throw lancamentosAno.error;
 
-    const arrecadado = (lancamentosResult.data ?? []).reduce(
+    const arrecadado = (lancamentosMes.data ?? []).reduce(
+      (sum, l) => sum + (Number(l.valor) || 0),
+      0,
+    );
+
+    const arrecadadoAno = (lancamentosAno.data ?? []).reduce(
       (sum, l) => sum + (Number(l.valor) || 0),
       0,
     );
 
     return {
       arrecadado,
-      qtdPagamentos: lancamentosResult.data?.length ?? 0,
+      arrecadadoAno,
+      qtdPagamentos: lancamentosMes.data?.length ?? 0,
       daePendente: daeResult.count ?? 0,
     };
   },

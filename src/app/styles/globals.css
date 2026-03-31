@@ -40,6 +40,9 @@
     --info: 217 91% 60%; /* Blue 500 */
     --info-foreground: 210 40% 98%;
 
+    --warning: 38 92% 50%; /* Amber 500 */
+    --warning-foreground: 210 40% 98%;
+
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 160 84% 39%;
@@ -94,6 +97,9 @@
 
     --info: 217 91% 60%;
     --info-foreground: 210 40% 98%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 210 40% 98%;
 
     --border: 217 33% 17%;
     --input: 217 33% 17%;
@@ -245,5 +251,15 @@
   100% {
     opacity: 0.9;
     transform: scale(1.2);
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
   }
 }

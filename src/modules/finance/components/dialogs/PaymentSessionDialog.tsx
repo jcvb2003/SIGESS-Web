@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,6 +12,7 @@ import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { usePaymentSession } from "../../hooks/edit/usePaymentSession";
 import { useFinanceSettings } from "../../hooks/data/useFinanceSettings";
 import { useMemberStatement } from "../../hooks/data/useMemberStatement";
+import { memberFinanceConfigService } from "../../services/memberFinanceConfigService";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { formatNumericInput } from "../shared/formatters";
 import { MemberFinancePreview } from "../shared/MemberFinancePreview";
@@ -29,6 +30,7 @@ import type {
   PaymentMethod,
   FinancialStatusType,
   ChargeType,
+  FinanceLancamento,
 } from "../../types/finance.types";
 
 interface PaymentSessionDialogProps {
@@ -64,6 +66,7 @@ export function PaymentSessionDialog({
   const [paymentDate, setPaymentDate] = useState(
     new Date().toLocaleDateString("sv"), // YYYY-MM-DD local
   );
+  const [isHistoricMember, setIsHistoricMember] = useState(false);
 
   const anoBase = settings?.ano_base_cobranca ?? 2024;
   const valorAnuidade = settings?.valor_anuidade ?? 0;
@@ -77,11 +80,26 @@ export function PaymentSessionDialog({
     );
   };
 
+  useEffect(() => {
+    async function loadConfig() {
+      if (open && socioCpf) {
+        try {
+          const config = await memberFinanceConfigService.getConfig(socioCpf);
+          // @ts-expect-error - campo recém adicionado no banco
+          setIsHistoricMember(config?.socio_historico ?? false);
+        } catch (error) {
+          console.error("Erro ao carregar configuração financeira:", error);
+        }
+      }
+    }
+    loadConfig();
+  }, [open, socioCpf]);
+
   const toggleMonth = (m: number) => {
     const paidMonthsByYear = new Map<number, Set<number>>();
     lancamentos
-      .filter(l => l.tipo === "mensalidade" && l.status === "pago")
-      .forEach(l => {
+      .filter((l: FinanceLancamento) => l.tipo === "mensalidade" && l.status === "pago")
+      .forEach((l: FinanceLancamento) => {
         if (!l.competencia_ano || !l.competencia_mes) return;
         if (!paidMonthsByYear.has(l.competencia_ano)) paidMonthsByYear.set(l.competencia_ano, new Set());
         paidMonthsByYear.get(l.competencia_ano)?.add(l.competencia_mes);
@@ -103,9 +121,28 @@ export function PaymentSessionDialog({
     }
   };
 
+  const handleToggleHistoricMember = (checked: boolean) => {
+    setIsHistoricMember(checked);
+    if (checked) {
+      // Remover taxas iniciais se marcar como histórico
+      setExtraFees(prev => prev.filter(f => f.tipo !== "inicial" && f.tipo !== "transferencia"));
+    }
+    
+    // Persistir no banco de dados
+    if (socioCpf) {
+      memberFinanceConfigService.upsertConfig(socioCpf, { 
+        // @ts-expect-error - campo recém adicionado no banco
+        socio_historico: checked 
+      })
+        .catch(err => console.error("Erro ao salvar flag de sócio histórico:", err));
+    }
+  };
+
   const addExtraFee = (type: PaymentType) => {
+    if (isHistoricMember && (type === "inicial" || type === "transferencia")) return;
+    
     let valor = 0;
-    if (type === "inscricao") valor = settings?.valor_inscricao ?? 0;
+    if (type === "inicial") valor = settings?.valor_inscricao ?? 0;
     if (type === "transferencia") valor = settings?.valor_transferencia ?? 0;
 
     setExtraFees(prev => {
@@ -115,10 +152,10 @@ export function PaymentSessionDialog({
       }
 
       let filtered = [...prev];
-      if (type === "inscricao") {
+      if (type === "inicial") {
         filtered = filtered.filter(f => f.tipo !== "transferencia");
       } else if (type === "transferencia") {
-        filtered = filtered.filter(f => f.tipo !== "inscricao");
+        filtered = filtered.filter(f => f.tipo !== "inicial");
       }
 
       return [...filtered, { 
@@ -293,6 +330,8 @@ export function PaymentSessionDialog({
               onToggleCharge={toggleCharge}
               onChargeValueChange={handleChargeValueChange}
               onRemoveCharge={removeCharge}
+              isHistoricMember={isHistoricMember}
+              onToggleHistoricMember={handleToggleHistoricMember}
             />
 
             {/* Payment Method & Date */}

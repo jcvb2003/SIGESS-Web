@@ -10,6 +10,7 @@ export function useFinanceStats(year: number, month: number) {
 
   return {
     arrecadado: query.data?.arrecadado ?? 0,
+    arrecadadoAno: query.data?.arrecadadoAno ?? 0,
     qtdPagamentos: query.data?.qtdPagamentos ?? 0,
     daePendente: query.data?.daePendente ?? 0,
     isLoading: query.isLoading,

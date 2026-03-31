@@ -29,7 +29,7 @@ export default function Dashboard() {
           icon={User}
           description="Sócios do sexo masculino"
           loading={statsLoading}
-          variant="secondary"
+          variant="info"
         />
         <StatCard
           title="Mulheres"

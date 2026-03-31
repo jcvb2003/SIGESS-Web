@@ -3,7 +3,6 @@ import {
   DollarSign,
   AlertTriangle,
   FileText,
-  Unlock,
   LucideIcon,
 } from "lucide-react";
 import { StatCard, StatCardVariant } from "@/modules/dashboard/components/StatCard";
@@ -18,53 +17,53 @@ interface StatCardConfig {
 
 interface SummaryCardsProps {
   readonly arrecadadoMes: number;
+  readonly arrecadadoAno: number;
   readonly qtdPagamentosMes: number;
   readonly mesLabel: string;
+  readonly yearLabel: string;
   readonly inadimplentes: number;
   readonly inadimplentes1Ano: number;
   readonly daePendente: number;
-  readonly liberados: number;
-  readonly isentos: number;
 }
 
 export function SummaryCards({
   arrecadadoMes,
+  arrecadadoAno,
   qtdPagamentosMes,
   mesLabel,
+  yearLabel,
   inadimplentes,
   inadimplentes1Ano,
   daePendente,
-  liberados,
-  isentos,
 }: SummaryCardsProps) {
   const cards: StatCardConfig[] = [
+    {
+      title: "Arrecadado no Ano",
+      value: formatCurrency(arrecadadoAno),
+      description: `Total acumulado em ${yearLabel}`,
+      icon: DollarSign,
+      variant: "primary",
+    },
     {
       title: "Arrecadado no Mês",
       value: formatCurrency(arrecadadoMes),
       description: `${qtdPagamentosMes} pagamentos em ${mesLabel}`,
       icon: DollarSign,
-      variant: "primary",
+      variant: "info",
+    },
+    {
+      title: "DAE - Boletos Pendentes",
+      value: daePendente,
+      description: "Recebido, aguardando pagamento",
+      icon: FileText,
+      variant: "warning",
     },
     {
       title: "Inadimplentes",
       value: inadimplentes,
       description: `${inadimplentes1Ano} há mais de 1 ano`,
       icon: AlertTriangle,
-      variant: "secondary",
-    },
-    {
-      title: "DAE — Boleto Pendente",
-      value: daePendente,
-      description: "Recebido, aguardando pagamento",
-      icon: FileText,
-      variant: "info",
-    },
-    {
-      title: "Liberados / Isentos",
-      value: liberados + isentos,
-      description: `${liberados} liberados · ${isentos} isentos`,
-      icon: Unlock,
-      variant: "accent",
+      variant: "destructive",
     },
   ];
 

@@ -66,15 +66,61 @@ export const daeService = {
   async cancelDAE(id: string, observation: string = "Cancelado pelo operador"): Promise<void> {
     const { data: { user } } = await supabase.auth.getUser();
 
-    const { error } = await supabase
+    // 1. Busca o registro para verificar se faz parte de um grupo
+    const { data: currentItem, error: fetchError } = await supabase
       .from("financeiro_dae")
-      .update({ 
-        status: "cancelado",
-        cancelado_em: new Date().toISOString(),
-        cancelado_por: user?.id ?? null,
-        cancelamento_obs: observation
-      })
-      .eq("id", id);
+      .select("grupo_id")
+      .eq("id", id)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    // 2. Define a query de atualização (individual ou por grupo)
+    let query = supabase.from("financeiro_dae").update({ 
+      status: "cancelado",
+      cancelado_em: new Date().toISOString(),
+      cancelado_por: user?.id ?? null,
+      cancelamento_obs: observation
+    });
+
+    if (currentItem?.grupo_id) {
+      query = query.eq("grupo_id", currentItem.grupo_id);
+    } else {
+      query = query.eq("id", id);
+    }
+
+    const { error: updateError } = await query;
+    if (updateError) throw updateError;
+  },
+
+  /**
+   * Busca todos os membros de um grupo específico.
+   */
+  async getGroupMembers(grupoId: string): Promise<FinanceDAE[]> {
+    const { data, error } = await supabase
+      .from("financeiro_dae")
+      .select("*")
+      .eq("grupo_id", grupoId)
+      .order("competencia_mes", { ascending: true });
+
+    if (error) throw error;
+    return data ?? [];
+  },
+
+  /**
+   * Chama a RPC atômica para atualizar todos os meses de um grupo.
+   */
+  async updateGroupDAE(
+    grupoId: string,
+    year: number,
+    items: { mes: number; valor: number }[]
+  ): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.rpc as any)("update_dae_group", {
+      p_grupo_id: grupoId,
+      p_new_year: year,
+      p_items: items,
+    });
 
     if (error) throw error;
   },

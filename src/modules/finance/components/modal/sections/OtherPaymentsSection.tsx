@@ -16,7 +16,7 @@ import { useUpdateFinanceActions } from "../../../hooks/edit/useUpdateFinanceAct
 import type { FinanceLancamento, FinanceDAE } from "../../../types/finance.types";
 
 const TYPE_LABELS: Record<string, string> = {
-  inscricao: "Taxa de inscrição",
+  inicial: "Taxa inicial",
   transferencia: "Taxa de transferência",
   contribuicao: "Contribuição",
   cadastro_governamental: "Cadastro governamental",

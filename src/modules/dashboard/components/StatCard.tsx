@@ -12,6 +12,8 @@ export type StatCardVariant =
   | "secondary"
   | "accent"
   | "info"
+  | "destructive"
+  | "warning"
   | "default";
 interface StatCardProps {
   title: string;
@@ -57,6 +59,20 @@ const variants = {
     iconBg: "bg-[hsl(var(--info))]/10",
     iconColor: "text-[hsl(var(--info))]",
     border: "border-[hsl(var(--info))]/20",
+  },
+  destructive: {
+    bg: "bg-[hsl(var(--destructive))]/5",
+    text: "text-[hsl(var(--destructive))]",
+    iconBg: "bg-[hsl(var(--destructive))]/10",
+    iconColor: "text-[hsl(var(--destructive))]",
+    border: "border-[hsl(var(--destructive))]/20",
+  },
+  warning: {
+    bg: "bg-[hsl(var(--warning))]/5",
+    text: "text-[hsl(var(--warning))]",
+    iconBg: "bg-[hsl(var(--warning))]/10",
+    iconColor: "text-[hsl(var(--warning))]",
+    border: "border-[hsl(var(--warning))]/20",
   },
 };
 export function StatCard({

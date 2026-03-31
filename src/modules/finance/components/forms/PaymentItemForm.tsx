@@ -16,7 +16,9 @@ import {
   Trash2,
   UserPlus,
   ArrowRightLeft,
+  History,
 } from "lucide-react";
+import { Switch } from "@/shared/components/ui/switch";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { cn } from "@/shared/lib/utils";
 import { PaymentTypeSelector, type SelectedCharge } from "../shared/PaymentTypeSelector";
@@ -37,7 +39,7 @@ const FEE_TYPES: {
   label: string;
   icon: React.ReactNode;
 }[] = [
-  { value: "inscricao", label: "Inscrição", icon: <UserPlus className="h-3.5 w-3.5" /> },
+  { value: "inicial", label: "Inicial", icon: <UserPlus className="h-3.5 w-3.5" /> },
   { value: "transferencia", label: "Transferência", icon: <ArrowRightLeft className="h-3.5 w-3.5" /> },
 ];
 
@@ -77,6 +79,9 @@ interface PaymentItemFormProps {
   readonly onToggleCharge: (chargeType: ChargeType) => void;
   readonly onChargeValueChange: (uid: string, rawValue: string) => void;
   readonly onRemoveCharge: (uid: string) => void;
+
+  readonly isHistoricMember: boolean;
+  readonly onToggleHistoricMember: (checked: boolean) => void;
 }
 
 export function PaymentItemForm({
@@ -101,6 +106,8 @@ export function PaymentItemForm({
   onToggleCharge,
   onChargeValueChange,
   onRemoveCharge,
+  isHistoricMember,
+  onToggleHistoricMember,
 }: PaymentItemFormProps) {
   // Mapa de pagamentos já realizados (Memoizado para performance)
   const paidYears = useMemo(() => {
@@ -115,7 +122,7 @@ export function PaymentItemForm({
   const paidFees = useMemo(() => {
     return new Set(
       lancamentos
-        .filter(l => (l.tipo === "inscricao" || l.tipo === "transferencia") && l.status === "pago")
+        .filter(l => (l.tipo === "inicial" || l.tipo === "transferencia") && l.status === "pago")
         .map(l => l.tipo)
     );
   }, [lancamentos]);
@@ -149,7 +156,7 @@ export function PaymentItemForm({
     return years;
   }, [currentYear, anoBase]);
 
-  const hasInscricao = extraFees.some(f => f.tipo === "inscricao");
+  const hasInicial = extraFees.some(f => f.tipo === "inicial");
   const hasTransferencia = extraFees.some(f => f.tipo === "transferencia");
 
   return (
@@ -287,22 +294,34 @@ export function PaymentItemForm({
         </div>
       </div>
 
-      {/* Extra Fees */}
-      <div className="space-y-3">
-        <Label className="text-[10px] font-black text-slate-500 flex items-center gap-2 uppercase tracking-widest">
-          <Plus className="h-3 w-3 text-emerald-500" />
-          TAXAS E OUTROS
-        </Label>
+      {/* Extra Fees (Inscrição) */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <Label className="text-[10px] font-black text-slate-500 flex items-center gap-2 uppercase tracking-widest">
+            <Plus className="h-3 w-3 text-emerald-500" />
+            INSCRIÇÃO
+          </Label>
+
+          <div className="flex items-center gap-2 bg-slate-50 px-2 py-1 rounded-full border border-slate-100">
+            <History className={cn("h-3 w-3", isHistoricMember ? "text-amber-500" : "text-slate-300")} />
+            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">Sócio Histórico</span>
+            <Switch 
+              checked={isHistoricMember} 
+              onCheckedChange={onToggleHistoricMember}
+              className="scale-75 h-4 w-7 data-[state=checked]:bg-amber-500"
+            />
+          </div>
+        </div>
         
         <div className="flex flex-wrap gap-2 mb-2">
           {FEE_TYPES.map(fee => {
             const isSelected = extraFees.some(f => f.tipo === fee.value);
             const isPaid = paidFees.has(fee.value);
             const isDisabledByOther = 
-              (fee.value === "inscricao" && hasTransferencia) || 
-              (fee.value === "transferencia" && hasInscricao);
+              (fee.value === "inicial" && hasTransferencia) || 
+              (fee.value === "transferencia" && hasInicial);
             
-            const isDisabled = isPaid || isDisabledByOther;
+            const isDisabled = isPaid || isDisabledByOther || isHistoricMember;
 
             return (
               <Button

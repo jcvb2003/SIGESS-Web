@@ -119,16 +119,16 @@ export function MemberDetailsModal({
           className="flex-1 flex flex-col overflow-hidden min-h-0"
         >
           <div className="px-5 sm:px-6 w-full flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-0 pt-4 pb-3 sm:pb-0">
-            <TabsList className="w-full h-10 overflow-hidden bg-muted/50 border border-border/30">
+            <TabsList>
               <TabsTrigger
                 value="primary"
-                className="flex-1 sm:px-5 data-[state=active]:shadow-sm"
+                className="flex-1 sm:px-5"
               >
                 Dados Principais
               </TabsTrigger>
               <TabsTrigger
                 value="complementary"
-                className="flex-1 sm:px-5 data-[state=active]:shadow-sm"
+                className="flex-1 sm:px-5"
               >
                 Dados Complementares
               </TabsTrigger>

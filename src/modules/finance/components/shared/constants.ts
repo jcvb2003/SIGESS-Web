@@ -41,7 +41,7 @@ export const FEE_TYPES: {
   value: PaymentType;
   label: string;
 }[] = [
-  { value: "inscricao", label: "Inscrição" },
+  { value: "inicial", label: "Inicial" },
   { value: "transferencia", label: "Transferência" },
   { value: "contribuicao", label: "Contribuição" },
   { value: "cadastro_governamental", label: "Cadastro" },

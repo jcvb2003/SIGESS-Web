@@ -68,8 +68,51 @@ export function useUpdateFinanceActions() {
     },
   });
 
+  /**
+   * Atualizar Grupo de DAE (Atomicamente via RPC)
+   */
+  const updateGroupDAE = useMutation({
+    mutationFn: async ({ 
+      grupoId, 
+      year, 
+      items 
+    }: { 
+      grupoId: string; 
+      year: number; 
+      items: { mes: number; valor: number }[] 
+    }) => {
+      await daeService.updateGroupDAE(grupoId, year, items);
+    },
+    onSuccess: () => {
+      toast.success("Boleto agrupado atualizado com sucesso.");
+      queryClient.invalidateQueries({ queryKey: financeQueryKeys.all });
+    },
+    onError: (error) => {
+      console.error("Erro ao atualizar grupo:", error);
+      toast.error("Erro ao atualizar boleto agrupado.");
+    },
+  });
+
+  /**
+   * Alternar Status do Boleto (Pago/Pendente)
+   */
+  const toggleBoletoStatus = useMutation({
+    mutationFn: async ({ id, pago, dataPagamento }: { id: string; pago: boolean; dataPagamento?: string }) => {
+      await daeService.updateBoletoStatus(id, pago, dataPagamento);
+    },
+    onSuccess: (_, variables) => {
+      toast.success(variables.pago ? "Boleto marcado como pago." : "Pagamento do boleto removido.");
+      queryClient.invalidateQueries({ queryKey: financeQueryKeys.all });
+    },
+    onError: () => {
+      toast.error("Erro ao atualizar status do boleto.");
+    },
+  });
+
   return {
     updatePayment,
     updateDAE,
+    updateGroupDAE,
+    toggleBoletoStatus,
   };
 }

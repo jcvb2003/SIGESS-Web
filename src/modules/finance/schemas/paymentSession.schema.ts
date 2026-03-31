@@ -3,7 +3,7 @@ import { z } from "zod";
 const paymentTypeSchema = z.enum([
   "anuidade",
   "mensalidade",
-  "inscricao",
+  "inicial",
   "transferencia",
   "contribuicao",
   "cadastro_governamental",

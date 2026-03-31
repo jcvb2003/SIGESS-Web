@@ -19,7 +19,7 @@ export type SituacaoFinanceiraSocio = Tables<"v_situacao_financeira_socio">;
 export type PaymentType =
   | "anuidade"
   | "mensalidade"
-  | "inscricao"
+  | "inicial"
   | "transferencia"
   | "contribuicao"
   | "cadastro_governamental";
@@ -100,4 +100,14 @@ export interface DAEItem {
   competencia_mes: number;
   valor: number;
   grupo_id?: string;
+}
+
+export interface EditDAEData {
+  isGroup?: boolean;
+  grupoId?: string;
+  year: number;
+  items?: { mes: number; valor: number }[];
+  valor?: number;
+  competencia_mes?: number;
+  competencia_ano?: number;
 }

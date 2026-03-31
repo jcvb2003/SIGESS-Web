@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
-import { Printer, X, Fish, Check } from "lucide-react";
+import { Printer, X, Fish, Check, FileText } from "lucide-react";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { formatDate } from "@/shared/utils/formatters/dateFormatters";
 import type { FinanceLancamento, FinanceDAE } from "../../types/finance.types";
@@ -24,7 +24,7 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
 const PAYMENT_TYPE_LABELS: Record<string, string> = {
   anuidade: "Anuidade",
   mensalidade: "Mensalidade",
-  inscricao: "Inscrição",
+  inicial: "Inicial",
   transferencia: "Transferência",
   contribuicao: "Contribuição",
   cadastro_governamental: "Cadastro Governamental",
@@ -84,18 +84,18 @@ const ReceiptContent = forwardRef<HTMLDivElement, {
             `${entity.street}, ${entity.number} - ${entity.district}, ${entity.city}/${entity.state}`}
         </p>
         <div className="mt-2 pt-2 border-t border-dashed border-muted">
-          <p className="text-[10px] font-bold tracking-widest uppercase">
+          <p className="text-[10px] font-bold tracking-widest uppercase text-emerald-600">
             Comprovante de Pagamento
           </p>
         </div>
       </div>
 
       {/* Member Info */}
-      <div className="border rounded-lg p-3 bg-muted/20">
-        <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-1">
+      <div className="border rounded-lg p-3 bg-muted/20 border-slate-100">
+        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold mb-1">
           Sócio
         </p>
-        <p className="font-semibold">{memberName ?? "—"}</p>
+        <p className="text-sm font-semibold text-slate-800">{memberName ?? "—"}</p>
         <p className="text-xs text-muted-foreground">
           CPF: {memberCpf ?? "—"}
         </p>
@@ -103,24 +103,24 @@ const ReceiptContent = forwardRef<HTMLDivElement, {
 
       {/* Items */}
       <div>
-        <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-2">
-          Itens
+        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold mb-2 px-1">
+          Descrição dos Itens
         </p>
-        <div className="space-y-1.5">
+        <div className="space-y-1 bg-white rounded-lg border border-slate-100 divide-y divide-dashed divide-slate-100 overflow-hidden">
           {lancamentos.map((l) => (
             <div
               key={l.id}
-              className="flex items-center justify-between py-1.5 border-b border-dashed last:border-0"
+              className="flex items-center justify-between p-2.5 hover:bg-slate-50/50 transition-colors"
             >
               <div className="flex items-center gap-2">
                 <Check className="h-3 w-3 text-emerald-500" />
-                <span className="text-xs">
+                <span className="text-[11px] font-medium text-slate-600">
                   {PAYMENT_TYPE_LABELS[l.tipo] ?? l.tipo}
                   {l.competencia_ano && ` — ${l.competencia_ano}`}
                   {l.competencia_mes && `/${String(l.competencia_mes).padStart(2, "0")}`}
                 </span>
               </div>
-              <span className="text-xs font-semibold">
+              <span className="text-[11px] font-bold text-slate-700">
                 {formatCurrency(Number(l.valor))}
               </span>
             </div>
@@ -128,15 +128,15 @@ const ReceiptContent = forwardRef<HTMLDivElement, {
           {daes.map((d) => (
             <div
               key={d.id}
-              className="flex items-center justify-between py-1.5 border-b border-dashed last:border-0"
+              className="flex items-center justify-between p-2.5 hover:bg-slate-50/50 transition-colors"
             >
               <div className="flex items-center gap-2">
                 <Check className="h-3 w-3 text-emerald-500" />
-                <span className="text-xs">
+                <span className="text-[11px] font-medium text-slate-600">
                   Repasse DAE — {String(d.competencia_mes).padStart(2, "0")}/{d.competencia_ano}
                 </span>
               </div>
-              <span className="text-xs font-semibold">
+              <span className="text-[11px] font-bold text-slate-700">
                 {formatCurrency(Number(d.valor))}
               </span>
             </div>
@@ -145,47 +145,47 @@ const ReceiptContent = forwardRef<HTMLDivElement, {
       </div>
 
       {/* Total */}
-      <div className="flex items-center justify-between rounded-lg bg-emerald-50 border border-emerald-200 p-3">
-        <span className="text-xs font-bold uppercase text-emerald-700">
-          Total pago
+      <div className="flex items-center justify-between rounded-xl bg-emerald-600 p-4 shadow-lg shadow-emerald-900/10 transition-all hover:bg-emerald-700">
+        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-50">
+          Total Pago
         </span>
-        <span className="text-lg font-bold text-emerald-700">
+        <span className="text-xl font-black text-white tracking-tighter">
           {formatCurrency(totalValue)}
         </span>
       </div>
 
       {/* Payment Details */}
-      <div className="grid grid-cols-2 gap-3 text-xs">
-        <div>
-          <p className="text-muted-foreground">Forma de pagamento</p>
-          <p className="font-semibold">
+      <div className="grid grid-cols-2 gap-3 p-3 rounded-lg border border-slate-100 bg-slate-50/30">
+        <div className="space-y-0.5">
+          <p className="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Forma de pagamento</p>
+          <p className="text-[11px] font-bold text-slate-700">
             {PAYMENT_METHOD_LABELS[paymentMethod] ?? paymentMethod}
           </p>
         </div>
-        <div>
-          <p className="text-muted-foreground">Data do pagamento</p>
-          <p className="font-semibold">
+        <div className="space-y-0.5 text-right">
+          <p className="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Data do pagamento</p>
+          <p className="text-[11px] font-bold text-slate-700">
             {paymentDate ? formatDate(paymentDate) : "—"}
           </p>
         </div>
-        <div>
-          <p className="text-muted-foreground">Sessão ID</p>
-          <p className="font-mono text-[10px]">
-            {firstLancamento?.sessao_id ?? "—"}
+        <div className="space-y-0.5">
+          <p className="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Emissão</p>
+          <p className="text-[11px] font-bold text-slate-700">
+            {formatDate(new Date().toISOString())}
           </p>
         </div>
-        <div>
-          <p className="text-muted-foreground">Emissão</p>
-          <p className="font-semibold">
-            {formatDate(new Date().toISOString())}
+        <div className="space-y-0.5 text-right">
+          <p className="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Sessão ID</p>
+          <p className="font-mono text-[9px] text-slate-500 font-medium">
+            {firstLancamento?.sessao_id?.slice(0, 8) ?? "—"}...
           </p>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="text-center border-t pt-3 text-[10px] text-muted-foreground">
-        <p>Este documento é um comprovante de pagamento válido.</p>
-        <p>Gerado pelo SIGESS em {new Date().toLocaleString("pt-BR")}</p>
+      <div className="text-center border-t border-dashed pt-4 space-y-1">
+        <p className="text-[10px] font-bold text-slate-400">Este documento é um comprovante de pagamento válido.</p>
+        <p className="text-[9px] text-slate-300">Gerado pelo SIGESS em {new Date().toLocaleString("pt-BR")}</p>
       </div>
     </div>
   );
@@ -275,33 +275,41 @@ export function SessionReceiptDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm p-0 overflow-hidden">
-        <DialogHeader className="px-4 pt-4 pb-0">
+      <DialogContent className="max-w-md p-0 outline-none [&>button]:hidden overflow-hidden transition-all duration-300">
+        <DialogHeader className="px-6 pt-6 pb-2 border-b flex-shrink-0 text-left">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-sm">Comprovante</DialogTitle>
-            <div className="flex gap-1.5">
+            <div className="flex items-center gap-2 text-emerald-600 mb-1">
+              <FileText className="h-5 w-5" />
+              <DialogTitle className="text-xl font-bold tracking-tight">
+                Comprovante
+              </DialogTitle>
+            </div>
+            <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                className="h-7 text-xs gap-1"
+                className="h-8 text-xs gap-2 font-bold border-slate-200 hover:bg-emerald-50 hover:text-emerald-600 transition-all shadow-sm"
                 onClick={handlePrint}
               >
-                <Printer className="h-3 w-3" />
+                <Printer className="h-3.5 w-3.5" />
                 Imprimir
               </Button>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
-                className="h-7 w-7"
+                className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 border-slate-200 transition-colors"
                 onClick={() => onOpenChange(false)}
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-4 w-4" />
               </Button>
             </div>
           </div>
+          <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider mt-1 px-0.5">
+            Documento de validação de pagamento de sessão
+          </p>
         </DialogHeader>
 
-        <div className="max-h-[70vh] overflow-y-auto overflow-x-hidden scrollbar-hide">
+        <div className="max-h-[70vh] overflow-y-auto overflow-x-hidden scrollbar-hide bg-slate-50/30">
           <ReceiptContent
             lancamentos={lancamentos}
             daes={daes}
