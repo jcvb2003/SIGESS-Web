@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/shared/lib/supabase/client";
 import { authService } from "../services/authService";
 import type { LoginCredentials } from "../types/auth.types";
 import { toast } from "sonner";
 import { AuthContext } from "./authContextStore";
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -16,6 +16,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data, error } = await authService.getSession();
         if (error) {
           console.error("Error checking session:", error);
+          // Se o erro for relacionado a token inválido ou não encontrado, limpa o estado
+          if (error.message?.includes("Refresh Token") || (error as { status?: number }).status === 400) {
+            setSession(null);
+            setUser(null);
+          }
           return;
         }
         setSession(data?.session ?? null);
@@ -78,8 +83,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOutInProgressRef.current = false;
     }
   };
+  const value = useMemo(() => ({ user, session, loading, signIn, signOut }), [user, session, loading]);
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, signIn, signOut }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

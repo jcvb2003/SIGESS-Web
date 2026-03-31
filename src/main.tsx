@@ -33,6 +33,24 @@ if (typeof Node !== "undefined") {
   };
 }
 
+// --- Module loading recovery ---
+// Handle chunk load errors (common after new deployments where old hashes are gone)
+globalThis.addEventListener("error", (e) => {
+  if (e.message.includes("Failed to fetch dynamically imported module") || 
+      e.message.includes("is not matching its integrity")) {
+    console.warn("Módulo dinâmico falhou ao carregar. Recarregando a página...", e);
+    globalThis.location.reload();
+  }
+}, true);
+
+globalThis.addEventListener("unhandledrejection", (e) => {
+  if (e.reason?.message?.includes("Failed to fetch dynamically imported module") || 
+      e.reason?.name === "ChunkLoadError") {
+    console.warn("Rejeição de módulo dinâmico detectada. Recarregando a página...", e.reason);
+    globalThis.location.reload();
+  }
+});
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <AppProviders>
