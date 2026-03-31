@@ -337,7 +337,7 @@ export function PaymentSessionDialog({
                     ) : (
                       <Check className="h-4 w-4 shrink-0" />
                     )}
-                    CONFIRMAR Lançamento
+                    CONFIRMAR LANÇAMENTO
                   </Button>
                 </div>
               </div>

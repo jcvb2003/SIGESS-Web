@@ -45,5 +45,4 @@ export const FEE_TYPES: {
   { value: "transferencia", label: "Transferência" },
   { value: "contribuicao", label: "Contribuição" },
   { value: "cadastro_governamental", label: "Cadastro" },
-  { value: "outros", label: "Outros" },
 ];

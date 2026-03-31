@@ -1,5 +1,5 @@
 import { supabase } from "@/shared/lib/supabase/client";
-import type { FinanceDAE } from "../types/finance.types";
+import type { FinanceDAE, FinanceDAEInsert } from "../types/finance.types";
 
 export const daeService = {
   async getMemberDAE(cpf: string): Promise<FinanceDAE[]> {
@@ -25,11 +25,10 @@ export const daeService = {
     return data;
   },
 
-  async createDAE(data: Partial<FinanceDAE>): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async createDAE(data: FinanceDAEInsert): Promise<void> {
     const { error } = await supabase
       .from("financeiro_dae")
-      .insert(data as any);
+      .insert(data);
 
     if (error) throw error;
   },
@@ -50,12 +49,29 @@ export const daeService = {
     if (error) throw error;
   },
 
+  /**
+   * Busca DAEs pagos em uma sessão específica (para comprovante).
+   */
+  async getSessionDAEs(sessaoId: string): Promise<FinanceDAE[]> {
+    const { data, error } = await supabase
+      .from("financeiro_dae")
+      .select("*")
+      .eq("sessao_id", sessaoId)
+      .eq("status", "pago");
+
+    if (error) throw error;
+    return data ?? [];
+  },
+
   async cancelDAE(id: string, observation: string = "Cancelado pelo operador"): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+
     const { error } = await supabase
       .from("financeiro_dae")
       .update({ 
         status: "cancelado",
         cancelado_em: new Date().toISOString(),
+        cancelado_por: user?.id ?? null,
         cancelamento_obs: observation
       })
       .eq("id", id);
@@ -64,8 +80,8 @@ export const daeService = {
   },
 
   /**
-   * Atualiza campos de um DAE (Uso interno restrito ou legado). 
-   * Para edições auditáveis, use o fluxo Cancelar + Criar.
+   * ATENÇÃO: Uso restrito. Para edições auditáveis, use o fluxo Cancelar + Criar.
+   * @deprecated Use o fluxo de substituição do useUpdateFinanceActions
    */
   async updateDAE(
     id: string, 

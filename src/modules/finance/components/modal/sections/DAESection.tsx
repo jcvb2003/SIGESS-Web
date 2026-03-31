@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { 
   Trash2, 
-  Pencil
+  Pencil,
+  FileText
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
@@ -16,7 +17,10 @@ import { CancelPaymentDialog } from "../../dialogs/CancelPaymentDialog";
 import { EditDAEDialog } from "../../dialogs/EditDAEDialog";
 import { useCancelFinanceActions } from "../../../hooks/edit/useCancelFinanceActions";
 import { useUpdateFinanceActions } from "../../../hooks/edit/useUpdateFinanceActions";
-import type { FinanceDAE } from "../../../types/finance.types";
+import type { FinanceDAE, FinanceLancamento } from "../../../types/finance.types";
+import { SessionReceiptDialog } from "../../dialogs/SessionReceiptDialog";
+import { financeService } from "../../../services/financeService";
+import { daeService } from "../../../services/daeService";
 
 const MONTH_LABELS = [
   "", "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
@@ -34,6 +38,26 @@ export function DAESection({ daes }: DAESectionProps) {
 
   const { cancelDAE } = useCancelFinanceActions();
   const { updateDAE } = useUpdateFinanceActions();
+
+  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
+  const [receiptData, setReceiptData] = useState<{ lancamentos: FinanceLancamento[], daes: FinanceDAE[] }>({ lancamentos: [], daes: [] });
+  const [isLoadingReceipt, setIsLoadingReceipt] = useState(false);
+
+  const handleViewReceipt = async (sessaoId: string) => {
+    setIsLoadingReceipt(true);
+    try {
+      const [l, d] = await Promise.all([
+        financeService.getSessionPayments(sessaoId),
+        daeService.getSessionDAEs(sessaoId)
+      ]);
+      setReceiptData({ lancamentos: l, daes: d });
+      setIsReceiptOpen(true);
+    } catch (error) {
+      console.error("Erro ao carregar recibo:", error);
+    } finally {
+      setIsLoadingReceipt(false);
+    }
+  };
 
   const sorted = [...daes].sort((a, b) => {
     const ya = a.competencia_ano * 100 + a.competencia_mes;
@@ -86,6 +110,25 @@ export function DAESection({ daes }: DAESectionProps) {
               </p>
             </div>
             <div className="flex items-center gap-1 ml-2 border-l pl-3">
+              {d.sessao_id && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7 text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                        onClick={() => handleViewReceipt(d.sessao_id!)}
+                        disabled={isLoadingReceipt}
+                      >
+                        <FileText className="h-3.5 w-3.5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Ver comprovante da sessão</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -139,6 +182,14 @@ export function DAESection({ daes }: DAESectionProps) {
         }}
         isPending={cancelDAE.isPending}
         title="Cancelar Repasse DAE"
+      />
+
+      <SessionReceiptDialog
+        open={isReceiptOpen}
+        onOpenChange={setIsReceiptOpen}
+        lancamentos={receiptData.lancamentos}
+        daes={receiptData.daes}
+        memberCpf={daes[0]?.socio_cpf}
       />
 
       <EditDAEDialog

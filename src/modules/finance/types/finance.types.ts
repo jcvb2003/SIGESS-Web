@@ -22,8 +22,7 @@ export type PaymentType =
   | "inscricao"
   | "transferencia"
   | "contribuicao"
-  | "cadastro_governamental"
-  | "outros";
+  | "cadastro_governamental";
 
 export type PaymentMethod =
   | "dinheiro"

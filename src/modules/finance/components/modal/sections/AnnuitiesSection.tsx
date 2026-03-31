@@ -3,7 +3,7 @@ import { FinancialStatusBadge } from "../../shared/FinancialStatusBadge";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { formatDate } from "@/shared/utils/formatters/dateFormatters";
 import { Button } from "@/shared/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, FileText } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -14,7 +14,10 @@ import { CancelPaymentDialog } from "../../dialogs/CancelPaymentDialog";
 import { EditLancamentoDialog } from "../../dialogs/EditLancamentoDialog";
 import { useCancelFinanceActions } from "../../../hooks/edit/useCancelFinanceActions";
 import { useUpdateFinanceActions } from "../../../hooks/edit/useUpdateFinanceActions";
-import type { FinanceLancamento } from "../../../types/finance.types";
+import type { FinanceLancamento, FinanceDAE } from "../../../types/finance.types";
+import { SessionReceiptDialog } from "../../dialogs/SessionReceiptDialog";
+import { financeService } from "../../../services/financeService";
+import { daeService } from "../../../services/daeService";
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   dinheiro: "Dinheiro",
@@ -35,6 +38,26 @@ export function AnnuitiesSection({ anuidades }: AnnuitiesSectionProps) {
 
   const { cancelPayment } = useCancelFinanceActions();
   const { updatePayment } = useUpdateFinanceActions();
+
+  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
+  const [receiptData, setReceiptData] = useState<{ lancamentos: FinanceLancamento[], daes: FinanceDAE[] }>({ lancamentos: [], daes: [] });
+  const [isLoadingReceipt, setIsLoadingReceipt] = useState(false);
+
+  const handleViewReceipt = async (sessaoId: string) => {
+    setIsLoadingReceipt(true);
+    try {
+      const [l, d] = await Promise.all([
+        financeService.getSessionPayments(sessaoId),
+        daeService.getSessionDAEs(sessaoId)
+      ]);
+      setReceiptData({ lancamentos: l, daes: d });
+      setIsReceiptOpen(true);
+    } catch (error) {
+      console.error("Erro ao carregar recibo:", error);
+    } finally {
+      setIsLoadingReceipt(false);
+    }
+  };
 
   const sorted = [...anuidades].sort(
     (a, b) => (b.competencia_ano ?? 0) - (a.competencia_ano ?? 0),
@@ -85,6 +108,25 @@ export function AnnuitiesSection({ anuidades }: AnnuitiesSectionProps) {
                 </p>
               </div>
               <div className="flex items-center gap-1 ml-2 border-l pl-3">
+                {a.sessao_id && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-7 w-7 text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                          onClick={() => handleViewReceipt(a.sessao_id)}
+                          disabled={isLoadingReceipt}
+                        >
+                          <FileText className="h-3.5 w-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Ver comprovante da sessão</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -139,6 +181,14 @@ export function AnnuitiesSection({ anuidades }: AnnuitiesSectionProps) {
         }}
         isPending={cancelPayment.isPending}
         title="Cancelar Anuidade"
+      />
+
+      <SessionReceiptDialog
+        open={isReceiptOpen}
+        onOpenChange={setIsReceiptOpen}
+        lancamentos={receiptData.lancamentos}
+        daes={receiptData.daes}
+        memberCpf={anuidades[0]?.socio_cpf}
       />
 
       <EditLancamentoDialog

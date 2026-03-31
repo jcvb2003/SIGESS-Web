@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { financeService } from "../../services/financeService";
 import { daeService } from "../../services/daeService";
 import { financeQueryKeys } from "../../queryKeys";
-import type { FinanceLancamento, FinanceDAE } from "../../types/finance.types";
+import type { FinanceLancamento, FinanceDAE, FinanceLancamentoInsert, FinanceDAEInsert } from "../../types/finance.types";
 import { toast } from "sonner";
 
 export function useUpdateFinanceActions() {
@@ -27,7 +27,7 @@ export function useUpdateFinanceActions() {
       await financeService.createPayment({
         ...newData,
         ...data,
-      });
+      } as FinanceLancamentoInsert);
     },
     onSuccess: () => {
       toast.success("Lançamento corrigido com sucesso (Histórico preservado).");
@@ -57,7 +57,7 @@ export function useUpdateFinanceActions() {
       await daeService.createDAE({
         ...newData,
         ...data,
-      });
+      } as FinanceDAEInsert);
     },
     onSuccess: () => {
       toast.success("DAE corrigido com sucesso (Histórico preservado).");

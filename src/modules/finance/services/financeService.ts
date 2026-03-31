@@ -5,6 +5,7 @@ import type {
   MemberFinancialSummary,
   PaymentSessionPayload,
   FinanceLancamento,
+  FinanceLancamentoInsert,
 } from "../types/finance.types";
 import { toMemberFinancialSummary } from "./transformers/financeDataTransformer";
 
@@ -219,10 +220,10 @@ export const financeService = {
     return data;
   },
 
-  async createPayment(data: Partial<FinanceLancamento>): Promise<void> {
+  async createPayment(data: FinanceLancamentoInsert): Promise<void> {
     const { error } = await supabase
       .from("financeiro_lancamentos")
-      .insert(data as any);
+      .insert(data);
 
     if (error) throw error;
   },
@@ -245,11 +246,14 @@ export const financeService = {
    * Cancela um lançamento (soft delete com audit trail).
    */
   async cancelPayment(id: string, observation: string): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    
     const { error } = await supabase
       .from("financeiro_lancamentos")
       .update({
         status: "cancelado",
         cancelado_em: new Date().toISOString(),
+        cancelado_por: user?.id ?? null,
         cancelamento_obs: observation,
       })
       .eq("id", id);
@@ -258,8 +262,8 @@ export const financeService = {
   },
 
   /**
-   * Atualiza campos de um lançamento (Uso interno restrito ou legado). 
-   * Para edições auditáveis, use o fluxo Cancelar + Criar.
+   * ATENÇÃO: Uso restrito. Para edições auditáveis, use o fluxo Cancelar + Criar.
+   * @deprecated Use o fluxo de substituição do useUpdateFinanceActions
    */
   async updatePayment(id: string, data: Partial<FinanceLancamento>): Promise<void> {
     const { error } = await supabase

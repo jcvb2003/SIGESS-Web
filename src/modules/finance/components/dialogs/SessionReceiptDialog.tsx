@@ -9,7 +9,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Printer, X, Fish, Check } from "lucide-react";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { formatDate } from "@/shared/utils/formatters/dateFormatters";
-import type { FinanceLancamento } from "../../types/finance.types";
+import type { FinanceLancamento, FinanceDAE } from "../../types/finance.types";
 import { useEntityData } from "@/shared/hooks/useEntityData";
 import { EntitySettings } from "@/shared/types/entity.types";
 
@@ -34,22 +34,29 @@ interface SessionReceiptDialogProps {
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
   readonly lancamentos: FinanceLancamento[];
+  readonly daes?: FinanceDAE[];
   readonly memberName?: string;
   readonly memberCpf?: string;
 }
 
 const ReceiptContent = forwardRef<HTMLDivElement, {
   readonly lancamentos: FinanceLancamento[];
+  readonly daes?: FinanceDAE[];
   readonly memberName?: string;
   readonly memberCpf?: string;
   readonly entity: EntitySettings | null | undefined;
-}>(function ReceiptContent({ lancamentos, memberName, memberCpf, entity }, ref) {
-  if (lancamentos.length === 0) return null;
+}>(function ReceiptContent({ lancamentos, daes = [], memberName, memberCpf, entity }, ref) {
+  if (lancamentos.length === 0 && daes.length === 0) return null;
 
-  const firstLancamento = lancamentos[0];
-  const totalValue = lancamentos.reduce((sum, l) => sum + Number(l.valor), 0);
-  const paymentDate = firstLancamento.data_pagamento;
-  const paymentMethod = firstLancamento.forma_pagamento;
+  const firstLancamento = lancamentos[0] as FinanceLancamento | undefined;
+  const firstDAE = daes[0] as FinanceDAE | undefined;
+  
+  const totalLancamentos = lancamentos.reduce((sum, l) => sum + Number(l.valor), 0);
+  const totalDAEs = daes.reduce((sum, d) => sum + Number(d.valor), 0);
+  const totalValue = totalLancamentos + totalDAEs;
+
+  const paymentDate = firstLancamento?.data_pagamento || firstDAE?.data_pagamento_boleto;
+  const paymentMethod = firstLancamento?.forma_pagamento || "boleto";
 
   return (
     <div
@@ -118,6 +125,22 @@ const ReceiptContent = forwardRef<HTMLDivElement, {
               </span>
             </div>
           ))}
+          {daes.map((d) => (
+            <div
+              key={d.id}
+              className="flex items-center justify-between py-1.5 border-b border-dashed last:border-0"
+            >
+              <div className="flex items-center gap-2">
+                <Check className="h-3 w-3 text-emerald-500" />
+                <span className="text-xs">
+                  Repasse DAE — {String(d.competencia_mes).padStart(2, "0")}/{d.competencia_ano}
+                </span>
+              </div>
+              <span className="text-xs font-semibold">
+                {formatCurrency(Number(d.valor))}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -148,7 +171,7 @@ const ReceiptContent = forwardRef<HTMLDivElement, {
         <div>
           <p className="text-muted-foreground">Sessão ID</p>
           <p className="font-mono text-[10px]">
-            {firstLancamento.sessao_id ?? "—"}
+            {firstLancamento?.sessao_id ?? "—"}
           </p>
         </div>
         <div>
@@ -172,6 +195,7 @@ export function SessionReceiptDialog({
   open,
   onOpenChange,
   lancamentos,
+  daes,
   memberName,
   memberCpf,
 }: SessionReceiptDialogProps) {
@@ -184,75 +208,69 @@ export function SessionReceiptDialog({
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
 
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Comprovante de Pagamento</title>
-        <style>
-          @page { size: 80mm auto; margin: 0; }
-          * { box-sizing: border-box; margin: 0; padding: 0; }
-          body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            padding: 5mm; 
-            width: 80mm; 
-            margin: 0;
-            background: #fff;
-            color: #000;
-          }
-          .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 5mm; margin-bottom: 5mm; }
-          .header h2 { font-size: 14pt; font-weight: 800; text-transform: uppercase; margin-bottom: 1mm; }
-          .header p { font-size: 9pt; color: #333; margin-top: 0.5mm; line-height: 1.2; }
-          .section { margin-bottom: 4mm; }
-          .section-title { font-size: 8pt; font-weight: 800; text-transform: uppercase; border-bottom: 1px solid #ddd; margin-bottom: 2mm; padding-bottom: 0.5mm; }
-          .member-box { border: 1px solid #ccc; padding: 3mm; margin-bottom: 4mm; }
-          .member-box .name { font-weight: 700; font-size: 11pt; }
-          .member-box .cpf { font-size: 9pt; }
-          .item { display: flex; justify-content: space-between; padding: 1.5mm 0; border-bottom: 1px dashed #eee; font-size: 10pt; }
-          .item:last-child { border-bottom: none; }
-          .total { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-            border: 2px solid #000; 
-            padding: 3mm; 
-            font-weight: 800; 
-            margin: 5mm 0; 
-          }
-          .total .label { font-size: 9pt; text-transform: uppercase; }
-          .total .value { font-size: 16pt; }
-          .details { display: grid; grid-template-columns: 1fr 1fr; gap: 2mm; font-size: 9pt; }
-          .details div { margin-bottom: 1mm; }
-          .details .label { color: #666; font-size: 8pt; }
-          .details .value { font-weight: 700; display: block; }
-          .footer { 
-            text-align: center; 
-            border-top: 1px solid #000; 
-            padding-top: 4mm; 
-            margin-top: 5mm;
-            font-size: 8pt; 
-            line-height: 1.4;
-          }
-          @media print {
-            body { width: 100%; padding: 3mm; }
-            button, .no-print { display: none; }
-          }
-        </style>
-      </head>
-      <body>
-        ${content.innerHTML}
-        <script>
-          window.onload = function() { 
-            setTimeout(() => {
-              window.print(); 
-              window.close(); 
-            }, 500);
-          }
-        </script>
-      </body>
-      </html>
-    `);
+    const htmlHead = `
+      <title>Comprovante de Pagamento</title>
+      <style>
+        @page { size: 80mm auto; margin: 0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+          padding: 5mm; 
+          width: 80mm; 
+          margin: 0;
+          background: #fff;
+          color: #000;
+        }
+        .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 5mm; margin-bottom: 5mm; }
+        .header h2 { font-size: 14pt; font-weight: 800; text-transform: uppercase; margin-bottom: 1mm; }
+        .header p { font-size: 9pt; color: #333; margin-top: 0.5mm; line-height: 1.2; }
+        .section { margin-bottom: 4mm; }
+        .section-title { font-size: 8pt; font-weight: 800; text-transform: uppercase; border-bottom: 1px solid #ddd; margin-bottom: 2mm; padding-bottom: 0.5mm; }
+        .member-box { border: 1px solid #ccc; padding: 3mm; margin-bottom: 4mm; }
+        .member-box .name { font-weight: 700; font-size: 11pt; }
+        .member-box .cpf { font-size: 9pt; }
+        .item { display: flex; justify-content: space-between; padding: 1.5mm 0; border-bottom: 1px dashed #eee; font-size: 10pt; }
+        .item:last-child { border-bottom: none; }
+        .total { 
+          display: flex; 
+          justify-content: space-between; 
+          align-items: center; 
+          border: 2px solid #000; 
+          padding: 3mm; 
+          font-weight: 800; 
+          margin: 5mm 0; 
+        }
+        .total .label { font-size: 9pt; text-transform: uppercase; }
+        .total .value { font-size: 16pt; }
+        .details { display: grid; grid-template-columns: 1fr 1fr; gap: 2mm; font-size: 9pt; }
+        .details div { margin-bottom: 1mm; }
+        .details .label { color: #666; font-size: 8pt; }
+        .details .value { font-weight: 700; display: block; }
+        .footer { 
+          text-align: center; 
+          border-top: 1px solid #000; 
+          padding-top: 4mm; 
+          margin-top: 5mm;
+          font-size: 8pt; 
+          line-height: 1.4;
+        }
+        @media print {
+          body { width: 100%; padding: 3mm; }
+          button, .no-print { display: none; }
+        }
+      </style>
+    `;
+
+    printWindow.document.head.innerHTML = htmlHead;
+    printWindow.document.body.innerHTML = content.innerHTML;
     printWindow.document.close();
+
+    // Small delay to ensure styles are applied before printing
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
+    }, 500);
   }, []);
 
   return (
@@ -286,6 +304,7 @@ export function SessionReceiptDialog({
         <div className="max-h-[70vh] overflow-y-auto overflow-x-hidden scrollbar-hide">
           <ReceiptContent
             lancamentos={lancamentos}
+            daes={daes}
             memberName={memberName}
             memberCpf={memberCpf}
             entity={entity}

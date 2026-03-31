@@ -65,7 +65,7 @@ export function BulkContributionDialog({
                 Gerando...
               </>
             ) : (
-              "Confirmar lançamento"
+              "CONFIRMAR LANÇAMENTO"
             )}
           </AlertDialogAction>
         </AlertDialogFooter>

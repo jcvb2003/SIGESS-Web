@@ -67,14 +67,14 @@ export function FinanceTableRow({
         />
       </TableCell>
       <TableCell>
-        <div className="flex justify-end gap-1">
+        <div className="flex justify-end gap-2">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-7 w-7 hover:border-emerald-500 hover:text-emerald-600"
+                  className="h-7 w-7 transition-all duration-200 hover:bg-sky-600 hover:text-white hover:border-sky-600 hover:scale-110 active:scale-95 shadow-sm"
                   onClick={() => onOpenStatement(member.cpf)}
                 >
                   <ClipboardList className="h-3.5 w-3.5" />
@@ -91,9 +91,9 @@ export function FinanceTableRow({
                   variant="outline"
                   size="icon"
                   className={cn(
-                    "h-7 w-7",
+                    "h-7 w-7 transition-all duration-200 shadow-sm",
                     !member.isento &&
-                    "hover:bg-emerald-600 hover:text-white hover:border-emerald-600",
+                    "hover:bg-emerald-600 hover:text-white hover:border-emerald-600 hover:scale-110 active:scale-95",
                   )}
                   disabled={member.isento}
                   onClick={() => onOpenPayment(member.cpf)}
@@ -112,9 +112,9 @@ export function FinanceTableRow({
                   variant="outline"
                   size="icon"
                   className={cn(
-                    "h-7 w-7",
+                    "h-7 w-7 transition-all duration-200 shadow-sm",
                     !member.isento &&
-                    "hover:bg-amber-600 hover:text-white hover:border-amber-600",
+                    "hover:bg-amber-600 hover:text-white hover:border-amber-600 hover:scale-110 active:scale-95",
                   )}
                   disabled={member.isento}
                   onClick={() => onOpenDAE(member.cpf)}

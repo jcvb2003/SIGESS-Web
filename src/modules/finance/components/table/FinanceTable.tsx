@@ -1,4 +1,4 @@
-import { Table } from "@/shared/components/ui/table";
+import { Table, TableBody } from "@/shared/components/ui/table";
 import { FinanceTableHeader } from "./FinanceTableHeader";
 import { FinanceTableBody } from "./FinanceTableBody";
 import { FinanceTablePagination } from "./FinanceTablePagination";
@@ -37,7 +37,9 @@ export function FinanceTable({
     return (
       <Table>
         <FinanceTableHeader />
-        <TableLoadingState colSpan={7} rows={pageSize} />
+        <TableBody>
+          <TableLoadingState colSpan={7} rows={pageSize} />
+        </TableBody>
       </Table>
     );
   }
@@ -47,7 +49,9 @@ export function FinanceTable({
       <Table>
         <FinanceTableHeader />
         {members.length === 0 ? (
-          <TableEmptyState colSpan={7} message="Nenhum sócio encontrado para os filtros selecionados." />
+          <TableBody>
+            <TableEmptyState colSpan={7} message="Nenhum sócio encontrado para os filtros selecionados." />
+          </TableBody>
         ) : (
           <FinanceTableBody
             members={members}
