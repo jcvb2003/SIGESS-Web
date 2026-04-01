@@ -1,8 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/shared/lib/supabase/client";
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const PROBE_INTERVAL_MS = 15_000;
 const PROBE_TIMEOUT_MS = 5_000;
 
@@ -11,14 +10,9 @@ async function checkRealConnectivity(): Promise<boolean> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
 
-    await fetch(`${SUPABASE_URL}/auth/v1/settings`, {
-      method: "GET",
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-      },
-      cache: "no-store",
-      signal: controller.signal,
-    });
+    // Use the already-configured supabase client to probe connectivity,
+    // so the correct tenant URL and key are always used.
+    await supabase.auth.getSession();
 
     clearTimeout(timeout);
     return true;
