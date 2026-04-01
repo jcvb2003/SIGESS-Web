@@ -1,7 +1,26 @@
 import { useRouteError, isRouteErrorResponse } from "react-router-dom";
+import { useEffect } from "react";
 import { ErrorState } from "./ErrorState";
+
+function isChunkLoadError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  return (
+    error.message.includes("dynamically imported module") ||
+    error.message.includes("Failed to fetch dynamically imported module") ||
+    error.name === "ChunkLoadError"
+  );
+}
+
 export function RouteError() {
   const error = useRouteError();
+
+  useEffect(() => {
+    if (isChunkLoadError(error)) {
+      // Stale chunk after deploy — hard reload to get fresh assets
+      window.location.reload();
+    }
+  }, [error]);
+
   let message = "Ocorreu um erro inesperado.";
   if (isRouteErrorResponse(error)) {
     if (error.status === 404) {
@@ -12,7 +31,9 @@ export function RouteError() {
       message = error.statusText || message;
     }
   } else if (error instanceof Error) {
-    message = error.message;
+    message = isChunkLoadError(error)
+      ? "Atualizando aplicação..."
+      : error.message;
   }
   return (
     <ErrorState

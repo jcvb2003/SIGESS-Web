@@ -18,6 +18,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
           console.error("Error checking session:", error);
           // Se o erro for relacionado a token inválido ou não encontrado, limpa o estado
           if (error.message?.includes("Refresh Token") || (error as { status?: number }).status === 400) {
+            await supabase.auth.signOut();
             setSession(null);
             setUser(null);
           }
@@ -34,9 +35,14 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     initializeAuth();
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT" || event === "TOKEN_REFRESHED" && !session) {
+        setSession(null);
+        setUser(null);
+      } else {
+        setSession(session);
+        setUser(session?.user ?? null);
+      }
       setLoading(false);
     });
     return () => subscription.unsubscribe();
