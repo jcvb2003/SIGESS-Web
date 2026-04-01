@@ -120,8 +120,15 @@ export const memberRegistrationSchema = z
         "Viúvo(a)",
         "União Estável",
       ])
-      .optional()
-      .or(z.literal("")),
+      .or(z.literal(""))
+      .superRefine((val, ctx) => {
+        if (val === "") {
+          ctx.addIssue({
+            code: "custom",
+            message: "Estado Civil é obrigatório",
+          });
+        }
+      }),
     pai: optionalStringSchema,
     mae: optionalStringSchema,
     nacionalidade: optionalStringSchema,
