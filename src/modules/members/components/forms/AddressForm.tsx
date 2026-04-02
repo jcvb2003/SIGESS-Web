@@ -30,7 +30,11 @@ export function AddressForm() {
     }));
 
   const handleLocalityCreated = (code: string) => {
-    setValue("codigoLocalidade", code, { shouldValidate: true });
+    setValue("codigoLocalidade", code, {
+      shouldValidate: true,
+      shouldDirty: true,
+      shouldTouch: true,
+    });
   };
 
   return (

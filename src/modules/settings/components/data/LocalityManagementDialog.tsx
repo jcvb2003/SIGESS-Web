@@ -58,15 +58,23 @@ export function LocalityManagementDialog({
       return data;
     },
     onSuccess: async (newLocality) => {
-      await queryClient.invalidateQueries({
+      // Aguarda o refetch completo para garantir que a nova localidade esteja na lista global
+      await queryClient.refetchQueries({
         queryKey: ["localities"],
       });
+      
       toast.success("Localidade salva com sucesso.");
       
       // Se foi uma criação (não edição), chama o callback onCreated
-      if (!editingLocality?.id && newLocality?.code && onCreated) {
-        onCreated(newLocality.code);
-        onOpenChange(false); // Fecha o modal após criar e selecionar
+      const isNew = editingLocality && !editingLocality.id;
+      if (isNew && newLocality?.code && onCreated) {
+        const selectedCode = newLocality.code;
+        // Pequeno atraso para garantir que o React Hook Form e o SelectComponent 
+        // tenham processado o novo estado da lista antes de setar o valor
+        setTimeout(() => {
+          onCreated(selectedCode);
+          onOpenChange(false);
+        }, 100);
       }
       
       setEditingLocality(null);
