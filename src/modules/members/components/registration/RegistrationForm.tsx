@@ -28,7 +28,6 @@ import { ErrorBoundary } from "@/shared/components/feedback/ErrorBoundary";
 import { RegistrationTabs } from "./RegistrationTabs";
 import { RegistrationActions } from "./RegistrationActions";
 import { useNavigate } from "react-router-dom";
-import { useMemberCodeGenerator } from "../../hooks/registration/useMemberCodeGenerator";
 import { useCpfValidation } from "../../hooks/registration/useCpfValidation";
 import { photoService } from "../../services/photoService";
 import { useUserMetadata } from "@/modules/auth/hooks/useUserMetadata";
@@ -57,7 +56,6 @@ export function RegistrationForm({
     mode: "onChange",
   });
 
-  useMemberCodeGenerator(form, isEditMode);
   useCpfValidation(form, isEditMode);
 
   const { entity } = useEntityData();
@@ -191,7 +189,7 @@ export function RegistrationForm({
           className="space-y-8"
         >
           <ErrorBoundary>
-            <RegistrationTabs />
+            <RegistrationTabs isEditMode={isEditMode} />
           </ErrorBoundary>
 
           <RegistrationActions

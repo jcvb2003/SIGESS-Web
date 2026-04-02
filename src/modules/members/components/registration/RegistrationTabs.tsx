@@ -7,7 +7,11 @@ import {
 import { PersonalDataTabContent } from "./tabs/PersonalDataTabContent";
 import { DocumentsTabContent } from "./tabs/DocumentsTabContent";
 import { User, FileText } from "lucide-react";
-export function RegistrationTabs() {
+interface RegistrationTabsProps {
+  isEditMode: boolean;
+}
+
+export function RegistrationTabs({ isEditMode }: Readonly<RegistrationTabsProps>) {
   return (
     <Tabs defaultValue="personal" className="w-full space-y-6">
       <TabsList>
@@ -32,7 +36,7 @@ export function RegistrationTabs() {
         value="personal"
         className="mt-6 focus-visible:outline-none focus-visible:ring-0"
       >
-        <PersonalDataTabContent />
+        <PersonalDataTabContent isEditMode={isEditMode} />
       </TabsContent>
       <TabsContent
         value="documents"

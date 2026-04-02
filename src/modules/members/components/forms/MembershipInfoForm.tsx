@@ -1,4 +1,4 @@
-import { useFormContext } from "react-hook-form";
+import { useFormContext, useWatch } from "react-hook-form";
 import {
   Card,
   CardContent,
@@ -12,9 +12,23 @@ import { SelectField } from "@/shared/components/form-fields/fields/SelectField"
 import { TextareaField } from "@/shared/components/form-fields/fields/TextareaField";
 import { masks } from "@/shared/utils/masks/inputMasks";
 import { MemberPhotoField } from "../form-fields/MemberPhotoField";
-import { ClipboardList } from "lucide-react";
-export function MembershipInfoForm() {
-  const { control } = useFormContext();
+import { ClipboardList, RefreshCw, Sparkles } from "lucide-react";
+import { Button } from "@/shared/components/ui/button";
+import { useMemberCodeGenerator, REGISTRATION_CODE_PATTERN } from "../../hooks/registration/useMemberCodeGenerator";
+import { MemberRegistrationSchemaType } from "../../schemas/memberRegistration.schema";
+
+interface MembershipInfoFormProps {
+  isEditMode: boolean;
+}
+
+export function MembershipInfoForm({ isEditMode }: Readonly<MembershipInfoFormProps>) {
+  const form = useFormContext<MemberRegistrationSchemaType>();
+  const { control } = form;
+  const { handleGenerateCode } = useMemberCodeGenerator(form, isEditMode);
+  
+  const codigoDoSocio = useWatch({ control, name: "codigoDoSocio" });
+  const isPatternMatch = !!(codigoDoSocio && REGISTRATION_CODE_PATTERN.test(String(codigoDoSocio)));
+
   const situationOptions = [
     { label: "ATIVO", value: "ATIVO" },
     { label: "APOSENTADO", value: "APOSENTADO" },
@@ -43,13 +57,32 @@ export function MembershipInfoForm() {
 
           <div className="flex-1 space-y-4">
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-              <TextField
-                control={control}
-                name="codigoDoSocio"
-                label="Número de Registro"
-                placeholder="Número de registro do sócio"
-                mask={masks.numbers}
-              />
+              <div className="flex items-end gap-2">
+                <div className="flex-1">
+                  <TextField
+                    control={control}
+                    name="codigoDoSocio"
+                    label="Número de Registro"
+                    placeholder="Número de registro do sócio"
+                    mask={masks.numbers}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="mb-[2px] transition-all hover:bg-primary/10 hover:text-primary active:scale-95"
+                  onClick={handleGenerateCode}
+                  disabled={isPatternMatch}
+                  title={isPatternMatch ? "Já está no formato padrão" : "Gerar código"}
+                >
+                  {isPatternMatch ? (
+                    <Sparkles className="h-4 w-4 text-muted-foreground/30" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
               <DateField
                 control={control}
                 name="dataDeAdmissao"
