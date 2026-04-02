@@ -111,7 +111,7 @@ export function PersonalInfoForm() {
             control={control}
             name="nacionalidade"
             label="Nacionalidade"
-            placeholder="Ex: Brasileira"
+            placeholder="Ex: Brasileiro(a)"
             autoUppercase
           />
           <TextField

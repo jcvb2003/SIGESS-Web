@@ -124,7 +124,7 @@ export const initialMemberRegistrationForm: MemberRegistrationForm = {
   sexo: "",
   pai: "",
   mae: "",
-  nacionalidade: "BRASILEIRA",
+  nacionalidade: "BRASILEIRO(A)",
   naturalidade: "",
   ufNaturalidade: "PA",
   escolaridade: "",
