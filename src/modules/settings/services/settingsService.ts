@@ -218,29 +218,55 @@ export const settingsService = {
     }));
     return { data: localities, error: null };
   },
-  async saveLocality(locality: Locality): Promise<ServiceResponse<void>> {
+  async saveLocality(locality: Locality): Promise<ServiceResponse<Locality>> {
     const normalizedName = locality.name.trim().toUpperCase();
+    
     if (locality.id) {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from(LOCALITIES_TABLE)
         .update({
           nome: normalizedName || null,
         })
-        .eq("id", locality.id);
+        .eq("id", locality.id)
+        .select("id, nome, codigo_localidade")
+        .single();
+        
       if (error) {
         console.error("Erro ao atualizar localidade:", error);
         return { data: null, error };
       }
-      return { data: null, error: null };
+      
+      return { 
+        data: {
+          id: String(data.id),
+          name: String(data.nome ?? ""),
+          code: String(data.codigo_localidade ?? ""),
+        }, 
+        error: null 
+      };
     }
-    const { error } = await supabase.from(LOCALITIES_TABLE).insert({
-      nome: normalizedName || null,
-    });
+    
+    const { data, error } = await supabase
+      .from(LOCALITIES_TABLE)
+      .insert({
+        nome: normalizedName || null,
+      })
+      .select("id, nome, codigo_localidade")
+      .single();
+      
     if (error) {
       console.error("Erro ao adicionar localidade:", error);
       return { data: null, error };
     }
-    return { data: null, error: null };
+    
+    return { 
+      data: {
+        id: String(data.id),
+        name: String(data.nome ?? ""),
+        code: String(data.codigo_localidade ?? ""),
+      }, 
+      error: null 
+    };
   },
   async deleteLocality(id: string): Promise<ServiceResponse<void>> {
     const { error } = await supabase
