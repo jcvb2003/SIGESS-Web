@@ -415,7 +415,7 @@ CREATE TABLE public.socios (
     alfabetizado text,
     escolaridade text,
     rg text,
-    ssp text,
+    uf_rg text,
     dt_expedicao_rg date,
     cpf text UNIQUE,
     titulo text,
