@@ -326,6 +326,50 @@ BEGIN
 END;
 $function$;
 
+CREATE OR REPLACE FUNCTION public.get_finance_tab_counts(
+  p_search_term text DEFAULT '',
+  p_year integer DEFAULT NULL,
+  p_ano_base integer DEFAULT 2024
+) RETURNS jsonb
+LANGUAGE plpgsql STABLE SECURITY DEFINER AS $$
+DECLARE
+  v_year integer;
+  v_required_years integer[];
+  v_result jsonb;
+  v_todos bigint;
+  v_isentos bigint;
+  v_liberados bigint;
+  v_em_dia bigint;
+BEGIN
+  v_year := COALESCE(p_year, EXTRACT(YEAR FROM CURRENT_DATE)::integer);
+  v_required_years := ARRAY(SELECT generate_series(p_ano_base, v_year));
+
+  SELECT
+    COUNT(*),
+    COUNT(*) FILTER (WHERE isento = true),
+    COUNT(*) FILTER (WHERE liberado_presidente = true),
+    COUNT(*) FILTER (
+      WHERE isento = false
+        AND liberado_presidente = false
+        AND anuidades_pagas @> v_required_years
+    )
+  INTO v_todos, v_isentos, v_liberados, v_em_dia
+  FROM v_situacao_financeira_socio
+  WHERE (p_search_term = '' OR nome ILIKE '%' || p_search_term || '%'
+         OR cpf ILIKE '%' || p_search_term || '%');
+
+  v_result := jsonb_build_object(
+    'todos', v_todos,
+    'em-dia', v_em_dia,
+    'inadimplentes', GREATEST(v_todos - COALESCE(v_em_dia, 0) - COALESCE(v_isentos, 0) - COALESCE(v_liberados, 0), 0),
+    'liberados', COALESCE(v_liberados, 0),
+    'isentos', COALESCE(v_isentos, 0)
+  );
+
+  RETURN v_result;
+END;
+$$;
+
 -- 3. TABLES
 CREATE TABLE public."User" (
     id uuid NOT NULL PRIMARY KEY,

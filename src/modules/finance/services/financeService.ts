@@ -26,13 +26,7 @@ export const financeService = {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
-    const { data: settings } = await supabase
-      .from("parametros_financeiros")
-      .select("ano_base_cobranca")
-      .limit(1)
-      .single();
-
-    const anoBase = settings?.ano_base_cobranca ?? 2024;
+    const anoBase = params.anoBase ?? 2024;
 
     // Anos que precisam estar pagos para o sócio estar em dia
     const requiredYears: number[] = [];
@@ -91,54 +85,14 @@ export const financeService = {
     year: number,
     anoBase: number,
   ): Promise<Record<string, number>> {
-    const requiredYears: number[] = [];
-    for (let y = anoBase; y <= year; y++) requiredYears.push(y);
-
-    const buildBase = () => {
-      let q = supabase
-        .from("v_situacao_financeira_socio")
-        .select("cpf", { count: "exact", head: true });
-      if (searchTerm) {
-        q = q.or(`nome.ilike.%${searchTerm}%,cpf.ilike.%${searchTerm}%`);
-      }
-      return q;
-    };
-
-    const emDiaQuery = () => {
-      let q = buildBase()
-        .not("isento", "eq", true)
-        .not("liberado_presidente", "eq", true);
-      if (requiredYears.length > 0) {
-        q = q.contains("anuidades_pagas", requiredYears);
-      }
-      return q;
-    };
-
-    const inadimplentesQuery = () => {
-      if (requiredYears.length === 0) return Promise.resolve({ count: 0, error: null });
-      return buildBase()
-        .not("isento", "eq", true)
-        .not("liberado_presidente", "eq", true)
-        .or(
-          `anuidades_pagas.is.null,anuidades_pagas.not.cs.{${requiredYears.join(",")}}`,
-        );
-    };
-
-    const [todos, isentos, liberados, emDia, inadimplentes] = await Promise.all([
-      buildBase(),
-      buildBase().eq("isento", true),
-      buildBase().eq("liberado_presidente", true),
-      emDiaQuery(),
-      inadimplentesQuery(),
-    ]);
-
-    return {
-      todos: todos.count ?? 0,
-      "em-dia": emDia.count ?? 0,
-      inadimplentes: inadimplentes.count ?? 0,
-      liberados: liberados.count ?? 0,
-      isentos: isentos.count ?? 0,
-    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase.rpc as any)('get_finance_tab_counts', {
+      p_search_term: searchTerm,
+      p_year: year,
+      p_ano_base: anoBase,
+    });
+    if (error) throw error;
+    return data as unknown as Record<string, number>;
   },
 
   /**

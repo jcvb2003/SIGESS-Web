@@ -9,6 +9,7 @@ export function useChargeTypes(activeOnly = false) {
       activeOnly
         ? chargeTypesService.getActive()
         : chargeTypesService.getAll(),
+    staleTime: 30 * 60 * 1000, // 30 minutos
   });
 
   return {

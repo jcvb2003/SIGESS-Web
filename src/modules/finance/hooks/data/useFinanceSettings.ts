@@ -6,6 +6,7 @@ export function useFinanceSettings() {
   const query = useQuery({
     queryKey: financeQueryKeys.settings(),
     queryFn: () => financeSettingsService.getSettings(),
+    staleTime: 30 * 60 * 1000, // 30 minutos
   });
 
   return {

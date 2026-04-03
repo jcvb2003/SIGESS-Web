@@ -65,6 +65,7 @@ export interface FinanceDashboardParams {
   pageSize: number;
   searchTerm: string;
   year: number;
+  anoBase?: number;
   tab: "todos" | "em-dia" | "inadimplentes" | "liberados" | "isentos";
   filterAnnuityOk?: boolean;
   filterAnnuityOverdue?: boolean;

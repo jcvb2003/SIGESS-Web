@@ -33,12 +33,12 @@ const MONTH_NAMES = [
 
 export default function FinancePage() {
   const { params, setSearch, setTab, setPage, applyAdvancedFilters, clearAdvancedFilters, hasActiveAdvancedFilters } = useFinanceFilters();
-  const { members, total, isLoading } = useFinanceDashboard(params);
   const { settings } = useFinanceSettings();
-
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
   const anoBase = settings?.ano_base_cobranca ?? 2024;
+
+  const { members, total, isLoading } = useFinanceDashboard({ ...params, anoBase });
 
   // Real stats from DB
   const { arrecadado, arrecadadoAno, qtdPagamentos, daePendente } = useFinanceStats(currentYear, currentMonth);

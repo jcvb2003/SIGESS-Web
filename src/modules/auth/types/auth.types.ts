@@ -5,6 +5,7 @@ export interface AuthState {
   loading: boolean;
 }
 export interface LoginCredentials {
+  tenantCode: string;
   email: string;
   password: string;
 }
