@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { UseFormReturn } from "react-hook-form";
+import { UseFormReturn, useWatch } from "react-hook-form";
 import { supabase } from "@/shared/lib/supabase/client";
 import { MemberRegistrationSchemaType } from "../../schemas/memberRegistration.schema";
 export function useCpfValidation(
@@ -7,7 +7,10 @@ export function useCpfValidation(
   isEditMode: boolean,
 ) {
   const [isValidatingCpf, setIsValidatingCpf] = useState(false);
-  const cpf = form.watch("cpf");
+  const cpf = useWatch({
+    control: form.control,
+    name: "cpf",
+  });
   useEffect(() => {
     if (isEditMode) return;
     const cleanCpf = cpf?.replaceAll(/\D/g, "") || "";

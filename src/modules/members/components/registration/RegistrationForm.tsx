@@ -53,7 +53,7 @@ export function RegistrationForm({
   const form = useForm<MemberRegistrationSchemaType, undefined, MemberRegistrationSchemaType>({
     resolver: zodResolver(memberRegistrationSchema) as import("react-hook-form").Resolver<MemberRegistrationSchemaType>,
     defaultValues: (initialData || initialMemberRegistrationForm) as DefaultValues<MemberRegistrationSchemaType>,
-    mode: "onChange",
+    mode: "onBlur",
   });
 
   useCpfValidation(form, isEditMode);

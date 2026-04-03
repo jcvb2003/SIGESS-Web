@@ -79,8 +79,8 @@ export function TextField<T extends FieldValues>({
         return (
           <FormItem className={className}>
             <FormLabel>{label}</FormLabel>
-            <FormControl>
-              <div className="relative">
+            <div className="relative">
+              <FormControl>
                 <Input
                   {...field}
                   type={type}
@@ -94,11 +94,11 @@ export function TextField<T extends FieldValues>({
                   onPaste={handlePaste}
                   value={field.value || ""}
                 />
-                {type === "date" && (
-                  <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50 pointer-events-none" />
-                )}
-              </div>
-            </FormControl>
+              </FormControl>
+              {type === "date" && (
+                <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50 pointer-events-none" />
+              )}
+            </div>
             {description && <FormDescription>{description}</FormDescription>}
             <FormMessage />
           </FormItem>

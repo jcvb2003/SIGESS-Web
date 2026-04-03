@@ -107,8 +107,17 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
         toast.error("Erro ao realizar logout");
         return false;
       }
+      
+      // Limpa os tokens e o tenant do localStorage ANTES do redirecionamento
       clearSupabaseClient();
+      
       toast.success("Logout realizado com sucesso!");
+      
+      // Força o recarregamento total da aplicação para a raiz
+      if (typeof globalThis !== "undefined") {
+        globalThis.location.href = "/";
+      }
+      
       return true;
     } catch (error: unknown) {
       console.error("Logout error:", error);

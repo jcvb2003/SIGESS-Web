@@ -7,6 +7,11 @@ const PROBE_TIMEOUT_MS = 5_000;
 
 async function checkRealConnectivity(): Promise<boolean> {
   try {
+    // Se não houver um tenant selecionado, não podemos testar a conexão com o Supabase.
+    // Usamos o status do navegador para evitar falsos negativos na tela de login.
+    const savedTenant = typeof localStorage !== 'undefined' ? localStorage.getItem('sigess_tenant') : null;
+    if (!savedTenant) return navigator.onLine;
+
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
 

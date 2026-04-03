@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from "react";
-import { UseFormReturn } from "react-hook-form";
+import { UseFormReturn, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { MemberRegistrationSchemaType } from "../../schemas/memberRegistration.schema";
 import { memberService } from "../../services/memberService";
@@ -58,48 +58,34 @@ export function useMemberCodeGenerator(
     }
   }, [form]);
 
+  // Observa apenas o campo necessário de forma granular
+  const dataDeNascimento = useWatch({
+    control: form.control,
+    name: "dataDeNascimento",
+  });
+
   useEffect(() => {
     // Permitimos a geração automática apenas em modo de criação
-    if (isEditing) return;
+    if (isEditing || dataDeNascimento?.length !== 10) return;
 
-    const subscription = form.watch(
-      async (
-        formData: Partial<MemberRegistrationSchemaType>,
-        {
-          name,
-        }: {
-          name?: string;
-        },
-      ) => {
-        if (
-          name === "dataDeNascimento" &&
-          formData.dataDeNascimento?.length === 10
-        ) {
-          const currentCode = form.getValues("codigoDoSocio");
-          
-          // Se já tiver um código válido no formato padrão, não sobrescrevemos automaticamente
-          if (currentCode && REGISTRATION_CODE_PATTERN.test(String(currentCode))) {
-            return;
-          }
+    const autoGenerate = async () => {
+      const currentCode = form.getValues("codigoDoSocio");
+      
+      // Se já tiver um código válido no formato padrão, não sobrescrevemos automaticamente
+      if (currentCode && REGISTRATION_CODE_PATTERN.test(String(currentCode))) {
+        return;
+      }
 
-          const generatedCode = await generateRegistrationNumber(
-            formData.dataDeNascimento,
-          );
-          if (generatedCode) {
-            form.setValue("codigoDoSocio", generatedCode, {
-              shouldValidate: true,
-            });
-          }
-        }
-      },
-    );
-
-    return () => {
-      if (subscription && typeof subscription.unsubscribe === "function") {
-        subscription.unsubscribe();
+      const generatedCode = await generateRegistrationNumber(dataDeNascimento);
+      if (generatedCode) {
+        form.setValue("codigoDoSocio", generatedCode, {
+          shouldValidate: true,
+        });
       }
     };
-  }, [form, isEditing]);
+
+    autoGenerate();
+  }, [dataDeNascimento, isEditing, form]);
 
   return { handleGenerateCode };
 }
