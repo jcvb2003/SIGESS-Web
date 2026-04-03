@@ -21,9 +21,14 @@ let _client: SupabaseClient<Database> | null = null;
 export function initSupabaseClient(tenantCode: string): SupabaseClient<Database> {
   const tenant = resolveTenant(tenantCode);
   if (!tenant) throw new Error('Entidade não encontrada');
-  
+
   if (!tenant.supabaseUrl || !tenant.supabaseAnonKey) {
-     throw new Error(`Variáveis de ambiente ausentes para o código: ${tenantCode}`);
+    throw new Error(`Entidade não encontrada: ${tenantCode}`);
+  }
+
+  const saved = typeof globalThis === 'undefined' ? null : globalThis.localStorage.getItem(TENANT_KEY);
+  if (_client && saved === tenantCode) {
+    return _client;
   }
 
   _client = createClient<Database>(tenant.supabaseUrl, tenant.supabaseAnonKey);
@@ -45,7 +50,7 @@ export function getSupabaseClient(): SupabaseClient<Database> {
       return _client;
     }
   }
-  
+
   throw new Error('Nenhuma entidade inicializada. Faça login.');
 }
 

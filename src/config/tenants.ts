@@ -7,13 +7,13 @@ export interface TenantConfig {
 export const TENANTS: Record<string, TenantConfig> = {
   'z2': {
     label: 'Colônia Z-2 de Salvaterra',
-    supabaseUrl: import.meta.env.VITE_SUPABASE_URL_Z2 || '',
-    supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY_Z2 || '',
+    supabaseUrl: import.meta.env.VITE_SUPABASE_URL_Z2 || import.meta.env.VITE_SUPABASE_URL || '',
+    supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY_Z2 || import.meta.env.VITE_SUPABASE_ANON_KEY || '',
   },
   'sinpesca-breves': {
     label: 'SINPESCA — Polo Breves Eliseu',
-    supabaseUrl: import.meta.env.VITE_SUPABASE_URL_SINPESCA_BREVES || '',
-    supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY_SINPESCA_BREVES || '',
+    supabaseUrl: import.meta.env.VITE_SUPABASE_URL_SINPESCA_BREVES || import.meta.env.VITE_SUPABASE_URL || '',
+    supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY_SINPESCA_BREVES || import.meta.env.VITE_SUPABASE_ANON_KEY || '',
   },
 }
 

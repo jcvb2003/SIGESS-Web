@@ -73,7 +73,10 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       
       const { error } = await authService.signIn(credentials);
       if (error) {
-        const message = error.message || "Erro ao realizar login";
+        let message = error.message || "Erro ao realizar login";
+        if (message === "Invalid login credentials") {
+          message = "Código, email ou senha incorretos";
+        }
         toast.error(message);
         clearSupabaseClient(); // Remove a tentativa falha
         return false;
