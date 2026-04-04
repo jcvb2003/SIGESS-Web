@@ -65,7 +65,7 @@ const DataField = ({
   readonly value: string | null | undefined;
   readonly icon?: React.ElementType;
 }) => (
-  <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-zinc-50 transition-colors border border-transparent hover:border-zinc-100">
+  <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors border border-transparent hover:border-border/50">
     {Icon && <Icon className="w-4 h-4 mt-0.5 text-primary/60" />}
     <div className="space-y-1">
       <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
@@ -196,8 +196,8 @@ export function DefesoRequestDocument({
         )}
       </div>
 
-      <Card className="overflow-hidden border-none shadow-md ring-1 ring-zinc-200">
-        <CardHeader className="bg-zinc-50/50 border-b pb-4">
+      <Card className="overflow-hidden border-none shadow-md ring-1 ring-border/50">
+        <CardHeader className="bg-muted/30 border-b pb-4">
           <CardTitle className="text-lg flex items-center gap-2">
             <User className="w-5 h-5 text-primary" />
             Dados do Requerente
@@ -249,7 +249,7 @@ export function DefesoRequestDocument({
                   type="date"
                   value={requestDate}
                   onChange={(e) => setRequestDate(e.target.value)}
-                  className="bg-white pl-3 pr-10 hover:border-primary/50 transition-colors focus-visible:ring-primary/20 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:p-0 [&::-webkit-calendar-picker-indicator]:m-0 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:w-4 [&::-webkit-calendar-picker-indicator]:h-4"
+                  className="bg-background pl-3 pr-10 hover:border-primary/50 transition-colors focus-visible:ring-primary/20 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:p-0 [&::-webkit-calendar-picker-indicator]:m-0 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:w-4 [&::-webkit-calendar-picker-indicator]:h-4"
                 />
                 <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50 pointer-events-none text-primary" />
               </div>
@@ -263,7 +263,7 @@ export function DefesoRequestDocument({
             </Label>
             {availableModels.length > 0 ? (
               <Select value={resolvedModel} onValueChange={setSelectedModel}>
-                <SelectTrigger className="bg-white">
+                <SelectTrigger className="bg-background">
                   <SelectValue placeholder="Selecione um modelo" />
                 </SelectTrigger>
                 <SelectContent>

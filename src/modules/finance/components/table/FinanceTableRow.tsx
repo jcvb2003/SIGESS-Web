@@ -40,12 +40,12 @@ export function FinanceTableRow({
         />
       </TableCell>
       <TableCell className="py-4 px-4">
-        <span className="text-sm font-medium text-slate-600 whitespace-nowrap">
+        <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
           {member.cpf}
         </span>
       </TableCell>
       <TableCell className="py-4 px-4">
-        <span className="text-sm font-medium text-slate-700 capitalize">
+        <span className="text-sm font-medium capitalize">
           {member.regime}
         </span>
       </TableCell>
@@ -53,7 +53,7 @@ export function FinanceTableRow({
         <FinancialStatusCell member={member} anoBase={anoBase} />
       </TableCell>
       <TableCell className="py-4 px-4">
-        <span className="text-sm font-medium text-slate-600">
+        <span className="text-sm font-medium text-muted-foreground">
           {member.ultimoPagamento
             ? formatDate(member.ultimoPagamento)
             : "—"}

@@ -132,18 +132,26 @@ export function MemberPhotoField() {
 
           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-3">
             <Camera className="h-6 w-6 text-white" />
-            <button
-              type="button"
-              className="absolute top-1 right-1 p-1.5 bg-destructive/90 hover:bg-destructive rounded-full text-white transition-colors"
+            <div
+              role="button"
+              tabIndex={0}
+              className="absolute top-1 right-1 p-1.5 bg-destructive/90 hover:bg-destructive rounded-full text-white transition-colors cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
                 deletePhoto();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  deletePhoto();
+                }
               }}
               title="Excluir foto"
               aria-label="Excluir foto"
             >
               <Trash2 className="h-3.5 w-3.5" />
-            </button>
+            </div>
           </div>
         </>
       );

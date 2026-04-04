@@ -52,7 +52,7 @@ export function MemberInfoCell({ nome, status = "ok" }: MemberInfoCellProps) {
       <div className="relative">
         <div
           className={cn(
-            "flex h-9 w-9 items-center justify-center rounded-full text-[13px] font-bold shadow-sm ring-2 ring-white",
+            "flex h-9 w-9 items-center justify-center rounded-full text-[13px] font-bold shadow-sm ring-2 ring-background",
             STATUS_AVATAR_COLORS[status],
           )}
         >
@@ -60,13 +60,13 @@ export function MemberInfoCell({ nome, status = "ok" }: MemberInfoCellProps) {
         </div>
         <span 
           className={cn(
-            "absolute -bottom-0.5 -right-0.5 block h-3 w-3 rounded-full border-2 border-white shadow-sm",
+            "absolute -bottom-0.5 -right-0.5 block h-3 w-3 rounded-full border-2 border-background shadow-sm",
             STATUS_DOT_COLORS[status]
           )}
         />
       </div>
       <div className="flex flex-col justify-center">
-        <span className="text-sm font-medium text-slate-900 leading-tight">
+        <span className="text-sm font-medium leading-tight">
           {capitalizeName(nome)}
         </span>
       </div>

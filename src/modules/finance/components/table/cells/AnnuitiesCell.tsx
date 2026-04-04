@@ -16,7 +16,7 @@ interface AnnuitiesCellProps {
 export function AnnuitiesCell({ member, currentYear, anoBase }: AnnuitiesCellProps) {
   if (member.isento) {
     return (
-      <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700 border border-blue-100">
+      <span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400 border border-blue-100 dark:border-blue-800">
         Isento
       </span>
     );
@@ -50,8 +50,8 @@ export function AnnuitiesCell({ member, currentYear, anoBase }: AnnuitiesCellPro
                 className={cn(
                   "flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold border transition-all cursor-default shadow-sm",
                   y.isPaid 
-                    ? "bg-emerald-50 border-emerald-200 text-emerald-700" 
-                    : "bg-red-50 border-red-100 text-red-600 opacity-60 hover:opacity-100"
+                    ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400" 
+                    : "bg-red-50 dark:bg-red-900/30 border-red-100 dark:border-red-800 text-red-600 dark:text-red-400 opacity-60 hover:opacity-100"
                 )}
               >
                 {String(y.year).slice(-2)}

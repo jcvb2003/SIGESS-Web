@@ -7,13 +7,18 @@ export interface TenantConfig {
 export const TENANTS: Record<string, TenantConfig> = {
   'z2': {
     label: 'Colônia Z-2 de Salvaterra',
-    supabaseUrl: import.meta.env.VITE_SUPABASE_URL_Z2 || import.meta.env.VITE_SUPABASE_URL || '',
-    supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY_Z2 || import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+    supabaseUrl: import.meta.env.VITE_SUPABASE_URL_Z2 || '',
+    supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY_Z2 || '',
+  },
+  'sinpesca': {
+    label: 'SINPESCA',
+    supabaseUrl: import.meta.env.VITE_SUPABASE_URL_SINPESCA || '',
+    supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY_SINPESCA || '',
   },
   'sinpesca-breves': {
     label: 'SINPESCA — Polo Breves Eliseu',
-    supabaseUrl: import.meta.env.VITE_SUPABASE_URL_SINPESCA_BREVES || import.meta.env.VITE_SUPABASE_URL || '',
-    supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY_SINPESCA_BREVES || import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+    supabaseUrl: import.meta.env.VITE_SUPABASE_URL_SINPESCA_BREVES || '',
+    supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY_SINPESCA_BREVES || '',
   },
 }
 

@@ -15,6 +15,7 @@ import {
 } from "@/shared/components/ui/form";
 import { Input } from "@/shared/components/ui/input";
 import { toast } from "sonner";
+import { isLegacyMode, LEGACY_TENANT_CODE } from "@/config/appMode";
 
 const loginSchema = z.object({
   tenantCode: z.string().min(1, "O código da entidade é obrigatório"),
@@ -38,7 +39,7 @@ export function LoginForm() {
   const methods = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      tenantCode: "",
+      tenantCode: isLegacyMode ? LEGACY_TENANT_CODE : "",
       email: "",
       password: "",
     },
@@ -152,28 +153,30 @@ export function LoginForm() {
         ) : (
           <FormProvider key="login-provider" {...methods}>
             <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={methods.control}
-                name="tenantCode"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-emerald-200/80 text-sm font-medium">
-                      Código da Entidade
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="text"
-                        placeholder="Ex: z2"
-                        autoComplete="off"
-                        required
-                        className="h-11 bg-white/5 border-white/10 text-emerald-50 placeholder:text-emerald-100/30 focus:border-emerald-400/50 focus:ring-emerald-400/20 rounded-xl"
-                      />
-                    </FormControl>
-                    <FormMessage className="text-red-300" />
-                  </FormItem>
-                )}
-              />
+              {!isLegacyMode && (
+                <FormField
+                  control={methods.control}
+                  name="tenantCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-emerald-200/80 text-sm font-medium">
+                        Código da Entidade
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="text"
+                          placeholder="Ex: z2"
+                          autoComplete="off"
+                          required
+                          className="h-11 bg-white/5 border-white/10 text-emerald-50 placeholder:text-emerald-100/30 focus:border-emerald-400/50 focus:ring-emerald-400/20 rounded-xl"
+                        />
+                      </FormControl>
+                      <FormMessage className="text-red-300" />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <FormField
                 control={methods.control}

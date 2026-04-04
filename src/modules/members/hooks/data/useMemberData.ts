@@ -34,7 +34,7 @@ export function useMembersListController() {
     field: string;
     direction: "asc" | "desc";
   }>({
-    field: "data_de_admissao",
+    field: "created_at",
     direction: "desc",
   });
 

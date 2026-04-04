@@ -476,12 +476,16 @@ CREATE TABLE public.socios (
     email text,
     senhagov_inss text,
     observacoes text,
-    tipo_rgp text
+    tipo_rgp text,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
 );
 
 CREATE TABLE public.fotos (
     cpf text PRIMARY KEY REFERENCES public.socios(cpf),
-    foto_url text
+    foto_url text,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
 );
 
 CREATE TABLE public.requerimentos (
@@ -669,6 +673,14 @@ CREATE TRIGGER trg_fin_config_socio_upd
 
 CREATE TRIGGER trg_cobrancas_geradas_upd
   BEFORE UPDATE ON public.financeiro_cobrancas_geradas
+  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+CREATE TRIGGER trg_fotos_upd
+  BEFORE UPDATE ON public.fotos
+  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+CREATE TRIGGER trg_socios_upd
+  BEFORE UPDATE ON public.socios
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 -- 6. RLS POLICIES
