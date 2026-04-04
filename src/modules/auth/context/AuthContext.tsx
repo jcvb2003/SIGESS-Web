@@ -116,6 +116,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     return () => {
       if (subscriptionRef.current) {
         subscriptionRef.current.unsubscribe();
+        subscriptionRef.current = null;
       }
     };
   }, []);
@@ -129,16 +130,22 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       }
       // Modo legado: cliente já foi inicializado no useEffect — usa o Proxy diretamente
 
-      const { error } = await authService.signIn(credentials);
+      const { data, error } = await authService.signIn(credentials);
       if (error) {
         let message = error.message || "Erro ao realizar login";
         if (message === "Invalid login credentials") {
           message = "Código, email ou senha incorretos";
         }
         toast.error(message);
-        if (!isLegacyMode) clearSupabaseClient();
+        clearSupabaseClient(); // Remove a tentativa falha
         return false;
       }
+      
+      if (data?.session) {
+        setSession(data.session);
+        setUser(data.user);
+      }
+      
       localStorage.setItem("last_activity_timestamp", Date.now().toString());
       toast.success("Login realizado com sucesso!");
       return true;
