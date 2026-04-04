@@ -173,7 +173,7 @@ export function LoginForm() {
                         <Input
                           {...field}
                           type="text"
-                          placeholder="Ex: z2"
+                          placeholder="Ex: Colonia z-x"
                           autoComplete="off"
                           required
                           className="h-11 bg-white/5 border-white/10 text-emerald-50 placeholder:text-emerald-100/30 focus:border-emerald-400/50 focus:ring-emerald-400/20 rounded-xl"
