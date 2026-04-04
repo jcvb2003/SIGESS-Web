@@ -15,6 +15,7 @@ import { useMemberStatement } from "../../hooks/data/useMemberStatement";
 import { memberFinanceConfigService } from "../../services/memberFinanceConfigService";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { formatNumericInput } from "../shared/formatters";
+import { generateUUID } from "@/shared/utils/uuid";
 import { MemberFinancePreview } from "../shared/MemberFinancePreview";
 import { PaymentMethodSelect } from "../shared/PaymentMethodSelect";
 import { PaymentItemForm, type ExtraFeeItem, type SelectedCharge } from "../forms/PaymentItemForm";
@@ -162,7 +163,7 @@ export function PaymentSessionDialog({
         tipo: type, 
         valor, 
         displayValue: formatNumericInput(valor),
-        uid: crypto.randomUUID()
+        uid: generateUUID()
       }];
     });
   };
@@ -193,7 +194,7 @@ export function PaymentSessionDialog({
           chargeType,
           valor,
           displayValue: formatNumericInput(valor),
-          uid: crypto.randomUUID(),
+          uid: generateUUID(),
         },
       ];
     });
@@ -234,7 +235,7 @@ export function PaymentSessionDialog({
   const handleSubmit = async () => {
     if (!socioCpf) return;
 
-    const sessaoId = crypto.randomUUID();
+    const sessaoId = generateUUID();
     const items: PaymentSessionItem[] = [
       ...(paymentCategory === "anuidade"
         ? selectedYears.map((year) => ({

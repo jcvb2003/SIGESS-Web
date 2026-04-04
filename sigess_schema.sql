@@ -46,7 +46,7 @@ DECLARE
 BEGIN
   SELECT COALESCE(MAX(NULLIF(regexp_replace(codigo_localidade, '\D', '', 'g'), '')::integer), 0) INTO max_code_val FROM public.localidades;
   next_code := LPAD((max_code_val + 1)::text, 3, '0');
-  IF NEW.codigo_localidade IS NULL OR NEW.codigo_localidade = '' THEN
+  IF (NEW.codigo_localidade IS NULL) OR (NEW.codigo_localidade = '') THEN
     NEW.codigo_localidade := next_code;
   END IF;
   RETURN NEW;
@@ -107,9 +107,9 @@ $function$;
 CREATE OR REPLACE FUNCTION public.auto_generate_cod_req()
  RETURNS trigger
  LANGUAGE plpgsql
-AS $function$
+ AS $function$
 BEGIN
-    IF NEW.cod_req IS NULL OR NEW.cod_req = '' THEN
+    IF (NEW.cod_req IS NULL) OR (NEW.cod_req = '') THEN
         NEW.cod_req := get_next_cod_req();
     END IF;
     RETURN NEW;
@@ -277,6 +277,24 @@ BEGIN
       CASE WHEN (v_dae->>'tipo_boleto') = 'unitario' THEN NULL ELSE v_grupo_id END
     );
   END LOOP;
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION public.confirmar_upload_foto(p_token uuid, p_base64 text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ AS $function$
+BEGIN
+  UPDATE public.foto_upload_tokens
+  SET 
+    foto_base64 = p_base64,
+    updated_at = now()
+  WHERE token = p_token
+    AND expires_at > now()
+    AND foto_base64 IS NULL;
+
+  RETURN FOUND;
 END;
 $function$;
 
@@ -484,6 +502,15 @@ CREATE TABLE public.socios (
 CREATE TABLE public.fotos (
     cpf text PRIMARY KEY REFERENCES public.socios(cpf),
     foto_url text,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+
+CREATE TABLE public.foto_upload_tokens (
+    token uuid DEFAULT gen_random_uuid() NOT NULL PRIMARY KEY,
+    socio_cpf text REFERENCES public.socios(cpf) ON DELETE CASCADE,
+    foto_base64 text,
+    expires_at timestamp with time zone DEFAULT (now() + '00:10:00'::interval),
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now()
 );
@@ -699,6 +726,7 @@ ALTER TABLE public.financeiro_cobrancas_geradas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.financeiro_dae ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.financeiro_config_socio ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.financeiro_historico_regime ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.foto_upload_tokens ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow all for authenticated users" ON public.templates FOR ALL TO authenticated USING (auth.uid() IS NOT NULL);
 CREATE POLICY "Allow all for authenticated users" ON public.entidade FOR ALL TO authenticated USING (auth.uid() IS NOT NULL);
@@ -714,6 +742,8 @@ CREATE POLICY "Allow all for authenticated users" ON public.financeiro_cobrancas
 CREATE POLICY "Allow all for authenticated users" ON public.financeiro_dae FOR ALL TO authenticated USING (auth.uid() IS NOT NULL) WITH CHECK (auth.uid() IS NOT NULL);
 CREATE POLICY "Allow all for authenticated users" ON public.financeiro_config_socio FOR ALL TO authenticated USING (auth.uid() IS NOT NULL) WITH CHECK (auth.uid() IS NOT NULL);
 CREATE POLICY "Allow all for authenticated users" ON public.financeiro_historico_regime FOR ALL TO authenticated USING (auth.uid() IS NOT NULL) WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "Public insert for valid tokens" ON public.foto_upload_tokens FOR UPDATE TO public USING (expires_at > now());
+CREATE POLICY "Full access for authenticated workers" ON public.foto_upload_tokens FOR ALL TO authenticated USING (true);
 
 CREATE POLICY "Service role can manage users" ON public."User" FOR ALL TO service_role USING (true);
 CREATE POLICY "Allow user to read own User data" ON public."User" FOR SELECT TO authenticated USING (auth.uid() = id);

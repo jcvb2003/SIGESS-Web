@@ -11,7 +11,7 @@ export function TableLoadingState({
   colSpan = 7,
   rows = 5,
 }: TableLoadingStateProps) {
-  const skeletonIds = useMemo(() => Array.from({ length: rows }).map(() => crypto.randomUUID()), [rows]);
+  const skeletonIds = useMemo(() => Array.from({ length: rows }).map((_, i) => String(i)), [rows]);
 
   return (
     <>

@@ -21,6 +21,8 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const signOutInProgressRef = useRef(false);
   const subscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
 
+
+
   const attachListener = () => {
     if (subscriptionRef.current) return;
     try {
@@ -158,13 +160,16 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     }
     signOutInProgressRef.current = true;
     try {
-      const { error } = await authService.signOut();
-      if (error) {
-        toast.error("Erro ao realizar logout");
-        return false;
-      }
+      // Tenta deslogar no Supabase, mas não bloqueia se falhar (ex: cliente não inicializado)
+      await authService.signOut().catch((err) => {
+        console.warn("Supabase signOut error (expected if not initialized):", err);
+      });
 
+      // SEMPRE limpa o estado local e redireciona
       clearSupabaseClient();
+      setSession(null);
+      setUser(null);
+      
       toast.success("Logout realizado com sucesso!");
 
       if (typeof globalThis !== "undefined") {
@@ -173,9 +178,13 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
 
       return true;
     } catch (error: unknown) {
-      console.error("Logout error:", error);
-      toast.error("Erro ao realizar logout");
-      return false;
+      console.error("Logout unexpected error:", error);
+      // Mesmo em erro inesperado, limpamos o cliente
+      clearSupabaseClient();
+      if (typeof globalThis !== "undefined") {
+        globalThis.location.href = "/";
+      }
+      return true;
     } finally {
       signOutInProgressRef.current = false;
     }

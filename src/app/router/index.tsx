@@ -22,6 +22,7 @@ const ReportsPage = lazy(() => import("@/pages/Reports"));
 const SettingsPage = lazy(() => import("@/pages/Settings"));
 const NotFoundPage = lazy(() => import("@/pages/NotFound"));
 const PasswordPage = lazy(() => import("@/pages/Password"));
+const FotoUploadPage = lazy(() => import("@/pages/FotoUpload"));
 
 function PublicRoute() {
   const { session, loading } = useAuth();
@@ -38,6 +39,10 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: <Navigate to="/dashboard" replace />,
+  },
+  {
+    path: "/foto-upload",
+    element: <FotoUploadPage />,
   },
   {
     element: <PublicRoute />,

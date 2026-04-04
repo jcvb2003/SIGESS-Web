@@ -23,6 +23,7 @@ import { useParametersData } from "@/modules/settings/hooks/useParametersData";
 import { isMonthInDefeso } from "../../utils/defesoUtils";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { formatNumericInput } from "../shared/formatters";
+import { generateUUID } from "@/shared/utils/uuid";
 import { MemberFinancePreview } from "../shared/MemberFinancePreview";
 import { PaymentMethodSelect } from "../shared/PaymentMethodSelect";
 import {
@@ -129,7 +130,7 @@ export function DAEDialog({
     // Distribui o valor total entre os meses selecionados
     const individualValue = Number((valorTotal / selectedMonths.length).toFixed(2));
 
-    const sessaoId = crypto.randomUUID();
+    const sessaoId = generateUUID();
     const daeItems: DAEItem[] = selectedMonths.map((m) => ({
       tipo_boleto: tipoBoleto,
       competencia_ano: selectedYear,

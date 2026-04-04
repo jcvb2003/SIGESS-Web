@@ -78,9 +78,29 @@ export function clearSupabaseClient(): void {
   }
 }
 
+const createNoopStub = (): unknown => {
+  const stub = () => stub;
+  return new Proxy(stub, {
+    get: () => createNoopStub(),
+    apply: () => Promise.resolve({ data: null, error: { message: 'Supabase não inicializado', status: 400 } })
+  }) as unknown;
+};
+
 // Proxy global para os componentes migrarem livremente
 export const supabase = new Proxy({} as SupabaseClient<Database>, {
   get(_, prop) {
-    return getSupabaseClient()[prop as keyof SupabaseClient<Database>];
+    const client = (() => {
+      try { return getSupabaseClient(); }
+      catch { return null; }
+    })();
+
+    if (!client) {
+      // Retorna um stub recursivo que não explode ao acessar propriedades ou chamar métodos
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (createNoopStub() as any)[prop as keyof SupabaseClient<Database>];
+    }
+    
+    return client[prop as keyof SupabaseClient<Database>];
   }
 });
+

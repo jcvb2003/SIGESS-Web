@@ -10,11 +10,6 @@ export const TENANTS: Record<string, TenantConfig> = {
     supabaseUrl: import.meta.env.VITE_SUPABASE_URL_Z2 || '',
     supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY_Z2 || '',
   },
-  'sinpesca': {
-    label: 'SINPESCA',
-    supabaseUrl: import.meta.env.VITE_SUPABASE_URL_SINPESCA || '',
-    supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY_SINPESCA || '',
-  },
   'sinpesca-breves': {
     label: 'SINPESCA — Polo Breves Eliseu',
     supabaseUrl: import.meta.env.VITE_SUPABASE_URL_SINPESCA_BREVES || '',
