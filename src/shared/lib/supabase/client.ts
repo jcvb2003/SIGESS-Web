@@ -31,7 +31,10 @@ export function initSupabaseClient(tenantCode: string): SupabaseClient<Database>
     return _client;
   }
 
-  _client = createClient<Database>(tenant.supabaseUrl, tenant.supabaseAnonKey);
+  const isPasswordRoute = typeof globalThis !== 'undefined' && globalThis.location.pathname.startsWith('/password');
+  _client = createClient<Database>(tenant.supabaseUrl, tenant.supabaseAnonKey, {
+    auth: { detectSessionInUrl: !isPasswordRoute }
+  });
   injectPreconnect(tenant.supabaseUrl);
   localStorage.setItem(TENANT_KEY, tenantCode);
   return _client;
@@ -49,7 +52,10 @@ export function initLegacyClient(): SupabaseClient<Database> {
     throw new Error('Variáveis de ambiente legadas (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY) não configuradas.');
   }
   if (_client) return _client;
-  _client = createClient<Database>(url, key);
+  const isPasswordRoute = typeof globalThis !== 'undefined' && globalThis.location.pathname.startsWith('/password');
+  _client = createClient<Database>(url, key, {
+    auth: { detectSessionInUrl: !isPasswordRoute }
+  });
   injectPreconnect(url);
   return _client;
 }
@@ -62,7 +68,10 @@ export function getSupabaseClient(): SupabaseClient<Database> {
   if (saved) {
     const tenant = resolveTenant(saved);
     if (tenant?.supabaseUrl && tenant?.supabaseAnonKey) {
-      _client = createClient<Database>(tenant.supabaseUrl, tenant.supabaseAnonKey);
+      const isPasswordRoute = typeof globalThis !== 'undefined' && globalThis.location.pathname.startsWith('/password');
+      _client = createClient<Database>(tenant.supabaseUrl, tenant.supabaseAnonKey, {
+        auth: { detectSessionInUrl: !isPasswordRoute }
+      });
       injectPreconnect(tenant.supabaseUrl);
       return _client;
     }
