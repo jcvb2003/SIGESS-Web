@@ -1,3 +1,4 @@
+import { isLegacyMode, LEGACY_TENANT_CODE } from "@/config/appMode";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/shared/lib/supabase/client";
 import { toast } from "sonner";
@@ -48,9 +49,13 @@ export function useUserManagement() {
   });
 
   const inviteUser = async (email: string, nome: string, role: 'admin' | 'user') => {
-    const tenantCode = localStorage
-      ? (localStorage.getItem('sigess_tenant') ?? '')
+    let tenantCode = typeof globalThis !== 'undefined' && globalThis.localStorage 
+      ? (globalThis.localStorage.getItem('sigess_tenant') ?? '') 
       : '';
+      
+    if (!tenantCode && isLegacyMode && LEGACY_TENANT_CODE) {
+      tenantCode = LEGACY_TENANT_CODE;
+    }
 
     toast.promise(
       manageUserMutation.mutateAsync({

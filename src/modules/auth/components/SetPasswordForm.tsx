@@ -48,12 +48,17 @@ function extractTokensFromHash(): { accessToken: string | null; refreshToken: st
   };
 }
 
+import { isLegacyMode, LEGACY_TENANT_CODE } from "@/config/appMode";
+
 /**
- * Lê o código do tenant do query param `?tenant=` da URL.
+ * Lê o código do tenant do query param `?tenant=` da URL, ou usa o fallback do modo legado.
  */
 function extractTenantFromUrl(): string | null {
   if (globalThis.window === undefined) return null;
-  return new URLSearchParams(globalThis.location.search).get("tenant");
+  const param = new URLSearchParams(globalThis.location.search).get("tenant");
+  if (param) return param;
+  if (isLegacyMode && LEGACY_TENANT_CODE) return LEGACY_TENANT_CODE;
+  return null;
 }
 
 export function SetPasswordForm() {
