@@ -50,14 +50,14 @@
 
     --radius: 0.75rem;
 
-    /* Sidebar: Clean, white, blending with the background */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
+    /* Sidebar: Defaults to Primary Green with White text */
+    --sidebar-background: 160 84% 39%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 210 40% 98%;
+    --sidebar-primary-foreground: 160 84% 39%;
+    --sidebar-accent: 160 84% 35%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 160 84% 35%;
     /* Subtle separation */
     --sidebar-ring: 217.2 91.2% 59.8%;
   }

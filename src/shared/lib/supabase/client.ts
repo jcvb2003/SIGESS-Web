@@ -75,6 +75,7 @@ export function clearSupabaseClient(): void {
   _client = null;
   if (typeof globalThis !== 'undefined') {
     globalThis.localStorage.removeItem(TENANT_KEY);
+    globalThis.localStorage.removeItem("last_activity_timestamp");
   }
 }
 

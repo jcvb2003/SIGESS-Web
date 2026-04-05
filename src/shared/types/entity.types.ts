@@ -19,6 +19,9 @@ export interface EntitySettings {
   county: string;
   presidentName: string;
   presidentCpf: string;
+  corPrimaria: string;
+  corSecundaria: string;
+  corSidebar: string;
 }
 export const defaultEntitySettings: EntitySettings = {
   id: undefined,
@@ -41,4 +44,7 @@ export const defaultEntitySettings: EntitySettings = {
   county: "",
   presidentName: "",
   presidentCpf: "",
+  corPrimaria: "160 84% 39%",
+  corSecundaria: "152 69% 41%",
+  corSidebar: "0 0% 98%",
 };

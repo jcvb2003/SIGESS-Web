@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/modules/auth/context/AuthContext";
+import { EntityThemeProvider } from "@/shared/components/EntityThemeProvider";
 import { ThemeProvider } from "next-themes";
 export function AppProviders({ children }: Readonly<{ children: ReactNode }>) {
   const [queryClient] = useState(
@@ -19,10 +20,13 @@ export function AppProviders({ children }: Readonly<{ children: ReactNode }>) {
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          {children}
+          <EntityThemeProvider>
+            {children}
+          </EntityThemeProvider>
           <Toaster />
         </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );
 }
+

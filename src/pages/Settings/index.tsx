@@ -5,6 +5,7 @@ import { DocumentsCard } from "@/modules/settings/components/data/DocumentsCard"
 import { LocalitiesCard } from "@/modules/settings/components/data/LocalitiesCard";
 import { PhotoImportCard } from "@/modules/settings/components/data/PhotoImportCard";
 import { EntityForm } from "@/modules/settings/components/entity/EntityForm";
+import { CustomizationForm } from "@/modules/settings/components/entity/CustomizationForm";
 import { ParametersForm } from "@/modules/settings/components/parameters/ParametersForm";
 import { PasswordChangeForm } from "@/modules/settings/components/passwords/PasswordChangeForm";
 import { UserManagementSection } from "@/modules/settings/components/passwords/UserManagementSection";
@@ -55,6 +56,13 @@ export default function Settings() {
             <PasswordChangeForm />
             <UserManagementSection />
           </div>
+        </TabsContent>
+
+        <TabsContent
+          value="personalizacao"
+          className="space-y-4 focus-visible:outline-none focus-visible:ring-0"
+        >
+          <CustomizationForm />
         </TabsContent>
       </Tabs>
     </div>

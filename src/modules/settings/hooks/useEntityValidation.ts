@@ -23,5 +23,8 @@ export const entitySchema = z.object({
   county: z.string().toUpperCase().optional(),
   presidentName: z.string().toUpperCase().optional(),
   presidentCpf: z.string().optional(),
+  corPrimaria: z.string().optional(),
+  corSecundaria: z.string().optional(),
+  corSidebar: z.string().optional(),
 });
 export type EntityFormData = z.infer<typeof entitySchema>;

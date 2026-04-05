@@ -431,7 +431,10 @@ CREATE TABLE public.entidade (
     comarca text,
     numero text,
     nome_do_presidente text,
-    cpf_do_presidente text
+    cpf_do_presidente text,
+    cor_primaria text DEFAULT '160 84% 39%',
+    cor_secundaria text DEFAULT '152 69% 41%',
+    cor_sidebar text DEFAULT '0 0% 98%'
 );
 
 CREATE TABLE public.localidades (

@@ -34,6 +34,9 @@ export function EntityForm() {
       county: "",
       presidentName: "",
       presidentCpf: "",
+      corPrimaria: "160 84% 39%",
+      corSecundaria: "152 69% 41%",
+      corSidebar: "0 0% 98%",
     },
   });
   useEffect(() => {
@@ -57,7 +60,10 @@ export function EntityForm() {
         foundation: entity.foundation || "",
         county: entity.county || "",
         presidentName: entity.presidentName || "",
-        presidentCpf: entity.presidentCpf || ""
+        presidentCpf: entity.presidentCpf || "",
+        corPrimaria: entity.corPrimaria || "160 84% 39%",
+        corSecundaria: entity.corSecundaria || "152 69% 41%",
+        corSidebar: entity.corSidebar || "0 0% 98%",
       });
     }
   }, [entity, methods]);
@@ -83,6 +89,9 @@ export function EntityForm() {
       county: data.county ?? "",
       presidentName: data.presidentName ?? "",
       presidentCpf: data.presidentCpf ?? "",
+      corPrimaria: data.corPrimaria ?? "160 84% 39%",
+      corSecundaria: data.corSecundaria ?? "152 69% 41%",
+      corSidebar: data.corSidebar ?? "0 0% 98%",
     };
     await saveEntity(values);
   };
@@ -118,3 +127,4 @@ export function EntityForm() {
     </FormProvider>
   );
 }
+

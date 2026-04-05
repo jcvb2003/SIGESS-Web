@@ -23,6 +23,9 @@ export type Database = {
           cnpj: string | null
           comarca: string | null
           confederacao: string | null
+          cor_primaria: string | null
+          cor_secundaria: string | null
+          cor_sidebar: string | null
           cpf_do_presidente: string | null
           email: string | null
           endereco: string | null
@@ -45,6 +48,9 @@ export type Database = {
           cnpj?: string | null
           comarca?: string | null
           confederacao?: string | null
+          cor_primaria?: string | null
+          cor_secundaria?: string | null
+          cor_sidebar?: string | null
           cpf_do_presidente?: string | null
           email?: string | null
           endereco?: string | null
@@ -67,6 +73,9 @@ export type Database = {
           cnpj?: string | null
           comarca?: string | null
           confederacao?: string | null
+          cor_primaria?: string | null
+          cor_secundaria?: string | null
+          cor_sidebar?: string | null
           cpf_do_presidente?: string | null
           email?: string | null
           endereco?: string | null

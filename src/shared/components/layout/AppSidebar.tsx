@@ -58,7 +58,7 @@ function SidebarContent({
   onSignOut,
 }: SidebarContentProps) {
   return (
-    <div className="flex h-full flex-col bg-primary dark:bg-[hsl(220,20%,12%)] text-primary-foreground transition-all duration-300 ease-in-out overflow-hidden">
+    <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground border-r transition-all duration-300 ease-in-out overflow-hidden">
       <div
         className={cn(
           "flex h-20 items-center px-4 transition-all duration-300 shrink-0",
@@ -69,7 +69,7 @@ function SidebarContent({
           to="/dashboard"
           className="flex items-center gap-3 group overflow-hidden"
         >
-          <div className="flex h-10 w-10 min-w-[2.5rem] items-center justify-center rounded-xl bg-primary-foreground/20 dark:bg-white/10 text-primary-foreground transition-all group-hover:bg-primary-foreground group-hover:text-primary dark:group-hover:bg-emerald-500 dark:group-hover:text-white shadow-sm">
+          <div className="flex h-10 w-10 min-w-[2.5rem] items-center justify-center rounded-xl bg-primary-foreground/20 dark:bg-white/10 text-sidebar-foreground transition-all group-hover:bg-primary-foreground group-hover:text-primary dark:group-hover:bg-emerald-500 dark:group-hover:text-white shadow-sm">
             <Fish className="h-6 w-6" />
           </div>
           <div
@@ -78,7 +78,7 @@ function SidebarContent({
               isCollapsed ? "opacity-0 w-0 hidden" : "opacity-100 w-auto",
             )}
           >
-            <span className="font-bold text-xl tracking-tight leading-none text-primary-foreground whitespace-nowrap">
+            <span className="font-bold text-xl tracking-tight leading-none text-sidebar-foreground whitespace-nowrap">
               SIGESS
             </span>
           </div>
@@ -100,7 +100,7 @@ function SidebarContent({
                   "flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition-all whitespace-nowrap relative overflow-hidden group mx-1 my-1",
                   isActive
                     ? "bg-background text-primary shadow-md dark:bg-emerald-500/15 dark:text-emerald-400 dark:shadow-emerald-500/10"
-                    : "text-primary-foreground/80 hover:bg-primary-foreground/20 hover:text-primary-foreground dark:hover:bg-white/10 dark:hover:text-white",
+                    : "text-sidebar-foreground/80 hover:bg-primary-foreground/20 hover:text-sidebar-foreground dark:hover:bg-white/10 dark:hover:text-white",
                 )}
               >
                 <item.icon
@@ -108,7 +108,7 @@ function SidebarContent({
                     "h-[18px] w-[18px] shrink-0 transition-transform duration-200 group-hover:scale-110",
                     isActive
                       ? "text-primary"
-                      : "text-primary-foreground/80 group-hover:text-primary-foreground",
+                      : "text-sidebar-foreground/80 group-hover:text-sidebar-foreground",
                   )}
                 />
                 <span
@@ -155,7 +155,7 @@ function SidebarContent({
         <Button
           variant="ghost"
           className={cn(
-            "w-full gap-3 text-primary-foreground/80 hover:text-white hover:bg-primary-foreground/20 transition-all whitespace-nowrap rounded-xl h-12",
+            "w-full gap-3 text-sidebar-foreground/80 hover:text-white hover:bg-primary-foreground/20 transition-all whitespace-nowrap rounded-xl h-12",
             isCollapsed
               ? "justify-center px-0 w-10 mx-auto"
               : "justify-start px-4",
@@ -179,7 +179,7 @@ function SidebarContent({
         <Button
           variant="ghost"
           className={cn(
-            "w-full gap-3 text-primary-foreground/80 hover:text-white hover:bg-destructive/90 transition-all whitespace-nowrap rounded-xl h-12",
+            "w-full gap-3 text-sidebar-foreground/80 hover:text-white hover:bg-destructive/90 transition-all whitespace-nowrap rounded-xl h-12",
             isCollapsed
               ? "justify-center px-0 w-10 mx-auto"
               : "justify-start px-4",
@@ -233,7 +233,7 @@ export function AppSidebar({
         </SheetTrigger>
         <SheetContent
           side="left"
-          className="p-0 w-72 border-r-0 bg-primary dark:bg-[hsl(220,20%,12%)] h-full"
+          className="p-0 w-72 border-r-0 bg-sidebar text-sidebar-foreground h-full"
         >
           <SheetHeader className="sr-only">
             <SheetTitle>Menu de Navegação</SheetTitle>
@@ -261,7 +261,7 @@ export function AppSidebar({
     >
       <div
         className={cn(
-          "flex-1 flex flex-col rounded-[24px] shadow-2xl border border-white/10 overflow-hidden bg-primary dark:bg-[hsl(220,20%,12%)] transition-all duration-300 ease-in-out w-full",
+          "flex-1 flex flex-col rounded-[24px] shadow-2xl border border-white/10 overflow-hidden bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out w-full",
         )}
       >
         <SidebarContent

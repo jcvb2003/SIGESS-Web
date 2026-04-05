@@ -4,6 +4,7 @@ import {
   Building,
   Database,
   KeyRound,
+  Palette,
 } from "lucide-react";
 export function SettingsTabsNav() {
   return (
@@ -23,6 +24,10 @@ export function SettingsTabsNav() {
       <TabsTrigger value="senhas">
         <KeyRound className="h-4 w-4" />
         <span className="hidden sm:inline">Senhas</span>
+      </TabsTrigger>
+      <TabsTrigger value="personalizacao" className="gap-2">
+        <Palette className="h-4 w-4" />
+        <span className="hidden sm:inline">Personalização</span>
       </TabsTrigger>
     </TabsList>
   );

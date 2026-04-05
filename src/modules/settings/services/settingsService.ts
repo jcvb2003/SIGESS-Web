@@ -67,6 +67,9 @@ export const settingsService = {
           number: toStringValue(data.numero),
           presidentName: toStringValue(data.nome_do_presidente),
           presidentCpf: toStringValue(data.cpf_do_presidente),
+          corPrimaria: toStringValue(data.cor_primaria, "160 84% 39%"),
+          corSecundaria: toStringValue(data.cor_secundaria, "152 69% 41%"),
+          corSidebar: toStringValue(data.cor_sidebar, "0 0% 98%"),
         }
         : null,
       error: null,
@@ -98,6 +101,9 @@ export const settingsService = {
         comarca: toNullable(settings.county),
         nome_do_presidente: toNullable(settings.presidentName),
         cpf_do_presidente: toNullable(settings.presidentCpf),
+        cor_primaria: toNullable(settings.corPrimaria),
+        cor_secundaria: toNullable(settings.corSecundaria),
+        cor_sidebar: toNullable(settings.corSidebar),
       })
       .select()
       .single();
