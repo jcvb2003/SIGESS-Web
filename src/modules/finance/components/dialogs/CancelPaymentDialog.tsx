@@ -86,9 +86,9 @@ export function CancelPaymentDialog({
 
           <div className="pt-4 flex items-center gap-3 border-t border-slate-100">
             <Button
-              variant="ghost"
+              variant="outline"
               onClick={() => onOpenChange(false)}
-              className="flex-1 h-11 text-xs font-bold text-slate-500 hover:bg-slate-50"
+              className="flex-1 h-11"
             >
               Manter Registro
             </Button>

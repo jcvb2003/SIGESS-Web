@@ -7,7 +7,7 @@ import {
 } from "@/shared/components/ui/dialog";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { Button } from "@/shared/components/ui/button";
-import { Printer, Pencil, Unlock, X, Settings2 } from "lucide-react";
+import { Printer, Pencil, Unlock, Settings2 } from "lucide-react";
 import { useMemberStatement } from "../../hooks/data/useMemberStatement";
 import { MemberFinancePreview } from "../shared/MemberFinancePreview";
 import { AnnuitiesSection } from "./sections/AnnuitiesSection";
@@ -49,7 +49,7 @@ export function MemberStatementModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-xl p-0 outline-none [&>button]:hidden overflow-hidden">
+      <DialogContent className="w-full max-w-xl p-0 outline-none overflow-hidden">
         <div className="flex flex-col h-full max-h-[90vh] sm:max-h-[85vh] overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-2 border-b flex-shrink-0">
           <div className="flex items-center justify-between">
@@ -59,7 +59,7 @@ export function MemberStatementModal({
                 Histórico completo de lançamentos
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 pr-12">
               <Button
                 variant="outline"
                 size="sm"
@@ -67,14 +67,6 @@ export function MemberStatementModal({
               >
                 <Printer className="h-3.5 w-3.5" />
                 Imprimir
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 border-slate-200 transition-colors"
-                onClick={() => onOpenChange(false)}
-              >
-                <X className="h-4 w-4" />
               </Button>
             </div>
           </div>

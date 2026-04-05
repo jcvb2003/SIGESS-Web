@@ -70,7 +70,7 @@ export function DocumentsDashboard() {
   if (!selectedMember) {
     return (
       <MemberSelect>
-        <div className="flex items-center gap-4 p-4 border rounded-lg bg-card text-card-foreground shadow-sm mt-4 hover:bg-muted/50 transition-colors cursor-pointer group">
+        <div className="flex items-center gap-4 p-4 border rounded-lg bg-card text-card-foreground shadow-sm mt-4 hover:bg-primary/5 hover:border-primary/30 transition-all cursor-pointer group">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
             <Search className="h-6 w-6" />
           </div>
@@ -266,7 +266,7 @@ export function DocumentsDashboard() {
       <div className="grid grid-cols-2 gap-4">
         <Button
           variant="outline"
-          className="h-auto min-h-24 py-4 flex flex-col items-center justify-center gap-2 hover:bg-muted/50 border-dashed text-center whitespace-normal"
+          className="h-auto min-h-24 py-4 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 hover:border-primary/30 hover:text-primary border-dashed text-center whitespace-normal transition-all"
           onClick={() => setActiveModal("residence")}
           disabled={
             residenceModels.length === 0 || financialIssues?.type === "blocking"
@@ -283,7 +283,7 @@ export function DocumentsDashboard() {
 
         <Button
           variant="outline"
-          className="h-auto min-h-24 py-4 flex flex-col items-center justify-center gap-2 hover:bg-muted/50 border-dashed text-center whitespace-normal"
+          className="h-auto min-h-24 py-4 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 hover:border-primary/30 hover:text-primary border-dashed text-center whitespace-normal transition-all"
           onClick={() => setActiveModal("representation")}
           disabled={
             representationModels.length === 0 ||

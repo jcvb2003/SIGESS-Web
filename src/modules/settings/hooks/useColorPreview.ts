@@ -33,8 +33,6 @@ export function useColorPreview() {
       "--primary-foreground": root.style.getPropertyValue("--primary-foreground"),
       "--secondary": root.style.getPropertyValue("--secondary"),
       "--secondary-foreground": root.style.getPropertyValue("--secondary-foreground"),
-      "--accent": root.style.getPropertyValue("--accent"),
-      "--accent-foreground": root.style.getPropertyValue("--accent-foreground"),
       "--sidebar-background": root.style.getPropertyValue("--sidebar-background"),
       "--sidebar-foreground": root.style.getPropertyValue("--sidebar-foreground"),
     };
@@ -64,13 +62,9 @@ export function useColorPreview() {
       if (corSecundariaCache) {
         root.style.setProperty("--secondary", corSecundariaCache);
         root.style.setProperty("--secondary-foreground", generateAccessibleForeground(corSecundariaCache));
-        root.style.setProperty("--accent", corSecundariaCache);
-        root.style.setProperty("--accent-foreground", generateAccessibleForeground(corSecundariaCache));
       } else {
         root.style.removeProperty("--secondary");
         root.style.removeProperty("--secondary-foreground");
-        root.style.removeProperty("--accent");
-        root.style.removeProperty("--accent-foreground");
       }
 
       if (corSidebarCache) {
@@ -98,8 +92,6 @@ export function useColorPreview() {
     if (corSecundaria) {
       root.style.setProperty("--secondary", corSecundaria);
       root.style.setProperty("--secondary-foreground", generateAccessibleForeground(corSecundaria));
-      root.style.setProperty("--accent", corSecundaria);
-      root.style.setProperty("--accent-foreground", generateAccessibleForeground(corSecundaria));
     }
   }, [corSecundaria]);
 

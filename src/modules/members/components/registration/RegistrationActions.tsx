@@ -18,7 +18,7 @@ export function RegistrationActions({
         <Button
           variant="outline"
           type="button"
-          className="border-border/50 hover:border-primary/30 transition-all"
+          className="w-full sm:w-auto"
           onClick={onCancel}
           disabled={isSubmitting}
         >

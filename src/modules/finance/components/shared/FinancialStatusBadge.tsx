@@ -7,8 +7,8 @@ const STATUS_CONFIG: Record<
 > = {
   ok: {
     label: "Em dia",
-    dotClass: "bg-emerald-500",
-    badgeClass: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50",
+    dotClass: "bg-primary",
+    badgeClass: "bg-primary/10 dark:bg-primary/20 text-primary border-primary/20",
   },
   overdue: {
     label: "Inadimplente",

@@ -7,7 +7,7 @@ interface MemberInfoCellProps {
 }
 
 const STATUS_DOT_COLORS: Record<FinancialStatusType, string> = {
-  ok: "bg-emerald-500",
+  ok: "bg-primary",
   overdue: "bg-red-500",
   exempt: "bg-blue-500",
   released: "bg-amber-500",
@@ -15,7 +15,7 @@ const STATUS_DOT_COLORS: Record<FinancialStatusType, string> = {
 };
 
 const STATUS_AVATAR_COLORS: Record<FinancialStatusType, string> = {
-  ok: "bg-emerald-100 text-emerald-700",
+  ok: "bg-primary/20 text-primary-foreground dark:text-primary font-bold",
   overdue: "bg-red-100 text-red-700",
   exempt: "bg-blue-100 text-blue-700",
   released: "bg-amber-100 text-amber-700",

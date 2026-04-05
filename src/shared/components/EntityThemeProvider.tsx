@@ -10,8 +10,9 @@ import { generateAccessibleForeground } from "../utils/colorConversion";
 const COLOR_MAPPINGS = {
   // corPrimaria se aplica à cor da marca de destaque e bordas ativas
   corPrimaria: ["--primary", "--ring"],
-  // corSecundaria supre tanto badges secundárias quanto animações e hovers fantasmas
-  corSecundaria: ["--secondary", "--accent"],
+  // corSecundaria supre exclusivamente os badges secundários (bg-secondary)
+  // Deixando o --accent intacto para que botões outline/ghost continuem cinza neutros.
+  corSecundaria: ["--secondary"],
   // corSidebar preenche o background da navegação da esquerda
   corSidebar: ["--sidebar-background"],
 } as const;
@@ -22,7 +23,7 @@ const COLOR_MAPPINGS = {
  */
 const FOREGROUND_MAPPINGS = {
   corPrimaria: ["--primary-foreground"],
-  corSecundaria: ["--secondary-foreground", "--accent-foreground"],
+  corSecundaria: ["--secondary-foreground"],
   corSidebar: ["--sidebar-foreground"],
 } as const;
 

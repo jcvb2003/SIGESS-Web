@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { Switch } from "@/shared/components/ui/switch";
-import { Loader2, Check, X } from "lucide-react";
+import { Loader2, Check } from "lucide-react";
 import { useMemberConfig } from "../../hooks/data/useMemberConfig";
 import { useUpdateMemberConfig } from "../../hooks/edit/useUpdateMemberConfig";
 import { Skeleton } from "@/shared/components/ui/skeleton";
@@ -96,10 +96,10 @@ export function MemberFinanceConfigForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4 rounded-xl border border-dashed border-blue-200 bg-blue-50/40 p-4 mt-3">
+    <form onSubmit={onSubmit} className="space-y-4 rounded-xl border border-dashed border-border bg-muted/20 p-4 mt-3">
       {mode === "isencao" && (
         <>
-          <p className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
+          <p className="text-xs font-semibold text-primary uppercase tracking-wider">
             Isenção de Contribuições
           </p>
           <div className="flex items-center justify-between rounded-lg border bg-white p-3">
@@ -116,7 +116,6 @@ export function MemberFinanceConfigForm({
                 <Switch
                   checked={field.value}
                   onCheckedChange={field.onChange}
-                  className="data-[state=checked]:bg-blue-600"
                 />
               )}
             />
@@ -126,7 +125,7 @@ export function MemberFinanceConfigForm({
 
       {mode === "liberacao" && (
         <>
-          <p className="text-xs font-semibold text-amber-700 uppercase tracking-wider">
+          <p className="text-xs font-semibold text-primary uppercase tracking-wider">
             Liberação Presidencial
           </p>
           <div className="flex items-center justify-between rounded-lg border bg-white p-3">
@@ -143,7 +142,6 @@ export function MemberFinanceConfigForm({
                 <Switch
                   checked={field.value}
                   onCheckedChange={field.onChange}
-                  className="data-[state=checked]:bg-amber-500"
                 />
               )}
             />
@@ -153,7 +151,7 @@ export function MemberFinanceConfigForm({
 
       {mode === "regime" && (
         <>
-          <p className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
+          <p className="text-xs font-semibold text-primary uppercase tracking-wider">
             Regime de Contribuição
           </p>
           <div className="space-y-1.5">
@@ -197,19 +195,19 @@ export function MemberFinanceConfigForm({
       <div className="flex items-center justify-end gap-2 pt-1">
         <Button
           type="button"
-          variant="ghost"
+          variant="outline"
           size="sm"
           onClick={onClose}
-          className="h-8 text-xs gap-1.5 text-slate-500"
+          className="bg-transparent border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
         >
-          <X className="h-3.5 w-3.5" />
           Cancelar
         </Button>
         <Button
           type="submit"
+          variant="default"
           size="sm"
           disabled={isPending || !isDirty}
-          className="h-8 text-xs gap-1.5 bg-blue-600 hover:bg-blue-700"
+          className="gap-1.5"
         >
           {isPending ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />

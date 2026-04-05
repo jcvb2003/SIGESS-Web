@@ -153,23 +153,6 @@
   }
 }
 
-/* Base custom utility for a luxurious gradient on primary buttons/details */
-@layer utilities {
-  .bg-primary-gradient {
-    background-image: linear-gradient(
-      to right,
-      hsl(var(--primary)),
-      hsl(var(--accent))
-    );
-    border: 0;
-    color: hsl(var(--primary-foreground));
-    transition: opacity 0.2s ease;
-  }
-
-  .bg-primary-gradient:hover {
-    opacity: 0.9;
-  }
-}
 
 /* ========================================
    Animated Sea Background (Login Page)

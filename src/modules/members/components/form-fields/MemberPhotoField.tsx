@@ -290,7 +290,7 @@ export function MemberPhotoField() {
               type="button"
               variant="outline"
               size="icon"
-              className="w-8 h-8 rounded-full shadow-md bg-background hover:bg-muted"
+              className="w-8 h-8 rounded-full shadow-md transition-all active:scale-95"
               onClick={generatePhotoToken}
               disabled={isGeneratingToken}
               title="Mandar link (QR Code)"
@@ -305,7 +305,7 @@ export function MemberPhotoField() {
               type="button"
               variant="outline"
               size="icon"
-              className="w-8 h-8 rounded-full shadow-md bg-background hover:bg-muted"
+              className="w-8 h-8 rounded-full shadow-md transition-all active:scale-95"
               onClick={triggerFileInput}
               title="Fazer Upload local"
             >

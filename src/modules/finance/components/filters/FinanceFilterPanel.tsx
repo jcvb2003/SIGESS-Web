@@ -214,7 +214,7 @@ function FilterCheckbox({
         id={id}
         checked={checked}
         onCheckedChange={onChange}
-        className="border-slate-300 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+        className="border-slate-300 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
       />
       <Label
         htmlFor={id}

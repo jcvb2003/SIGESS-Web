@@ -26,8 +26,8 @@ function getStatusInfo(status: string | null) {
     return {
       icon: CheckCircle,
       label: "Ativo",
-      textColor: "text-emerald-700 dark:text-emerald-400",
-      bgColor: "bg-emerald-50 dark:bg-emerald-950/40",
+      textColor: "text-primary font-bold",
+      bgColor: "bg-primary/10 border border-primary/20",
     };
   }
   if (normalized.includes("APOSENTADO")) {

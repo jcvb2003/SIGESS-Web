@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Search } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { Card } from "@/shared/components/ui/card";
 import {
   Sheet,
   SheetClose,
@@ -115,9 +116,10 @@ export function MemberSelect({ children }: { children?: React.ReactNode }) {
               </div>
             ) : (
               members.map((member) => (
-                <div
+                <Card
                   key={member.id}
-                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted border border-transparent hover:border-border cursor-pointer transition-all"
+                  variant="interactive"
+                  className="flex items-center gap-3 p-3 transition-all"
                   onClick={() => handleSelect(member)}
                 >
                   <Avatar className="h-10 w-10 border bg-muted">
@@ -129,18 +131,16 @@ export function MemberSelect({ children }: { children?: React.ReactNode }) {
                     <p className="font-medium truncate text-sm">
                       {member.nome}
                     </p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                      <span className="bg-muted px-1.5 py-0.5 rounded">
-                        CPF: {member.cpf}
-                      </span>
-                      {member.codigo_do_socio && (
-                        <span className="bg-muted px-1.5 py-0.5 rounded">
-                          Mat: {member.codigo_do_socio}
-                        </span>
-                      )}
-                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      CPF: {member.cpf || "N/A"}
+                    </p>
                   </div>
-                </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-xs font-semibold text-primary">
+                      #{member.codigo_do_socio}
+                    </p>
+                  </div>
+                </Card>
               ))
             )}
           </div>
@@ -148,7 +148,10 @@ export function MemberSelect({ children }: { children?: React.ReactNode }) {
 
         <SheetFooter className="mt-auto pt-2 border-t">
           <SheetClose asChild>
-            <Button variant="outline" className="w-full sm:w-auto">
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+            >
               Cancelar
             </Button>
           </SheetClose>

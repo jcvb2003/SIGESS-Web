@@ -30,7 +30,6 @@ import {
   Loader2,
   Check,
   Calendar,
-  X,
   PlusCircle,
   ShieldAlert,
 } from "lucide-react";
@@ -153,24 +152,16 @@ export function DAEDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-xl p-0 outline-none [&>button]:hidden overflow-hidden bg-white shadow-2xl rounded-2xl border-none">
+      <DialogContent className="w-full max-w-xl p-0 outline-none overflow-hidden bg-white shadow-2xl rounded-2xl border-none">
         <div className="flex flex-col h-full max-h-[90vh] sm:max-h-[85vh] overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-2 border-b flex-shrink-0 bg-white">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between pr-12">
               <div className="flex items-center gap-2 text-emerald-600">
                 <PlusCircle className="h-5 w-5" />
                 <DialogTitle className="text-xl font-bold tracking-tight">
                   DAE (Documento de Arrecadação eSocial)
                 </DialogTitle>
               </div>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8 text-slate-400 hover:text-red-600 border-slate-200"
-                onClick={() => onOpenChange(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
             </div>
           </DialogHeader>
 

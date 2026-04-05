@@ -65,17 +65,17 @@ export function SetPasswordForm() {
     <div className="space-y-6">
       <div className="text-center space-y-2">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 shadow-lg mb-2">
-          <KeyRound className="h-9 w-9 text-emerald-300" />
+          <KeyRound className="h-9 w-9 text-primary/80" />
         </div>
-        <h1 className="text-3xl font-bold tracking-tight text-emerald-200">
+        <h1 className="text-3xl font-bold tracking-tight text-primary">
           Nova Senha
         </h1>
-        <p className="text-sm text-emerald-100/60">
+        <p className="text-sm text-muted-foreground">
           Crie uma senha forte para sua conta
         </p>
       </div>
 
-      <div className="rounded-2xl border border-emerald-400/15 bg-[rgba(10,34,20,0.75)] backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-6 sm:p-8 space-y-6">
+      <div className="rounded-2xl border border-primary/20 bg-card/50 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-6 sm:p-8 space-y-6">
         <FormProvider {...methods}>
           <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-5">
             <FormField
@@ -83,7 +83,7 @@ export function SetPasswordForm() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-emerald-200/80 text-sm font-medium">
+                  <FormLabel className="text-muted-foreground text-sm font-medium">
                     Senha
                   </FormLabel>
                   <FormControl>
@@ -93,13 +93,13 @@ export function SetPasswordForm() {
                         type={showPassword ? "text" : "password"}
                         placeholder="Nova senha"
                         required
-                        className="h-11 pr-12 bg-white/5 border-white/10 text-emerald-50 placeholder:text-emerald-100/30 focus:border-emerald-400/50 focus:ring-emerald-400/20 rounded-xl"
+                        className="h-11 pr-12 bg-white/5 border-white/10 text-foreground placeholder:text-muted-foreground/30 focus:border-primary/50 focus:ring-primary/20 rounded-xl"
                       />
                       <button
                         type="button"
                         tabIndex={-1}
                         onClick={() => setShowPassword((prev) => !prev)}
-                        className="absolute right-1.5 top-1/2 -translate-y-1/2 p-2 rounded-lg text-emerald-300/50 hover:text-emerald-300 hover:bg-white/10 transition-all duration-200"
+                        className="absolute right-1.5 top-1/2 -translate-y-1/2 p-2 rounded-lg text-muted-foreground/30 hover:text-foreground hover:bg-white/10 transition-all duration-200"
                         title={showPassword ? "Ocultar senha" : "Mostrar senha"}
                         aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                       >
@@ -117,7 +117,7 @@ export function SetPasswordForm() {
               name="confirmPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-emerald-200/80 text-sm font-medium">
+                  <FormLabel className="text-muted-foreground text-sm font-medium">
                     Confirmar Senha
                   </FormLabel>
                   <FormControl>
@@ -126,7 +126,7 @@ export function SetPasswordForm() {
                       type={showPassword ? "text" : "password"}
                       placeholder="Confirme a nova senha"
                       required
-                      className="h-11 bg-white/5 border-white/10 text-emerald-50 placeholder:text-emerald-100/30 focus:border-emerald-400/50 focus:ring-emerald-400/20 rounded-xl"
+                      className="h-11 bg-white/5 border-white/10 text-foreground placeholder:text-muted-foreground/30 focus:border-primary/50 focus:ring-primary/20 rounded-xl"
                     />
                   </FormControl>
                   <FormMessage className="text-red-300" />
@@ -135,7 +135,7 @@ export function SetPasswordForm() {
             />
 
             <Button
-              className="w-full h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl shadow-lg shadow-emerald-900/30 transition-all duration-200 hover:shadow-emerald-800/40 mt-4"
+              className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl shadow-lg shadow-primary/20 transition-all duration-200 mt-4"
               type="submit"
               disabled={loading}
             >

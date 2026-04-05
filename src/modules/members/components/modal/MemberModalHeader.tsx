@@ -132,7 +132,7 @@ export function MemberModalHeader({
   );
 
   return (
-    <div className="relative flex flex-row items-center sm:items-stretch gap-3 sm:gap-5 pb-3 sm:pb-5 border-b border-border/40">
+    <div className="relative flex flex-row items-center sm:items-stretch gap-3 sm:gap-5 pb-3 sm:pb-5 border-b border-border/40 pr-10">
       <div className="absolute inset-0 bg-gradient-to-r from-primary/[0.03] via-transparent to-primary/[0.02] rounded-t-lg pointer-events-none" />
 
       <MemberAvatar

@@ -78,6 +78,10 @@ export function useFinanceFilters() {
     params.filterReleased ||
     params.filterExempt;
 
+  const setPageSize = useCallback((pageSize: number) => {
+    setParams((prev) => ({ ...prev, pageSize, page: 1 }));
+  }, []);
+
   const resetFilters = useCallback(() => {
     setParams(DEFAULT_PARAMS);
   }, []);
@@ -87,6 +91,7 @@ export function useFinanceFilters() {
     setSearch,
     setTab,
     setPage,
+    setPageSize,
     setYear,
     applyAdvancedFilters,
     clearAdvancedFilters,

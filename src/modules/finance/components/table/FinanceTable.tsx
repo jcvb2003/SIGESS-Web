@@ -15,6 +15,7 @@ interface FinanceTableProps {
   readonly pageSize: number;
   readonly total: number;
   readonly onPageChange: (page: number) => void;
+  readonly onPageSizeChange: (pageSize: number) => void;
   readonly onOpenStatement: (cpf: string) => void;
   readonly onOpenPayment: (cpf: string) => void;
   readonly onOpenDAE: (cpf: string) => void;
@@ -29,6 +30,7 @@ export function FinanceTable({
   pageSize,
   total,
   onPageChange,
+  onPageSizeChange,
   onOpenStatement,
   onOpenPayment,
   onOpenDAE,
@@ -68,6 +70,7 @@ export function FinanceTable({
         page={page}
         pageSize={pageSize}
         onPageChange={onPageChange}
+        onPageSizeChange={onPageSizeChange}
       />
     </div>
   );

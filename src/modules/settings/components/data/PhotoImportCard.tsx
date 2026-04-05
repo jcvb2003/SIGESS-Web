@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/components/ui/card";
+import { cn } from "@/shared/lib/utils";
 import {
   Images,
   Image,
@@ -50,7 +51,7 @@ export function PhotoImportCard() {
   } = usePhotoImport();
   const handleSelectFolder = async () => {
     try {
-      const pickerWindow = window as DirectoryPickerWindow;
+      const pickerWindow = (globalThis as unknown) as DirectoryPickerWindow;
       if (!pickerWindow.showDirectoryPicker) {
         toast.error("Seu navegador não suporta seleção de pastas.");
         return;
@@ -90,8 +91,12 @@ export function PhotoImportCard() {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3 border-t border-border/10 pt-4">
-        <div className="flex items-center gap-3 rounded-md border border-dashed border-border/60 bg-muted/30 px-3 py-2">
-          <Image className="h-5 w-5 text-primary" />
+        <div 
+          className="flex items-start gap-3 p-3 rounded-lg hover:bg-accent/5 hover:border-accent/40 transition-all duration-300 border border-transparent shadow-sm hover:shadow-md cursor-pointer"
+          role="button"
+          tabIndex={0}
+        >
+          <Image className="h-5 w-5 text-primary shrink-0" />
           <p className="text-xs text-muted-foreground">
             Suporte focado em navegadores Chromium (Chrome, Edge, Opera). No
             Firefox a funcionalidade será limitada.
@@ -129,7 +134,14 @@ export function PhotoImportCard() {
                       value={mode}
                       onValueChange={(v) => setMode(v as "all" | "newOnly")}
                     >
-                      <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-muted/50 transition-colors">
+                      <Card
+                        variant="interactive"
+                        className={cn(
+                          "flex items-center space-x-2 p-3 transition-all",
+                          mode === "all" && "border-accent/50 bg-accent/5",
+                        )}
+                        onClick={() => setMode("all")}
+                      >
                         <RadioGroupItem value="all" id="r1" />
                         <Label htmlFor="r1" className="cursor-pointer flex-1">
                           <span className="font-medium block">
@@ -139,8 +151,15 @@ export function PhotoImportCard() {
                             Atualiza fotos existentes e adiciona novas
                           </span>
                         </Label>
-                      </div>
-                      <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-muted/50 transition-colors">
+                      </Card>
+                      <Card
+                        variant="interactive"
+                        className={cn(
+                          "flex items-center space-x-2 p-3 transition-all",
+                          mode === "newOnly" && "border-accent/50 bg-accent/5",
+                        )}
+                        onClick={() => setMode("newOnly")}
+                      >
                         <RadioGroupItem value="newOnly" id="r2" />
                         <Label htmlFor="r2" className="cursor-pointer flex-1">
                           <span className="font-medium block">
@@ -150,7 +169,7 @@ export function PhotoImportCard() {
                             Pula sócios que já possuem foto cadastrada
                           </span>
                         </Label>
-                      </div>
+                      </Card>
                     </RadioGroup>
                   </div>
 

@@ -58,7 +58,7 @@ function SidebarContent({
   onSignOut,
 }: SidebarContentProps) {
   return (
-    <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground border-r transition-all duration-300 ease-in-out overflow-hidden">
+    <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out overflow-hidden">
       <div
         className={cn(
           "flex h-20 items-center px-4 transition-all duration-300 shrink-0",
@@ -69,7 +69,7 @@ function SidebarContent({
           to="/dashboard"
           className="flex items-center gap-3 group overflow-hidden"
         >
-          <div className="flex h-10 w-10 min-w-[2.5rem] items-center justify-center rounded-xl bg-primary-foreground/20 dark:bg-white/10 text-sidebar-foreground transition-all group-hover:bg-primary-foreground group-hover:text-primary dark:group-hover:bg-emerald-500 dark:group-hover:text-white shadow-sm">
+          <div className="flex h-10 w-10 min-w-[2.5rem] items-center justify-center rounded-xl bg-primary-foreground/20 dark:bg-white/10 text-sidebar-foreground transition-all group-hover:bg-primary-foreground group-hover:text-primary dark:group-hover:bg-primary dark:group-hover:text-white shadow-sm">
             <Fish className="h-6 w-6" />
           </div>
           <div
@@ -97,9 +97,10 @@ function SidebarContent({
                 to={item.href}
                 onClick={onNavigate}
                 className={cn(
-                  "flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition-all whitespace-nowrap relative overflow-hidden group mx-1 my-1",
+                  "flex items-center rounded-xl py-3 text-sm font-semibold transition-all whitespace-nowrap relative overflow-hidden group my-1",
+                  isCollapsed ? "justify-center px-0 gap-0 w-10 mx-auto" : "justify-start px-3 gap-3 mx-1",
                   isActive
-                    ? "bg-background text-primary shadow-md dark:bg-emerald-500/15 dark:text-emerald-400 dark:shadow-emerald-500/10"
+                    ? "bg-background text-primary shadow-md dark:bg-primary/15 dark:text-primary dark:shadow-primary/10"
                     : "text-sidebar-foreground/80 hover:bg-primary-foreground/20 hover:text-sidebar-foreground dark:hover:bg-white/10 dark:hover:text-white",
                 )}
               >

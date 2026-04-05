@@ -32,7 +32,7 @@ const MONTH_NAMES = [
 ];
 
 export default function FinancePage() {
-  const { params, setSearch, setTab, setPage, applyAdvancedFilters, clearAdvancedFilters, hasActiveAdvancedFilters } = useFinanceFilters();
+  const { params, setSearch, setTab, setPage, setPageSize, applyAdvancedFilters, clearAdvancedFilters, hasActiveAdvancedFilters } = useFinanceFilters();
   const { settings } = useFinanceSettings();
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
@@ -90,28 +90,27 @@ export default function FinancePage() {
         </div>
         <div className="flex items-center gap-2">
           <Button
+            type="button"
             variant="outline"
-            size="sm"
-            className={cn(
-              "h-9 md:h-10 text-xs font-semibold px-4 border-border/60 hover:bg-muted",
-              hasActiveAdvancedFilters && "border-emerald-300 bg-emerald-50 text-emerald-700"
-            )}
+            size="icon"
+            className="h-9 w-9 md:h-11 md:w-auto md:px-4 bg-background shrink-0"
             onClick={() => setFiltersOpen(true)}
           >
-            <SlidersHorizontal className="mr-2 h-4 w-4 text-muted-foreground" />
-            Filtros
+            <SlidersHorizontal className="h-3 w-3 md:h-4 md:w-4 md:mr-2" />
+            <span className="hidden md:inline">Filtros</span>
             {hasActiveAdvancedFilters && (
-              <span className="ml-1.5 h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="ml-1.5 h-2 w-2 rounded-full bg-primary animate-pulse" />
             )}
           </Button>
           <Button
+            type="button"
             variant="outline"
-            size="sm"
-            className="h-9 md:h-10 text-xs font-semibold px-4 border-border/60 hover:bg-muted"
+            size="icon"
+            className="h-9 w-9 md:h-11 md:w-auto md:px-4 bg-background shrink-0"
             onClick={() => setSettingsOpen(true)}
           >
-            <Settings className="mr-2 h-4 w-4 text-muted-foreground" />
-            Configurar
+            <Settings className="h-3 w-3 md:h-4 md:w-4 md:mr-2" />
+            <span className="hidden md:inline">Configurar</span>
           </Button>
         </div>
       </div>
@@ -147,7 +146,7 @@ export default function FinancePage() {
               className={cn(
                 "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all",
                 params.tab === tab.value
-                  ? "bg-emerald-600 text-white shadow-sm"
+                  ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
               )}
               onClick={() => setTab(tab.value)}
@@ -157,7 +156,7 @@ export default function FinancePage() {
                 className={cn(
                   "ml-1.5 inline-block rounded-full px-1.5 text-[10px]",
                   params.tab === tab.value
-                    ? "bg-emerald-500/50 text-white"
+                    ? "bg-primary-foreground/20 text-primary-foreground"
                     : "bg-muted text-muted-foreground/70",
                 )}
               >
@@ -177,6 +176,7 @@ export default function FinancePage() {
           pageSize={params.pageSize}
           total={total}
           onPageChange={setPage}
+          onPageSizeChange={setPageSize}
           onOpenStatement={handleOpenStatement}
           onOpenPayment={handleOpenPayment}
           onOpenDAE={handleOpenDAE}

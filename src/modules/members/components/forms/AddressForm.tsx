@@ -120,7 +120,7 @@ export function AddressForm() {
                 type="button"
                 variant="outline"
                 size="icon"
-                className="mb-[2px] transition-all hover:bg-primary/10 hover:text-primary active:scale-95"
+                className="mb-[2px] transition-all active:scale-95"
                 onClick={() => setIsLocalityDialogOpen(true)}
                 title="Gerenciar localidades"
               >

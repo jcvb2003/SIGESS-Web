@@ -82,22 +82,22 @@ export function LoginForm() {
     <div className="space-y-6">
       <div className="text-center space-y-2">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 shadow-lg mb-2">
-          <Fish className="h-9 w-9 text-emerald-300" />
+          <Fish className="h-9 w-9 text-primary/80" />
         </div>
-        <h1 className="text-3xl font-bold tracking-tight text-emerald-200">
+        <h1 className="text-3xl font-bold tracking-tight text-primary">
           SIGESS
         </h1>
-        <p className="text-sm text-emerald-100/60">
+        <p className="text-sm text-foreground/60">
           Sistema de Gestão para Sindicatos de Pescadores Artesanais
         </p>
       </div>
 
-      <div className="rounded-2xl border border-emerald-400/15 bg-[rgba(10,34,20,0.75)] backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-6 sm:p-8 space-y-6">
+      <div className="rounded-2xl border border-primary/20 bg-card/50 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-6 sm:p-8 space-y-6">
         <div className="text-center space-y-1">
-          <h2 className="text-xl font-semibold text-emerald-200">
+          <h2 className="text-xl font-semibold text-foreground">
             {isForgotPassword ? "Recuperar Senha" : "Área do Administrador"}
           </h2>
-          <p className="text-sm text-emerald-100/50">
+          <p className="text-sm text-muted-foreground">
             {isForgotPassword
               ? "Enviaremos um link de recuperação para o seu email."
               : "Entre com suas credenciais para acessar o sistema."}
@@ -112,7 +112,7 @@ export function LoginForm() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-emerald-200/80 text-sm font-medium">
+                    <FormLabel className="text-muted-foreground text-sm font-medium">
                       Email cadastrado
                     </FormLabel>
                     <FormControl>
@@ -122,7 +122,7 @@ export function LoginForm() {
                         placeholder="seu@email.com"
                         autoComplete="email"
                         required
-                        className="h-11 bg-white/5 border-white/10 text-emerald-50 placeholder:text-emerald-100/30 focus:border-emerald-400/50 focus:ring-emerald-400/20 rounded-xl"
+                        className="h-11 bg-white/5 border-white/10 text-foreground placeholder:text-muted-foreground/30 focus:border-primary/50 focus:ring-primary/20 rounded-xl"
                       />
                     </FormControl>
                     <FormMessage className="text-red-300" />
@@ -132,7 +132,7 @@ export function LoginForm() {
 
               <div className="pt-2 space-y-3">
                 <Button
-                  className="w-full h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl shadow-lg shadow-emerald-900/30 transition-all duration-200"
+                  className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl shadow-lg shadow-primary/20 transition-all duration-200"
                   type="submit"
                   disabled={resetLoading}
                 >
@@ -150,7 +150,7 @@ export function LoginForm() {
                   type="button"
                   variant="ghost"
                   onClick={() => setIsForgotPassword(false)}
-                  className="w-full h-12 text-emerald-300 hover:text-emerald-200 hover:bg-white/5"
+                  className="w-full h-12 text-muted-foreground hover:text-foreground hover:bg-white/5"
                 >
                   Voltar para o Login
                 </Button>
@@ -166,7 +166,7 @@ export function LoginForm() {
                   name="tenantCode"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-emerald-200/80 text-sm font-medium">
+                      <FormLabel className="text-muted-foreground text-sm font-medium">
                         Código da Entidade
                       </FormLabel>
                       <FormControl>
@@ -176,7 +176,7 @@ export function LoginForm() {
                           placeholder="Ex: Colonia z-x"
                           autoComplete="off"
                           required
-                          className="h-11 bg-white/5 border-white/10 text-emerald-50 placeholder:text-emerald-100/30 focus:border-emerald-400/50 focus:ring-emerald-400/20 rounded-xl"
+                          className="h-11 bg-white/5 border-white/10 text-foreground placeholder:text-muted-foreground/30 focus:border-primary/50 focus:ring-primary/20 rounded-xl"
                         />
                       </FormControl>
                       <FormMessage className="text-red-300" />
@@ -190,7 +190,7 @@ export function LoginForm() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-emerald-200/80 text-sm font-medium">
+                    <FormLabel className="text-muted-foreground text-sm font-medium">
                       Email
                     </FormLabel>
                     <FormControl>
@@ -200,7 +200,7 @@ export function LoginForm() {
                         placeholder="seu@email.com"
                         autoComplete="email"
                         required
-                        className="h-11 bg-white/5 border-white/10 text-emerald-50 placeholder:text-emerald-100/30 focus:border-emerald-400/50 focus:ring-emerald-400/20 rounded-xl"
+                        className="h-11 bg-white/5 border-white/10 text-foreground placeholder:text-muted-foreground/30 focus:border-primary/50 focus:ring-primary/20 rounded-xl"
                       />
                     </FormControl>
                     <FormMessage className="text-red-300" />
@@ -213,7 +213,7 @@ export function LoginForm() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-emerald-200/80 text-sm font-medium">
+                    <FormLabel className="text-muted-foreground text-sm font-medium">
                       Senha
                     </FormLabel>
                     <FormControl>
@@ -224,19 +224,19 @@ export function LoginForm() {
                           autoComplete="current-password"
                           placeholder="Senha"
                           required
-                          className="h-11 pr-12 bg-white/5 border-white/10 text-emerald-50 placeholder:text-emerald-100/30 focus:border-emerald-400/50 focus:ring-emerald-400/20 rounded-xl"
+                          className="h-11 pr-12 bg-white/5 border-white/10 text-foreground placeholder:text-muted-foreground/30 focus:border-primary/50 focus:ring-primary/20 rounded-xl"
                         />
                         <button
                           type="button"
                           tabIndex={-1}
                           onClick={() => setShowPassword((prev) => !prev)}
-                          className="absolute right-1.5 top-1/2 -translate-y-1/2 p-2 rounded-lg text-emerald-300/50 hover:text-emerald-300 hover:bg-white/10 transition-all duration-200 group"
+                          className="absolute right-1.5 top-1/2 -translate-y-1/2 p-2 rounded-lg text-primary/50 hover:text-primary hover:bg-white/10 transition-all duration-200 group"
                           aria-label={
                             showPassword ? "Ocultar senha" : "Mostrar senha"
                           }
                         >
                           <Fish
-                            className={`h-5 w-5 transition-transform duration-300 ${showPassword ? "scale-x-[-1] text-emerald-400" : ""
+                            className={`h-5 w-5 transition-transform duration-300 ${showPassword ? "scale-x-[-1] text-primary" : ""
                               }`}
                           />
                         </button>
@@ -249,7 +249,7 @@ export function LoginForm() {
 
               <div className="pt-2">
                 <Button
-                  className="w-full h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl shadow-lg shadow-emerald-900/30 transition-all duration-200 hover:shadow-emerald-800/40"
+                  className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl shadow-lg shadow-primary/20 transition-all duration-200"
                   type="submit"
                   disabled={loading}
                 >
@@ -271,7 +271,7 @@ export function LoginForm() {
                 <button
                   type="button"
                   onClick={() => setIsForgotPassword(true)}
-                  className="text-sm text-emerald-300 hover:text-emerald-200 transition-colors"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Esqueci a senha
                 </button>
@@ -281,7 +281,7 @@ export function LoginForm() {
         )}
       </div>
 
-      <p className="text-center text-xs text-emerald-100/30">
+      <p className="text-center text-xs text-muted-foreground/30">
         Sindicato dos Pescadores Artesanais &copy; {new Date().getFullYear()}
       </p>
     </div>

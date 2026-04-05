@@ -11,18 +11,22 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Upload, FileSpreadsheet, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+
 interface ImportDialogProps {
   trigger?: React.ReactNode;
 }
+
 export function ImportDialog({ trigger }: ImportDialogProps) {
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
     }
   };
+
   const handleImport = () => {
     if (!file) return;
     console.log("File selected for import:", file);
@@ -30,6 +34,7 @@ export function ImportDialog({ trigger }: ImportDialogProps) {
     setOpen(false);
     setFile(null);
   };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -54,8 +59,15 @@ export function ImportDialog({ trigger }: ImportDialogProps) {
         <div className="grid gap-4 py-4">
           <div className="flex flex-col gap-2">
             <div
-              className="border-2 border-dashed border-border rounded-lg p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-muted/50 transition-colors"
+              className="border-2 border-dashed border-border rounded-lg p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-accent/5 hover:border-accent/40 hover:text-primary transition-all duration-300 shadow-sm hover:shadow-md"
               onClick={() => fileInputRef.current?.click()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  fileInputRef.current?.click();
+                }
+              }}
+              role="button"
+              tabIndex={0}
             >
               <FileSpreadsheet className="h-10 w-10 text-muted-foreground mb-4" />
               {file ? (

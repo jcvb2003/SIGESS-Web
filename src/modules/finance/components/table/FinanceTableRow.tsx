@@ -74,7 +74,7 @@ export function FinanceTableRow({
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-7 w-7 transition-all duration-200 hover:bg-sky-600 hover:text-white hover:border-sky-600 hover:scale-110 active:scale-95 shadow-sm"
+                  className="h-7 w-7 transition-all duration-200 hover:bg-blue-600 hover:text-white hover:border-blue-600 hover:scale-110 active:scale-95 shadow-sm"
                   onClick={() => onOpenStatement(member.cpf)}
                 >
                   <ClipboardList className="h-3.5 w-3.5" />
@@ -93,7 +93,7 @@ export function FinanceTableRow({
                   className={cn(
                     "h-7 w-7 transition-all duration-200 shadow-sm",
                     !member.isento &&
-                    "hover:bg-emerald-600 hover:text-white hover:border-emerald-600 hover:scale-110 active:scale-95",
+                    "hover:bg-primary hover:text-white hover:border-primary hover:scale-110 active:scale-95",
                   )}
                   disabled={member.isento}
                   onClick={() => onOpenPayment(member.cpf)}

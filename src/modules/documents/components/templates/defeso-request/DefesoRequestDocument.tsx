@@ -190,7 +190,7 @@ export function DefesoRequestDocument({
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h2 className="text-xl font-semibold">Requerimento de Seguro Defeso</h2>
         {savedRequest && (
-          <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+          <div className="bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
             Requerimento Salvo em {formatDate(savedRequest.data)}
           </div>
         )}

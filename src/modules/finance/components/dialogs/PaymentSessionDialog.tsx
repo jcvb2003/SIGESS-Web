@@ -360,13 +360,13 @@ export function PaymentSessionDialog({
                   <span className="text-2xl font-black text-slate-900 tracking-tight">{formatCurrency(totalValue)}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    onClick={() => onOpenChange(false)}
-                    className="text-slate-500 hover:text-red-600 hover:bg-red-50 text-[11px] font-black h-10 px-4 transition-all"
-                  >
-                    CANCELAR
-                  </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => onOpenChange(false)}
+                      className="text-xs font-bold h-10 px-4 transition-colors rounded-lg"
+                    >
+                      Cancelar
+                    </Button>
                   <Button
                     onClick={handleSubmit}
                     disabled={paymentMutation.isPending || !canConfirm}

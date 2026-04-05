@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useForm, Controller, type Resolver } from "react-hook-form";
+import { useForm, Controller, type Resolver, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/shared/components/ui/button";
@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { Switch } from "@/shared/components/ui/switch";
-import { Loader2, Check, X } from "lucide-react";
+import { Loader2, Check } from "lucide-react";
 import { MoneyField } from "../shared/MoneyField";
 import {
   chargeTypeSchema,
@@ -43,7 +43,6 @@ export function ChargeTypeForm({
     register,
     control,
     handleSubmit,
-    watch,
     reset,
     formState: { errors, isDirty },
   } = useForm<ChargeTypeFormInput>({
@@ -70,7 +69,10 @@ export function ChargeTypeForm({
     });
   }, [initial, reset]);
 
-  const categoria = watch("categoria");
+  const categoria = useWatch({
+    control,
+    name: "categoria",
+  });
 
   const handleFormSubmit = handleSubmit(async (data) => {
     // After Zod validation, `ativo` is guaranteed to be `boolean` (via default)
@@ -188,28 +190,26 @@ export function ChargeTypeForm({
             <Switch
               checked={field.value}
               onCheckedChange={field.onChange}
-              className="data-[state=checked]:bg-emerald-600"
             />
           )}
         />
       </div>
 
-      <div className="flex items-center justify-end gap-2 pt-2 border-t">
+      <div className="flex items-center justify-end gap-3 pt-2 border-t">
         <Button
           type="button"
           variant="outline"
           size="sm"
           onClick={onCancel}
-          className="h-8 text-xs gap-1.5"
         >
-          <X className="h-3.5 w-3.5" />
           Cancelar
         </Button>
         <Button
           type="submit"
+          variant="default"
           size="sm"
           disabled={isPending || !isDirty}
-          className="h-8 text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700"
+          className="gap-1.5"
         >
           {isPending ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />

@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
-import { FileText } from "lucide-react";
+import { FileText, CalendarIcon } from "lucide-react";
 import { WitnessForm, WitnessData } from "../forms/WitnessForm";
 import {
   Select,
@@ -20,7 +20,6 @@ import {
 import { Label } from "@/shared/components/ui/label";
 import { Input } from "@/shared/components/ui/input";
 import { formatDateForInput } from "@/shared/utils/formatters/dateFormatters";
-import { CalendarIcon } from "lucide-react";
 interface WitnessDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -46,7 +45,7 @@ export function WitnessDialog({
   description,
   onConfirm,
   availableModels = [],
-}: WitnessDialogProps) {
+}: Readonly<WitnessDialogProps>) {
   const [includeWitnesses, setIncludeWitnesses] = useState(false);
   const [witness1, setWitness1] = useState<WitnessData>({
     name: "",
@@ -90,7 +89,7 @@ export function WitnessDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+        <DialogHeader className="pr-12">
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
             {title}
