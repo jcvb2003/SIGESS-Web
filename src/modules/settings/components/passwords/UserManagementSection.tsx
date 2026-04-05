@@ -26,7 +26,7 @@ import {
   Mail,
   Search
 } from "lucide-react";
-import { useUserManagement, UserAccount } from "../../hooks/useUserManagement";
+import { useUserManagement } from "../../hooks/useUserManagement";
 import {
   Dialog,
   DialogContent,
