@@ -118,6 +118,6 @@ serve(async (req: Request) => {
 
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erro desconhecido';
-    return jsonResponse({ error: message }, 400);
+    console.error('Edge Function Error:', message, error); return jsonResponse({ error: message }, 400);
   }
 });

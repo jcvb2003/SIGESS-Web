@@ -77,7 +77,7 @@ function extractTenantFromToken(token: string | null): string | null {
  */
 function extractTenantFromUrl(accessToken: string | null): string | null {
   if (globalThis.window === undefined) return null;
-  
+
   const param = new URLSearchParams(globalThis.location.search).get("tenant");
   if (param) return param;
 
@@ -85,7 +85,7 @@ function extractTenantFromUrl(accessToken: string | null): string | null {
   if (tenantFromToken) return tenantFromToken;
 
   if (isLegacyMode && LEGACY_TENANT_CODE) return LEGACY_TENANT_CODE;
-  
+
   return null;
 }
 
