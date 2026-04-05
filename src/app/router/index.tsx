@@ -6,6 +6,7 @@ import {
   Outlet,
 } from "react-router-dom";
 import { useAuth } from "@/modules/auth/context/authContextStore";
+import { usePermissions } from "@/shared/hooks/usePermissions";
 import { Loader2 } from "lucide-react";
 import { RouteError } from "@/shared/components/feedback/RouteError";
 import { DashboardLayout } from "@/shared/components/layout/DashboardLayout";
@@ -35,6 +36,11 @@ function PublicRoute() {
   }
   return session ? <Navigate to="/dashboard" replace /> : <Outlet />;
 }
+
+function AdminRoute() {
+  const { isAdmin } = usePermissions();
+  return isAdmin ? <Outlet /> : <Navigate to="/dashboard" replace />;
+}
 const router = createBrowserRouter([
   {
     path: "/",
@@ -44,6 +50,14 @@ const router = createBrowserRouter([
     path: "/foto-upload",
     element: <FotoUploadPage />,
   },
+  // Rota independente: sem guard de sessão.
+  // O token chega via hash da URL — não pode estar sob PublicRoute
+  // pois o Supabase criaria sessão automaticamente e redirecionaria para /dashboard.
+  {
+    path: "/password",
+    element: <PasswordPage />,
+    errorElement: <RouteError />,
+  },
   {
     element: <PublicRoute />,
     errorElement: <RouteError />,
@@ -51,10 +65,6 @@ const router = createBrowserRouter([
       {
         path: "/auth",
         element: <LoginPage />,
-      },
-      {
-        path: "/password",
-        element: <PasswordPage />,
       },
     ],
   },
@@ -91,8 +101,13 @@ const router = createBrowserRouter([
         element: <ReportsPage />,
       },
       {
-        path: "/settings",
-        element: <SettingsPage />,
+        element: <AdminRoute />,
+        children: [
+          {
+            path: "/settings",
+            element: <SettingsPage />,
+          },
+        ]
       },
     ],
   },

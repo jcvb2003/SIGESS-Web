@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/shared/components/ui/button";
-import { Loader2, KeyRound } from "lucide-react";
+import { Loader2, KeyRound, AlertTriangle } from "lucide-react";
 import {
   FormControl,
   FormField,
@@ -12,9 +12,11 @@ import {
   FormMessage,
 } from "@/shared/components/ui/form";
 import { Input } from "@/shared/components/ui/input";
-import { authService } from "../services/authService";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { createClient } from "@supabase/supabase-js";
+import { resolveTenant } from "@/config/tenants";
+import { initSupabaseClient } from "@/shared/lib/supabase/client";
 
 const passwordSchema = z.object({
   password: z
@@ -32,10 +34,50 @@ const passwordSchema = z.object({
 
 type PasswordFormData = z.infer<typeof passwordSchema>;
 
+/**
+ * Lê os tokens de convite/reset do hash da URL (ex: #access_token=...&refresh_token=...).
+ * NÃO usa o Supabase SDK para detectar a sessão — isso consumiria o token imediatamente.
+ */
+function extractTokensFromHash(): { accessToken: string | null; refreshToken: string | null } {
+  if (globalThis.window === undefined) return { accessToken: null, refreshToken: null };
+  const hash = globalThis.location.hash.substring(1);
+  const params = new URLSearchParams(hash);
+  return {
+    accessToken: params.get("access_token"),
+    refreshToken: params.get("refresh_token"),
+  };
+}
+
+/**
+ * Lê o código do tenant do query param `?tenant=` da URL.
+ */
+function extractTenantFromUrl(): string | null {
+  if (globalThis.window === undefined) return null;
+  return new URLSearchParams(globalThis.location.search).get("tenant");
+}
+
 export function SetPasswordForm() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [tokenError, setTokenError] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  // Tokens lidos UMA vez no mount — não re-leituras reativas
+  const tokensRef = useRef(extractTokensFromHash());
+  const tenantCodeRef = useRef(extractTenantFromUrl());
+
+  useEffect(() => {
+    const { accessToken, refreshToken } = tokensRef.current;
+    const tenantCode = tenantCodeRef.current;
+
+    if (!accessToken || !refreshToken) {
+      setTokenError("Link inválido ou já utilizado. Solicite um novo convite.");
+      return;
+    }
+    if (!tenantCode || !resolveTenant(tenantCode)) {
+      setTokenError("Link inválido: entidade não identificada. Solicite um novo convite.");
+    }
+  }, []);
 
   const methods = useForm<PasswordFormData>({
     resolver: zodResolver(passwordSchema),
@@ -46,20 +88,83 @@ export function SetPasswordForm() {
   });
 
   const onSubmit = async (data: PasswordFormData) => {
+    const { accessToken, refreshToken } = tokensRef.current;
+    const tenantCode = tenantCodeRef.current;
+
+    if (!accessToken || !refreshToken || !tenantCode) {
+      toast.error("Link inválido ou expirado. Solicite um novo convite.");
+      return;
+    }
+
+    const tenant = resolveTenant(tenantCode);
+    if (!tenant) {
+      toast.error("Entidade não encontrada. Verifique o link.");
+      return;
+    }
+
     setLoading(true);
     try {
-      const { error } = await authService.updatePassword(data.password);
-      if (error) throw error;
-      
-      toast.success("Senha atualizada com sucesso!");
+      // Cria um client isolado (detectSessionInUrl: false) para não consumir o token ao inicializar
+      const isolatedClient = createClient(tenant.supabaseUrl, tenant.supabaseAnonKey, {
+        auth: {
+          detectSessionInUrl: false,
+          persistSession: false,
+        },
+      });
+
+      // Só aqui trocamos o token por sessão — no momento do submit, não no carregamento
+      const { error: sessionError } = await isolatedClient.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
+      if (sessionError) throw sessionError;
+
+      const { error: updateError } = await isolatedClient.auth.updateUser({
+        password: data.password,
+      });
+      if (updateError) throw updateError;
+
+      // Promove a sessão para o cliente principal e inicializa o tenant
+      initSupabaseClient(tenantCode);
+      await initSupabaseClient(tenantCode).auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
+
+      toast.success("Senha cadastrada com sucesso! Bem-vindo ao SIGESS.");
       navigate("/dashboard");
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Erro ao atualizar a senha";
-      toast.error(message);
+      if (message.includes("expired") || message.includes("invalid")) {
+        toast.error("Link expirado ou já utilizado. Solicite um novo convite.");
+      } else {
+        toast.error(message);
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  if (tokenError) {
+    return (
+      <div className="space-y-6 text-center">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 shadow-lg mb-2">
+          <AlertTriangle className="h-9 w-9 text-yellow-400" />
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-primary">Link inválido</h1>
+        <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/5 backdrop-blur-xl shadow-lg p-6 text-sm text-muted-foreground">
+          {tokenError}
+        </div>
+        <Button
+          variant="outline"
+          className="w-full h-11 rounded-xl border-white/10"
+          onClick={() => navigate("/auth")}
+        >
+          Ir para o login
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

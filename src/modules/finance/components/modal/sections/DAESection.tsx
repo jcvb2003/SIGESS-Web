@@ -35,6 +35,7 @@ import { financeService } from "../../../services/financeService";
 import { daeService } from "../../../services/daeService";
 import { format } from "date-fns";
 import { cn } from "@/shared/lib/utils";
+import { usePermissions } from "@/shared/hooks/usePermissions";
 import type { FinanceDAE, FinanceLancamento, EditDAEData } from "../../../types/finance.types";
 
 const MONTH_LABELS = [
@@ -59,6 +60,7 @@ export function DAESection({ daes }: DAESectionProps) {
     updateDAE, 
     updateGroupDAE 
   } = useUpdateFinanceActions();
+  const { isAdmin } = usePermissions();
 
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   const [receiptData, setReceiptData] = useState<{ lancamentos: FinanceLancamento[], daes: FinanceDAE[] }>({ lancamentos: [], daes: [] });
@@ -293,10 +295,10 @@ export function DAESection({ daes }: DAESectionProps) {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button 
-                      onClick={() => handleToggleStatusClick(g.lead)}
-                      disabled={toggleBoletoStatus.isPending}
-                      className="group/status focus:outline-none"
-                      title={g.lead.boleto_pago ? "Desmarcar pagamento" : "Registrar pagamento"}
+                      onClick={() => isAdmin && handleToggleStatusClick(g.lead)}
+                      disabled={toggleBoletoStatus.isPending || !isAdmin}
+                      className={cn("group/status focus:outline-none", !isAdmin && "cursor-not-allowed opacity-80")}
+                      title={!isAdmin ? "Apenas o presidente pode alterar status de pagamento" : (g.lead.boleto_pago ? "Desmarcar pagamento" : "Registrar pagamento")}
                     >
                       <FinancialStatusBadge 
                         status={g.lead.boleto_pago ? "ok" : "released"} 
@@ -311,7 +313,7 @@ export function DAESection({ daes }: DAESectionProps) {
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom" className="text-[10px]">
-                    {g.lead.boleto_pago ? "Clique para desmarcar pagamento" : "Clique para registrar pagamento"}
+                    {!isAdmin ? "Apenas o presidente pode alterar status de pagamento" : (g.lead.boleto_pago ? "Clique para desmarcar pagamento" : "Clique para registrar pagamento")}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -353,13 +355,16 @@ export function DAESection({ daes }: DAESectionProps) {
                         variant="ghost" 
                         size="icon" 
                         title="Editar DAE"
-                        className="h-7 w-7 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50"
-                        onClick={() => handleEdit(g.lead)}
+                        className={cn("h-7 w-7 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50", !isAdmin && "opacity-50 cursor-not-allowed")}
+                        onClick={() => isAdmin && handleEdit(g.lead)}
+                        disabled={!isAdmin}
                       >
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Editar DAE</TooltipContent>
+                    <TooltipContent>
+                      {isAdmin ? "Editar DAE" : "Apenas o presidente pode editar DAEs"}
+                    </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               )}
@@ -371,13 +376,18 @@ export function DAESection({ daes }: DAESectionProps) {
                       variant="ghost" 
                       size="icon" 
                       title="Excluir DAE"
-                      className="h-7 w-7 text-slate-400 hover:text-red-600 hover:bg-red-50"
-                      onClick={() => handleDelete(g.lead)}
+                      className={cn("h-7 w-7 text-slate-400 hover:text-red-600 hover:bg-red-50", !isAdmin && "opacity-50 cursor-not-allowed")}
+                      onClick={() => isAdmin && handleDelete(g.lead)}
+                      disabled={!isAdmin}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>{g.isGroup ? "Cancelar todo o boleto" : "Excluir DAE"}</TooltipContent>
+                  <TooltipContent>
+                    {isAdmin 
+                      ? (g.isGroup ? "Cancelar todo o boleto" : "Excluir DAE") 
+                      : "Apenas o presidente pode cancelar DAEs"}
+                  </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>

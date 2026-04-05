@@ -14,6 +14,8 @@ import { CancelPaymentDialog } from "../../dialogs/CancelPaymentDialog";
 import { EditLancamentoDialog } from "../../dialogs/EditLancamentoDialog";
 import { useCancelFinanceActions } from "../../../hooks/edit/useCancelFinanceActions";
 import { useUpdateFinanceActions } from "../../../hooks/edit/useUpdateFinanceActions";
+import { usePermissions } from "@/shared/hooks/usePermissions";
+import { cn } from "@/shared/lib/utils";
 import type { FinanceLancamento, FinanceDAE } from "../../../types/finance.types";
 import { SessionReceiptDialog } from "../../dialogs/SessionReceiptDialog";
 import { financeService } from "../../../services/financeService";
@@ -38,6 +40,7 @@ export function AnnuitiesSection({ anuidades }: AnnuitiesSectionProps) {
 
   const { cancelPayment } = useCancelFinanceActions();
   const { updatePayment } = useUpdateFinanceActions();
+  const { isAdmin } = usePermissions();
 
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   const [receiptData, setReceiptData] = useState<{ lancamentos: FinanceLancamento[], daes: FinanceDAE[] }>({ lancamentos: [], daes: [] });
@@ -133,13 +136,16 @@ export function AnnuitiesSection({ anuidades }: AnnuitiesSectionProps) {
                       <Button
                          variant="ghost" 
                          size="icon" 
-                         className="h-7 w-7 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50"
-                         onClick={() => handleEdit(a)}
+                         className={cn("h-7 w-7 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50", !isAdmin && "opacity-50 cursor-not-allowed")}
+                         onClick={() => isAdmin && handleEdit(a)}
+                         disabled={!isAdmin}
                       >
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Editar lançamento</TooltipContent>
+                    <TooltipContent>
+                      {isAdmin ? "Editar lançamento" : "Apenas o presidente pode editar lançamentos"}
+                    </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
 
@@ -149,13 +155,16 @@ export function AnnuitiesSection({ anuidades }: AnnuitiesSectionProps) {
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="h-7 w-7 text-slate-400 hover:text-red-600 hover:bg-red-50"
-                        onClick={() => handleDelete(a)}
+                        className={cn("h-7 w-7 text-slate-400 hover:text-red-600 hover:bg-red-50", !isAdmin && "opacity-50 cursor-not-allowed")}
+                        onClick={() => isAdmin && handleDelete(a)}
+                        disabled={!isAdmin}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Excluir lançamento</TooltipContent>
+                    <TooltipContent>
+                      {isAdmin ? "Excluir lançamento" : "Apenas o presidente pode cancelar lançamentos"}
+                    </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </div>
