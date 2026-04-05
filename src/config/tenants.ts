@@ -21,3 +21,11 @@ export function resolveTenant(code: string): TenantConfig | null {
   if (!code) return null;
   return TENANTS[code.toLowerCase().trim()] ?? null;
 }
+
+export function resolveTenantBySupabaseUrl(url: string | undefined): string | null {
+  if (!url) return null;
+  const match = Object.entries(TENANTS).find(([, config]) => 
+    url.startsWith(config.supabaseUrl)
+  );
+  return match ? match[0] : null;
+}

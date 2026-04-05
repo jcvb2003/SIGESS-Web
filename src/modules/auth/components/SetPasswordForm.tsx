@@ -49,15 +49,43 @@ function extractTokensFromHash(): { accessToken: string | null; refreshToken: st
 }
 
 import { isLegacyMode, LEGACY_TENANT_CODE } from "@/config/appMode";
+import { resolveTenantBySupabaseUrl } from "@/config/tenants";
 
 /**
- * Lê o código do tenant do query param `?tenant=` da URL, ou usa o fallback do modo legado.
+ * Tenta decodificar o tenant a partir do access_token presente no hash da URL.
+ * O access_token é um JWT onde o "iss" (issuer) tem a URL do Supabase Project.
  */
-function extractTenantFromUrl(): string | null {
+function extractTenantFromToken(token: string | null): string | null {
+  if (!token) return null;
+  try {
+    const payloadPayload = token.split('.')[1];
+    if (!payloadPayload) return null;
+    const payloadString = globalThis.atob(payloadPayload);
+    const payload = JSON.parse(payloadString);
+    if (payload.iss) {
+      return resolveTenantBySupabaseUrl(payload.iss);
+    }
+  } catch {
+    // Ignorar falhas de decodificação no client
+  }
+  return null;
+}
+
+/**
+ * Lê o código do tenant do query param `?tenant=` da URL, ou tenta deduzir do access_token caso a query seja truncada,
+ * ou usa o fallback do modo legado.
+ */
+function extractTenantFromUrl(accessToken: string | null): string | null {
   if (globalThis.window === undefined) return null;
+  
   const param = new URLSearchParams(globalThis.location.search).get("tenant");
   if (param) return param;
+
+  const tenantFromToken = extractTenantFromToken(accessToken);
+  if (tenantFromToken) return tenantFromToken;
+
   if (isLegacyMode && LEGACY_TENANT_CODE) return LEGACY_TENANT_CODE;
+  
   return null;
 }
 
@@ -69,7 +97,7 @@ export function SetPasswordForm() {
 
   // Tokens lidos UMA vez no mount — não re-leituras reativas
   const tokensRef = useRef(extractTokensFromHash());
-  const tenantCodeRef = useRef(extractTenantFromUrl());
+  const tenantCodeRef = useRef(extractTenantFromUrl(tokensRef.current.accessToken));
 
   useEffect(() => {
     const { accessToken, refreshToken } = tokensRef.current;
