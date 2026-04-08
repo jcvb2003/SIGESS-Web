@@ -107,7 +107,6 @@ export const dashboardService = {
         return [];
       }
 
-      const normalizedMembers = normalizeMembers(data);
       return normalizeMembers(data);
     } catch (error) {
       console.error("Birthday members error:", error);
