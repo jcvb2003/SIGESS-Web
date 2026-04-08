@@ -7,25 +7,46 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-.env
-.env.*
-! .env.example
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+dist-ssr/
 *.tsbuildinfo
 
-# Editor directories and files
+# Environment variables (Critically Sensitive)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+! .env.example
+.env.example
+
+# Supabase & Runner
+.supabase/
+scripts/*.local.ts
+scripts/fix-*.ts
+scripts/audit-*.ts
+
+# Editor / OS
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+Thumbs.db
 
-#outros  
+# Planning / Documentation  
 .planejamento
+C:\Users\José Carlos\.gemini\antigravity\brain/*
+walkthrough*.md
+task.md
+implementation_plan*.md

@@ -141,12 +141,19 @@ export function usePhotoImport() {
     return memberMap;
   };
   const checkPhotoExists = async (cpf: string) => {
-    const { data } = await supabase
+    const fileName = `${cpf}.jpg`;
+    const { data, error } = await supabase.storage
       .from("fotos")
-      .select("id")
-      .eq("cpf", cpf)
-      .maybeSingle();
-    return !!data;
+      .list("", {
+        search: fileName,
+      });
+    
+    if (error) {
+      console.error("Erro ao verificar foto no storage:", error);
+      return false;
+    }
+
+    return (data || []).some(f => f.name === fileName);
   };
   const uploadPhoto = async (file: File, memberCpf: string) => {
     const fileName = `${memberCpf}.jpg`;
@@ -157,18 +164,6 @@ export function usePhotoImport() {
         contentType: "image/jpeg",
       });
     if (uploadError) throw uploadError;
-    const { data: publicUrlData } = supabase.storage
-      .from("fotos_socios")
-      .getPublicUrl(fileName);
-    const { error: dbError } = await supabase.from("fotos").upsert(
-      {
-        cpf: memberCpf,
-        foto_url: publicUrlData.publicUrl,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "cpf" },
-    );
-    if (dbError) throw dbError;
   };
   const importPhotos = async (
     directoryHandle: DirectoryHandleLike,

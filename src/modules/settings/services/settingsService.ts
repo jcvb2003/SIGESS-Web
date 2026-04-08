@@ -69,7 +69,7 @@ export const settingsService = {
           presidentCpf: toStringValue(data.cpf_do_presidente),
           corPrimaria: toStringValue(data.cor_primaria, "160 84% 39%"),
           corSecundaria: toStringValue(data.cor_secundaria, "152 69% 41%"),
-          corSidebar: toStringValue(data.cor_sidebar, "0 0% 98%"),
+          corSidebar: toStringValue(data.cor_sidebar, "160 84% 39%"),
         }
         : null,
       error: null,

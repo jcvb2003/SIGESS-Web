@@ -34,7 +34,7 @@ export function useMembersListController() {
     field: string;
     direction: "asc" | "desc";
   }>({
-    field: "created_at",
+    field: "data_de_admissao",
     direction: "desc",
   });
 
@@ -63,7 +63,7 @@ export function useMembersListController() {
     confirmDelete,
   } = useMemberActions();
   const navigate = useNavigate();
-  const [viewMemberId, setViewMemberId] = useState<string | null>(null);
+  const [viewMemberUuid, setViewMemberUuid] = useState<string | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
   const queryParams = useMemo<MemberSearchParams>(
@@ -184,13 +184,13 @@ export function useMembersListController() {
     navigate(`/members/${member.id}`);
   };
   const handleView = (member: MemberListItem) => {
-    setViewMemberId(member.id);
+    setViewMemberUuid(member.id);
     setIsViewModalOpen(true);
   };
   const handleViewModalChange = (open: boolean) => {
     setIsViewModalOpen(open);
     if (!open) {
-      setViewMemberId(null);
+      setTimeout(() => setViewMemberUuid(null), 300);
     }
   };
   const handleGenerateDocument = (member: MemberListItem) => {
@@ -266,7 +266,7 @@ export function useMembersListController() {
     viewDialog: {
       open: isViewModalOpen,
       onOpenChange: handleViewModalChange,
-      memberId: viewMemberId,
+      memberUuid: viewMemberUuid,
     },
   };
 }

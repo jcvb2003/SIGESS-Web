@@ -9,7 +9,10 @@ import {
 } from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
 import { FileText, CalendarIcon } from "lucide-react";
+import { isNotFutureDate } from "@/shared/utils/validators/dateValidators";
+import { toast } from "sonner";
 import { WitnessForm, WitnessData } from "../forms/WitnessForm";
+
 import {
   Select,
   SelectContent,
@@ -69,6 +72,11 @@ export function WitnessDialog({
     onOpenChange(nextOpen);
   };
   const handleConfirm = () => {
+    if (!isNotFutureDate(documentDate)) {
+      toast.error("A data do documento não pode ser futura");
+      return;
+    }
+
     const data: {
       witnesses?: {
         witness1: WitnessData;

@@ -46,5 +46,5 @@ export const defaultEntitySettings: EntitySettings = {
   presidentCpf: "",
   corPrimaria: "160 84% 39%",
   corSecundaria: "152 69% 41%",
-  corSidebar: "0 0% 98%",
+  corSidebar: "160 84% 39%",
 };

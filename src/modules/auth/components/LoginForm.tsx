@@ -15,7 +15,6 @@ import {
 } from "@/shared/components/ui/form";
 import { Input } from "@/shared/components/ui/input";
 import { toast } from "sonner";
-import { isLegacyMode, LEGACY_TENANT_CODE, isDev, DEV_DEFAULT_TENANT } from "@/config/appMode";
 
 const loginSchema = z.object({
   tenantCode: z.string().min(1, "O código da entidade é obrigatório"),
@@ -36,12 +35,7 @@ export function LoginForm() {
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
 
-  let initialTenantCode = "";
-  if (isLegacyMode) {
-    initialTenantCode = LEGACY_TENANT_CODE;
-  } else if (isDev) {
-    initialTenantCode = DEV_DEFAULT_TENANT;
-  }
+  const initialTenantCode = "";
 
   const methods = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -160,8 +154,7 @@ export function LoginForm() {
         ) : (
           <FormProvider key="login-provider" {...methods}>
             <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-4">
-              {!isLegacyMode && (
-                <FormField
+              <FormField
                   control={methods.control}
                   name="tenantCode"
                   render={({ field }) => (
@@ -183,7 +176,6 @@ export function LoginForm() {
                     </FormItem>
                   )}
                 />
-              )}
 
               <FormField
                 control={methods.control}

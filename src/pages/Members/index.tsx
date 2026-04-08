@@ -101,7 +101,7 @@ export default function Members() {
       <MemberDetailsModal
         open={viewDialog.open}
         onOpenChange={viewDialog.onOpenChange}
-        memberId={viewDialog.memberId}
+        memberUuid={viewDialog.memberUuid}
         onEdit={(id, member) => {
           viewDialog.onOpenChange(false);
           table.onEdit(toMemberListItem(id, member));

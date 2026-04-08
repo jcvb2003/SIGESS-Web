@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { optionalDateSchema } from "@/shared/utils/validators/dateValidators";
 
 export const entitySchema = z.object({
   id: z.number().optional(),
@@ -19,7 +20,7 @@ export const entitySchema = z.object({
   federation: z.string().toUpperCase().optional(),
   confederation: z.string().toUpperCase().optional(),
   pole: z.string().toUpperCase().optional(),
-  foundation: z.string().optional(),
+  foundation: optionalDateSchema,
   county: z.string().toUpperCase().optional(),
   presidentName: z.string().toUpperCase().optional(),
   presidentCpf: z.string().optional(),

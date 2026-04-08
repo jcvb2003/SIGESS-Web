@@ -85,7 +85,7 @@ export const memberService = {
     let query = supabase
       .from("socios")
       .select(
-        "id, codigo_do_socio, nome, cpf, data_de_admissao, situacao, codigo_localidade, data_de_nascimento, fotos(foto_url)",
+        "id, codigo_do_socio, nome, cpf, data_de_admissao, situacao, codigo_localidade, data_de_nascimento",
         {
           count: "exact",
         },
@@ -114,7 +114,7 @@ export const memberService = {
     } else if (rgpStatus === "without_rgp") {
       query = query.or("num_rgp.is.null,num_rgp.eq.,emissao_rgp.is.null");
     }
-    const sortField = params.orderBy || "nome";
+    const sortField = params.orderBy || "data_de_admissao";
     const ascending = params.orderDirection !== "desc"; // Default to ASC if not 'desc'
 
     if (birthMonth) {
@@ -140,7 +140,6 @@ export const memberService = {
           data_de_admissao: string | null;
           situacao: string | null;
           codigo_localidade: string | null;
-          fotos: { foto_url: string }[] | null;
         };
         return {
           id: String(record.id),
@@ -150,7 +149,7 @@ export const memberService = {
           data_de_admissao: toNullableString(record.data_de_admissao),
           situacao: toNullableString(record.situacao),
           codigo_localidade: toNullableString(record.codigo_localidade),
-          foto_url: record.fotos?.[0]?.foto_url ?? null,
+          foto_url: record.cpf ? photoService.getPhotoUrl(record.cpf) : null,
         };
       });
       return {
@@ -173,7 +172,6 @@ export const memberService = {
         data_de_admissao: string | null;
         situacao: string | null;
         codigo_localidade: string | null;
-        fotos: { foto_url: string }[] | null;
       };
       return {
         id: String(record.id),
@@ -183,7 +181,7 @@ export const memberService = {
         data_de_admissao: toNullableString(record.data_de_admissao),
         situacao: toNullableString(record.situacao),
         codigo_localidade: toNullableString(record.codigo_localidade),
-        foto_url: record.fotos?.[0]?.foto_url ?? null,
+        foto_url: record.cpf ? photoService.getPhotoUrl(record.cpf) : null,
       };
     });
     return {
@@ -241,19 +239,18 @@ export const memberService = {
       .select("*")
       .eq("id", id)
       .single();
-    if (error) {
-      console.error("Error fetching member:", error);
+
+    if (error || !data) {
       return null;
     }
-    if (!data) return null;
-    let photoUrl = null;
-    if (data.cpf && typeof data.cpf === "string") {
-      photoUrl = await photoService.getPhotoUrl(data.cpf);
-    }
+
+    const photoUrl = data.cpf ? photoService.getPhotoUrl(data.cpf) : null;
+
     const recordWithPhoto = {
       ...data,
       fotos: photoUrl ? [{ foto_url: photoUrl }] : [],
     };
+
     return fromMemberRecord(recordWithPhoto);
   },
   async updateMember(

@@ -40,7 +40,7 @@ export function DocumentMemberProvider({
       if (error) throw error;
       let photoUrl: string | null = null;
       if (data.cpf && typeof data.cpf === "string") {
-        photoUrl = await photoService.getPhotoUrl(data.cpf);
+        photoUrl = photoService.getPhotoUrl(data.cpf);
       }
       return {
         ...data,

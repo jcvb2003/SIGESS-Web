@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { requiredDateSchema } from "@/shared/utils/validators/dateValidators";
 
 const paymentTypeSchema = z.enum([
   "anuidade",
@@ -19,7 +20,7 @@ const paymentMethodSchema = z.enum([
 
 export const paymentItemSchema = z.object({
   tipo: paymentTypeSchema,
-  tipo_cobranca_id: z.string().uuid().optional(),
+  tipo_cobranca_id: z.uuid().optional(),
   competencia_ano: z.number().int().optional(),
   competencia_mes: z.number().int().min(1).max(12).optional(),
   valor: z.number().positive("Valor deve ser positivo"),
@@ -31,14 +32,15 @@ export const daeItemSchema = z.object({
   competencia_ano: z.number().int(),
   competencia_mes: z.number().int().min(1).max(12),
   valor: z.number().positive("Valor deve ser positivo"),
-  grupo_id: z.string().uuid().optional(),
+  grupo_id: z.uuid().optional(),
 });
 
 export const paymentSessionSchema = z.object({
   items: z.array(paymentItemSchema).min(1, "Adicione ao menos um item"),
   daes: z.array(daeItemSchema).optional(),
   paymentMethod: paymentMethodSchema,
-  paymentDate: z.string().min(1, "Data é obrigatória"),
+  paymentDate: requiredDateSchema("Data de pagamento inválida"),
 });
+
 
 export type PaymentSessionForm = z.infer<typeof paymentSessionSchema>;

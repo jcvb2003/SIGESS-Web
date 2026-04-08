@@ -1,4 +1,10 @@
 import { z } from "zod";
+import { 
+  birthDateSchema, 
+  documentIssueDateSchema, 
+  requiredDateSchema 
+} from "@/shared/utils/validators/dateValidators";
+
 const baseStringSchema = z.string().trim();
 const optionalStringSchema = z.string().trim().optional().or(z.literal(""));
 const numeroRegistroSchema = z
@@ -58,8 +64,8 @@ const cepSchema = z
   .regex(/^\d{5}-?\d{3}$/, "CEP deve ter formato válido")
   .optional()
   .or(z.literal(""));
-const dateSchema = z.string().min(1, "Data é obrigatória");
-const optionalDateSchema = z.string().optional().or(z.literal(""));
+// Removidos dateSchema e optionalDateSchema genéricos para usar os novos validadores importados
+
 const nitSchema = z.string().optional().or(z.literal(""));
 export const validateCpf = (cpf: unknown): boolean => {
   if (!cpf || typeof cpf !== "string") return false;
@@ -84,7 +90,8 @@ export const validateCpf = (cpf: unknown): boolean => {
 export const memberRegistrationSchema = z
   .object({
     codigoDoSocio: numeroRegistroSchema,
-    dataDeAdmissao: dateSchema,
+    dataDeAdmissao: requiredDateSchema("Data de admissão inválida"),
+
     codigoLocalidade: numberStringSchema,
     situacao: z
       .enum([
@@ -111,14 +118,15 @@ export const memberRegistrationSchema = z
           });
         }
       }),
-    dataDeNascimento: dateSchema,
+    dataDeNascimento: birthDateSchema,
+
     estadoCivil: z
       .enum([
-        "Solteiro(a)",
-        "Casado(a)",
-        "Divorciado(a)",
-        "Viúvo(a)",
-        "União Estável",
+        "SOLTEIRO(A)",
+        "CASADO(A)",
+        "DIVORCIADO(A)",
+        "VIÚVO(A)",
+        "UNIÃO ESTÁVEL",
       ])
       .or(z.literal(""))
       .superRefine((val, ctx) => {
@@ -169,7 +177,8 @@ export const memberRegistrationSchema = z
     email: emailSchema,
     rg: rgSchema,
     ufRg: optionalStringSchema,
-    dataExpedicaoRg: optionalDateSchema,
+    dataExpedicaoRg: documentIssueDateSchema,
+
     tituloEleitor: numberSpaceStringSchema,
     zonaEleitoral: zonaEleitoralSchema,
     secaoEleitoral: secaoEleitoralSchema,
@@ -179,8 +188,9 @@ export const memberRegistrationSchema = z
     nit: nitSchema,
     cei: optionalStringSchema,
     rgp: optionalStringSchema,
-    tipoRgp: z.enum(["INICIAL", "PROTOCOLO", "RECADASTRAMENTO"]).optional().or(z.literal("")),
-    emissaoRgp: optionalDateSchema,
+    tipoRgp: z.enum(["INICIAL", "PROTOCOLO", "RECADASTRAMENTO", "NONE"]).optional().or(z.literal("")),
+    emissaoRgp: documentIssueDateSchema,
+
     ufRgp: optionalStringSchema,
     senhaGovInss: optionalStringSchema,
     observacoes: optionalStringSchema,

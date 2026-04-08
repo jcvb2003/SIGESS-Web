@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_log_financeiro: {
+        Row: {
+          changed_by: string | null
+          created_at: string | null
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          operation: string
+          record_id: string
+          table_name: string
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          operation: string
+          record_id: string
+          table_name: string
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          operation?: string
+          record_id?: string
+          table_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_financeiro_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "User"
+            referencedColumns: ["id"]
+          },
+        ]
+      },
       entidade: {
         Row: {
           bairro: string | null
@@ -967,6 +1008,22 @@ export type Database = {
       }
     }
     Functions: {
+      cancel_payment_v1: {
+        Args: {
+          p_id: string
+          p_observation: string
+        }
+        Returns: undefined
+      },
+      get_birthday_members: {
+        Args: { p_day: number; p_month: number }
+        Returns: {
+          id: string
+          nome: string
+          data_nascimento: string
+          cpf: string
+        }[]
+      }
       get_next_cod_req: { Args: never; Returns: string }
       launch_bulk_contribution: {
         Args: { p_tipo_cobranca_id: string }

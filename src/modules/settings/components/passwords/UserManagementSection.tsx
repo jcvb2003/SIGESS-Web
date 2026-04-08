@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -24,7 +25,9 @@ import {
   UserCheck,
   Loader2,
   Mail,
-  Search
+  Search,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { useUserManagement } from "../../hooks/useUserManagement";
 import {
@@ -45,30 +48,62 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/shared/components/ui/tabs";
+import { Checkbox } from "@/shared/components/ui/checkbox";
 import { cn } from "@/shared/lib/utils";
 import { formatDate } from "@/shared/utils/formatters/dateFormatters";
 
 export function UserManagementSection() {
-  const { users, isLoading, inviteUser, toggleUserStatus, isProcessing } = useUserManagement();
+  const { users, loading, fetchUsers, toggleUserStatus, createUser, inviteUser } = useUserManagement();
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<"invite" | "create">("invite");
+  const [showPassword, setShowPassword] = useState(false);
+  const isProcessing = loading;
+  const isLoading = loading;
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
   
-  // Estado do formulário de convite
-  const [inviteForm, setInviteForm] = useState<{
-    email: string;
-    nome: string;
-    role: 'admin' | 'user';
-  }>({
+  // Estado do formulário de criação/convite
+  const [form, setForm] = useState({
     email: "",
     nome: "",
-    role: "user",
+    role: "operador_administrativo",
+    password: "",
+    autoConfirm: true,
   });
 
-  const handleInvite = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await inviteUser(inviteForm.email, inviteForm.nome, inviteForm.role);
-    setIsInviteOpen(false);
-    setInviteForm({ email: "", nome: "", role: "user" });
+    
+    let result;
+    if (activeTab === "invite") {
+      result = await inviteUser({
+        email: form.email,
+        nome: form.nome,
+        role: form.role,
+      });
+    } else {
+      result = await createUser({
+        email: form.email,
+        nome: form.nome,
+        role: form.role,
+        password: form.password,
+        email_confirm: form.autoConfirm,
+      });
+    }
+
+    if (result && !result.error) {
+      setIsInviteOpen(false);
+      setForm({ email: "", nome: "", role: "operador_administrativo", password: "", autoConfirm: true });
+    }
   };
 
   const filteredUsers = users.filter(u => 
@@ -96,22 +131,27 @@ export function UserManagementSection() {
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
-            <form onSubmit={handleInvite}>
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
               <DialogHeader>
-                <DialogTitle>Convidar Usuário</DialogTitle>
+                <DialogTitle>Gerenciar Usuário</DialogTitle>
                 <DialogDescription>
-                  Um convite será enviado para o e-mail informado. O usuário poderá definir sua senha ao acessar.
+                  Escolha entre enviar um convite ou criar o usuário manualmente com uma senha definida.
                 </DialogDescription>
+                <TabsList className="grid w-full grid-cols-2 mt-4">
+                  <TabsTrigger value="invite">Convite</TabsTrigger>
+                  <TabsTrigger value="create">Criação Manual</TabsTrigger>
+                </TabsList>
               </DialogHeader>
-              <div className="grid gap-4 py-4">
+
+              <form onSubmit={handleSubmit} className="space-y-4 py-4">
                 <div className="grid gap-2">
                   <Label htmlFor="nome">Nome Completo</Label>
                   <Input 
                     id="nome" 
                     placeholder="Ex: João Silva" 
                     required 
-                    value={inviteForm.nome}
-                    onChange={e => setInviteForm(prev => ({ ...prev, nome: e.target.value }))}
+                    value={form.nome}
+                    onChange={e => setForm(prev => ({ ...prev, nome: e.target.value }))}
                   />
                 </div>
                 <div className="grid gap-2">
@@ -121,35 +161,80 @@ export function UserManagementSection() {
                     type="email" 
                     placeholder="email@exemplo.com" 
                     required 
-                    value={inviteForm.email}
-                    onChange={e => setInviteForm(prev => ({ ...prev, email: e.target.value }))}
+                    value={form.email}
+                    onChange={e => setForm(prev => ({ ...prev, email: e.target.value }))}
                   />
                 </div>
+                
+                <TabsContent value="create" className="space-y-4 mt-0 border-none p-0">
+                  <div className="grid gap-2">
+                    <Label htmlFor="password">Senha Inicial</Label>
+                    <div className="relative">
+                      <Input 
+                        id="password" 
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••" 
+                        required={activeTab === "create"}
+                        minLength={6}
+                        value={form.password}
+                        onChange={e => setForm(prev => ({ ...prev, password: e.target.value }))}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="auto-confirm" 
+                      checked={form.autoConfirm}
+                      onCheckedChange={(checked) => setForm(prev => ({ ...prev, autoConfirm: !!checked }))}
+                    />
+                    <Label 
+                      htmlFor="auto-confirm" 
+                      className="text-sm font-medium leading-none cursor-pointer"
+                    >
+                      Confirmar usuário automaticamente
+                    </Label>
+                  </div>
+                </TabsContent>
+
                 <div className="grid gap-2">
                   <Label htmlFor="role">Nível de Acesso (Perfil)</Label>
                   <Select 
-                    value={inviteForm.role} 
-                    onValueChange={(v: 'admin' | 'user') => setInviteForm(prev => ({ ...prev, role: v }))}
+                    value={form.role} 
+                    onValueChange={(v) => setForm(prev => ({ ...prev, role: v }))}
                   >
                     <SelectTrigger id="role">
                       <SelectValue placeholder="Selecione o perfil" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="admin">Presidente (Administrador)</SelectItem>
-                      <SelectItem value="user">Auxiliar (Restrito)</SelectItem>
+                      <SelectItem value="operador_administrativo">Auxiliar (Restrito)</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-[10px] text-muted-foreground mt-1">
                     * Auxiliares não podem cancelar pagamentos ou alterar configurações críticas.
                   </p>
                 </div>
-              </div>
-              <DialogFooter>
-                <Button type="submit" disabled={isProcessing} className="w-full sm:w-auto font-bold">
-                  {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Enviar Convite"}
-                </Button>
-              </DialogFooter>
-            </form>
+
+                <DialogFooter className="pt-2">
+                  <Button type="submit" disabled={isProcessing} className="w-full font-bold">
+                    {isProcessing ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : activeTab === "invite" ? (
+                      "Enviar Convite"
+                    ) : (
+                      "Criar Usuário"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Tabs>
           </DialogContent>
         </Dialog>
       </CardHeader>
@@ -178,87 +263,89 @@ export function UserManagementSection() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading ? (
+              {isLoading && (
                 <TableRow>
                   <TableCell colSpan={5} className="h-32 text-center">
                     <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary/40" />
                     <p className="text-xs text-muted-foreground mt-2">Carregando usuários...</p>
                   </TableCell>
                 </TableRow>
-              ) : filteredUsers.length === 0 ? (
+              )}
+
+              {!isLoading && filteredUsers.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
                     Nenhum usuário encontrado.
                   </TableCell>
                 </TableRow>
-              ) : (
-                filteredUsers.map((u) => (
-                  <TableRow key={u.id} className="hover:bg-muted/10 transition-colors">
-                    <TableCell className="font-medium">
-                      <div className="flex flex-col">
-                        <span className="text-sm">{u.nome || "Sem nome"}</span>
-                        <span className="text-[10px] text-muted-foreground flex items-center gap-1 font-normal">
-                          <Mail className="h-2.5 w-2.5" />
-                          {u.email}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1.5">
-                        {u.role === 'admin' ? (
-                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 gap-1 py-0.5 px-2 font-bold uppercase text-[9px]">
-                            <ShieldCheck className="h-3 w-3" />
-                            Presidente
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 gap-1 py-0.5 px-2 font-bold uppercase text-[9px]">
-                            <ShieldAlert className="h-3 w-3" />
-                            Auxiliar
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground hidden md:table-cell font-mono">
-                      {formatDate(u.created_at)}
-                    </TableCell>
-                    <TableCell>
-                      {u.ativo ? (
-                        <Badge className="bg-emerald-500/10 text-emerald-700 border-emerald-500/20 shadow-none font-bold text-[10px]">
-                          Ativo
+              )}
+
+              {!isLoading && filteredUsers.length > 0 && filteredUsers.map((u) => (
+                <TableRow key={u.id} className="hover:bg-muted/10 transition-colors">
+                  <TableCell className="font-medium">
+                    <div className="flex flex-col">
+                      <span className="text-sm">{u.nome || "Sem nome"}</span>
+                      <span className="text-[10px] text-muted-foreground flex items-center gap-1 font-normal">
+                        <Mail className="h-2.5 w-2.5" />
+                        {u.email}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1.5">
+                      {u.role === 'admin' ? (
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 gap-1 py-0.5 px-2 font-bold uppercase text-[9px]">
+                          <ShieldCheck className="h-3 w-3" />
+                          Presidente
                         </Badge>
                       ) : (
-                        <Badge variant="destructive" className="bg-red-500/10 text-red-700 border-red-500/20 shadow-none font-bold text-[10px] hover:bg-red-500/10">
-                          Inativo
+                        <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 gap-1 py-0.5 px-2 font-bold uppercase text-[9px]">
+                          <ShieldAlert className="h-3 w-3" />
+                          Auxiliar
                         </Badge>
                       )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        disabled={isProcessing}
-                        className={cn(
-                          "h-8 gap-2 font-bold",
-                          u.ativo ? "text-red-600 hover:text-red-700 hover:bg-red-50" : "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-                        )}
-                        onClick={() => toggleUserStatus(u.id, u.ativo)}
-                      >
-                        {u.ativo ? (
-                          <>
-                            <UserX className="h-4 w-4" />
-                            <span className="hidden sm:inline">Desativar</span>
-                          </>
-                        ) : (
-                          <>
-                            <UserCheck className="h-4 w-4" />
-                            <span className="hidden sm:inline">Ativar</span>
-                          </>
-                        )}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground hidden md:table-cell font-mono">
+                    {formatDate(u.createdAt)}
+                  </TableCell>
+                  <TableCell>
+                    {u.ativo ? (
+                      <Badge className="bg-emerald-500/10 text-emerald-700 border-emerald-500/20 shadow-none font-bold text-[10px]">
+                        Ativo
+                      </Badge>
+                    ) : (
+                      <Badge variant="destructive" className="bg-red-500/10 text-red-700 border-red-500/20 shadow-none font-bold text-[10px] hover:bg-red-500/10">
+                        Inativo
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={isProcessing}
+                      className={cn(
+                        "h-8 gap-2 font-bold",
+                        u.ativo ? "text-red-600 hover:text-red-700 hover:bg-red-50" : "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                      )}
+                      onClick={() => toggleUserStatus(u.id, u.ativo)}
+                    >
+                      {u.ativo ? (
+                        <>
+                          <UserX className="h-4 w-4" />
+                          <span className="hidden sm:inline">Desativar</span>
+                        </>
+                      ) : (
+                        <>
+                          <UserCheck className="h-4 w-4" />
+                          <span className="hidden sm:inline">Ativar</span>
+                        </>
+                      )}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </div>

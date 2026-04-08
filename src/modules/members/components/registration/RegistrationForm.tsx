@@ -34,22 +34,24 @@ import { useUserMetadata } from "@/modules/auth/hooks/useUserMetadata";
 import { useEntityData } from "@/modules/settings/hooks/useEntityData";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
+
 interface RegistrationFormProps {
   readonly onSuccess?: () => void;
   readonly initialData?: MemberRegistrationForm;
-  readonly memberId?: string;
+  readonly memberUuid?: string;
 }
+
 export function RegistrationForm({
   onSuccess,
   initialData,
-  memberId,
+  memberUuid,
 }: Readonly<RegistrationFormProps>) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [memberCount, setMemberCount] = useState<number | null>(null);
   const { metadata } = useUserMetadata();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const isEditMode = !!memberId;
+  const isEditMode = !!memberUuid;
   const form = useForm<MemberRegistrationSchemaType, undefined, MemberRegistrationSchemaType>({
     resolver: zodResolver(memberRegistrationSchema) as import("react-hook-form").Resolver<MemberRegistrationSchemaType>,
     defaultValues: (initialData || initialMemberRegistrationForm) as DefaultValues<MemberRegistrationSchemaType>,
@@ -107,6 +109,10 @@ export function RegistrationForm({
     }
   };
 
+  const onValidationError = () => {
+    toast.error("Por favor, preencha todos os campos obrigatórios corretamente.");
+  };
+
   const handleRegistrationError = (err: unknown) => {
     const errorCode =
       typeof err === "object" && err !== null && "code" in err
@@ -128,8 +134,8 @@ export function RegistrationForm({
     try {
       const payload = data as MemberRegistrationForm;
       
-      if (isEditMode && memberId) {
-        await memberService.updateMember(memberId, payload);
+      if (isEditMode && memberUuid) {
+        await memberService.updateMember(memberUuid, payload);
         await handlePhotoActions(data);
         toast.success("Sócio atualizado com sucesso.");
       } else {
@@ -155,7 +161,7 @@ export function RegistrationForm({
   };
 
   const handleConfirmSubmit = () => {
-    form.handleSubmit((data) => onSubmit(data))();
+    form.handleSubmit((data) => onSubmit(data), onValidationError)();
   };
 
   const isLimitReached = !isEditMode && 
@@ -184,7 +190,7 @@ export function RegistrationForm({
               e.preventDefault();
               return;
             }
-            form.handleSubmit(() => setConfirmOpen(true))(e);
+            form.handleSubmit(() => setConfirmOpen(true), onValidationError)(e);
           }}
           className="space-y-8"
         >

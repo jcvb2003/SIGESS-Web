@@ -212,20 +212,16 @@ export const financeService = {
   },
 
   /**
-   * Cancela um lançamento (soft delete com audit trail).
+   * Cancela um lançamento (soft delete atômico via RPC).
    */
   async cancelPayment(id: string, observation: string): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
+    // Cast intermediário para unknown para satisfazer o linter sem 'any' e contornar tipos desatualizados
+    const rpcCall = (supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) => Promise<{ error: unknown }>);
     
-    const { error } = await supabase
-      .from("financeiro_lancamentos")
-      .update({
-        status: "cancelado",
-        cancelado_em: new Date().toISOString(),
-        cancelado_por: user?.id ?? null,
-        cancelamento_obs: observation,
-      })
-      .eq("id", id);
+    const { error } = await rpcCall("cancel_payment_v1", {
+      p_id: id,
+      p_obs: observation,
+    });
 
     if (error) throw error;
   },

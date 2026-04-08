@@ -34,10 +34,10 @@ function formatPhoneForStorage(phone: string): string | null {
   const cleaned = cleanInvisibleCharacters(phone);
   const numbers = cleaned.replaceAll(/\D/g, "");
   if (numbers.length === 11) {
-    return `(${numbers.slice(0, 2)})${numbers.slice(2, 7)}-${numbers.slice(7)}`;
+    return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7)}`;
   }
   if (numbers.length === 10) {
-    return `(${numbers.slice(0, 2)})${numbers.slice(2, 6)}-${numbers.slice(6)}`;
+    return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 6)}-${numbers.slice(6)}`;
   }
   return cleaned || null;
 }
@@ -107,7 +107,7 @@ export function toMemberInsertPayload(
     cei: formatCEI(input.cei),
     nit: formatNIT(input.nit),
     num_rgp: cleanInvisibleCharacters(input.rgp) || null,
-    tipo_rgp: input.tipoRgp || null,
+    tipo_rgp: (input.tipoRgp && input.tipoRgp !== "NONE") ? input.tipoRgp : null,
     emissao_rgp: input.emissaoRgp || null,
     rgp_uf: toUpperOrEmpty(input.ufRgp),
     situacao: input.situacao || "ATIVO",
@@ -172,7 +172,7 @@ export function fromMemberRecord(
     estadoCivil:
       (getString(
         record.estado_civil,
-      ) as MemberRegistrationForm["estadoCivil"]) || "Solteiro(a)",
+      ) as MemberRegistrationForm["estadoCivil"]) || "SOLTEIRO(A)",
     alfabetizado:
       (getString(
         record.alfabetizado,
@@ -187,7 +187,7 @@ export function fromMemberRecord(
     cei: getString(record.cei),
     nit: getString(record.nit),
     rgp: getString(record.num_rgp),
-    tipoRgp: (getString(record.tipo_rgp) as "INICIAL" | "PROTOCOLO" | "RECADASTRAMENTO" | "") || "",
+    tipoRgp: (getString(record.tipo_rgp) as "INICIAL" | "PROTOCOLO" | "RECADASTRAMENTO" | "NONE") || "NONE",
     emissaoRgp: getString(record.emissao_rgp),
     ufRgp: getString(record.rgp_uf),
     situacao: parseSituacao(record.situacao),

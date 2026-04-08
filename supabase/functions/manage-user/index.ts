@@ -36,30 +36,37 @@ async function handleInvite(admin: SupabaseClient, payload: Record<string, strin
   return data;
 }
 
-async function handleCreate(admin: SupabaseClient, payload: Record<string, string>) {
-  const { email, password, nome, role = 'user' } = payload;
+async function handleCreate(admin: SupabaseClient, payload: Record<string, string | boolean>) {
+  const { email, password, nome, role = 'user', email_confirm = true } = payload;
 
   const { data, error } = await admin.auth.admin.createUser({
-    email,
-    password,
+    email: email as string,
+    password: password as string,
     user_metadata: { nome, role },
     app_metadata: { role },
-    email_confirm: true,
+    email_confirm: email_confirm as boolean,
   });
   if (error) throw error;
 
   if (data.user) {
-    await admin.from('User').update({ nome, role, ativo: true }).eq('id', data.user.id);
+    // Sincronização manual pois não queremos esperar o trigger se houver lag
+    await admin.from('User').upsert({ 
+      id: data.user.id, 
+      email: data.user.email,
+      nome, 
+      role, 
+      ativo: true 
+    });
   }
   return data;
 }
 
 async function handleDeactivate(admin: SupabaseClient, payload: Record<string, string>) {
   const { userId } = payload;
-  const { error } = await admin.auth.admin.updateUserById(userId, { ban_duration: '87600h' });
+  const { error } = await admin.auth.admin.updateUserById(userId, { ban_duration: '876600h' });
   if (error) throw error;
   await admin.from('User').update({ ativo: false }).eq('id', userId);
-  return { success: true, message: 'Usuário desativado' };
+  return { success: true, message: 'Usuário desativado e banido no Auth' };
 }
 
 async function handleActivate(admin: SupabaseClient, payload: Record<string, string>) {

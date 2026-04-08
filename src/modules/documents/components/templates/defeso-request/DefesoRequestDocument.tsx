@@ -93,7 +93,7 @@ export function DefesoRequestDocument({
     isSaving,
     deleteRequest,
     isDeleting,
-  } = useRequestManagement(fullMemberData?.codigo_do_socio);
+  } = useRequestManagement(fullMemberData?.cpf);
   const { parameters } = useParametersData();
   const [requestDate, setRequestDate] = useState<string>(
     format(new Date(), "yyyy-MM-dd"),
@@ -108,8 +108,8 @@ export function DefesoRequestDocument({
   const { generatePdf, isGenerating } = usePdfGeneration();
   const resolvedModel = selectedModel || availableModels[0]?.id || "";
   const handleSave = async () => {
-    if (!fullMemberData?.codigo_do_socio) {
-      toast.error("Dados do sócio incompletos (código do sócio ausente).");
+    if (!fullMemberData?.cpf || !fullMemberData?.codigo_do_socio) {
+      toast.error("Dados do sócio incompletos (CPF ou matrícula ausente).");
       return;
     }
     const data = {

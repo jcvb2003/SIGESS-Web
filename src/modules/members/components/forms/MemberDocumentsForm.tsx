@@ -109,6 +109,7 @@ export function MemberDocumentsForm() {
               label="Tipo de RGP"
               placeholder="Selecione"
               options={[
+                { label: "Selecione", value: "NONE" },
                 { label: "Inicial", value: "INICIAL" },
                 { label: "Protocolo", value: "PROTOCOLO" },
                 { label: "Recadastramento", value: "RECADASTRAMENTO" },

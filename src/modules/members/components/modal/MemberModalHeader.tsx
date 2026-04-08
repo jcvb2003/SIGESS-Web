@@ -28,15 +28,17 @@ function MemberAvatar({
   isLoading: boolean;
 }>) {
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const [prevPhotoUrl, setPrevPhotoUrl] = useState(photoUrl);
 
-  // Reset image loaded state when photoUrl changes without useEffect to avoid cascading renders
+  // Reset image loaded and error states when photoUrl changes
   if (photoUrl !== prevPhotoUrl) {
     setPrevPhotoUrl(photoUrl);
     setImageLoaded(false);
+    setImageError(false);
   }
 
-  const showSpinner = !imageLoaded && (isLoading || !!photoUrl);
+  const showSpinner = !imageLoaded && !imageError && (isLoading || !!photoUrl);
 
   const getInitials = (name: string) => {
     return name
@@ -48,8 +50,8 @@ function MemberAvatar({
   };
 
   const renderAvatarContent = () => {
-    // Se não há foto e terminou de carregar o metadado, mostra as iniciais imediatamente
-    if (!photoUrl && !isLoading) {
+    // Se não há foto, houve erro no carregamento ou terminou o carregamento inicial sem URL
+    if ((!photoUrl || imageError) && !isLoading) {
       return (
         <div className="flex flex-col items-center gap-0.5 sm:gap-1 text-muted-foreground">
           <User className="h-5 w-5 sm:h-8 sm:w-8 opacity-40" />
@@ -65,11 +67,12 @@ function MemberAvatar({
         {showSpinner && (
           <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin text-muted-foreground" />
         )}
-        {photoUrl && (
+        {photoUrl && !imageError && (
           <img
             src={photoUrl}
             alt={member.nome}
             onLoad={() => setImageLoaded(true)}
+            onError={() => setImageError(true)}
             className={`h-full w-full object-cover transition-opacity duration-300 ${
               imageLoaded ? "opacity-100" : "opacity-0 absolute"
             }`}
@@ -79,6 +82,8 @@ function MemberAvatar({
     );
   };
 
+  const canShowDialog = photoUrl && !imageError;
+
   const Content = (
     <div
       className={`
@@ -87,7 +92,7 @@ function MemberAvatar({
         border-2 border-border/50
         flex items-center justify-center shrink-0
         shadow-md ring-2 ring-background
-        ${photoUrl ? "cursor-pointer hover:opacity-90 hover:shadow-lg transition-all" : ""}
+        ${canShowDialog ? "cursor-pointer hover:opacity-90 hover:shadow-lg transition-all" : ""}
       `}
     >
       {renderAvatarContent()}
@@ -96,13 +101,13 @@ function MemberAvatar({
 
   return (
     <Dialog>
-      {photoUrl ? (
+      {canShowDialog ? (
         <DialogTrigger asChild>{Content}</DialogTrigger>
       ) : (
         Content
       )}
 
-      {photoUrl && (
+      {canShowDialog && (
         <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-transparent border-none shadow-none">
           <DialogTitle className="sr-only">Foto de {member.nome}</DialogTitle>
           <div className="flex items-center justify-center">

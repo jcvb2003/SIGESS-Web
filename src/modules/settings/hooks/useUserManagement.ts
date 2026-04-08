@@ -1,95 +1,112 @@
-import { isLegacyMode, LEGACY_TENANT_CODE } from "@/config/appMode";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/shared/lib/supabase/client";
-import { toast } from "sonner";
+import { useState, useCallback } from 'react';
+import { supabase } from '@/shared/lib/supabase/client';
+import { toast } from 'sonner';
 
-export interface UserAccount {
+export interface User {
   id: string;
   email: string;
   nome: string | null;
-  role: 'admin' | 'user';
+  role: 'admin' | 'operador_financeiro' | 'operador_administrativo' | 'consulta';
   ativo: boolean;
-  created_at: string;
+  max_socios: number | null;
+  createdAt: string;
 }
 
 export function useUserManagement() {
-  const queryClient = useQueryClient();
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // 1. Buscar todos os usuários do banco (permitido apenas para admins via RLS)
-  const { data: users = [], isLoading } = useQuery({
-    queryKey: ['system-users'],
-    queryFn: async () => {
+  const fetchUsers = useCallback(async () => {
+    setLoading(true);
+    try {
+      /**
+       * Nota de RLS (N-01):
+       * A policy foi corrigida via migration 20240407_ph1_hardening.sql.
+       * Agora admins autenticados podem listar todos os usuários nativamente
+       * sem necessidade de bypass ou Edge Functions para visualização.
+       */
       const { data, error } = await supabase
         .from('User')
         .select('*')
-        .order('role', { ascending: true }) // Admins primeiro
-        .order('nome', { ascending: true });
-      
+        .order('nome');
+
       if (error) throw error;
-      return (data as unknown) as UserAccount[];
-
+      setUsers((data as unknown as User[]) || []);
+    } catch (err: unknown) {
+      console.error('Erro ao buscar usuários:', err);
+      toast.error('Ocorreu um erro ao carregar os usuários');
+    } finally {
+      setLoading(false);
     }
-  });
+  }, []);
 
-  // 2. Convidar/Criar Usuário (Chama a Edge Function)
-  const manageUserMutation = useMutation({
-    mutationFn: async ({ action, payload }: { action: string, payload: Record<string, unknown> }) => {
+  const inviteUser = async (payload: { email: string; nome: string; role: string }) => {
+    try {
       const { data, error } = await supabase.functions.invoke('manage-user', {
-        body: { action, payload }
+        body: { action: 'invite', payload },
       });
       if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['system-users'] });
-    },
-    onError: (error: Error) => {
-      toast.error(`Erro na operação: ${error.message}`);
+      toast.success('Convite enviado com sucesso');
+      await fetchUsers();
+      return { data, error: null };
+    } catch (err: unknown) {
+      console.error('Erro ao convidar usuário:', err);
+      toast.error('Erro ao enviar convite');
+      return { data: null, error: err };
     }
-  });
+  };
 
-  const inviteUser = async (email: string, nome: string, role: 'admin' | 'user') => {
-    let tenantCode = typeof globalThis !== 'undefined' && globalThis.localStorage 
-      ? (globalThis.localStorage.getItem('sigess_tenant') ?? '') 
-      : '';
-      
-    if (!tenantCode && isLegacyMode && LEGACY_TENANT_CODE) {
-      tenantCode = LEGACY_TENANT_CODE;
+  const createUser = async (payload: { 
+    email: string; 
+    nome: string; 
+    role: string; 
+    password?: string;
+    email_confirm?: boolean;
+  }) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('manage-user', {
+        body: { action: 'create', payload },
+      });
+      if (error) throw error;
+      toast.success('Usuário criado com sucesso');
+      await fetchUsers();
+      return { data, error: null };
+    } catch (err: unknown) {
+      console.error('Erro ao criar usuário:', err);
+      toast.error('Erro ao criar usuário com senha');
+      return { data: null, error: err };
     }
-
-    toast.promise(
-      manageUserMutation.mutateAsync({
-        action: 'invite',
-        payload: { email, nome, role, tenantCode }
-      }),
-      {
-        loading: 'Enviando convite...',
-        success: 'Convite enviado com sucesso!',
-        error: 'Erro ao enviar convite.'
-      }
-    );
   };
 
   const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
-    const action = currentStatus ? 'deactivate' : 'activate';
-    toast.promise(
-      manageUserMutation.mutateAsync({
-        action,
-        payload: { userId }
-      }),
-      {
-        loading: currentStatus ? 'Desativando usuário...' : 'Ativando usuário...',
-        success: currentStatus ? 'Usuário desativado.' : 'Usuário ativado.',
-        error: 'Erro ao alterar status.'
-      }
-    );
+    setLoading(true);
+    try {
+      const action = currentStatus ? 'deactivate' : 'activate';
+      const { error } = await supabase.functions.invoke('manage-user', {
+        body: { action, payload: { userId } },
+      });
+
+      if (error) throw error;
+      
+      setUsers(prev => prev.map(u => 
+        u.id === userId ? { ...u, ativo: !currentStatus } : u
+      ));
+      
+      toast.success(`Usuário ${currentStatus ? 'desativado' : 'ativado'} com sucesso`);
+    } catch (err: unknown) {
+      console.error('Erro ao alterar status:', err);
+      toast.error('Erro ao alterar status (verifique permissões)');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return {
     users,
-    isLoading,
-    inviteUser,
+    loading,
+    fetchUsers,
     toggleUserStatus,
-    isProcessing: manageUserMutation.isPending
+    inviteUser,
+    createUser
   };
 }

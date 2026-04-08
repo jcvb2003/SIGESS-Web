@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { formatDateOrDash } from "@/shared/utils/date";
 import { documentService } from "../services/documentService";
 import { documentQueryKeys } from "../queryKeys";
 import type {
-  DocumentListItem,
   DocumentSearchParams,
 } from "../types/document.types";
 export function useExistingRequests(params: DocumentSearchParams) {
@@ -29,21 +29,11 @@ const formatCpf = (value: string | null): string => {
   if (!value) {
     return "-";
   }
-  const digits = value.replace(/\D/g, "");
+  const digits = value.replaceAll(/\D/g, "");
   if (digits.length !== 11) {
     return value;
   }
   return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
-};
-const formatDate = (value: string | null): string => {
-  if (!value) {
-    return "-";
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-  return date.toLocaleDateString("pt-BR");
 };
 const getStatusLabel = (status: string | null): string => {
   if (!status) {
@@ -83,16 +73,12 @@ export function useDocumentsListController() {
     }
   };
   const handleNewDocument = () => {
-    console.log("Novo documento");
   };
-  const handleViewPdf = (document: DocumentListItem) => {
-    console.log("Visualizar PDF", document.id);
+  const handleViewPdf = () => {
   };
-  const handleReprint = (document: DocumentListItem) => {
-    console.log("Reimprimir documento", document.id);
+  const handleReprint = () => {
   };
-  const handleDelete = (document: DocumentListItem) => {
-    console.log("Excluir registro de documento", document.id);
+  const handleDelete = () => {
   };
   return {
     search: {
@@ -121,7 +107,7 @@ export function useDocumentsListController() {
     },
     formatters: {
       formatCpf,
-      formatDate,
+      formatDate: formatDateOrDash,
       getStatusLabel,
     },
   };

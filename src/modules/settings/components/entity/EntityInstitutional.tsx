@@ -6,6 +6,7 @@ import {
   CardTitle,
 } from "@/shared/components/ui/card";
 import { TextField } from "@/shared/components/form-fields/fields/TextField";
+import { DateField } from "@/shared/components/form-fields/fields/DateField";
 import { EntityFormData } from "../../hooks/useEntityValidation";
 export function EntityInstitutional() {
   const { control } = useFormContext<EntityFormData>();
@@ -39,7 +40,7 @@ export function EntityInstitutional() {
             placeholder="Polo"
             autoUppercase={true}
           />
-          <TextField
+          <DateField
             control={control}
             name="foundation"
             label="Fundação"

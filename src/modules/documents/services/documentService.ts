@@ -19,12 +19,13 @@ const toNullableString = (value: unknown): string | null => {
 };
 export const documentService = {
   async getRequestByMember(
-    memberId: string,
+    memberCpf: string,
   ): Promise<ServiceResponse<DocumentListItem>> {
     const { data, error } = await supabase
       .from("requerimentos")
       .select("id, cod_req, data, cpf, socios!inner(nome, codigo_do_socio)")
-      .eq("cpf", memberId) // Nota: codigo_do_socio mudou para cpf ser a FK base? Espera, o memberId vindo era o codigo_do_socio ou CPF? O frontend passava memberId. Se era memberId = CPF, OK. Vou verificar na assinatura.
+      .eq("cpf", memberCpf)
+      // Nota: codigo_do_socio mudou para cpf ser a FK base? Espera, o memberId vindo era o codigo_do_socio ou CPF? O frontend passava memberId. Se era memberId = CPF, OK. Vou verificar na assinatura.
       .order("data", { ascending: false })
       .limit(1)
       .maybeSingle();

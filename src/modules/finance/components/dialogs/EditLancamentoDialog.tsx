@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { requiredDateSchema } from "@/shared/utils/validators/dateValidators";
+
 import {
   Dialog,
   DialogContent,
@@ -18,7 +20,8 @@ import type { FinanceLancamento, PaymentMethod } from "../../types/finance.types
 
 const editLancamentoSchema = z.object({
   valor: z.number().min(0.01, "O valor deve ser maior que zero"),
-  data_pagamento: z.string().min(1, "A data é obrigatória"),
+  data_pagamento: requiredDateSchema("A data do pagamento é inválida"),
+
   forma_pagamento: z.string().min(1, "A forma de pagamento é obrigatória"),
   descricao: z.string().optional(),
 });

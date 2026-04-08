@@ -11,12 +11,14 @@ export function usePhotoManager({
   cpf,
   initialPhotoUrl,
 }: UsePhotoManagerProps = {}) {
-  const [photoUrl, setPhotoUrl] = useState<string | null>(
-    initialPhotoUrl || null,
-  );
+  const [photoUrl, setPhotoUrl] = useState<string | null>(() => {
+    if (initialPhotoUrl) return initialPhotoUrl;
+    if (cpf) return photoService.getPhotoUrl(cpf);
+    return null;
+  });
   const [stagedFile, setStagedFile] = useState<File | null>(null);
   const [stagedDelete, setStagedDelete] = useState(false);
-  const [isLoading, setIsLoading] = useState(!!cpf);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -29,7 +31,7 @@ export function usePhotoManager({
       try {
         setIsLoading(true);
         setError(null);
-        const url = await photoService.getPhotoUrl(cpf);
+        const url = photoService.getPhotoUrl(cpf);
         if (isMounted) {
           setPhotoUrl(url || initialPhotoUrl || null);
         }
@@ -93,10 +95,9 @@ export function usePhotoManager({
     deletePhoto: handleDelete,
     refreshPhoto: () => {
       if (cpf) {
-        photoService.getPhotoUrl(cpf).then((url) => {
-          if (url) setPhotoUrl(`${url}&t=${Date.now()}`);
-          else setPhotoUrl(null);
-        });
+        const url = photoService.getPhotoUrl(cpf);
+        if (url) setPhotoUrl(`${url}&t=${Date.now()}`);
+        else setPhotoUrl(null);
       }
     },
   };

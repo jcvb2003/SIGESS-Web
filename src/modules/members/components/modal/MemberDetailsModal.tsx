@@ -30,18 +30,18 @@ import {
 } from "@/shared/components/ui/tooltip";
 
 interface MemberDetailsModalProps {
-  memberId: string | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onEdit: (id: string, member: MemberRegistrationForm) => void;
-  onDelete: (id: string, member: MemberRegistrationForm) => void;
-  onDocuments: (id: string, member: MemberRegistrationForm) => void;
+  readonly open: boolean;
+  readonly onOpenChange: (open: boolean) => void;
+  readonly memberUuid: string | null;
+  readonly onEdit: (uuid: string, member: MemberRegistrationForm) => void;
+  readonly onDelete: (uuid: string, member: MemberRegistrationForm) => void;
+  readonly onDocuments: (uuid: string, member: MemberRegistrationForm) => void;
 }
 
 export function MemberDetailsModal({
-  memberId,
   open,
   onOpenChange,
+  memberUuid,
   onEdit,
   onDelete,
   onDocuments,
@@ -52,19 +52,19 @@ export function MemberDetailsModal({
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["member", memberId],
-    queryFn: () => (memberId ? memberService.getMemberById(memberId) : null),
-    enabled: !!memberId && open,
+    queryKey: ["member", memberUuid],
+    queryFn: () => (memberUuid ? memberService.getMemberById(memberUuid) : null),
+    enabled: !!memberUuid && open,
   });
 
   const handleEdit = () => {
-    if (memberId && member) onEdit(memberId, member);
+    if (memberUuid && member) onEdit(memberUuid, member);
   };
   const handleDelete = () => {
-    if (memberId && member) onDelete(memberId, member);
+    if (memberUuid && member) onDelete(memberUuid, member);
   };
   const handleDocuments = () => {
-    if (memberId && member) onDocuments(memberId, member);
+    if (memberUuid && member) onDocuments(memberUuid, member);
   };
   const handleFinance = () => {
     if (member?.cpf) {

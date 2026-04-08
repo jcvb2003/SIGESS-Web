@@ -39,11 +39,17 @@ export function MemberPhotoField() {
   const { setValue } = useFormContext();
   const photoUrl = useWatch({ control, name: "photoPreviewUrl" }) || managerPhotoUrl;
 
+  const [hasImageError, setHasImageError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingPhoto, setPendingPhoto] = useState<{
     file: File;
     previewUrl: string;
   } | null>(null);
+
+  // Reset image error state when photoUrl changes (important for new uploads)
+  useEffect(() => {
+    setHasImageError(false);
+  }, [photoUrl]);
 
   // --- QR Code Photo Upload ---
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
@@ -226,12 +232,13 @@ export function MemberPhotoField() {
       );
     }
 
-    if (photoUrl) {
+    if (photoUrl && !hasImageError) {
       return (
         <>
           <img
             src={photoUrl}
             alt="Foto do sócio"
+            onError={() => setHasImageError(true)}
             className="h-full w-full object-cover"
           />
 
@@ -280,11 +287,11 @@ export function MemberPhotoField() {
     <div className="flex flex-col items-center gap-2">
       <div 
         className="group relative w-[7.5rem] h-[9.5rem] rounded-lg border border-dashed border-border hover:border-primary/40 bg-muted/30 overflow-hidden transition-all duration-200"
-        aria-label={photoUrl ? "Foto do sócio" : "Adicionar foto do sócio"}
+        aria-label={photoUrl && !hasImageError ? "Foto do sócio" : "Adicionar foto do sócio"}
       >
         {renderContent()}
 
-        {!photoUrl && (
+        {(!photoUrl || hasImageError) && (
           <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-2 z-10 w-full px-2">
             <Button
               type="button"

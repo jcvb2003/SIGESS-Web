@@ -59,7 +59,7 @@ export default function MemberDetailsPage() {
         </p>
       </div>
 
-      <RegistrationForm initialData={member} memberId={id} />
+      <RegistrationForm initialData={member} memberUuid={id} />
     </div>
   );
 }

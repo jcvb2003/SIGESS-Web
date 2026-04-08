@@ -15,7 +15,7 @@ import { Input } from "@/shared/components/ui/input";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { createClient } from "@supabase/supabase-js";
-import { resolveTenant } from "@/config/tenants";
+import { resolveTenant, resolveTenantBySupabaseUrl } from "@/config/tenants";
 import { initSupabaseClient } from "@/shared/lib/supabase/client";
 
 const passwordSchema = z.object({
@@ -48,9 +48,6 @@ function extractTokensFromHash(): { accessToken: string | null; refreshToken: st
   };
 }
 
-import { isLegacyMode, LEGACY_TENANT_CODE } from "@/config/appMode";
-import { resolveTenantBySupabaseUrl } from "@/config/tenants";
-
 /**
  * Tenta decodificar o tenant a partir do access_token presente no hash da URL.
  * O access_token é um JWT onde o "iss" (issuer) tem a URL do Supabase Project.
@@ -72,8 +69,7 @@ function extractTenantFromToken(token: string | null): string | null {
 }
 
 /**
- * Lê o código do tenant do query param `?tenant=` da URL, ou tenta deduzir do access_token caso a query seja truncada,
- * ou usa o fallback do modo legado.
+ * Lê o código do tenant do query param `?tenant=` da URL, ou tenta deduzir do access_token.
  */
 function extractTenantFromUrl(accessToken: string | null): string | null {
   if (globalThis.window === undefined) return null;
@@ -81,12 +77,7 @@ function extractTenantFromUrl(accessToken: string | null): string | null {
   const param = new URLSearchParams(globalThis.location.search).get("tenant");
   if (param) return param;
 
-  const tenantFromToken = extractTenantFromToken(accessToken);
-  if (tenantFromToken) return tenantFromToken;
-
-  if (isLegacyMode && LEGACY_TENANT_CODE) return LEGACY_TENANT_CODE;
-
-  return null;
+  return extractTenantFromToken(accessToken);
 }
 
 export function SetPasswordForm() {

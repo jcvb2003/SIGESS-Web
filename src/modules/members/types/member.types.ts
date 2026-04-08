@@ -5,11 +5,11 @@ import type {
 } from "@/shared/lib/supabase/database.types";
 export type SexoValue = "MASCULINO" | "FEMININO";
 export type EstadoCivilValue =
-  | "Solteiro(a)"
-  | "Casado(a)"
-  | "Divorciado(a)"
-  | "Viúvo(a)"
-  | "União Estável"
+  | "SOLTEIRO(A)"
+  | "CASADO(A)"
+  | "DIVORCIADO(A)"
+  | "VIÚVO(A)"
+  | "UNIÃO ESTÁVEL"
   | "";
 export type AlfabetizadoValue = "SIM" | "NÃO";
 export type SituacaoValue =
@@ -66,7 +66,7 @@ export interface MemberRegistrationForm {
   cei: string;
   nit: string;
   rgp: string;
-  tipoRgp: "INICIAL" | "PROTOCOLO" | "RECADASTRAMENTO" | "";
+  tipoRgp: "INICIAL" | "PROTOCOLO" | "RECADASTRAMENTO" | "NONE";
   emissaoRgp: string;
   ufRgp: string;
   situacao: SituacaoValue;
@@ -148,7 +148,7 @@ export const initialMemberRegistrationForm: MemberRegistrationForm = {
   cei: "",
   nit: "",
   rgp: "",
-  tipoRgp: "",
+  tipoRgp: "NONE",
   emissaoRgp: "",
   ufRgp: "PA",
   situacao: "ATIVO",

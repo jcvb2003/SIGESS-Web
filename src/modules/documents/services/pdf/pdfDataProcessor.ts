@@ -77,7 +77,7 @@ export function processDocumentData(
 
     // Embarcação / RGP
     num_rgp: member.num_rgp || member.rgp || "",
-    rgp_uf: member.rgp_uf || member.uf_rgp || member.uf || "",
+    rgp_uf: member.rgp_uf || member.uf_rgp || "",
     data_rgp: dataRgp,
 
     // Defeso / Portarias

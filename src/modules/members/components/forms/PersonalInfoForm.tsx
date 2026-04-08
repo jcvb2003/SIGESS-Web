@@ -21,11 +21,11 @@ export function PersonalInfoForm() {
     { label: "FEMININO", value: "FEMININO" },
   ];
   const estadoCivilOptions = [
-    { label: "SOLTEIRO(A)", value: "Solteiro(a)" },
-    { label: "CASADO(A)", value: "Casado(a)" },
-    { label: "DIVORCIADO(A)", value: "Divorciado(a)" },
-    { label: "VIÚVO(A)", value: "Viúvo(a)" },
-    { label: "UNIÃO ESTÁVEL", value: "União Estável" },
+    { label: "SOLTEIRO(A)", value: "SOLTEIRO(A)" },
+    { label: "CASADO(A)", value: "CASADO(A)" },
+    { label: "DIVORCIADO(A)", value: "DIVORCIADO(A)" },
+    { label: "VIÚVO(A)", value: "VIÚVO(A)" },
+    { label: "UNIÃO ESTÁVEL", value: "UNIÃO ESTÁVEL" },
   ];
   const alfabetizadoOptions = [
     { label: "SIM", value: "SIM" },

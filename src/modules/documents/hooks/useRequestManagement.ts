@@ -1,20 +1,23 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { documentService } from "../services/documentService";
 import { toast } from "sonner";
-export function useRequestManagement(memberId?: string) {
+
+export function useRequestManagement(memberCpf?: string) {
   const queryClient = useQueryClient();
   type SaveRequestPayload = Parameters<typeof documentService.saveRequest>[0];
+
   const { data: savedRequest, isLoading: isLoadingRequest } = useQuery({
-    queryKey: ["documents", "request", memberId],
+    queryKey: ["documents", "request", memberCpf],
     queryFn: async () => {
-      if (!memberId) return null;
+      if (!memberCpf) return null;
       const { data, error } =
-        await documentService.getRequestByMember(memberId);
+        await documentService.getRequestByMember(memberCpf);
       if (error) throw error;
       return data;
     },
-    enabled: !!memberId,
+    enabled: !!memberCpf,
   });
+
   const saveMutation = useMutation({
     mutationFn: async (data: SaveRequestPayload) => {
       const { data: result, error } = await documentService.saveRequest(data);
@@ -22,7 +25,7 @@ export function useRequestManagement(memberId?: string) {
       return result;
     },
     onSuccess: (data) => {
-      queryClient.setQueryData(["documents", "request", memberId], data);
+      queryClient.setQueryData(["documents", "request", memberCpf], data);
       toast.success("Requerimento salvo com sucesso!");
     },
     onError: (error) => {
@@ -30,13 +33,14 @@ export function useRequestManagement(memberId?: string) {
       toast.error("Erro ao salvar requerimento.");
     },
   });
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await documentService.deleteRequest(id);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.setQueryData(["documents", "request", memberId], null);
+      queryClient.setQueryData(["documents", "request", memberCpf], null);
       toast.success("Requerimento excluído com sucesso!");
     },
     onError: (error) => {

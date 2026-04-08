@@ -24,6 +24,9 @@ import { isMonthInDefeso } from "../../utils/defesoUtils";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { formatNumericInput } from "../shared/formatters";
 import { generateUUID } from "@/shared/utils/uuid";
+import { isNotFutureDate } from "@/shared/utils/validators/dateValidators";
+import { toast } from "sonner";
+
 import { MemberFinancePreview } from "../shared/MemberFinancePreview";
 import { PaymentMethodSelect } from "../shared/PaymentMethodSelect";
 import {
@@ -137,7 +140,18 @@ export function DAEDialog({
       valor: individualValue,
     }));
 
+    if (!isNotFutureDate(dataRecebimento)) {
+      toast.error("A data de recebimento não pode ser futura");
+      return;
+    }
+
+    if (boletoPago && !isNotFutureDate(dataPagamentoBoleto)) {
+      toast.error("A data de pagamento no banco não pode ser futura");
+      return;
+    }
+
     await paymentMutation.mutateAsync({
+
       sessaoId,
       socioCpf,
       items: [],

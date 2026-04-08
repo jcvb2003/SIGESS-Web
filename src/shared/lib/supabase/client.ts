@@ -40,25 +40,7 @@ export function initSupabaseClient(tenantCode: string): SupabaseClient<Database>
   return _client;
 }
 
-/**
- * Inicializa o cliente Supabase em modo legado, usando as variáveis de ambiente
- * genéricas (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY) dos projetos antigos da Vercel.
- * NÃO persiste tenant no localStorage — o cliente é recriado a cada sessão.
- */
-export function initLegacyClient(): SupabaseClient<Database> {
-  const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-  const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
-  if (!url || !key) {
-    throw new Error('Variáveis de ambiente legadas (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY) não configuradas.');
-  }
-  if (_client) return _client;
-  const isPasswordRoute = typeof globalThis !== 'undefined' && globalThis.location.pathname.startsWith('/password');
-  _client = createClient<Database>(url, key, {
-    auth: { detectSessionInUrl: !isPasswordRoute }
-  });
-  injectPreconnect(url);
-  return _client;
-}
+
 
 export function getSupabaseClient(): SupabaseClient<Database> {
   if (_client) return _client;
