@@ -10,17 +10,19 @@ BEGIN;
 -- -----------------------------------------------------------------------------
 
 -- public.update_updated_at_column já possui search_path no schema dump.
--- Aplicando aos demais:
-
-ALTER FUNCTION public.check_member_limit() SET search_path TO 'public', 'pg_temp';
-ALTER FUNCTION public.handle_delete_user() SET search_path TO 'public', 'pg_temp';
-ALTER FUNCTION public.handle_new_user() SET search_path TO 'public', 'pg_temp';
-ALTER FUNCTION public.handle_update_user() SET search_path TO 'public', 'pg_temp';
-ALTER FUNCTION public.launch_bulk_contribution(uuid) SET search_path TO 'public', 'pg_temp';
-ALTER FUNCTION public.update_member_regime(text, text, text) SET search_path TO 'public', 'pg_temp';
-ALTER FUNCTION public.register_payment_session(text, uuid, text, date, jsonb, jsonb) SET search_path TO 'public', 'pg_temp';
-ALTER FUNCTION public.confirmar_upload_foto(uuid, text) SET search_path TO 'public', 'pg_temp';
-ALTER FUNCTION public.update_dae_group(uuid, integer, jsonb) SET search_path TO 'public', 'pg_temp';
+-- Aplicando aos demais de forma segura:
+DO $$ 
+BEGIN 
+  IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'check_member_limit') THEN ALTER FUNCTION public.check_member_limit() SET search_path TO 'public', 'pg_temp'; END IF;
+  IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'handle_delete_user') THEN ALTER FUNCTION public.handle_delete_user() SET search_path TO 'public', 'pg_temp'; END IF;
+  IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'handle_new_user') THEN ALTER FUNCTION public.handle_new_user() SET search_path TO 'public', 'pg_temp'; END IF;
+  IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'handle_update_user') THEN ALTER FUNCTION public.handle_update_user() SET search_path TO 'public', 'pg_temp'; END IF;
+  IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'launch_bulk_contribution') THEN ALTER FUNCTION public.launch_bulk_contribution(uuid) SET search_path TO 'public', 'pg_temp'; END IF;
+  IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_member_regime') THEN ALTER FUNCTION public.update_member_regime(text, text, text) SET search_path TO 'public', 'pg_temp'; END IF;
+  IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'register_payment_session') THEN ALTER FUNCTION public.register_payment_session(text, uuid, text, date, jsonb, jsonb) SET search_path TO 'public', 'pg_temp'; END IF;
+  IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'confirmar_upload_foto') THEN ALTER FUNCTION public.confirmar_upload_foto(uuid, text) SET search_path TO 'public', 'pg_temp'; END IF;
+  IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_dae_group') THEN ALTER FUNCTION public.update_dae_group(uuid, integer, jsonb) SET search_path TO 'public', 'pg_temp'; END IF;
+END $$;
 
 -- -----------------------------------------------------------------------------
 -- 2. N-01: UPGRADE RLS POLICY PARA "User" (Admins podem ler todos)

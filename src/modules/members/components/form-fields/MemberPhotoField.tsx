@@ -5,6 +5,7 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { compressMemberPhoto } from "@/shared/utils/image-compression";
 import { supabase } from "@/shared/lib/supabase/client";
+import { resolveTenantBySupabaseUrl } from "@/config/tenants";
 import { QRCodeCanvas } from "qrcode.react";
 import {
   Dialog,
@@ -69,10 +70,12 @@ export function MemberPhotoField() {
     
     setIsGeneratingToken(true);
     try {
+      const cleanCpf = cpf.replace(/\D/g, "");
+      
       /* eslint-disable @typescript-eslint/no-explicit-any */
       const { data, error } = await ((supabase
         .from("foto_upload_tokens" as any) as any)
-        .insert([{ socio_cpf: cpf }])
+        .insert([{ socio_cpf: cleanCpf }])
         .select("token")
         .single());
       /* eslint-enable @typescript-eslint/no-explicit-any */
@@ -280,7 +283,7 @@ export function MemberPhotoField() {
     );
   };
 
-  const tenantCode = localStorage.getItem('sigess_tenant') || '';
+  const tenantCode = localStorage.getItem('sigess_tenant') || resolveTenantBySupabaseUrl(import.meta.env.VITE_SUPABASE_URL) || '';
   const uploadUrl = `${globalThis.location.origin}/foto-upload?t=${qrToken}&tenant=${tenantCode}`;
 
   return (

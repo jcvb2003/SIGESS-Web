@@ -14,41 +14,48 @@ dotenv.config();
 type EnvSource = Record<string, string | undefined>;
 
 /**
- * Migration Runner Multi-Tenant
+ * Migration Runner Multi-Tenant Evolution
  * 
- * Executa um arquivo SQL em todos os tenants configurados no .env
- * Usa o Proxy IPv4 do Supabase (Pooler em modo Session porta 5432)
+ * Agora suporta sincronização automática (--sync), filtros por tenant
+ * e rastreio de migrações aplicadas.
  */
 async function runMigrations() {
   const args = process.argv.slice(2);
   const migrationFile = args.find(a => a.startsWith('--file='))?.split('=')[1];
+  const targetTenant = args.find(a => a.startsWith('--tenant='))?.split('=')[1];
+  const isSync = args.includes('--sync');
   const isDryRun = args.includes('--dry-run');
+  const isListApplied = args.includes('--list-applied');
 
-  if (!migrationFile) {
-    console.error('❌ Erro: Especifique o arquivo de migration com --file=nome_do_arquivo.sql');
+  if (!migrationFile && !isSync && !isListApplied) {
+    console.error('❌ Erro: Use --file=nome.sql, --sync ou --list-applied');
+    printUsage();
     process.exit(1);
   }
 
-  const sqlPath = path.resolve(process.cwd(), 'supabase', 'migrations', migrationFile);
-  if (!fs.existsSync(sqlPath)) {
-    console.error(`❌ Erro: Arquivo não encontrado em ${sqlPath}`);
-    process.exit(1);
-  }
-
-  const sqlContent = fs.readFileSync(sqlPath, 'utf8');
+  const migrationsDir = path.resolve(process.cwd(), 'supabase', 'migrations');
   
-  // Constrói mapa de tenants usando o injetor de process.env (agnóstico)
-  const tenants = buildTenants(process.env as EnvSource);
-  const tenantEntries = Object.entries(tenants);
+  // Lista arquivos locais (.sql, ignora 'admin_')
+  const localMigrationFiles = fs.readdirSync(migrationsDir)
+    .filter(f => f.endsWith('.sql') && !f.startsWith('admin_'))
+    .sort();
 
-  if (tenantEntries.length === 0) {
-    console.warn('⚠️  Nenhum tenant configurado no .env (Verifique os prefixos VITE_SUPABASE_URL_*)');
-    process.exit(0);
+  // Constrói mapa de tenants
+  const tenants = buildTenants(process.env as EnvSource);
+  let tenantEntries = Object.entries(tenants);
+
+  // Filtra por tenant se solicitado
+  if (targetTenant) {
+    tenantEntries = tenantEntries.filter(([code]) => code === targetTenant.toLowerCase());
+    if (tenantEntries.length === 0) {
+      console.error(`❌ Erro: Tenant '${targetTenant}' não configurado no .env`);
+      process.exit(1);
+    }
   }
 
   console.log(`\n🐘 SIGESS Multi-Tenant Migration Runner`);
-  console.log(`📄 Arquivo: ${migrationFile}`);
-  console.log(`👥 Tenants encontrados: ${tenantEntries.length}\n`);
+  if (isDryRun) console.log(`✨ MODE: DRY RUN (Nenhuma alteração será feita)`);
+  console.log(`👥 Tenants alvo: ${tenantEntries.length}\n`);
 
   for (const [code, config] of tenantEntries) {
     const envCode = code.toUpperCase().replaceAll('-', '_');
@@ -56,59 +63,87 @@ async function runMigrations() {
     const dbRegion = process.env[`DB_REGION_${envCode}`] || 'sa-east-1';
     const explicitHost = process.env[`DB_HOST_${envCode}`];
 
-    console.log(`\n🔄 Processando [${code}]...`);
-    
     if (!dbPassword) {
-      console.error(`   ❌ Senha (DB_PASSWORD_${envCode}) não encontrada no .env. Pulando...`);
+      console.warn(`   ⚠️  Senha (DB_PASSWORD_${envCode}) não encontrada. Pulando [${code}]...`);
       continue;
     }
 
-    // Extrai o project-ref da URL: https://ref.supabase.co
-    const refRegex = /https:\/\/(.+)\.supabase\.co/;
-    const refMatch = refRegex.exec(config.supabaseUrl);
-    
-    if (!refMatch) {
-      console.error(`   ❌ Não foi possível extrair o project-ref da URL: ${config.supabaseUrl}`);
-      continue;
-    }
-    const projectRef = refMatch[1];
-    
-    /**
-     * CONEXÃO VIA PROXY IPv4 (POOLER EM MODO SESSION)
-     * Region: DB_REGION_[CODE] (Default: sa-east-1)
-     * Host: aws-[0|1]-[REGION].pooler.supabase.com
-     * Porta: 5432
-     * User: postgres.[PROJECT_REF]
-     */
+    const refMatch = /https:\/\/(.+)\.supabase\.co/.exec(config.supabaseUrl);
+    const projectRef = refMatch ? refMatch[1] : 'unknown';
     const poolerPrefix = dbRegion.startsWith('us-west') ? 'aws-1' : 'aws-0';
     const host = explicitHost || `${poolerPrefix}-${dbRegion}.pooler.supabase.com`;
-    
     const dbUrl = `postgres://postgres.${projectRef}:${encodeURIComponent(dbPassword)}@${host}:5432/postgres`;
 
-    if (isDryRun) {
-      console.log(`   ✨ [DRY RUN] Conexão seria tentada para ${projectRef} via Proxy sa-east-1`);
-      continue;
-    }
-
-    const client = new Client({ 
-      connectionString: dbUrl,
-      connectionTimeoutMillis: 10000,
-      statement_timeout: 60000
-    });
+    const client = new Client({ connectionString: dbUrl, connectionTimeoutMillis: 10000 });
 
     try {
       await client.connect();
-      console.log(`   🔌 Conectado ao banco via Proxy (ref: ${projectRef})...`);
-      
-      await client.query('BEGIN;');
-      await client.query(sqlContent);
-      await client.query('COMMIT;');
-      
-      console.log(`   ✅ Migration aplicada com sucesso!`);
+      console.log(`\n📦 [${code}] (ref: ${projectRef})`);
+
+      // 1. Garantir tabela de controle
+      await client.query(`
+        SET search_path TO public;
+        CREATE TABLE IF NOT EXISTS public._migrations (
+          filename TEXT PRIMARY KEY,
+          applied_at TIMESTAMPTZ DEFAULT now()
+        );
+      `);
+
+      // 2. Buscar aplicadas
+      const { rows: applied } = await client.query('SELECT filename FROM public._migrations');
+      const appliedSet = new Set(applied.map(r => r.filename));
+
+      if (isListApplied) {
+        console.log(`   📜 Migrações aplicadas:`);
+        localMigrationFiles.forEach(f => {
+          const status = appliedSet.has(f) ? '✅' : '⏳';
+          console.log(`      ${status} ${f}`);
+        });
+        continue;
+      }
+
+      // 3. Determinar o que aplicar
+      let filesToApply: string[] = [];
+      if (isSync) {
+        filesToApply = localMigrationFiles.filter(f => !appliedSet.has(f));
+      } else if (migrationFile) {
+        filesToApply = [migrationFile];
+      }
+
+      if (filesToApply.length === 0) {
+        console.log(`   ✅ Banco de dados já está sincronizado.`);
+        continue;
+      }
+
+      console.log(`   🚀 Aplicando ${filesToApply.length} pendente(s)...`);
+
+      for (const file of filesToApply) {
+        const sqlPath = path.join(migrationsDir, file);
+        if (!fs.existsSync(sqlPath)) {
+          console.error(`      ❌ Erro: Arquivo ${file} não encontrado.`);
+          throw new Error('Migration missing');
+        }
+
+        const sqlContent = fs.readFileSync(sqlPath, 'utf8');
+
+        if (isDryRun) {
+          console.log(`      ✨ [DRY RUN] Aplicaria: ${file}`);
+        } else {
+          try {
+            await client.query('BEGIN;');
+            await client.query(sqlContent);
+            await client.query('INSERT INTO public._migrations (filename) VALUES ($1)', [file]);
+            await client.query('COMMIT;');
+            console.log(`      ✅ Sucesso: ${file}`);
+          } catch (err) {
+            await client.query('ROLLBACK;');
+            console.error(`      ❌ FALHA em ${file}:`, (err as Error).message);
+            throw err; // Interrompe o tenant
+          }
+        }
+      }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      await client.query('ROLLBACK;').catch(() => {});
-      console.error(`   ❌ ERRO no tenant ${code}:`, errorMessage);
+      console.error(`   🛑 Erro no tenant ${code}:`, (err as Error).message);
     } finally {
       await client.end();
     }
@@ -117,8 +152,18 @@ async function runMigrations() {
   console.log('\n🏁 Processo finalizado.\n');
 }
 
+function printUsage() {
+  console.log(`
+Uso:
+  npx tsx scripts/migrate-tenants.ts --sync            # Sincroniza todos os tenants
+  npx tsx scripts/migrate-tenants.ts --sync --dry-run  # Simula sincronização
+  npx tsx scripts/migrate-tenants.ts --list-applied    # Mostra status de cada tenant
+  npx tsx scripts/migrate-tenants.ts --tenant=oeiras   # Filtra por cliente
+  npx tsx scripts/migrate-tenants.ts --file=nome.sql   # Aplica um arquivo específico
+  `);
+}
+
 runMigrations().catch(err => {
-  const errorMessage = err instanceof Error ? err.message : String(err);
-  console.error('💥 Erro fatal no runner:', errorMessage);
+  console.error('💥 Erro fatal:', err.message);
   process.exit(1);
 });

@@ -23,21 +23,44 @@ async function handleInvite(admin: SupabaseClient, payload: Record<string, strin
     ? `${appOrigin}/password?tenant=${tenantCode}`
     : `${appOrigin}/password`;
 
+  console.log(`[ManageUser] Convidando usuário: ${email} (${role})`);
+
   const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
     redirectTo,
     data: { nome, role },
   });
-  if (error) throw error;
+  
+  if (error) {
+    console.error(`[ManageUser] Erro no inviteUserByEmail:`, error.message, error);
+    throw error;
+  }
 
   if (data.user) {
+    // 1. Garantir app_metadata sincronizado
     await admin.auth.admin.updateUserById(data.user.id, { app_metadata: { role } });
-    await admin.from('User').update({ nome, role, ativo: true }).eq('id', data.user.id);
+    
+    // 2. Blindagem: Usar UPSERT para garantir que a linha exista na public.User
+    // mesmo que a trigger handle_new_user tenha falhado ou atrasado.
+    const { error: upsertErr } = await admin.from('User').upsert({ 
+      id: data.user.id, 
+      email: data.user.email,
+      nome, 
+      role, 
+      ativo: true 
+    }, { onConflict: 'id' });
+
+    if (upsertErr) {
+      console.warn(`[ManageUser] Aviso: Falha no upsert secundário (User):`, upsertErr.message);
+      // Não lançamos erro aqui para não invalidar o convite que já foi enviado com sucesso no Auth
+    }
   }
   return data;
 }
 
 async function handleCreate(admin: SupabaseClient, payload: Record<string, string | boolean>) {
   const { email, password, nome, role = 'user', email_confirm = true } = payload;
+
+  console.log(`[ManageUser] Criando usuário manual: ${email} (${role})`);
 
   const { data, error } = await admin.auth.admin.createUser({
     email: email as string,
@@ -49,7 +72,7 @@ async function handleCreate(admin: SupabaseClient, payload: Record<string, strin
   if (error) throw error;
 
   if (data.user) {
-    // Sincronização manual pois não queremos esperar o trigger se houver lag
+    // Sincronização manual imediata
     await admin.from('User').upsert({ 
       id: data.user.id, 
       email: data.user.email,
@@ -63,16 +86,24 @@ async function handleCreate(admin: SupabaseClient, payload: Record<string, strin
 
 async function handleDeactivate(admin: SupabaseClient, payload: Record<string, string>) {
   const { userId } = payload;
-  const { error } = await admin.auth.admin.updateUserById(userId, { ban_duration: '876600h' });
-  if (error) throw error;
+  console.log(`[ManageUser] Desativando usuário: ${userId}`);
+  
+  const { error: authError } = await admin.auth.admin.updateUserById(userId, { ban_duration: '876600h' });
+  if (authError) throw authError;
+
+  // Garantir sincronização na tabela pública (usamos upsert por segurança se for legado)
   await admin.from('User').update({ ativo: false }).eq('id', userId);
+  
   return { success: true, message: 'Usuário desativado e banido no Auth' };
 }
 
 async function handleActivate(admin: SupabaseClient, payload: Record<string, string>) {
   const { userId } = payload;
-  const { error } = await admin.auth.admin.updateUserById(userId, { ban_duration: 'none' });
-  if (error) throw error;
+  console.log(`[ManageUser] Reativando usuário: ${userId}`);
+
+  const { error: authError } = await admin.auth.admin.updateUserById(userId, { ban_duration: 'none' });
+  if (authError) throw authError;
+
   await admin.from('User').update({ ativo: true }).eq('id', userId);
   return { success: true, message: 'Usuário ativado' };
 }
@@ -81,7 +112,7 @@ async function handleActivate(admin: SupabaseClient, payload: Record<string, str
 
 const ACTION_HANDLERS: Record<
   string,
-  (admin: SupabaseClient, payload: Record<string, string>) => Promise<unknown>
+  (admin: SupabaseClient, payload: Record<string, any>) => Promise<unknown>
 > = {
   invite: handleInvite,
   create: handleCreate,
@@ -108,11 +139,16 @@ serve(async (req: Request) => {
     });
 
     // Validação de identidade e permissão
-    const { data: { user }, error: authErr } = await supabaseAdmin.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-    if (authErr || !user) throw new Error('Acesso não autorizado ou token expirado.');
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authErr } = await supabaseAdmin.auth.getUser(token);
+    
+    if (authErr || !user) {
+       console.error(`[ManageUser] Erro de autenticação do chamador:`, authErr);
+       throw new Error('Acesso não autorizado ou token expirado.');
+    }
+
     if (user.app_metadata?.role !== 'admin') {
+      console.warn(`[ManageUser] Tentativa de acesso não-admin por: ${user.email}`);
       return jsonResponse({ error: 'Operação restrita a Presidentes (admin).' }, 403);
     }
 
@@ -125,6 +161,9 @@ serve(async (req: Request) => {
 
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erro desconhecido';
-    console.error('Edge Function Error:', message, error); return jsonResponse({ error: message }, 400);
+    const status = message.includes('authorized') ? 401 : 400;
+    
+    console.error(`[ManageUser] Erro fatal:`, message, error);
+    return jsonResponse({ error: message }, status);
   }
 });

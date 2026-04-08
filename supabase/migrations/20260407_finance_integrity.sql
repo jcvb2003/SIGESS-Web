@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS public.audit_log_financeiro (
 ALTER TABLE public.audit_log_financeiro ENABLE ROW LEVEL SECURITY;
 
 -- Política simples: Apenas admins podem ver auditoria
+DROP POLICY IF EXISTS "Admins podem ver auditoria" ON public.audit_log_financeiro;
 CREATE POLICY "Admins podem ver auditoria" ON public.audit_log_financeiro
     FOR SELECT TO authenticated
     USING (EXISTS (SELECT 1 FROM public."User" WHERE id = auth.uid() AND role = 'admin'));
