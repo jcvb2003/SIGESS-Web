@@ -532,8 +532,15 @@ CREATE TABLE public.foto_upload_tokens (
 CREATE TABLE public.requerimentos (
     id uuid DEFAULT gen_random_uuid() NOT NULL PRIMARY KEY,
     cod_req text UNIQUE,
-    data date,
-    cpf text REFERENCES public.socios(cpf) ON DELETE CASCADE
+    data_assinatura date,
+    cpf text REFERENCES public.socios(cpf) ON DELETE CASCADE,
+    ano_referencia integer NOT NULL,
+    status_mte text DEFAULT 'assinado'::text CHECK (status_mte = ANY (ARRAY['assinado'::text, 'analise'::text, 'recurso_acerto'::text, 'deferido'::text, 'indeferido'::text])),
+    data_envio date,
+    num_req_mte text,
+    beneficio_recebido boolean DEFAULT false,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
 );
 
 CREATE TABLE public.parametros_financeiros (

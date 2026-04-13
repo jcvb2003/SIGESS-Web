@@ -44,7 +44,7 @@ export const documentService = {
       data: {
         id: String(data.id),
         cod_req: toNullableString(data.cod_req),
-        data: toNullableString((data as any).data_assinatura),
+        data: toNullableString(data.data_assinatura),
         codigo_do_socio: toNullableString(sociosObj?.codigo_do_socio),
         nome: toNullableString(sociosObj?.nome),
         cpf: toNullableString(data.cpf),
@@ -63,7 +63,7 @@ export const documentService = {
       cpf: toNullable(data.cpf),
       data_assinatura: toNullable(data.data),
       ano_referencia: new Date(data.data).getFullYear() || new Date().getFullYear(),
-      status: 'assinado'
+      status_mte: 'assinado'
     };
 
     const { data: savedData, error } = await supabase
@@ -83,7 +83,7 @@ export const documentService = {
       data: {
         id: String(savedData.id),
         cod_req: toNullableString(savedData.cod_req),
-        data: toNullableString((savedData as any).data_assinatura),
+        data: toNullableString(savedData.data_assinatura),
         codigo_do_socio: toNullableString(sociosObj?.codigo_do_socio),
         nome: toNullableString(sociosObj?.nome),
         cpf: toNullableString(savedData.cpf),
