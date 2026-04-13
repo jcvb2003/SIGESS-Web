@@ -162,7 +162,7 @@ export const reapService = {
     // Elimina N+1 queries sequenciais (era 3 queries por arquivo × 414 = 1.242 requests)
     // Paginação para superar o PostgREST max_rows
     const fetchSocios = async () => {
-      let all: any[] = [];
+      let all: { cpf: string | null }[] = [];
       let from = 0;
       while (true) {
         const { data } = await supabase.from("socios").select("cpf").range(from, from + 1000 - 1);
@@ -174,14 +174,14 @@ export const reapService = {
       return all;
     };
     
-    // @ts-expect-error PENDING TYPE GEN
     const fetchReaps = async () => {
-      let all: any[] = [];
+      let all: { cpf: string; anual: unknown }[] = [];
       let from = 0;
       while (true) {
+        // @ts-expect-error PENDING TYPE GEN
         const { data } = await supabase.from("reap").select("cpf, anual").range(from, from + 1000 - 1);
         if (!data || data.length === 0) break;
-        all = all.concat(data);
+        all = all.concat(data as unknown as { cpf: string; anual: unknown }[]);
         if (data.length < 1000) break;
         from += 1000;
       }
@@ -193,7 +193,7 @@ export const reapService = {
       fetchReaps(),
     ]);
 
-    const cpfSet = new Set((socios ?? []).map((s) => s.cpf as string));
+    const cpfSet = new Set((socios ?? []).map((s) => s.cpf!));
     const reapMap = new Map(
       (reapRecords ?? []).map((r) => {
         const rec = r as unknown as { cpf: string; anual: Reap["anual"] };
@@ -277,7 +277,7 @@ export const reapService = {
       .select("uf")
       .maybeSingle();
 
-    let allMembers: any[] = [];
+    let allMembers: { cpf: string | null; nome: string | null; reap: unknown }[] = [];
     let fromIndex = 0;
     const pageSize = 1000;
 

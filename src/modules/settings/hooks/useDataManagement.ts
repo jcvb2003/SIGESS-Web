@@ -11,7 +11,7 @@ export interface ImportReport {
   details: string[];
 }
 interface DirectoryEntryLike {
-  kind: "file" | "directory" | string;
+  kind: string;
   getFile?: () => Promise<File>;
 }
 interface DirectoryHandleLike {
@@ -26,7 +26,7 @@ function getErrorMessage(error: unknown): string {
 export function useDataImportExport() {
   const [isExporting, setIsExporting] = useState(false);
   const fetchAllMembers = async () => {
-    let allData: any[] = [];
+    let allData: Record<string, unknown>[] = [];
     let from = 0;
     const pageSize = 1000;
     while(true) {
@@ -48,7 +48,7 @@ export function useDataImportExport() {
   const exportToCsv = async () => {
     try {
       setIsExporting(true);
-      const data = (await fetchAllMembers()) as Record<string, unknown>[];
+      const data = await fetchAllMembers();
       if (data.length === 0) {
         toast.error("Nenhum dado encontrado para exportar.");
         return;
@@ -62,7 +62,7 @@ export function useDataImportExport() {
             return stringValue.includes(",") ||
               stringValue.includes('"') ||
               stringValue.includes("\n")
-              ? `"${stringValue.replace(/"/g, '""')}"`
+              ? `"${stringValue.replaceAll('"', '""')}"`
               : stringValue;
           })
           .join(","),
@@ -77,7 +77,7 @@ export function useDataImportExport() {
       link.download = `socios_export_${new Date().toISOString().split("T")[0]}.csv`;
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+      link.remove();
       URL.revokeObjectURL(url);
       toast.success(`${data.length} registros exportados com sucesso.`);
     } catch (error) {
@@ -122,9 +122,9 @@ export function usePhotoImport() {
   const [currentFile, setCurrentFile] = useState<string>("");
   const [report, setReport] = useState<ImportReport | null>(null);
   const cancelRef = useRef(false);
-  const cleanCpf = (cpf: string) => cpf.replace(/\D/g, "");
+  const cleanCpf = (cpf: string) => cpf.replaceAll(/\D/g, "");
   const fetchAllMembers = async () => {
-    let members: any[] = [];
+    let members: Array<{ id: string; nome: string | null; cpf: string | null }> = [];
     let from = 0;
     while(true) {
       const { data, error } = await supabase
@@ -151,7 +151,7 @@ export function usePhotoImport() {
       if (member.cpf) {
         memberMap.set(cleanCpf(member.cpf), {
           id: member.id,
-          nome: member.nome,
+          nome: member.nome ?? "",
           originalCpf: member.cpf,
         });
       }
@@ -183,6 +183,38 @@ export function usePhotoImport() {
       });
     if (uploadError) throw uploadError;
   };
+  const processPhoto = async (
+    file: File,
+    memberMap: Map<string, { id: string; nome: string; originalCpf: string }>,
+    mode: "all" | "newOnly",
+    currentReport: ImportReport
+  ) => {
+    setCurrentFile(file.name);
+    const potentialCpf = file.name.split(".")[0].replaceAll(/\D/g, "");
+    const member = memberMap.get(potentialCpf);
+    if (!member) {
+      currentReport.notFound++;
+      return;
+    }
+    try {
+      if (mode === "newOnly") {
+        const exists = await checkPhotoExists(member.originalCpf);
+        if (exists) {
+          currentReport.skipped++;
+          return;
+        }
+      }
+      await uploadPhoto(file, cleanCpf(member.originalCpf));
+      currentReport.success++;
+    } catch (error: unknown) {
+      console.error(`Erro ao importar ${file.name}:`, error);
+      currentReport.failed++;
+      currentReport.details.push(
+        `Erro em ${file.name}: ${getErrorMessage(error)}`,
+      );
+    }
+  };
+
   const importPhotos = async (
     directoryHandle: DirectoryHandleLike,
     mode: "all" | "newOnly",
@@ -221,32 +253,8 @@ export function usePhotoImport() {
           toast.info("Importação cancelada pelo usuário.");
           break;
         }
-        const file = files[i];
-        setCurrentFile(file.name);
         setProgress(Math.round(((i + 1) / total) * 100));
-        const potentialCpf = file.name.split(".")[0].replace(/\D/g, "");
-        const member = memberMap.get(potentialCpf);
-        if (!member) {
-          currentReport.notFound++;
-          continue;
-        }
-        try {
-          if (mode === "newOnly") {
-            const exists = await checkPhotoExists(member.originalCpf);
-            if (exists) {
-              currentReport.skipped++;
-              continue;
-            }
-          }
-          await uploadPhoto(file, cleanCpf(member.originalCpf));
-          currentReport.success++;
-        } catch (error: unknown) {
-          console.error(`Erro ao importar ${file.name}:`, error);
-          currentReport.failed++;
-          currentReport.details.push(
-            `Erro em ${file.name}: ${getErrorMessage(error)}`,
-          );
-        }
+        await processPhoto(files[i], memberMap, mode, currentReport);
       }
       setReport(currentReport);
       toast.success(

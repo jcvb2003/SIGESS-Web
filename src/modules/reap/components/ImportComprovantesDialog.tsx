@@ -42,14 +42,14 @@ function extractCpf(text: string): string | null {
   const cpfIdx = text.search(/\bCPF\b/i);
   if (cpfIdx !== -1) {
     const nearby = text.slice(cpfIdx + 3, cpfIdx + 65);
-    const digits = nearby.replace(/\D/g, "");
+    const digits = nearby.replaceAll(/\D/g, "");
     if (digits.length >= 11) {
       const d = digits.slice(0, 11);
       return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
     }
   }
   // Estratégia 2: CPF já formatado em qualquer lugar do texto (fallback)
-  return text.match(/(\d{3}\.\d{3}\.\d{3}-\d{2})/)?.[1] ?? null;
+  return /(\d{3}\.\d{3}\.\d{3}-\d{2})/.exec(text)?.[1] ?? null;
 }
 
 async function extractFromPdf(file: File): Promise<{
@@ -73,9 +73,9 @@ async function extractFromPdf(file: File): Promise<{
 
     if (!cpf) cpf = extractCpf(pageText);
     if (!dataEnvioRaw)
-      dataEnvioRaw = pageText.match(/Data\s+do\s+Envio[:\s]*(\d{2}\/\d{2}\/\d{4})/)?.[1] ?? null;
+      dataEnvioRaw = /Data\s+do\s+Envio[:\s]*(\d{2}\/\d{2}\/\d{4})/.exec(pageText)?.[1] ?? null;
     if (!anoRefRaw)
-      anoRefRaw = pageText.match(/Ano\s+de\s+Refer[êe]ncia[:\s]*(\d{4})/)?.[1] ?? null;
+      anoRefRaw = /Ano\s+de\s+Refer[êe]ncia[:\s]*(\d{4})/.exec(pageText)?.[1] ?? null;
 
     // Saída antecipada: para de ler páginas ao encontrar todos os campos
     if (cpf && dataEnvioRaw && anoRefRaw) break;
@@ -113,7 +113,7 @@ export function ImportComprovantesDialog({
       setProgress(0);
 
       try {
-        const cleanCpf = (c: string) => c.replace(/\D/g, "");
+        const cleanCpf = (c: string) => c.replaceAll(/\D/g, "");
         const context = await reapService.getReconciliationContext();
         const cpfSet = new Set(context.members.map((m) => cleanCpf(m.cpf)));
         const memberMap = new Map(context.members.map((m) => [cleanCpf(m.cpf), m]));
@@ -138,9 +138,7 @@ export function ImportComprovantesDialog({
 
                 if (!cpf || !dataEnvio || !anoRef) {
                   results[idx] = { cpf, dataEnvio, anoRef, fileName: file.name, status: "erro_extracao" };
-                } else if (!cpfSet.has(queryCpf)) {
-                  results[idx] = { cpf, dataEnvio, anoRef, fileName: file.name, status: "nao_encontrado" };
-                } else {
+                } else if (cpfSet.has(queryCpf)) {
                   const member = memberMap.get(queryCpf);
                   const anoKey = String(anoRef);
                   const jaRegistrado =
@@ -154,6 +152,8 @@ export function ImportComprovantesDialog({
                     // ja_registrado: marca para filtrar depois
                     status: jaRegistrado ? "ja_registrado" : "ok",
                   };
+                } else {
+                  results[idx] = { cpf, dataEnvio, anoRef, fileName: file.name, status: "nao_encontrado" };
                 }
               } catch {
                 results[idx] = { cpf: null, dataEnvio: null, anoRef: null, fileName: file.name, status: "erro_extracao" };
@@ -287,8 +287,8 @@ export function ImportComprovantesDialog({
             <div className="flex flex-col h-full gap-4">
               <ScrollArea className="flex-1 border rounded-lg">
                 <div className="divide-y">
-                  {entries.map((entry, i) => (
-                    <div key={i} className="flex items-center justify-between px-4 py-2.5 gap-3">
+                  {entries.map((entry) => (
+                    <div key={entry.fileName + (entry.cpf || "")} className="flex items-center justify-between px-4 py-2.5 gap-3">
                       <div className="flex flex-col min-w-0">
                         <span className="text-sm font-medium truncate">{entry.fileName}</span>
                         <span className="text-xs text-muted-foreground">
