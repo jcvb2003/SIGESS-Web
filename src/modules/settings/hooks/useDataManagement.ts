@@ -26,12 +26,24 @@ function getErrorMessage(error: unknown): string {
 export function useDataImportExport() {
   const [isExporting, setIsExporting] = useState(false);
   const fetchAllMembers = async () => {
-    const { data, error } = await supabase
-      .from("socios")
-      .select("*")
-      .order("nome", { ascending: true });
-    if (error) throw error;
-    return data || [];
+    let allData: any[] = [];
+    let from = 0;
+    const pageSize = 1000;
+    while(true) {
+      const { data, error } = await supabase
+        .from("socios")
+        .select("*")
+        .order("nome", { ascending: true })
+        .range(from, from + pageSize - 1);
+      
+      if (error) throw error;
+      if (!data || data.length === 0) break;
+      
+      allData = allData.concat(data);
+      if (data.length < pageSize) break;
+      from += pageSize;
+    }
+    return allData;
   };
   const exportToCsv = async () => {
     try {
@@ -112,10 +124,20 @@ export function usePhotoImport() {
   const cancelRef = useRef(false);
   const cleanCpf = (cpf: string) => cpf.replace(/\D/g, "");
   const fetchAllMembers = async () => {
-    const { data, error } = await supabase
-      .from("socios")
-      .select("id, nome, cpf");
-    if (error) throw error;
+    let members: any[] = [];
+    let from = 0;
+    while(true) {
+      const { data, error } = await supabase
+        .from("socios")
+        .select("id, nome, cpf")
+        .range(from, from + 1000 - 1);
+      if (error) throw error;
+      if (!data || data.length === 0) break;
+      members = members.concat(data);
+      if (data.length < 1000) break;
+      from += 1000;
+    }
+
     const memberMap = new Map<
       string,
       {
@@ -124,11 +146,7 @@ export function usePhotoImport() {
         originalCpf: string;
       }
     >();
-    const members = (data || []) as Array<{
-      id: string;
-      nome: string;
-      cpf: string | null;
-    }>;
+
     members.forEach((member) => {
       if (member.cpf) {
         memberMap.set(cleanCpf(member.cpf), {

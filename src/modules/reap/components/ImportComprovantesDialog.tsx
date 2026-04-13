@@ -18,9 +18,9 @@ import { reapQueryKeys } from "../queryKeys";
 import { toast } from "sonner";
 import { cn } from "@/shared/lib/utils";
 import * as pdfjs from "pdfjs-dist";
+import pdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
-// Worker para PDF.js (deve estar configurado no projeto)
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+pdfjs.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 interface ExtractedEntry {
   cpf: string | null;
@@ -35,6 +35,23 @@ interface ImportComprovantesDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+/** Extrai CPF normalizado: lida com qualquer padrão de tokenização do PDF.js */
+function extractCpf(text: string): string | null {
+  // Estratégia 1: Busca label "CPF" e extrai os próximos 11 dígitos do texto próximo
+  // Funciona mesmo que o PDF.js separe "1" "2" "3" "." "4" "5" ... como tokens distintos
+  const cpfIdx = text.search(/\bCPF\b/i);
+  if (cpfIdx !== -1) {
+    const nearby = text.slice(cpfIdx + 3, cpfIdx + 65);
+    const digits = nearby.replace(/\D/g, "");
+    if (digits.length >= 11) {
+      const d = digits.slice(0, 11);
+      return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
+    }
+  }
+  // Estratégia 2: CPF já formatado em qualquer lugar do texto (fallback)
+  return text.match(/(\d{3}\.\d{3}\.\d{3}-\d{2})/)?.[1] ?? null;
+}
+
 async function extractFromPdf(file: File): Promise<{
   cpf: string | null;
   dataEnvio: string | null;
@@ -42,26 +59,37 @@ async function extractFromPdf(file: File): Promise<{
 }> {
   const buffer = await file.arrayBuffer();
   const pdf = await pdfjs.getDocument({ data: buffer }).promise;
-  let fullText = "";
+
+  let cpf: string | null = null;
+  let dataEnvioRaw: string | null = null;
+  let anoRefRaw: string | null = null;
 
   for (let p = 1; p <= pdf.numPages; p++) {
     const page = await pdf.getPage(p);
     const content = await page.getTextContent();
-    fullText += content.items.map((i) => ("str" in i ? i.str : "")).join(" ");
+    // Reconstrói o texto da página preservando a junção dos tokens
+    const pageText = content.items.map((i) => ("str" in i ? i.str : "")).join(" ");
+    page.cleanup(); // libera memória da página imediatamente
+
+    if (!cpf) cpf = extractCpf(pageText);
+    if (!dataEnvioRaw)
+      dataEnvioRaw = pageText.match(/Data\s+do\s+Envio[:\s]*(\d{2}\/\d{2}\/\d{4})/)?.[1] ?? null;
+    if (!anoRefRaw)
+      anoRefRaw = pageText.match(/Ano\s+de\s+Refer[êe]ncia[:\s]*(\d{4})/)?.[1] ?? null;
+
+    // Saída antecipada: para de ler páginas ao encontrar todos os campos
+    if (cpf && dataEnvioRaw && anoRefRaw) break;
   }
 
-  const cpf = fullText.match(/CPF[:\s]*([\d]{3}\.[\d]{3}\.[\d]{3}-[\d]{2})/)?.[1] ?? null;
-  const dataEnvioRaw = fullText.match(/Data\s+do\s+Envio[:\s]*(\d{2}\/\d{2}\/\d{4})/)?.[1] ?? null;
-  const anoRefRaw = fullText.match(/Ano\s+de\s+Refer[êe]ncia[:\s]*(\d{4})/)?.[1] ?? null;
+  await pdf.destroy();
 
-  // Converte DD/MM/YYYY para YYYY-MM-DD
   let dataEnvio: string | null = null;
   if (dataEnvioRaw) {
     const [d, m, a] = dataEnvioRaw.split("/");
     dataEnvio = `${a}-${m}-${d}`;
   }
 
-  return { cpf, dataEnvio, anoRef: anoRefRaw ? Number(anoRefRaw) : null };
+  return { cpf: cpf?.trim() ?? null, dataEnvio, anoRef: anoRefRaw ? Number(anoRefRaw) : null };
 }
 
 export function ImportComprovantesDialog({
@@ -74,6 +102,7 @@ export function ImportComprovantesDialog({
   const [isSaving, setIsSaving] = useState(false);
   const [progress, setProgress] = useState(0);
   const [entries, setEntries] = useState<ExtractedEntry[]>([]);
+  const [skippedCount, setSkippedCount] = useState(0);
 
   const handleFileUpload = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -84,47 +113,75 @@ export function ImportComprovantesDialog({
       setProgress(0);
 
       try {
+        const cleanCpf = (c: string) => c.replace(/\D/g, "");
         const context = await reapService.getReconciliationContext();
-        const cpfSet = new Set(context.members.map((m) => m.cpf));
+        const cpfSet = new Set(context.members.map((m) => cleanCpf(m.cpf)));
+        const memberMap = new Map(context.members.map((m) => [cleanCpf(m.cpf), m]));
 
+        // Resultados filtrados: ja_registrado é contado mas não exibido
         const extracted: ExtractedEntry[] = [];
+        let skipped = 0;
+        let done = 0;
 
-        for (let i = 0; i < files.length; i++) {
-          const file = files[i];
-          try {
-            const { cpf, dataEnvio, anoRef } = await extractFromPdf(file);
+        // Processa PDFs em paralelo — lotes de 10 simultâneos
+        const CONCURRENCY = 10;
+        const results: ExtractedEntry[] = new Array(files.length);
 
-            if (!cpf || !dataEnvio || !anoRef) {
-              extracted.push({ cpf, dataEnvio, anoRef, fileName: file.name, status: "erro_extracao" });
-            } else if (!cpfSet.has(cpf)) {
-              extracted.push({ cpf, dataEnvio, anoRef, fileName: file.name, status: "nao_encontrado" });
-            } else {
-              // Verifica se já está registrado
-              const member = context.members.find((m) => m.cpf === cpf);
-              const jaRegistrado = member?.reap?.anual?.[String(anoRef)]?.enviado && member?.reap?.anual?.[String(anoRef)]?.data_envio;
-              extracted.push({
-                cpf,
-                dataEnvio,
-                anoRef,
-                fileName: file.name,
-                status: jaRegistrado ? "ja_registrado" : "ok",
-              });
-            }
-          } catch {
-            extracted.push({ cpf: null, dataEnvio: null, anoRef: null, fileName: file.name, status: "erro_extracao" });
-          }
+        for (let start = 0; start < files.length; start += CONCURRENCY) {
+          const chunk = files.slice(start, start + CONCURRENCY);
+          await Promise.all(
+            chunk.map(async (file, offset) => {
+              const idx = start + offset;
+              try {
+                const { cpf, dataEnvio, anoRef } = await extractFromPdf(file);
+                const queryCpf = cpf ? cleanCpf(cpf) : "";
 
-          setProgress(Math.round(((i + 1) / files.length) * 100));
+                if (!cpf || !dataEnvio || !anoRef) {
+                  results[idx] = { cpf, dataEnvio, anoRef, fileName: file.name, status: "erro_extracao" };
+                } else if (!cpfSet.has(queryCpf)) {
+                  results[idx] = { cpf, dataEnvio, anoRef, fileName: file.name, status: "nao_encontrado" };
+                } else {
+                  const member = memberMap.get(queryCpf);
+                  const anoKey = String(anoRef);
+                  const jaRegistrado =
+                    member?.reap?.anual?.[anoKey]?.enviado &&
+                    member?.reap?.anual?.[anoKey]?.data_envio;
+                  results[idx] = {
+                    cpf,
+                    dataEnvio,
+                    anoRef,
+                    fileName: file.name,
+                    // ja_registrado: marca para filtrar depois
+                    status: jaRegistrado ? "ja_registrado" : "ok",
+                  };
+                }
+              } catch {
+                results[idx] = { cpf: null, dataEnvio: null, anoRef: null, fileName: file.name, status: "erro_extracao" };
+              }
+
+              done++;
+              setProgress(Math.round((done / files.length) * 100));
+            })
+          );
+        }
+
+        // Separa silenciosamente os já registrados — usuário não precisa ver
+        for (const r of results) {
+          if (r.status === "ja_registrado") skipped++;
+          else extracted.push(r);
         }
 
         setEntries(extracted);
+        setSkippedCount(skipped);
         setStep("results");
-        toast.success(`${extracted.length} arquivo(s) processado(s).`);
+        const msg = skipped > 0
+          ? `${extracted.length} arquivo(s) processado(s). ${skipped} já registrado(s) ignorado(s).`
+          : `${extracted.length} arquivo(s) processado(s).`;
+        toast.success(msg);
       } catch {
         toast.error("Erro ao processar arquivos.");
       } finally {
         setIsProcessing(false);
-        // Reset input
         e.target.value = "";
       }
     },
@@ -158,12 +215,12 @@ export function ImportComprovantesDialog({
     setStep("upload");
     setEntries([]);
     setProgress(0);
+    setSkippedCount(0);
     onOpenChange(false);
   };
 
   const counts = {
     ok: entries.filter((e) => e.status === "ok").length,
-    jaRegistrado: entries.filter((e) => e.status === "ja_registrado").length,
     naoEncontrado: entries.filter((e) => e.status === "nao_encontrado").length,
     erroExtracao: entries.filter((e) => e.status === "erro_extracao").length,
   };
@@ -243,9 +300,6 @@ export function ImportComprovantesDialog({
                       {entry.status === "ok" && (
                         <Badge className="bg-emerald-600 hover:bg-emerald-700 shrink-0">Pronto</Badge>
                       )}
-                      {entry.status === "ja_registrado" && (
-                        <Badge variant="secondary" className="shrink-0">Já Registrado</Badge>
-                      )}
                       {entry.status === "nao_encontrado" && (
                         <Badge variant="destructive" className="shrink-0">CPF não encontrado</Badge>
                       )}
@@ -260,7 +314,7 @@ export function ImportComprovantesDialog({
               </ScrollArea>
 
               {/* Resumo */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className={`grid gap-3 ${skippedCount > 0 ? "grid-cols-3" : "grid-cols-2"}`}>
                 <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 p-3 rounded-lg flex items-center gap-2">
                   <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
                   <div>
@@ -268,6 +322,15 @@ export function ImportComprovantesDialog({
                     <p className="text-xs text-muted-foreground">Para importar</p>
                   </div>
                 </div>
+                {skippedCount > 0 && (
+                  <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-3 rounded-lg flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-blue-500 shrink-0" />
+                    <div>
+                      <p className="text-xl font-bold text-blue-600 dark:text-blue-400">{skippedCount}</p>
+                      <p className="text-xs text-muted-foreground">Já registrados</p>
+                    </div>
+                  </div>
+                )}
                 <div className="bg-muted/30 border border-border p-3 rounded-lg flex items-center gap-2">
                   <XCircle className="h-5 w-5 text-muted-foreground shrink-0" />
                   <div>
