@@ -63,7 +63,7 @@ export function BirthdayList({ members = [], loading }: BirthdayListProps) {
             </p>
           </div>
         ) : (
-          <div className="space-y-1 max-h-[350px] overflow-y-auto pr-1 custom-scrollbar">
+          <div className="space-y-1 max-h-[350px] overflow-y-auto pr-1">
             {members.map((member) => (
               <div
                 key={member.id}

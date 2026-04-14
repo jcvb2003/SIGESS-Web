@@ -227,7 +227,7 @@ export function DAESection({ daes }: DAESectionProps) {
         </span>
       </div>
 
-      <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+      <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
         {groupedData.map((g) => (
           <DAERow
             key={g.id}

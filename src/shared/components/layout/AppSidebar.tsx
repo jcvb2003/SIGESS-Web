@@ -97,7 +97,7 @@ function SidebarContent({
         </Link>
       </div>
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-3 scrollbar-none">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-3">
         <nav className="space-y-1">
           {NAV_ITEMS.map((item) => {
             const isRestricted = item.adminOnly && !isAdmin;

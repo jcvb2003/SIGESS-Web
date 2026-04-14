@@ -1,11 +1,11 @@
 import { useFormContext, useWatch } from "react-hook-form";
-import { usePhotoManager } from "../../hooks/registration/usePhotoManager";
 import { Camera, Loader2, ImagePlus, Trash2, Check, X, QrCode, Upload } from "lucide-react";
 import { useRef, useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { compressMemberPhoto } from "@/shared/utils/image-compression";
 import { supabase } from "@/shared/lib/supabase/client";
 import { resolveTenantBySupabaseUrl } from "@/config/tenants";
+import { photoService } from "../../services/photoService";
 import { QRCodeCanvas } from "qrcode.react";
 import {
   Dialog,
@@ -26,20 +26,13 @@ type FotoUploadToken = {
 };
 
 export function MemberPhotoField() {
-  const { control } = useFormContext();
+  const { control, setValue, getValues } = useFormContext();
   const cpf = useWatch({ control, name: "cpf" });
-  const {
-    photoUrl: managerPhotoUrl,
-    isLoading,
-    uploadPhoto: handleStagePhoto,
-    stagedFile,
-    stagedDelete,
-    deletePhoto,
-  } = usePhotoManager({ cpf });
 
-  const { setValue } = useFormContext();
-  const photoUrl = useWatch({ control, name: "photoPreviewUrl" }) || managerPhotoUrl;
+  // photoUrl vive inteiramente no form — sobrevive ao unmount/remount das abas
+  const photoUrl = useWatch({ control, name: "photoPreviewUrl" });
 
+  const [isLoading, setIsLoading] = useState(false);
   const [hasImageError, setHasImageError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingPhoto, setPendingPhoto] = useState<{
@@ -47,10 +40,48 @@ export function MemberPhotoField() {
     previewUrl: string;
   } | null>(null);
 
-  // Reset image error state when photoUrl changes (important for new uploads)
+  const prevPhotoUrlRef = useRef<string | null | undefined>(undefined);
+  // Garante que a carga inicial do storage só ocorre uma vez por CPF
+  const initialLoadCpfRef = useRef<string | null>(null);
+
+  // Só reseta o erro quando a URL realmente muda (não no ciclo de montagem)
   useEffect(() => {
-    setHasImageError(false);
+    if (prevPhotoUrlRef.current !== undefined && prevPhotoUrlRef.current !== photoUrl) {
+      setHasImageError(false);
+    }
+    prevPhotoUrlRef.current = photoUrl;
   }, [photoUrl]);
+
+  // Carrega URL inicial do storage apenas se o form ainda não tiver valor
+  // e apenas uma vez por CPF (não sobrescreve uploads/deletes posteriores)
+  useEffect(() => {
+    if (!cpf) return;
+    if (initialLoadCpfRef.current === cpf) return; // já carregou para este CPF
+    const currentUrl = getValues("photoPreviewUrl");
+    if (currentUrl) {
+      initialLoadCpfRef.current = cpf; // form já tem valor, marca como carregado
+      return;
+    }
+    initialLoadCpfRef.current = cpf;
+    setIsLoading(true);
+    const url = photoService.getPhotoUrl(cpf);
+    setValue("photoPreviewUrl", url ?? null);
+    setIsLoading(false);
+  }, [cpf, setValue, getValues]);
+
+  // --- Handlers de foto (todos escrevem direto no form) ---
+
+  const handleDeletePhoto = useCallback(() => {
+    setValue("photoPreviewUrl", null);
+    setValue("photoFile", null);
+    setValue("photoDelete", true);
+  }, [setValue]);
+
+  const handleStagePhoto = useCallback((file: File, previewUrl: string) => {
+    setValue("photoPreviewUrl", previewUrl);
+    setValue("photoFile", file);
+    setValue("photoDelete", false);
+  }, [setValue]);
 
   // --- QR Code Photo Upload ---
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
@@ -99,23 +130,16 @@ export function MemberPhotoField() {
 
       const compressedBlob = await compressMemberPhoto(new File([blob], "foto_mobile.jpg", { type: "image/jpeg" }));
       const previewUrl = URL.createObjectURL(compressedBlob);
+      const compressedFile = new File([compressedBlob], "member_photo.jpg", { type: "image/jpeg" });
 
-      const compressedFile = new File([compressedBlob], "member_photo.jpg", {
-        type: "image/jpeg",
-      });
-
-      setPendingPhoto({
-        file: compressedFile,
-        previewUrl,
-      });
-
+      handleStagePhoto(compressedFile, previewUrl);
       setIsQrModalOpen(false);
       toast.success("Foto recebida do celular!");
     } catch (error) {
       console.error("Erro ao processar foto remota:", error);
       toast.error("Erro ao processar foto vinda do celular.");
     }
-  }, []);
+  }, [handleStagePhoto]);
 
   useEffect(() => {
     if (!qrToken || !isQrModalOpen) return;
@@ -144,34 +168,29 @@ export function MemberPhotoField() {
     };
   }, [qrToken, isQrModalOpen, processBase64Photo]);
 
+  // --- Upload local ---
+
   const clearPendingPhoto = useCallback(() => {
     if (pendingPhoto?.previewUrl) {
-      URL.revokeObjectURL(pendingPhoto.previewUrl);
+      // Só revogar se a URL NÃO estiver em uso no form
+      const formUrl = getValues("photoPreviewUrl");
+      if (formUrl !== pendingPhoto.previewUrl) {
+        URL.revokeObjectURL(pendingPhoto.previewUrl);
+      }
     }
     setPendingPhoto(null);
-  }, [pendingPhoto]);
-
-  useEffect(() => {
-    setValue("photoFile", stagedFile);
-  }, [stagedFile, setValue]);
-
-  useEffect(() => {
-    if (!isLoading) {
-      setValue("photoPreviewUrl", managerPhotoUrl);
-    }
-  }, [managerPhotoUrl, isLoading, setValue]);
-
-  useEffect(() => {
-    setValue("photoDelete", stagedDelete);
-  }, [stagedDelete, setValue]);
+  }, [pendingPhoto, getValues]);
 
   useEffect(() => {
     return () => {
       if (pendingPhoto?.previewUrl) {
-        URL.revokeObjectURL(pendingPhoto.previewUrl);
+        const formUrl = getValues("photoPreviewUrl");
+        if (formUrl !== pendingPhoto.previewUrl) {
+          URL.revokeObjectURL(pendingPhoto.previewUrl);
+        }
       }
     };
-  }, [pendingPhoto]);
+  }, [pendingPhoto, getValues]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -180,15 +199,9 @@ export function MemberPhotoField() {
     try {
       const compressedBlob = await compressMemberPhoto(file);
       const previewUrl = URL.createObjectURL(compressedBlob);
+      const compressedFile = new File([compressedBlob], "member_photo.jpg", { type: "image/jpeg" });
 
-      const compressedFile = new File([compressedBlob], "member_photo.jpg", {
-        type: "image/jpeg",
-      });
-
-      setPendingPhoto({
-        file: compressedFile,
-        previewUrl,
-      });
+      setPendingPhoto({ file: compressedFile, previewUrl });
     } catch (error) {
       console.error("Erro ao processar imagem:", error);
       toast.error("Erro ao processar imagem. Tente outro arquivo.");
@@ -200,22 +213,24 @@ export function MemberPhotoField() {
   };
 
   const handleConfirmUpload = async () => {
-    if (pendingPhoto) {
-      handleStagePhoto(pendingPhoto.file);
+    if (!pendingPhoto) return;
 
-      // Limpar base64 do banco se veio via QR para economizar espaço
-      if (qrToken) {
-        /* eslint-disable @typescript-eslint/no-explicit-any */
-        await ((supabase
-          .from("foto_upload_tokens" as any) as any)
-          .update({ foto_base64: null })
-          .eq("token", qrToken));
-        /* eslint-enable @typescript-eslint/no-explicit-any */
-        setQrToken(null);
-      }
+    handleStagePhoto(pendingPhoto.file, pendingPhoto.previewUrl);
 
-      setPendingPhoto(null);
+    // Limpar base64 do banco se veio via QR para economizar espaço
+    if (qrToken) {
+      /* eslint-disable @typescript-eslint/no-explicit-any */
+      await ((supabase
+        .from("foto_upload_tokens" as any) as any)
+        .update({ foto_base64: null })
+        .eq("token", qrToken));
+      /* eslint-enable @typescript-eslint/no-explicit-any */
+      setQrToken(null);
     }
+
+    // NÃO revogar a URL aqui — ela foi transferida para o form
+    // Apenas limpar o estado sem chamar revokeObjectURL
+    setPendingPhoto(null);
   };
 
   const triggerFileInput = () => {
@@ -252,13 +267,13 @@ export function MemberPhotoField() {
               className="absolute top-1 right-1 p-1.5 bg-destructive/90 hover:bg-destructive rounded-full text-white transition-colors cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
-                deletePhoto();
+                handleDeletePhoto();
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
                   e.stopPropagation();
-                  deletePhoto();
+                  handleDeletePhoto();
                 }
               }}
               title="Excluir foto"
