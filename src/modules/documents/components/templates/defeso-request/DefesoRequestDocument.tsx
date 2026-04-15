@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { useState, useEffect } from "react";
+import { usePersistedModel } from "../../../hooks/usePersistedModel";
 import { Button } from "@/shared/components/ui/button";
 import {
   FileDown,
@@ -83,7 +84,7 @@ export function DefesoRequestDocument({
 }: DefesoRequestDocumentProps) {
   const { fullMemberData, isLoading: isLoadingMember } = useDocumentMember();
   const { entity } = useEntityData();
-  const [selectedModel, setSelectedModel] = useState<string>("");
+  const [selectedModel, setSelectedModel] = usePersistedModel("doc:model:defeso");
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const {

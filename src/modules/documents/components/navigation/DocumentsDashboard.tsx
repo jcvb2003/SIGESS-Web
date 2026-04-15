@@ -312,6 +312,7 @@ export function DocumentsDashboard() {
         onOpenChange={(open) => !open && setActiveModal(null)}
         title="Declaração de Residência"
         description="Selecione o modelo e preencha os dados das testemunhas caso necessário."
+        storageKey="doc:model:residence"
         onConfirm={handleGenerateResidence}
         availableModels={residenceModels}
       />
@@ -321,6 +322,7 @@ export function DocumentsDashboard() {
         onOpenChange={(open) => !open && setActiveModal(null)}
         title="Termo de Representação"
         description="Selecione o modelo e preencha os dados das testemunhas caso necessário."
+        storageKey="doc:model:representation"
         onConfirm={handleGenerateRepresentation}
         availableModels={representationModels}
       />

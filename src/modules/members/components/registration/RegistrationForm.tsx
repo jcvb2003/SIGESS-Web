@@ -39,7 +39,6 @@ interface RegistrationFormProps {
   readonly onSuccess?: () => void;
   readonly initialData?: MemberRegistrationForm;
   readonly memberUuid?: string;
-  readonly disableNavigateOnSuccess?: boolean;
   readonly onCancel?: () => void;
 }
 
@@ -47,7 +46,6 @@ export function RegistrationForm({
   onSuccess,
   initialData,
   memberUuid,
-  disableNavigateOnSuccess = false,
   onCancel,
 }: Readonly<RegistrationFormProps>) {
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -155,15 +153,18 @@ export function RegistrationForm({
         }
         toast.success("Sócio cadastrado com sucesso.");
       }
-      
+
       form.reset(initialMemberRegistrationForm);
-      
-      // Invalidate members query to ensure the list is updated
+
+      // Invalida a lista e o detalhe do sócio editado
       queryClient.invalidateQueries({ queryKey: memberQueryKeys.all });
-      
-      onSuccess?.();
-      
-      if (!disableNavigateOnSuccess) {
+      if (isEditMode && memberUuid) {
+        queryClient.invalidateQueries({ queryKey: memberQueryKeys.detail(memberUuid) });
+      }
+
+      if (onSuccess) {
+        onSuccess();
+      } else {
         navigate("/members");
       }
     } catch (err: unknown) {

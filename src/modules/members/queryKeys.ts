@@ -4,4 +4,5 @@ export const memberQueryKeys = {
   list: (params: MemberSearchParams) =>
     [...memberQueryKeys.all, "list", params] as const,
   localities: () => [...memberQueryKeys.all, "localities"] as const,
+  detail: (id: string) => ["member", id] as const,
 };

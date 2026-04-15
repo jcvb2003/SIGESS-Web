@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { usePersistedModel } from "../../hooks/usePersistedModel";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +29,7 @@ interface WitnessDialogProps {
   onOpenChange: (open: boolean) => void;
   title: string;
   description: string;
+  storageKey: string;
   onConfirm: (data: {
     witnesses?: {
       witness1: WitnessData;
@@ -46,6 +48,7 @@ export function WitnessDialog({
   onOpenChange,
   title,
   description,
+  storageKey,
   onConfirm,
   availableModels = [],
 }: Readonly<WitnessDialogProps>) {
@@ -60,7 +63,7 @@ export function WitnessDialog({
     cpf: "",
     rg: "",
   });
-  const [selectedModel, setSelectedModel] = useState<string>("");
+  const [selectedModel, setSelectedModel] = usePersistedModel(storageKey);
   const [documentDate, setDocumentDate] = useState<string>(
     formatDateForInput(new Date()),
   );

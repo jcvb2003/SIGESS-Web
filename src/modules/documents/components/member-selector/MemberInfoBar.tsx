@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDocumentMember } from "../../context/useDocumentMember";
 import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
@@ -22,6 +22,12 @@ export function MemberInfoBar() {
   const { fullMemberData, isLoading, refetchMember } = useDocumentMember();
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [photoError, setPhotoError] = useState(false);
+
+  // Reseta o erro de foto quando o membro muda
+  useEffect(() => {
+    setPhotoError(false);
+  }, [fullMemberData?.id]);
   if (isLoading) {
     return (
       <div className="flex items-center gap-4 p-4 border rounded-lg bg-card mt-4">
@@ -34,17 +40,20 @@ export function MemberInfoBar() {
     );
   }
   if (!fullMemberData) return null;
+
+  const hasPhoto = !!fullMemberData.foto_url && !photoError;
   return (
     <div className="flex items-center gap-4 p-4 border rounded-lg bg-card text-card-foreground shadow-sm mt-4">
       <Dialog>
         <DialogTrigger asChild>
           <div
-            className={`relative h-16 w-12 rounded-md border-2 border-border overflow-hidden bg-muted flex items-center justify-center shrink-0 shadow-sm ${fullMemberData.foto_url ? "cursor-pointer hover:opacity-90 transition-opacity" : ""}`}
+            className={`relative h-16 w-12 rounded-md border-2 border-border overflow-hidden bg-muted flex items-center justify-center shrink-0 shadow-sm ${hasPhoto ? "cursor-pointer hover:opacity-90 transition-opacity" : ""}`}
           >
-            {fullMemberData.foto_url ? (
+            {hasPhoto ? (
               <img
-                src={fullMemberData.foto_url}
+                src={fullMemberData.foto_url!}
                 alt={fullMemberData.nome}
+                onError={() => setPhotoError(true)}
                 className="h-full w-full object-cover"
               />
             ) : (
@@ -54,14 +63,14 @@ export function MemberInfoBar() {
             )}
           </div>
         </DialogTrigger>
-        {fullMemberData.foto_url && (
+        {hasPhoto && (
           <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-transparent border-none shadow-none">
             <DialogTitle className="sr-only">
               Foto de {fullMemberData.nome}
             </DialogTitle>
             <div className="flex items-center justify-center">
               <img
-                src={fullMemberData.foto_url}
+                src={fullMemberData.foto_url!}
                 alt={`Foto de ${fullMemberData.nome}`}
                 className="max-h-[80vh] w-full object-contain rounded-md"
               />
@@ -151,7 +160,6 @@ export function MemberInfoBar() {
             <RegistrationForm
               memberUuid={fullMemberData.id}
               initialData={fromMemberRecord(fullMemberData as unknown as SocioRow)}
-              disableNavigateOnSuccess={true}
               onCancel={() => setIsEditModalOpen(false)}
               onSuccess={() => {
                 setIsEditModalOpen(false);

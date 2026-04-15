@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { memberService } from "@/modules/members/services/memberService";
+import { memberQueryKeys } from "@/modules/members/queryKeys";
 import { RegistrationForm } from "@/modules/members/components/registration/RegistrationForm";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
@@ -12,7 +13,7 @@ export default function MemberDetailsPage() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["member", id],
+    queryKey: id ? memberQueryKeys.detail(id) : ["member", null],
     queryFn: () => (id ? memberService.getMemberById(id) : null),
     enabled: !!id,
   });
@@ -59,7 +60,12 @@ export default function MemberDetailsPage() {
         </p>
       </div>
 
-      <RegistrationForm initialData={member} memberUuid={id} />
+      <RegistrationForm
+        initialData={member}
+        memberUuid={id}
+        onSuccess={() => navigate(-1)}
+        onCancel={() => navigate(-1)}
+      />
     </div>
   );
 }

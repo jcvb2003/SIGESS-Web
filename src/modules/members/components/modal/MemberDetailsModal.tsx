@@ -14,6 +14,7 @@ import {
   TabsTrigger,
 } from "@/shared/components/ui/tabs";
 import { memberService } from "../../services/memberService";
+import { memberQueryKeys } from "../../queryKeys";
 import { MemberRegistrationForm } from "../../types/member.types";
 import { MemberModalHeader } from "./MemberModalHeader";
 import { MemberModalActions } from "./MemberModalActions";
@@ -45,7 +46,7 @@ export function MemberDetailsModal({
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["member", memberUuid],
+    queryKey: memberUuid ? memberQueryKeys.detail(memberUuid) : ["member", null],
     queryFn: () => (memberUuid ? memberService.getMemberById(memberUuid) : null),
     enabled: !!memberUuid && open,
   });
