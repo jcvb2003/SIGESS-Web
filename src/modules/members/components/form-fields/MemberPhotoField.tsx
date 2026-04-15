@@ -56,12 +56,17 @@ export function MemberPhotoField() {
   // e apenas uma vez por CPF (não sobrescreve uploads/deletes posteriores)
   useEffect(() => {
     if (!cpf) return;
-    if (initialLoadCpfRef.current === cpf) return; // já carregou para este CPF
     const currentUrl = getValues("photoPreviewUrl");
+    // Se já tem uma URL real no form (blob ou storage), não sobrescreve
     if (currentUrl) {
-      initialLoadCpfRef.current = cpf; // form já tem valor, marca como carregado
+      initialLoadCpfRef.current = cpf;
       return;
     }
+    // Se o usuário já deletou explicitamente a foto nesta sessão, não recarrega
+    if (getValues("photoDelete") === true) return;
+    // Se já carregou para este CPF e não houve reset (photoPreviewUrl ainda null),
+    // não tenta de novo para evitar loop — mas permite recarregar após reset()
+    if (initialLoadCpfRef.current === cpf) return;
     initialLoadCpfRef.current = cpf;
     setIsLoading(true);
     const url = photoService.getPhotoUrl(cpf);

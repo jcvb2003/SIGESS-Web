@@ -98,7 +98,13 @@ export function RegistrationForm({
 
   useEffect(() => {
     if (initialData) {
-      form.reset(initialData);
+      const photoUrl = initialData.cpf
+        ? photoService.getPhotoUrl(initialData.cpf)
+        : null;
+      form.reset({
+        ...initialData,
+        photoPreviewUrl: photoUrl ?? null,
+      });
     }
   }, [initialData, form]);
   const { isSubmitting } = form.formState;
