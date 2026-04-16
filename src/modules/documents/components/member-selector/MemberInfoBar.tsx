@@ -53,6 +53,7 @@ export function MemberInfoBar() {
               <img
                 src={fullMemberData.foto_url!}
                 alt={fullMemberData.nome}
+                loading="lazy"
                 onError={() => setPhotoError(true)}
                 className="h-full w-full object-cover"
               />

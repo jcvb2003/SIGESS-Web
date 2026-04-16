@@ -96,8 +96,7 @@ export function usePhotoManager({
     refreshPhoto: () => {
       if (cpf) {
         const url = photoService.getPhotoUrl(cpf);
-        if (url) setPhotoUrl(`${url}&t=${Date.now()}`);
-        else setPhotoUrl(null);
+        setPhotoUrl(url ?? null);
       }
     },
   };

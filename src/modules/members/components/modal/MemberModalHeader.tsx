@@ -72,6 +72,7 @@ function MemberAvatar({
           <img
             src={photoUrl}
             alt={member.nome}
+            loading="lazy"
             onLoad={() => setImageLoaded(true)}
             onError={() => setImageError(true)}
             className={`h-full w-full object-cover transition-opacity duration-300 ${

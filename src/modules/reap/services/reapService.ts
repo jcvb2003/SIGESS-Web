@@ -21,6 +21,7 @@ export const reapService = {
         reap (
           simplificado,
           anual,
+          observacoes,
           updated_at
         )
       `,
@@ -56,6 +57,7 @@ export const reapService = {
         emissao_rgp: socio.emissao_rgp ?? null,
         simplificado: (reapRecord?.simplificado as Reap["simplificado"]) ?? {},
         anual: (reapRecord?.anual as Reap["anual"]) ?? {},
+        observacoes: (reapRecord?.observacoes as string | null) ?? null,
         updated_at: reapRecord?.updated_at ?? "",
       };
     });
@@ -74,6 +76,7 @@ export const reapService = {
         reap (
           simplificado,
           anual,
+          observacoes,
           updated_at
         )
       `
@@ -90,6 +93,7 @@ export const reapService = {
       emissao_rgp: data.emissao_rgp ?? null,
       simplificado: (reapRecord?.simplificado as Reap["simplificado"]) ?? {},
       anual: (reapRecord?.anual as Reap["anual"]) ?? {},
+      observacoes: (reapRecord?.observacoes as string | null) ?? null,
       updated_at: reapRecord?.updated_at ?? "",
     };
   },
@@ -134,6 +138,78 @@ export const reapService = {
     });
 
     if (error) throw error;
+  },
+
+  async updateFullReap(
+    cpf: string,
+    simplificado: Reap["simplificado"],
+    anual: Reap["anual"],
+    observacoes: string | null
+  ): Promise<void> {
+    // @ts-expect-error PENDING TYPE GEN
+    const { error } = await supabase.rpc("reap_upsert_full", {
+      p_cpf: cpf,
+      p_simplificado: simplificado,
+      p_anual: anual,
+      p_observacoes: observacoes,
+    });
+
+    if (error) throw error;
+  },
+
+  async updateObservacoes(cpf: string, observacoes: string | null): Promise<void> {
+    const { error } = await supabase
+      // @ts-expect-error PENDING TYPE GEN
+      .from("reap")
+      .upsert({ cpf, observacoes }, { onConflict: "cpf" });
+
+    if (error) throw error;
+  },
+
+  async consolidateSimplificadoCompleteness(pendencyCpfs: string[]): Promise<number> {
+    const pendencySet = new Set(pendencyCpfs);
+
+    // Busca todos os CPFs de sócios ativos
+    const { data: allMembers, error: fetchError } = await supabase
+      .from("socios")
+      .select("cpf")
+      .eq("situacao", "ATIVO");
+
+    if (fetchError) throw fetchError;
+
+    const membersToMark = (allMembers || [])
+      .map(m => m.cpf)
+      .filter(cpf => !!cpf && !pendencySet.has(cpf));
+
+    if (membersToMark.length === 0) return 0;
+
+    // Prepara as entradas para o batch RPC
+    const entries = membersToMark.map(cpf => ({
+      cpf,
+      simplificado: {
+        "2021": { enviado: true, tem_problema: false, obs: null },
+        "2022": { enviado: true, tem_problema: false, obs: null },
+        "2023": { enviado: true, tem_problema: false, obs: null },
+        "2024": { enviado: true, tem_problema: false, obs: null },
+      }
+    }));
+
+    // Processa em chunks de 200 (seguro para o tamanho do payload JSON)
+    const CHUNK_SIZE = 200;
+    let totalUpdated = 0;
+
+    for (let i = 0; i < entries.length; i += CHUNK_SIZE) {
+      const chunk = entries.slice(i, i + CHUNK_SIZE);
+      // @ts-expect-error PENDING TYPE GEN
+      const { error } = await supabase.rpc("reap_batch_upsert_simplificado", {
+        p_entries: chunk
+      });
+
+      if (error) throw error;
+      totalUpdated += chunk.length;
+    }
+
+    return totalUpdated;
   },
 
   async batchMarkSent(
@@ -193,7 +269,7 @@ export const reapService = {
       fetchReaps(),
     ]);
 
-    const cpfSet = new Set((socios ?? []).map((s) => s.cpf!));
+    const cpfSet = new Set((socios ?? []).map((s) => s.cpf));
     const reapMap = new Map(
       (reapRecords ?? []).map((r) => {
         const rec = r as unknown as { cpf: string; anual: Reap["anual"] };
@@ -295,18 +371,18 @@ export const reapService = {
       fromIndex += pageSize;
     }
     
-    const members = allMembers;
-
+    const members = allMembers.filter((m): m is typeof m & { cpf: string } => !!m.cpf);
+    
     return {
       entityUf: entity?.uf ?? "PA",
-      members: (members ?? []).map((m) => {
+      members: members.map((m) => {
         const r = Array.isArray(m.reap) ? m.reap[0] : m.reap;
         return {
-          cpf: m.cpf!,
+          cpf: m.cpf,
           nome: m.nome,
           reap: r
             ? ({
-                cpf: m.cpf!,
+                cpf: m.cpf,
                 simplificado: r.simplificado as Reap["simplificado"],
                 anual: r.anual as Reap["anual"],
                 updated_at: r.updated_at,

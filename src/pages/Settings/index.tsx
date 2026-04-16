@@ -9,6 +9,7 @@ import { CustomizationForm } from "@/modules/settings/components/entity/Customiz
 import { ParametersForm } from "@/modules/settings/components/parameters/ParametersForm";
 import { PasswordChangeForm } from "@/modules/settings/components/passwords/PasswordChangeForm";
 import { UserManagementSection } from "@/modules/settings/components/passwords/UserManagementSection";
+import { ExtensionSettings } from "@/modules/settings/components/extension/ExtensionSettings";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 export default function Settings() {
@@ -63,6 +64,13 @@ export default function Settings() {
           className="space-y-4 focus-visible:outline-none focus-visible:ring-0"
         >
           <CustomizationForm />
+        </TabsContent>
+
+        <TabsContent
+          value="extensao"
+          className="space-y-4 focus-visible:outline-none focus-visible:ring-0"
+        >
+          <ExtensionSettings />
         </TabsContent>
       </Tabs>
     </div>

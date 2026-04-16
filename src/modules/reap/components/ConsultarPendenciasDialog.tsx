@@ -19,6 +19,8 @@ import { reapService } from "../services/reapService";
 import { reapQueryKeys } from "../queryKeys";
 import { toast } from "sonner";
 import { cn } from "@/shared/lib/utils";
+import { Switch } from "@/shared/components/ui/switch";
+import { Label } from "@/shared/components/ui/label";
 import * as pdfjs from "pdfjs-dist";
 import pdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
@@ -207,6 +209,7 @@ export function ConsultarPendenciasDialog({
   const [isSaving, setIsSaving] = useState(false);
   const [progress, setProgress] = useState(0);
   const [results, setResults] = useState<ReconciliationResult[]>([]);
+  const [consolidateOthers, setConsolidateOthers] = useState(false);
 
   const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -263,6 +266,13 @@ export function ConsultarPendenciasDialog({
           anosSimplificado: r.anosPendentes,
         }))
       );
+
+      if (consolidateOthers) {
+        const pendencyCpfs = selecionados.map(r => r.cpfMatch).filter(Boolean) as string[];
+        const count = await reapService.consolidateSimplificadoCompleteness(pendencyCpfs);
+        toast.info(`${count} outros sócios marcados como "Em Dia".`);
+      }
+
       toast.success(`${selecionados.length} pendência(s) registrada(s).`);
       queryClient.invalidateQueries({ queryKey: reapQueryKeys.all });
       handleClose();
@@ -277,6 +287,7 @@ export function ConsultarPendenciasDialog({
     setStep("upload");
     setResults([]);
     setProgress(0);
+    setConsolidateOthers(false);
     onOpenChange(false);
   };
 
@@ -461,18 +472,30 @@ export function ConsultarPendenciasDialog({
             Cancelar
           </Button>
           {step === "results" && (
-            <Button
-              onClick={handleConfirmar}
-              disabled={isSaving || selectedCount === 0}
-              className="gap-2"
-            >
-              {isSaving ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <CheckCircle2 className="h-4 w-4" />
-              )}
-              Registrar {selectedCount} pendência(s)
-            </Button>
+            <div className="flex items-center gap-6 mr-auto">
+              <div className="flex items-center space-x-2">
+                <Switch 
+                  id="consolidate-others" 
+                  checked={consolidateOthers} 
+                  onCheckedChange={setConsolidateOthers}
+                />
+                <Label htmlFor="consolidate-others" className="text-xs cursor-pointer select-none">
+                  Consolidar situação (Marcar demais sócios como "Em Dia")
+                </Label>
+              </div>
+              <Button
+                onClick={handleConfirmar}
+                disabled={isSaving || selectedCount === 0}
+                className="gap-2"
+              >
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="h-4 w-4" />
+                )}
+                Registrar {selectedCount} pendência(s)
+              </Button>
+            </div>
           )}
         </DialogFooter>
       </DialogContent>

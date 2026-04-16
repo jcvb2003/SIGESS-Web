@@ -30,7 +30,7 @@ export function MemberBasicInfoCell({
   return (
     <div className="flex items-center gap-2 md:gap-3">
       <Avatar className="hidden md:flex h-10 w-10 border border-border overflow-hidden bg-muted/30">
-        {photoUrl && <AvatarImage src={photoUrl} alt={name || "Sócio"} className="object-cover" />}
+        {photoUrl && <AvatarImage src={photoUrl} alt={name || "Sócio"} loading="lazy" className="object-cover" />}
         <AvatarFallback className="bg-primary/5 text-primary text-xs font-medium">
           {isLoading ? (
             <Loader2 className="h-4 w-4 animate-spin opacity-50" />

@@ -1,9 +1,11 @@
 import { TableBody, TableCell, TableRow } from "@/shared/components/ui/table";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
-import { AlertTriangle, Loader2, RefreshCcw } from "lucide-react";
+import { AlertTriangle, Loader2, RefreshCcw, Settings2 } from "lucide-react";
 import { ReapWithMember, ANOS_SIMPLIFICADO, ANO_INICIAL_ANUAL, ANO_ATUAL } from "../../types/reap.types";
 import { ReapStatusBadge } from "../ReapStatusBadge";
+import { ManageReapDialog } from "../ManageReapDialog";
+import { useState } from "react";
 
 interface ReapTableBodyProps {
   members: ReapWithMember[];
@@ -43,6 +45,7 @@ export function ReapTableBody({
   error,
   onRetry,
 }: Readonly<ReapTableBodyProps>) {
+  const [selectedMember, setSelectedMember] = useState<ReapWithMember | null>(null);
   const COLSPAN = 9;
 
   if (isLoading) {
@@ -190,11 +193,27 @@ export function ReapTableBody({
               )}
             </TableCell>
 
-            {/* Ações — espaço reservado para futuras ações inline */}
-            <TableCell />
+            {/* Ações */}
+            <TableCell className="text-right px-6">
+              <Button
+                variant="ghost" 
+                size="sm" 
+                className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10 hover:text-primary"
+                onClick={() => setSelectedMember(member)}
+              >
+                <Settings2 className="h-4 w-4 mr-2" />
+                Gerenciar
+              </Button>
+            </TableCell>
           </TableRow>
         );
       })}
+
+      <ManageReapDialog 
+        member={selectedMember} 
+        open={!!selectedMember}
+        onOpenChange={(open) => !open && setSelectedMember(null)}
+      />
     </TableBody>
   );
 }

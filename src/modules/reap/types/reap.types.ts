@@ -15,6 +15,7 @@ export interface Reap {
   cpf: string;
   simplificado: Record<string, ReapAnoSimplificado>;
   anual: Record<string, ReapAnoAnual>;
+  observacoes: string | null;
   updated_at: string;
 }
 

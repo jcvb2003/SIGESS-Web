@@ -6,12 +6,13 @@ export const photoService = {
     try {
       const cleanCpf = String(cpf).replaceAll(/\D/g, "");
       const fileName = `${cleanCpf}.jpg`;
-      
+
       const { data } = supabase.storage
         .from("fotos")
         .getPublicUrl(fileName);
-        
-      return data?.publicUrl ? `${data.publicUrl}?t=${Date.now()}` : null;
+
+      // URL estática sem timestamp — permite que o CDN sirva do cache
+      return data?.publicUrl ?? null;
     } catch (e) {
       console.error("Erro ao gerar URL da foto no photoService:", e);
       return null;
@@ -29,7 +30,7 @@ export const photoService = {
         .upload(fileName, file, {
           upsert: true,
           contentType: "image/jpeg",
-          cacheControl: "0",
+          cacheControl: "3600", // 1h de cache no CDN
         });
 
       if (uploadError) {
@@ -44,8 +45,9 @@ export const photoService = {
       if (!publicUrlData.publicUrl)
         return { data: null, error: new Error("Erro ao gerar URL pública") };
 
+      // URL estática — o browser e CDN podem cachear normalmente
       return {
-        data: `${publicUrlData.publicUrl}?t=${Date.now()}`,
+        data: publicUrlData.publicUrl,
         error: null,
       };
     } catch (error) {

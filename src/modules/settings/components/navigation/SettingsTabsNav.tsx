@@ -1,12 +1,18 @@
 import { TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
+import { useAuth } from "@/modules/auth/context/authContextStore";
 import {
   Settings as SettingsIcon,
   Building,
   Database,
   KeyRound,
   Palette,
+  Puzzle,
 } from "lucide-react";
+
 export function SettingsTabsNav() {
+  const { user } = useAuth();
+  const isAdmin = user?.app_metadata?.role === "admin";
+
   return (
     <TabsList className="overflow-x-auto scrollbar-hide w-auto justify-start px-2">
       <TabsTrigger value="dados" className="gap-2">
@@ -29,6 +35,13 @@ export function SettingsTabsNav() {
         <Palette className="h-4 w-4" />
         <span className="hidden sm:inline">Personalização</span>
       </TabsTrigger>
+      
+      {isAdmin && (
+        <TabsTrigger value="extensao" className="gap-2">
+          <Puzzle className="h-4 w-4" />
+          <span className="hidden sm:inline">Extensão</span>
+        </TabsTrigger>
+      )}
     </TabsList>
   );
 }
