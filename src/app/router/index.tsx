@@ -19,6 +19,9 @@ const MemberDetailsPage = lazy(
 const RegistrationPage = lazy(() => import("@/pages/Registration"));
 const DocumentsPage = lazy(() => import("@/pages/Documents"));
 const FinancePage = lazy(() => import("@/pages/Finance"));
+const PaymentsByPeriodPage = lazy(
+  () => import("@/pages/Finance/PaymentsByPeriodPage"),
+);
 const ReportsPage = lazy(() => import("@/pages/Reports"));
 const SettingsPage = lazy(() => import("@/pages/Settings"));
 const NotFoundPage = lazy(() => import("@/pages/NotFound"));
@@ -97,6 +100,10 @@ const router = createBrowserRouter([
       {
         path: "/finance",
         element: <FinancePage />,
+      },
+      {
+        path: "/finance/payments-report",
+        element: <PaymentsByPeriodPage />,
       },
       {
         path: "/reports",

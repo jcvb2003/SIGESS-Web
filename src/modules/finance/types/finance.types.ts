@@ -112,3 +112,14 @@ export interface EditDAEData {
   competencia_mes?: number;
   competencia_ano?: number;
 }
+
+export interface PaymentByPeriod {
+  data_pagamento: string;
+  nome: string;
+  cpf: string;
+  tipo: string;
+  competencia_ano: number | null;
+  competencia_mes: number | null;
+  forma_pagamento: string;
+  valor: number;
+}

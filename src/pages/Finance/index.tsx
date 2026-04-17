@@ -1,7 +1,8 @@
 import { useState, useCallback } from "react";
 import { Card } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
-import { Settings as SettingsIcon, SlidersHorizontal } from "lucide-react";
+import { Settings as SettingsIcon, SlidersHorizontal, Receipt } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { cn } from "@/shared/lib/utils";
 import { useFinanceDashboard } from "@/modules/finance/hooks/data/useFinanceDashboard";
@@ -33,6 +34,7 @@ const MONTH_NAMES = [
 ];
 
 export default function FinancePage() {
+  const navigate = useNavigate();
   const { params, setSearch, setTab, setPage, setPageSize, applyAdvancedFilters, clearAdvancedFilters, hasActiveAdvancedFilters } = useFinanceFilters();
   const { settings } = useFinanceSettings();
   const currentYear = new Date().getFullYear();
@@ -96,6 +98,16 @@ export default function FinancePage() {
               {hasActiveAdvancedFilters && (
                 <span className="absolute -top-1 -right-1 md:top-2 md:right-2 h-2 w-2 rounded-full bg-primary animate-pulse" />
               )}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 md:h-11 md:w-auto md:px-4 bg-background shrink-0 rounded-xl"
+              onClick={() => navigate("/finance/payments-report")}
+            >
+              <Receipt className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline text-xs font-bold uppercase transition-all">Pagamentos</span>
             </Button>
             <Button
               type="button"

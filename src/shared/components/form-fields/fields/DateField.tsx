@@ -8,6 +8,7 @@ interface DateFieldProps<T extends FieldValues> {
   description?: string;
   className?: string;
   readOnly?: boolean;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 export function DateField<T extends FieldValues>({
   control,
@@ -17,7 +18,8 @@ export function DateField<T extends FieldValues>({
   description,
   className,
   readOnly,
-}: DateFieldProps<T>) {
+  onChange,
+}: Readonly<DateFieldProps<T>>) {
   return (
     <TextField
       control={control}
@@ -28,6 +30,7 @@ export function DateField<T extends FieldValues>({
       className={className}
       readOnly={readOnly}
       type="date"
+      onChange={onChange}
     />
   );
 }

@@ -141,7 +141,7 @@ export function RegistrationForm({
   const onSubmit = async (data: MemberRegistrationSchemaType) => {
     try {
       const payload = data as MemberRegistrationForm;
-      
+
       if (isEditMode && memberUuid) {
         await memberService.updateMember(memberUuid, payload);
         await handlePhotoActions(data);
@@ -178,11 +178,11 @@ export function RegistrationForm({
     form.handleSubmit((data) => onSubmit(data), onValidationError)();
   };
 
-  const isLimitReached = !isEditMode && 
-                         metadata?.max_socios !== undefined && 
-                         metadata?.max_socios !== null &&
-                         memberCount !== null && 
-                         memberCount >= metadata.max_socios;
+  const isLimitReached = !isEditMode &&
+    metadata?.max_socios !== undefined &&
+    metadata?.max_socios !== null &&
+    memberCount !== null &&
+    memberCount >= metadata.max_socios;
 
   return (
     <div className="space-y-6">
@@ -191,7 +191,7 @@ export function RegistrationForm({
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Limite Atingido</AlertTitle>
           <AlertDescription>
-            Você atingiu o limite de {metadata?.max_socios} sócios para este período. 
+            Você atingiu o limite de {metadata?.max_socios} sócios para este período.
             Entre em contato com o suporte para aumentar seu limite.
           </AlertDescription>
         </Alert>
