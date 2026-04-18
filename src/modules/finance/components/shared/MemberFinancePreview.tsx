@@ -65,7 +65,7 @@ export function MemberFinancePreview({
         </div>
       </div>
       {children && (
-        <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+        <div className="flex flex-wrap items-center justify-end gap-1.5 shrink-0 max-w-[200px]">
           {children}
         </div>
       )}

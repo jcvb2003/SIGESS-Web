@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Label } from "@/shared/components/ui/label";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
@@ -25,7 +25,6 @@ import {
   TooltipTrigger,
 } from "@/shared/components/ui/tooltip";
 import { Switch } from "@/shared/components/ui/switch";
-import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { cn } from "@/shared/lib/utils";
 import { PaymentTypeSelector, type SelectedCharge } from "../shared/PaymentTypeSelector";
 import type {
@@ -33,6 +32,7 @@ import type {
   FinanceLancamento,
   PaymentSessionItem,
   ChargeType,
+  SelectedAnnuity,
 } from "../../types/finance.types";
 
 const MONTH_LABELS = [
@@ -60,15 +60,15 @@ export type { SelectedCharge } from "../shared/PaymentTypeSelector";
 interface PaymentItemFormProps {
   readonly currentYear: number;
   readonly anoBase: number;
-  readonly valorAnuidade: number;
   readonly lancamentos: FinanceLancamento[];
   readonly isLoadingStatement: boolean;
 
   readonly paymentCategory: "anuidade" | "mensalidade";
   readonly onPaymentCategoryChange: (category: "anuidade" | "mensalidade") => void;
 
-  readonly selectedYears: number[];
+  readonly selectedYears: SelectedAnnuity[];
   readonly onToggleYear: (year: number) => void;
+  readonly onAnnuityValueChange: (year: number, rawValue: string) => void;
 
   readonly selectedMonths: number[];
   readonly onToggleMonth: (month: number) => void;
@@ -93,7 +93,6 @@ interface PaymentItemFormProps {
 export function PaymentItemForm({
   currentYear,
   anoBase,
-  valorAnuidade,
   lancamentos,
   isLoadingStatement,
   paymentCategory,
@@ -108,6 +107,7 @@ export function PaymentItemForm({
   onAddExtraFee,
   onRemoveExtraFee,
   onFeeValueChange,
+  onAnnuityValueChange,
   selectedCharges,
   onToggleCharge,
   onChargeValueChange,
@@ -115,6 +115,8 @@ export function PaymentItemForm({
   isHistoricMember,
   onToggleHistoricMember,
 }: PaymentItemFormProps) {
+  const [showAllYears, setShowAllYears] = useState(false);
+
   // Mapa de pagamentos já realizados (Memoizado para performance)
   const paidYears = useMemo(() => {
     return new Set(
@@ -156,7 +158,9 @@ export function PaymentItemForm({
 
   const annuityYears = useMemo(() => {
     const years = [];
-    for (let y = currentYear; y >= anoBase; y--) {
+    const startYear = Math.min(anoBase, currentYear - 2); // Garante visibilidade de anos recentes se anoBase for muito futuro
+    // Permitir até 3 anos antes do anoBase e 1 ano no futuro
+    for (let y = currentYear + 1; y >= startYear - 3; y--) {
       years.push(y);
     }
     return years;
@@ -229,45 +233,62 @@ export function PaymentItemForm({
             ))
           ) : (
             <>
-              {paymentCategory === "anuidade" && annuityYears.map((year) => {
-                const isPaidFull = paidYears.has(year);
-                const isMonthlyRegime = yearsWithAnyMonthlyPayment.has(year);
-                const isSelected = selectedYears.includes(year);
-                const isPaid = isPaidFull || isMonthlyRegime;
+              {paymentCategory === "anuidade" && (
+                <>
+                  {annuityYears.map((year) => {
+                    const isPaidFull = paidYears.has(year);
+                    const isMonthlyRegime = yearsWithAnyMonthlyPayment.has(year);
+                    const isSelected = selectedYears.some(sy => sy.year === year);
+                    const isPaid = isPaidFull || isMonthlyRegime;
 
-                let buttonClass = "bg-white border-slate-100 text-slate-600 hover:border-emerald-200 hover:bg-emerald-50/30";
-                
-                if (isPaidFull) {
-                  buttonClass = "bg-slate-50 border-slate-100 opacity-60 cursor-not-allowed";
-                } else if (isMonthlyRegime) {
-                  buttonClass = "bg-slate-50 border-slate-100 opacity-60 cursor-not-allowed";
-                } else if (isSelected) {
-                  buttonClass = "bg-emerald-600 border-emerald-600 text-white shadow-md scale-[1.02]";
-                }
+                    // Mostra o ano se for o atual, se estiver expandido, ou se estiver selecionado
+                    const isCurrentYear = year === currentYear;
+                    const shouldShow = isCurrentYear || showAllYears || isSelected;
 
-                let statusText = formatCurrency(valorAnuidade);
-                if (isPaidFull) {
-                  statusText = "JÁ PAGO";
-                } else if (isMonthlyRegime) {
-                  statusText = "REGIME MENSAL";
-                }
+                    if (!shouldShow) return null;
 
-                return (
-                  <button
-                    key={`annuity-${year}`}
-                    type="button"
-                    disabled={isPaid}
-                    onClick={() => onToggleYear(year)}
-                    className={cn("relative flex flex-col items-center justify-center h-14 rounded-xl border-2 transition-all p-1 font-medium", buttonClass)}
-                  >
-                    <span className="text-sm font-bold">{year}</span>
-                    <span className={cn("text-[9px] font-bold tracking-tight", isSelected ? "text-emerald-100" : "text-slate-400")}>
-                      {statusText}
-                    </span>
-                    {isPaid && <Check className="absolute top-1 right-1 h-3 w-3 text-emerald-500" />}
-                  </button>
-                );
-              })}
+                    let buttonClass = "bg-white border-slate-100 text-slate-600 hover:border-emerald-200 hover:bg-emerald-50/30";
+                    
+                    if (isPaidFull) {
+                      buttonClass = "bg-slate-50 border-slate-100 opacity-60 cursor-not-allowed";
+                    } else if (isMonthlyRegime) {
+                      buttonClass = "bg-slate-50 border-slate-100 opacity-60 cursor-not-allowed";
+                    } else if (isSelected) {
+                      buttonClass = "bg-emerald-600 border-emerald-600 text-white shadow-md scale-[1.02]";
+                    }
+
+                    return (
+                      <button
+                        key={`annuity-${year}`}
+                        type="button"
+                        disabled={isPaid}
+                        onClick={() => onToggleYear(year)}
+                        className={cn("relative flex flex-col items-center justify-center h-14 rounded-xl border-2 transition-all p-1 font-medium", buttonClass)}
+                      >
+                        <span className="text-sm font-bold">{year}</span>
+                        <span className={cn("text-[9px] font-bold tracking-tight", isSelected ? "text-emerald-100" : "text-slate-400")}>
+                          {isPaidFull && "JÁ PAGO"}
+                          {!isPaidFull && isMonthlyRegime && "REGIME MENSAL"}
+                          {!isPaidFull && !isMonthlyRegime && "ANUIDADE"}
+                        </span>
+                        {isPaid && <Check className="absolute top-1 right-1 h-3 w-3 text-emerald-500" />}
+                      </button>
+                    );
+                  })}
+
+                  {!showAllYears && (
+                    <button
+                      key="show-more-years"
+                      type="button"
+                      onClick={() => setShowAllYears(true)}
+                      className="flex flex-col items-center justify-center h-14 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 text-slate-400 hover:border-emerald-200 hover:text-emerald-600 transition-all"
+                    >
+                      <Plus className="h-4 w-4 mb-0.5" />
+                      <span className="text-[10px] font-bold uppercase">Mais</span>
+                    </button>
+                  )}
+                </>
+              )}
 
               {paymentCategory === "mensalidade" && Array.from({ length: 12 }, (_, i) => i + 1).map((m) => {
                 const paidInYear = paidMonthsByYear.get(selectedYearForMensalidade) || new Set();
@@ -291,13 +312,61 @@ export function PaymentItemForm({
                     <span className="text-xs font-bold leading-tight uppercase tracking-tighter">{MONTH_LABELS[m]}</span>
                     {isPaid && <Check className="absolute top-1 right-1 h-3 w-3 text-emerald-500" />}
                     {isSelected && <span className="text-[8px] font-bold text-emerald-100 mt-0.5 animate-in zoom-in-50">OK</span>}
-                    {isAnnuityPaid && <span className="absolute bottom-1 text-[7px] text-emerald-600 font-bold">ANUIDADE</span>}
                   </button>
                 );
               })}
             </>
           )}
         </div>
+        
+        {/* Selected Annuities List with Editable Values */}
+        {paymentCategory === "anuidade" && selectedYears.length > 0 && (
+          <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/30 overflow-hidden divide-y divide-slate-100 ring-4 ring-slate-50 mt-4">
+            {selectedYears.map((ann) => (
+              <div key={`edit-ann-${ann.year}`} className="flex items-center justify-between p-2.5">
+                <div className="flex items-center gap-2">
+                  <div className="bg-white p-1.5 rounded-md border border-slate-100 shadow-sm">
+                    <Calendar className="h-3.5 w-3.5 text-emerald-600" />
+                  </div>
+                  <span className="text-xs font-bold text-slate-700">
+                    Anuidade {ann.year}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 pointer-events-none">
+                      R$
+                    </span>
+                    <Input
+                      type="text"
+                      inputMode="numeric"
+                      className="h-7 w-24 text-[11px] font-bold text-right pl-6 pr-2 border-slate-200 focus-visible:ring-emerald-500 bg-white"
+                      value={ann.displayValue}
+                      onChange={(e) => onAnnuityValueChange(ann.year, e.target.value)}
+                      onFocus={(e) => e.target.select()}
+                    />
+                  </div>
+                  <TooltipProvider delayDuration={100}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="outline"
+                          onClick={() => onToggleYear(ann.year)}
+                          className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-red-600 hover:text-white hover:border-red-600"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" sideOffset={5}>Remover</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Extra Fees (Inscrição) */}

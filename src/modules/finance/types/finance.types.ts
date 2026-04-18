@@ -103,6 +103,12 @@ export interface DAEItem {
   grupo_id?: string;
 }
 
+export interface SelectedAnnuity {
+  year: number;
+  valor: number;
+  displayValue: string;
+}
+
 export interface EditDAEData {
   isGroup?: boolean;
   grupoId?: string;
@@ -115,6 +121,7 @@ export interface EditDAEData {
 
 export interface PaymentByPeriod {
   data_pagamento: string;
+  created_at?: string;
   nome: string;
   cpf: string;
   tipo: string;

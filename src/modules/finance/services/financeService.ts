@@ -267,7 +267,8 @@ export const financeService = {
     startDate: string,
     endDate: string,
     page: number = 1,
-    pageSize: number = 20
+    pageSize: number = 20,
+    orderBy: "data_pagamento" | "created_at" = "data_pagamento"
   ): Promise<{ data: (PaymentByPeriod & { id: string })[]; total: number; totalAmount: number }> {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
@@ -282,6 +283,7 @@ export const financeService = {
         competencia_mes,
         forma_pagamento,
         valor,
+        created_at,
         socios!inner (
           nome,
           cpf
@@ -290,7 +292,7 @@ export const financeService = {
       .eq("status", "pago")
       .gte("data_pagamento", startDate)
       .lte("data_pagamento", endDate)
-      .order("data_pagamento", { ascending: false })
+      .order(orderBy, { ascending: false })
       .range(from, to);
 
     if (error) throw error;
@@ -344,10 +346,7 @@ export const financeService = {
    * Cancela um lançamento (soft delete atômico via RPC).
    */
   async cancelPayment(id: string, observation: string): Promise<void> {
-    // Cast intermediário para unknown para satisfazer o linter sem 'any' e contornar tipos desatualizados
-    const rpcCall = (supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) => Promise<{ error: unknown }>);
-    
-    const { error } = await rpcCall("cancel_payment_v1", {
+    const { error } = await supabase.rpc("cancel_payment_v1", {
       p_id: id,
       p_obs: observation,
     });

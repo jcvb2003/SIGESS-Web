@@ -20,6 +20,7 @@ import { ReportExportButtons } from "@/modules/reports/components/ReportExportBu
 import { Button } from "@/shared/components/ui/button";
 import { FinanceTablePagination } from "@/modules/finance/components/table/FinanceTablePagination";
 import type { PaymentByPeriod } from "@/modules/finance/types/finance.types";
+import { cn } from "@/shared/lib/utils";
 import { useState } from "react";
 
 interface FilterForm {
@@ -31,6 +32,7 @@ export default function PaymentsByPeriodPage() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const [orderBy, setOrderBy] = useState<"data_pagamento" | "created_at">("data_pagamento");
 
   const methods = useForm<FilterForm>({
     defaultValues: {
@@ -42,7 +44,7 @@ export default function PaymentsByPeriodPage() {
   const startDate = useWatch({ control: methods.control, name: "startDate" }) || "";
   const endDate = useWatch({ control: methods.control, name: "endDate" }) || "";
 
-  const { data, isLoading, isFetching } = usePaymentsByPeriod(startDate, endDate, page, pageSize);
+  const { data, isLoading, isFetching } = usePaymentsByPeriod(startDate, endDate, page, pageSize, orderBy);
   
   const payments = data?.data ?? [];
   const totalAmount = data?.totalAmount ?? 0;
@@ -72,7 +74,7 @@ export default function PaymentsByPeriodPage() {
     if (isLoading) {
       return (
         <TableRow>
-          <TableCell colSpan={6} className="h-32 text-center">
+          <TableCell colSpan={7} className="h-32 text-center">
             <div className="flex flex-col items-center justify-center gap-2">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <span className="text-sm text-muted-foreground">Carregando pagamentos...</span>
@@ -85,7 +87,7 @@ export default function PaymentsByPeriodPage() {
     if (payments.length === 0) {
       return (
         <TableRow>
-          <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+          <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
             Nenhum pagamento encontrado para este período.
           </TableCell>
         </TableRow>
@@ -96,6 +98,9 @@ export default function PaymentsByPeriodPage() {
       <TableRow key={payment.id} className="hover:bg-muted/30 transition-colors">
         <TableCell className="font-medium">
           {formatDate(payment.data_pagamento)}
+        </TableCell>
+        <TableCell className="text-[10px] text-muted-foreground font-medium">
+          {payment.created_at ? formatDate(payment.created_at) : "—"}
         </TableCell>
         <TableCell>
           <div className="flex flex-col">
@@ -131,6 +136,31 @@ export default function PaymentsByPeriodPage() {
           description="Liste todos os pagamentos recebidos em um período selecionado."
           actions={
             <div className="flex items-center gap-3 print:hidden">
+              <div className="flex bg-slate-100 p-1 rounded-xl gap-1">
+                <Button
+                  variant={orderBy === "data_pagamento" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setOrderBy("data_pagamento")}
+                  className={cn(
+                    "h-8 text-[10px] font-bold uppercase tracking-tight rounded-lg",
+                    orderBy === "data_pagamento" ? "bg-white text-primary shadow-sm hover:bg-white" : "text-slate-500"
+                  )}
+                >
+                  Data Pagamento
+                </Button>
+                <Button
+                  variant={orderBy === "created_at" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setOrderBy("created_at")}
+                  className={cn(
+                    "h-8 text-[10px] font-bold uppercase tracking-tight rounded-lg",
+                    orderBy === "created_at" ? "bg-white text-primary shadow-sm hover:bg-white" : "text-slate-500"
+                  )}
+                >
+                  Data Registro
+                </Button>
+              </div>
+
               {totalCount > 0 && (
                 <ReportExportButtons 
                   onExportExcel={handleExportExcel}
@@ -183,7 +213,8 @@ export default function PaymentsByPeriodPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="w-[120px]">Data</TableHead>
+                    <TableHead className="w-[120px]">Data Pagamento</TableHead>
+                    <TableHead className="w-[120px]">Data Registro</TableHead>
                     <TableHead>Sócio</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead>Competência</TableHead>

@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { Card } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
-import { Settings as SettingsIcon, SlidersHorizontal, Receipt } from "lucide-react";
+import { Settings as SettingsIcon, SlidersHorizontal, Receipt, History } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { cn } from "@/shared/lib/utils";
@@ -18,6 +18,8 @@ import { PaymentSessionDialog } from "@/modules/finance/components/dialogs/Payme
 import { DAEDialog } from "@/modules/finance/components/dialogs/DAEDialog";
 import { FinanceSettingsDialog } from "@/modules/finance/components/dialogs/FinanceSettingsDialog";
 import { FinanceFilterPanel } from "@/modules/finance/components/filters/FinanceFilterPanel";
+import { AuditLogDialog } from "@/modules/finance/components/dialogs/AuditLogDialog";
+import { usePermissions } from "@/shared/hooks/usePermissions";
 import type { FinanceDashboardParams } from "@/modules/finance/types/finance.types";
 
 const TABS: { value: FinanceDashboardParams["tab"]; label: string }[] = [
@@ -37,6 +39,7 @@ export default function FinancePage() {
   const navigate = useNavigate();
   const { params, setSearch, setTab, setPage, setPageSize, applyAdvancedFilters, clearAdvancedFilters, hasActiveAdvancedFilters } = useFinanceFilters();
   const { settings } = useFinanceSettings();
+  const { isAdmin } = usePermissions();
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
   const anoBase = settings?.ano_base_cobranca ?? 2024;
@@ -61,6 +64,9 @@ export default function FinancePage() {
 
   // Settings Dialog
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // Audit Log Dialog
+  const [auditOpen, setAuditOpen] = useState(false);
 
   // Filters Panel
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -109,6 +115,18 @@ export default function FinancePage() {
               <Receipt className="h-4 w-4 md:mr-2" />
               <span className="hidden md:inline text-xs font-bold uppercase transition-all">Pagamentos</span>
             </Button>
+            {isAdmin && (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 md:h-11 md:w-auto md:px-4 bg-background shrink-0 rounded-xl"
+                onClick={() => setAuditOpen(true)}
+              >
+                <History className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline text-xs font-bold uppercase transition-all">Auditoria</span>
+              </Button>
+            )}
             <Button
               type="button"
               variant="outline"
@@ -244,6 +262,12 @@ export default function FinancePage() {
         }}
         onApply={applyAdvancedFilters}
         onClear={clearAdvancedFilters}
+      />
+
+      {/* Audit Log Dialog */}
+      <AuditLogDialog 
+        open={auditOpen}
+        onOpenChange={setAuditOpen}
       />
     </div>
   );

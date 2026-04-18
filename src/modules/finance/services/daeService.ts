@@ -115,8 +115,7 @@ export const daeService = {
     year: number,
     items: { mes: number; valor: number }[]
   ): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.rpc as any)("update_dae_group", {
+    const { error } = await supabase.rpc("update_dae_group", {
       p_grupo_id: grupoId,
       p_new_year: year,
       p_items: items,

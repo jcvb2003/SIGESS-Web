@@ -24,6 +24,9 @@ import {
   Check,
   Wallet,
   X,
+  Pencil,
+  Settings2,
+  Unlock,
 } from "lucide-react";
 import type {
   PaymentSessionItem,
@@ -32,7 +35,9 @@ import type {
   FinancialStatusType,
   ChargeType,
   FinanceLancamento,
+  SelectedAnnuity,
 } from "../../types/finance.types";
+import { MemberFinanceConfigForm } from "../forms/MemberFinanceConfigForm";
 
 interface PaymentSessionDialogProps {
   readonly open: boolean;
@@ -56,8 +61,9 @@ export function PaymentSessionDialog({
   const paymentMutation = usePaymentSession();
 
   const [paymentCategory, setPaymentCategory] = useState<"anuidade" | "mensalidade">("anuidade");
-  const [selectedYears, setSelectedYears] = useState<number[]>([]);
+  const [selectedYears, setSelectedYears] = useState<SelectedAnnuity[]>([]);
   const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
+  const [configMode, setConfigMode] = useState<"isencao" | "liberacao" | "regime" | null>(null);
   
   const currentYear = new Date().getFullYear();
   const [selectedYearForMensalidade, setSelectedYearForMensalidade] = useState(currentYear);
@@ -74,12 +80,45 @@ export function PaymentSessionDialog({
   const valorMensalidade = settings?.valor_mensalidade ?? (valorAnuidade / 12);
 
   const toggleYear = (year: number) => {
+    setSelectedYears((prev) => {
+      const exists = prev.find((y) => y.year === year);
+      if (exists) {
+        return prev.filter((y) => y.year !== year);
+      }
+      return [
+        ...prev,
+        {
+          year,
+          valor: valorAnuidade,
+          displayValue: formatNumericInput(valorAnuidade),
+        },
+      ].sort((a, b) => b.year - a.year);
+    });
+  };
+
+  const handleAnnuityValueChange = (year: number, rawValue: string) => {
+    const digits = rawValue.replaceAll(/\D/g, "");
+    const numericValue = Number(digits) / 100;
     setSelectedYears((prev) =>
-      prev.includes(year)
-        ? prev.filter((y) => y !== year)
-        : [...prev, year].sort((a, b) => b - a),
+      prev.map((y) =>
+        y.year === year
+          ? { ...y, valor: numericValue, displayValue: formatNumericInput(numericValue) }
+          : y,
+      ),
     );
   };
+
+  useEffect(() => {
+    if (open) {
+      setSelectedYears([]);
+      setSelectedMonths([]);
+      setExtraFees([]);
+      setSelectedCharges([]);
+      setPaymentCategory("anuidade");
+      setSelectedYearForMensalidade(currentYear);
+      setPaymentDate(new Date().toLocaleDateString("sv"));
+    }
+  }, [open, currentYear]);
 
   useEffect(() => {
     async function loadConfig() {
@@ -214,7 +253,7 @@ export function PaymentSessionDialog({
     setSelectedCharges((prev) => prev.filter((c) => c.uid !== uid));
   };
 
-  const totalAnnuities = selectedYears.length * valorAnuidade;
+  const totalAnnuities = selectedYears.reduce((sum, item) => sum + (item.valor || 0), 0);
   const totalMonthly = selectedMonths.length * valorMensalidade;
   const totalFees = extraFees.reduce((sum, item) => sum + (item.valor || 0), 0);
   const totalCharges = selectedCharges.reduce((sum, c) => sum + (c.valor || 0), 0);
@@ -236,10 +275,10 @@ export function PaymentSessionDialog({
     const sessaoId = generateUUID();
     const items: PaymentSessionItem[] = [
       ...(paymentCategory === "anuidade"
-        ? selectedYears.map((year) => ({
+        ? selectedYears.map((ann) => ({
             tipo: "anuidade" as const,
-            competencia_ano: year,
-            valor: valorAnuidade,
+            competencia_ano: ann.year,
+            valor: ann.valor,
           }))
         : selectedMonths.map((month) => ({
             tipo: "mensalidade" as const,
@@ -304,19 +343,58 @@ export function PaymentSessionDialog({
               cpf={socioCpf ?? undefined} 
               status={status}
               regime={regime}
-            />
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setConfigMode(configMode === "isencao" ? null : "isencao")}
+                className="h-8 pr-3 pl-2.5 text-[10px] font-bold gap-1.5 border-blue-200 text-blue-700 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all"
+              >
+                <Pencil className="h-3 w-3" />
+                Isenção
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setConfigMode(configMode === "regime" ? null : "regime")}
+                className="h-8 pr-3 pl-2.5 text-[10px] font-bold gap-1.5 border-slate-200 text-slate-600 hover:bg-slate-600 hover:text-white transition-all"
+              >
+                <Settings2 className="h-3 w-3" />
+                Regime
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setConfigMode(configMode === "liberacao" ? null : "liberacao")}
+                className="h-8 pr-3 pl-2.5 text-[10px] font-bold gap-1.5 border-amber-200 text-amber-700 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all"
+              >
+                <Unlock className="h-3 w-3" />
+                Liberar
+              </Button>
+            </MemberFinancePreview>
+
+            {/* Config Panel (inline) - Independent from main form submit */}
+            {configMode && socioCpf && (
+              <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                <MemberFinanceConfigForm
+                  cpf={socioCpf}
+                  mode={configMode}
+                  onClose={() => setConfigMode(null)}
+                />
+              </div>
+            )}
 
             {/* Payment Items Form */}
             <PaymentItemForm
               currentYear={currentYear}
               anoBase={anoBase}
-              valorAnuidade={valorAnuidade}
               lancamentos={lancamentos}
               isLoadingStatement={isLoadingStatement}
               paymentCategory={paymentCategory}
               onPaymentCategoryChange={setPaymentCategory}
               selectedYears={selectedYears}
               onToggleYear={toggleYear}
+              onAnnuityValueChange={handleAnnuityValueChange}
               selectedMonths={selectedMonths}
               onToggleMonth={toggleMonth}
               selectedYearForMensalidade={selectedYearForMensalidade}

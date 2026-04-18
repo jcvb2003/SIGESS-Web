@@ -1196,6 +1196,26 @@ export type Database = {
           nome: string
         }[]
       }
+      get_finance_audit_log_v1: {
+        Args: {
+          p_table_name?: string | null
+          p_operation?: string | null
+          p_limit?: number
+          p_offset?: number
+        }
+        Returns: {
+          id: string
+          table_name: string
+          record_id: string
+          operation: string
+          old_data: Json | null
+          new_data: Json | null
+          changed_by: string
+          user_nome: string
+          user_email: string
+          created_at: string
+        }[]
+      }
       get_finance_tab_counts: {
         Args: { p_ano_base?: number; p_search_term?: string; p_year?: number }
         Returns: Json
@@ -1204,6 +1224,14 @@ export type Database = {
       launch_bulk_contribution: {
         Args: { p_tipo_cobranca_id: string }
         Returns: number
+      }
+      purge_cancelled_bulk_v1: {
+        Args: { p_older_than_days: number }
+        Returns: number
+      }
+      purge_payment_v1: {
+        Args: { p_id: string }
+        Returns: undefined
       }
       register_payment_session: {
         Args: {
@@ -1321,10 +1349,12 @@ export type TablesUpdate<
       : never
     : never
 
+type UnionWithSchema<T> = [T] extends [never]
+  ? { schema: keyof DatabaseWithoutInternals }
+  : T | { schema: keyof DatabaseWithoutInternals }
+
 export type Enums<
-  DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
+  DefaultSchemaEnumNameOrOptions extends UnionWithSchema<keyof DefaultSchema["Enums"]>,
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -1339,9 +1369,7 @@ export type Enums<
     : never
 
 export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
+  PublicCompositeTypeNameOrOptions extends UnionWithSchema<keyof DefaultSchema["CompositeTypes"]>,
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }

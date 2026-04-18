@@ -32,7 +32,8 @@ import type { ChargeTypeFormValues } from "../../schemas/chargeType.schema";
 // Subcomponentes das abas
 import { GeneralSettingsTab } from "./tabs/GeneralSettingsTab";
 import { ChargeTypesTab } from "./tabs/ChargeTypesTab";
-import { MemberFinanceSettingsTab } from "./tabs/MemberFinanceSettingsTab";
+import { MaintenanceTab } from "./tabs/MaintenanceTab";
+import { usePermissions } from "@/shared/hooks/usePermissions";
 
 interface FinanceSettingsDialogProps {
   readonly open: boolean;
@@ -43,6 +44,7 @@ export function FinanceSettingsDialog({
   open,
   onOpenChange,
 }: FinanceSettingsDialogProps) {
+  const { isAdmin } = usePermissions();
   // Data Fetching
   const { settings, isLoading: loadingSettings } = useFinanceSettings();
   const { chargeTypes, isLoading: loadingChargeTypes } = useChargeTypes();
@@ -162,7 +164,7 @@ export function FinanceSettingsDialog({
               <TabsList className="bg-transparent h-auto p-0">
                 <TabsTrigger value="parametros">Parâmetros</TabsTrigger>
                 <TabsTrigger value="tipos">Tipos de Cobrança</TabsTrigger>
-                <TabsTrigger value="socios">Configuração por Sócio</TabsTrigger>
+                {isAdmin && <TabsTrigger value="manutencao">Manutenção</TabsTrigger>}
               </TabsList>
             </div>
 
@@ -187,9 +189,12 @@ export function FinanceSettingsDialog({
               />
             </TabsContent>
 
-            <TabsContent value="socios" className="flex-1 overflow-hidden mt-0">
-              <MemberFinanceSettingsTab />
-            </TabsContent>
+
+            {isAdmin && (
+              <TabsContent value="manutencao" className="flex-1 overflow-hidden mt-0">
+                <MaintenanceTab />
+              </TabsContent>
+            )}
           </Tabs>
         </div>
       </DialogContent>
