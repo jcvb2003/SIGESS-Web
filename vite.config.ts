@@ -14,7 +14,7 @@ export default defineConfig({
                 runtimeCaching: [
                     {
                         urlPattern: /^https:\/\/.*supabase\.co\/rest\/v1\/.*/i,
-                        handler: 'NetworkFirst',
+                        handler: 'NetworkOnly',
                         options: {
                             cacheName: 'supabase-api-cache',
                             expiration: {
