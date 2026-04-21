@@ -13,7 +13,6 @@ export function useLogin() {
       if (!success) {
         return;
       }
-      localStorage.setItem("sigess_tenant_code", credentials.tenantCode);
       navigate("/dashboard");
     } finally {
       setLoading(false);
