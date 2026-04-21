@@ -87,41 +87,45 @@ async function verifyDrift() {
   }
 
   if (isDiff) {
-    console.log('\n📊 Analisando diferenças (Referência: oeiras vs breves)...\n');
+    const baselineCode = 'sinpesca-oeiras';
+    const baseline = tenantElements[baselineCode];
     
-    const oeiras = tenantElements['sinpesca-oeiras'];
-    const breves = tenantElements['sinpesca-breves'];
-    
-    if (!oeiras || !breves) {
-      console.error('❌ Falta oeiras ou breves para comparar.');
+    if (!baseline) {
+      console.error(`❌ Falta o tenant de referência (${baselineCode}) para comparar.`);
       return;
     }
+
+    console.log(`\n📊 Analisando diferenças em relação ao baseline: ${baselineCode}\n`);
     
-    let diffCount = 0;
-    
-    console.log('--- O QUE TEM NO OEIRAS MAS FALTA NO BREVES ---');
-    for (const el of oeiras) {
-      if (!breves.has(el)) {
-        console.log(`+ Falta no Breves: ${el}`);
-        diffCount++;
+    for (const [code, elements] of Object.entries(tenantElements)) {
+      if (code === baselineCode) continue;
+
+      console.log(`--- COMPARANDO: ${baselineCode} vs ${code} ---`);
+      
+      let diffCount = 0;
+      for (const el of baseline) {
+        if (!elements.has(el)) {
+          console.log(`[MISSING in ${code}] ${el}`);
+          diffCount++;
+        }
       }
-    }
-    
-    console.log('\n--- O QUE TEM NO BREVES MAS FALTA NO OEIRAS ---');
-    for (const el of breves) {
-      if (!oeiras.has(el)) {
-        console.log(`- Sobrando no Breves: ${el}`);
-        diffCount++;
+      
+      for (const el of elements) {
+        if (!baseline.has(el)) {
+          console.log(`[EXTRA in ${code}] ${el}`);
+          diffCount++;
+        }
       }
-    }
-    
-    if (diffCount === 0) {
-      console.log('\n✅ Nenhuma diferença estrutural encontrada entre Oeiras e Breves!');
-    } else {
-      console.log(`\n❌ Total de diferenças: ${diffCount}`);
+
+      if (diffCount === 0) {
+        console.log(`✅ [${code}] 100% Sincronizado com ${baselineCode}`);
+      } else {
+        console.log(`❌ [${code}] ${diffCount} diferenças encontradas.`);
+      }
+      console.log('--------------------------------------------\n');
     }
   } else {
-    console.log('\n💡 Rode com --diff para ver as diferenças exatas entre Oeiras e Breves.');
+    console.log('\n💡 Rode com --diff para ver as diferenças exatas entre os tenants.');
   }
 }
 
