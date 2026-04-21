@@ -138,15 +138,14 @@ export function MemberPhotoField() {
       const previewUrl = URL.createObjectURL(compressedBlob);
       const compressedFile = new File([compressedBlob], "member_photo.jpg", { type: "image/jpeg" });
 
-      handleStagePhoto(compressedFile, previewUrl);
-      setHasImageError(false); // Correção: Garantir que o erro seja limpo após o upload remoto
+      setPendingPhoto({ file: compressedFile, previewUrl });
       setIsQrModalOpen(false);
-      toast.success("Foto recebida do celular!");
+      toast.success("Foto recebida do celular! Revise e confirme.");
     } catch (error) {
       console.error("Erro ao processar foto remota:", error);
       toast.error("Erro ao processar foto vinda do celular.");
     }
-  }, [handleStagePhoto]);
+  }, []);
 
   useEffect(() => {
     if (!qrToken || !isQrModalOpen) return;
