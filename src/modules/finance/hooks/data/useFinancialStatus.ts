@@ -7,6 +7,7 @@ export function useFinancialStatus(cpf: string | null, year: number) {
     queryKey: financeQueryKeys.financialStatus(cpf ?? "", year),
     queryFn: () => financialStatusService.isOverdue(cpf ?? "", year),
     enabled: !!cpf,
+    staleTime: 0,
   });
 
   return {

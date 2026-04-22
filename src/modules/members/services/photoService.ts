@@ -1,7 +1,7 @@
 import { supabase } from "@/shared/lib/supabase/client";
 import { ServiceResponse } from "@/shared/services/base/serviceResponse";
 export const photoService = {
-  getPhotoUrl(cpf: string): string | null {
+  getPhotoUrl(cpf: string, cacheVersion?: string | boolean): string | null {
     if (!cpf) return null;
     try {
       const cleanCpf = String(cpf).replaceAll(/\D/g, "");
@@ -11,8 +11,16 @@ export const photoService = {
         .from("fotos")
         .getPublicUrl(fileName);
 
-      // URL estática sem timestamp — permite que o CDN sirva do cache
-      return data?.publicUrl ?? null;
+      if (!data?.publicUrl) return null;
+
+      // Se cacheVersion for string (ex: updated_at), usa como versão para cache longo
+      // Se for true, usa o timestamp atual para ignorar cache totalmente (modo de edição estrito)
+      if (cacheVersion) {
+        const v = typeof cacheVersion === 'string' ? new Date(cacheVersion).getTime() : Date.now();
+        return `${data.publicUrl}?v=${v}`;
+      }
+
+      return data.publicUrl;
     } catch (e) {
       console.error("Erro ao gerar URL da foto no photoService:", e);
       return null;

@@ -135,7 +135,6 @@ export async function applyGlobalFontConfig(
     return;
   }
   try {
-    clearFontCache();
     const form = pdfDoc.getForm();
     for (const config of fontConfigurations) {
       try {
@@ -174,6 +173,5 @@ export async function applyGlobalFontConfig(
     console.log("Aplicação de configurações de fonte concluída");
   } catch (error) {
     console.error("Erro ao aplicar configurações de fonte globalmente:", error);
-    clearFontCache();
   }
 }

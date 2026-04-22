@@ -2,11 +2,13 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/shared/lib/supabase/client';
 import { toast } from 'sonner';
 
+import { UserRole } from '@/shared/types/auth.types';
+
 export interface User {
   id: string;
   email: string;
   nome: string | null;
-  role: 'admin' | 'operador_financeiro' | 'operador_administrativo' | 'consulta';
+  role: UserRole;
   ativo: boolean;
   max_socios: number | null;
   createdAt: string;

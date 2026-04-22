@@ -97,7 +97,7 @@ export function RegistrationForm({
   useEffect(() => {
     if (initialData) {
       const photoUrl = initialData.cpf
-        ? photoService.getPhotoUrl(initialData.cpf)
+        ? photoService.getPhotoUrl(initialData.cpf, true) // bustCache = true
         : null;
       form.reset({
         ...initialData,

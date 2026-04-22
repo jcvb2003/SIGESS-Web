@@ -69,7 +69,7 @@ export function MemberPhotoField() {
     if (initialLoadCpfRef.current === cpf) return;
     initialLoadCpfRef.current = cpf;
     setIsLoading(true);
-    const url = photoService.getPhotoUrl(cpf);
+    const url = photoService.getPhotoUrl(cpf, true);
     setValue("photoPreviewUrl", url ?? null);
     setIsLoading(false);
   }, [cpf, setValue, getValues]);
@@ -77,9 +77,9 @@ export function MemberPhotoField() {
   // --- Handlers de foto (todos escrevem direto no form) ---
 
   const handleDeletePhoto = useCallback(() => {
-    setValue("photoPreviewUrl", null);
-    setValue("photoFile", null);
-    setValue("photoDelete", true);
+    setValue("photoPreviewUrl", null, { shouldDirty: true });
+    setValue("photoFile", null, { shouldDirty: true });
+    setValue("photoDelete", true, { shouldDirty: true });
   }, [setValue]);
 
   const handleStagePhoto = useCallback((file: File, previewUrl: string) => {
@@ -93,6 +93,20 @@ export function MemberPhotoField() {
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [qrToken, setQrToken] = useState<string | null>(null);
   const [isGeneratingToken, setIsGeneratingToken] = useState(false);
+
+  useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+    if (isQrModalOpen) {
+      timeoutId = setTimeout(() => {
+        setIsQrModalOpen(false);
+        setQrToken(null);
+        toast.info("A sessão de captura por QR Code expirou após 10 minutos de inatividade.");
+      }, 10 * 60 * 1000); // 10 minutes
+    }
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [isQrModalOpen]);
 
   const closeQrModal = useCallback(() => {
     setIsQrModalOpen(false);

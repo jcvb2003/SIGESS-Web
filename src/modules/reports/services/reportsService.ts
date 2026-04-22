@@ -36,25 +36,6 @@ export interface RequestReportResponse {
   total: number;
 }
 
-async function buildSearchFilters(searchTerm: string): Promise<string> {
-  const isNumber = !Number.isNaN(Number(searchTerm));
-  const like = `%${searchTerm}%`;
-  // Buscar cpfs baseados no nome do socio
-  const { data: matchedSocios } = await supabase.from("socios").select("cpf").or(`nome.ilike.${like}`).limit(100);
-  const cpfsInQuery = matchedSocios?.length 
-    ? matchedSocios
-        .map((s: { cpf: string | null }) => s.cpf ? `"${s.cpf}"` : null)
-        .filter(Boolean)
-        .join(',') 
-    : '';
-
-  let orString = '';
-  if (isNumber) orString += `cod_req.eq.${searchTerm},`;
-  orString += `cpf.ilike.${like}`;
-  if (cpfsInQuery) orString += `,cpf.in.(${cpfsInQuery})`;
-
-  return orString;
-}
 
 export const reportsService = {
   async fetchRequestsReport(
@@ -70,7 +51,8 @@ export const reportsService = {
       .order("cod_req", { ascending: false });
 
     if (searchTerm) {
-      query = query.or(await buildSearchFilters(searchTerm));
+      const like = `%${searchTerm}%`;
+      query = query.or(`cod_req.ilike.${like},cpf.ilike.${like},socios.nome.ilike.${like}`);
     }
 
     const {
@@ -104,7 +86,8 @@ export const reportsService = {
         .range(from, to);
 
       if (searchTerm) {
-        query = query.or(await buildSearchFilters(searchTerm));
+        const like = `%${searchTerm}%`;
+        query = query.or(`cod_req.ilike.${like},cpf.ilike.${like},socios.nome.ilike.${like}`);
       }
 
       const { data, error } = await query;

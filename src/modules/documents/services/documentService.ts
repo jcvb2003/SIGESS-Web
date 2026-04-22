@@ -114,22 +114,7 @@ export const documentService = {
     const term = searchTerm.trim();
     if (term) {
       const like = `%${term}%`;
-      // Precisamos buscar nomes ou códigos de socio na tabela socios
-      const { data: matchedSocios } = await supabase
-        .from("socios")
-        .select("cpf")
-        .or(`nome.ilike.${like},codigo_do_socio.ilike.${like}`)
-        .limit(100);
-      
-      const cpfs = matchedSocios?.map((s) => s.cpf) || [];
-      
-      if (cpfs.length > 0) {
-        // Formata os cpfs para string escapada, evitando nested template literals.
-        const cpfsInQuery = cpfs.map((c) => '"' + c + '"').join(',');
-        query = query.or(`cpf.ilike.${like},cod_req.ilike.${like},cpf.in.(${cpfsInQuery})`);
-      } else {
-        query = query.or(`cpf.ilike.${like},cod_req.ilike.${like}`);
-      }
+      query = query.or(`cpf.ilike.${like},cod_req.ilike.${like},socios.nome.ilike.${like},socios.codigo_do_socio.ilike.${like}`);
     }
 
     const { data, error, count } = await query

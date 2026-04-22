@@ -11,6 +11,7 @@ import {
   toMemberInsertPayload,
   fromMemberRecord,
 } from "./memberDataTransformer";
+import { mapRowToListItem } from "../utils/memberTransformers";
 const toNullableString = (value: unknown): string | null => {
   if (value === null || value === undefined) {
     return null;
@@ -85,7 +86,7 @@ export const memberService = {
     let query = supabase
       .from("socios")
       .select(
-        "id, codigo_do_socio, nome, cpf, data_de_admissao, situacao, codigo_localidade, data_de_nascimento",
+        "id, codigo_do_socio, nome, cpf, data_de_admissao, situacao, codigo_localidade, data_de_nascimento, updated_at",
         {
           count: "exact",
         },
@@ -118,44 +119,24 @@ export const memberService = {
     const ascending = params.orderDirection !== "desc"; // Default to ASC if not 'desc'
 
     if (birthMonth) {
-      const { data, error } = await query.order(sortField, { ascending });
-      if (error) {
-        throw error;
-      }
-      const month = birthMonth.padStart(2, "0");
-      const filteredItems = (data || []).filter((item) => {
-        const record = item as unknown as { data_de_nascimento: string | null };
-        const dob = record.data_de_nascimento;
-        if (!dob || typeof dob !== "string") return false;
-        return dob.includes(`-${month}-`);
+      const monthInt = parseInt(birthMonth, 10);
+      const { data: rpcData, error: rpcError } = await supabase.rpc("get_members_by_birth_month", {
+        p_month: monthInt,
+        p_limit: pageSize,
+        p_offset: from
       });
-      const total = filteredItems.length;
-      const pagedItems = filteredItems.slice(from, to + 1);
-      const items = pagedItems.map((item) => {
-        const record = item as unknown as {
-          id: string;
-          codigo_do_socio: string | null;
-          nome: string | null;
-          cpf: string | null;
-          data_de_admissao: string | null;
-          situacao: string | null;
-          codigo_localidade: string | null;
-        };
-        return {
-          id: String(record.id),
-          codigo_do_socio: toNullableString(record.codigo_do_socio),
-          nome: toNullableString(record.nome),
-          cpf: toNullableString(record.cpf),
-          data_de_admissao: toNullableString(record.data_de_admissao),
-          situacao: toNullableString(record.situacao),
-          codigo_localidade: toNullableString(record.codigo_localidade),
-          foto_url: record.cpf ? photoService.getPhotoUrl(record.cpf) : null,
-        };
-      });
-      return {
-        items,
-        total,
-      };
+
+      if (rpcError) throw rpcError;
+
+      const total = rpcData?.[0]?.total_count ? Number(rpcData[0].total_count) : 0;
+      const items = (rpcData || []).map((record: any) => ({
+        ...mapRowToListItem(record, photoService.getPhotoUrl),
+        data_de_admissao: null, // RPC simplificada
+        situacao: "Ativo", // Assumido para aniversariantes
+        codigo_localidade: null,
+      }));
+
+      return { items, total };
     }
     const { data, error, count } = await query
       .order(sortField, { ascending })
@@ -163,27 +144,7 @@ export const memberService = {
     if (error) {
       throw error;
     }
-    const items = (data || []).map((item) => {
-      const record = item as unknown as {
-        id: string;
-        codigo_do_socio: string | null;
-        nome: string | null;
-        cpf: string | null;
-        data_de_admissao: string | null;
-        situacao: string | null;
-        codigo_localidade: string | null;
-      };
-      return {
-        id: String(record.id),
-        codigo_do_socio: toNullableString(record.codigo_do_socio),
-        nome: toNullableString(record.nome),
-        cpf: toNullableString(record.cpf),
-        data_de_admissao: toNullableString(record.data_de_admissao),
-        situacao: toNullableString(record.situacao),
-        codigo_localidade: toNullableString(record.codigo_localidade),
-        foto_url: record.cpf ? photoService.getPhotoUrl(record.cpf) : null,
-      };
-    });
+    const items = (data || []).map((item) => mapRowToListItem(item as Record<string, unknown>, photoService.getPhotoUrl));
     return {
       items,
       total: count ?? items.length,
@@ -240,11 +201,13 @@ export const memberService = {
       .eq("id", id)
       .single();
 
-    if (error || !data) {
+    if (error) {
+      console.error(`Error fetching member by ID (${id}):`, error);
       return null;
     }
+    if (!data) return null;
 
-    const photoUrl = data.cpf ? photoService.getPhotoUrl(data.cpf) : null;
+    const photoUrl = data.cpf ? photoService.getPhotoUrl(data.cpf, data.updated_at || undefined) : null;
 
     const recordWithPhoto = {
       ...data,

@@ -45,35 +45,31 @@ const normalizeMembers = (value: unknown): Member[] => {
 };
 export const dashboardService = {
   async getStats() {
-    try {
-      const [totalResponse, maleResponse, femaleResponse, documentsResponse] =
-        await Promise.all([
-          supabase.from("socios").select("*", { count: "exact", head: true }),
-          supabase
-            .from("socios")
-            .select("*", { count: "exact", head: true })
-            .eq("sexo", "MASCULINO"),
-          supabase
-            .from("socios")
-            .select("*", { count: "exact", head: true })
-            .eq("sexo", "FEMININO"),
-          supabase.from("requerimentos").select("*", { count: "exact", head: true }),
-        ]);
-      return {
-        totalMembers: totalResponse.count || 0,
-        maleMembers: maleResponse.count || 0,
-        femaleMembers: femaleResponse.count || 0,
-        totalDocuments: documentsResponse.count || 0,
-      };
-    } catch (error) {
-      console.error("Dashboard stats error:", error);
-      return {
-        totalMembers: 0,
-        maleMembers: 0,
-        femaleMembers: 0,
-        totalDocuments: 0,
-      };
-    }
+    const [totalResponse, maleResponse, femaleResponse, documentsResponse] =
+      await Promise.all([
+        supabase.from("socios").select("*", { count: "exact", head: true }),
+        supabase
+          .from("socios")
+          .select("*", { count: "exact", head: true })
+          .eq("sexo", "MASCULINO"),
+        supabase
+          .from("socios")
+          .select("*", { count: "exact", head: true })
+          .eq("sexo", "FEMININO"),
+        supabase.from("requerimentos").select("*", { count: "exact", head: true }),
+      ]);
+
+    if (totalResponse.error) throw totalResponse.error;
+    if (maleResponse.error) throw maleResponse.error;
+    if (femaleResponse.error) throw femaleResponse.error;
+    if (documentsResponse.error) throw documentsResponse.error;
+
+    return {
+      totalMembers: totalResponse.count ?? 0,
+      maleMembers: maleResponse.count ?? 0,
+      femaleMembers: femaleResponse.count ?? 0,
+      totalDocuments: documentsResponse.count ?? 0,
+    };
   },
   async getRecentMembers(): Promise<Member[]> {
     try {

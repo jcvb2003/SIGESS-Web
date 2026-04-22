@@ -93,7 +93,11 @@ export const requirementService = {
       .eq("id", id)
       .single();
 
-    if (error || !data) return null;
+    if (error) {
+      console.error(`Error fetching requirement by ID (${id}):`, error);
+      return null;
+    }
+    if (!data) return null;
 
     const member = Array.isArray(data.socios) ? data.socios[0] : data.socios;
 
@@ -267,7 +271,6 @@ export const requirementService = {
       .select("uf")
       .maybeSingle();
 
-    // 2. Buscar todos os sócios com requerimentos
     const { data: members } = await supabase
       .from("socios")
       .select(`
@@ -281,12 +284,14 @@ export const requirementService = {
           beneficio_recebido,
           ano_referencia
         )
-      `);
+      `)
+      .limit(10000); // Correct silent 1000 limit
 
     // 3. Buscar situação financeira em lote
     const { data: finance } = await supabase
       .from("v_situacao_financeira_socio")
-      .select("cpf, situacao_geral");
+      .select("cpf, situacao_geral")
+      .limit(10000); // Correct silent 1000 limit
 
     return {
       entityUf: entity?.uf || 'PA',

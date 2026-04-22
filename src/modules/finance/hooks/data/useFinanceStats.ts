@@ -6,6 +6,7 @@ export function useFinanceStats(year: number, month: number) {
   const query = useQuery({
     queryKey: financeQueryKeys.stats(year, month),
     queryFn: () => financeService.getMonthlyStats(year, month),
+    staleTime: 0,
   });
 
   return {

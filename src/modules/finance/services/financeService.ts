@@ -88,19 +88,9 @@ export const financeService = {
     } else if (tab === "liberados") {
       filteredQuery = filteredQuery.eq("liberado_presidente", true);
     } else if (tab === "em-dia") {
-      filteredQuery = filteredQuery
-        .not("isento", "eq", true)
-        .not("liberado_presidente", "eq", true);
-      if (requiredYears.length > 0) {
-        filteredQuery = filteredQuery.contains("anuidades_pagas", requiredYears);
-      }
+      filteredQuery = filteredQuery.eq("situacao_geral", "EM_DIA");
     } else if (tab === "inadimplentes") {
-      filteredQuery = filteredQuery
-        .not("isento", "eq", true)
-        .not("liberado_presidente", "eq", true)
-        .or(
-          `anuidades_pagas.is.null,anuidades_pagas.not.cs.{${requiredYears.join(",")}}`,
-        );
+      filteredQuery = filteredQuery.eq("situacao_geral", "EM_ATRASO");
     }
 
     // Filtros Avançados
@@ -271,74 +261,38 @@ export const financeService = {
     orderBy: "data_pagamento" | "created_at" = "data_pagamento"
   ): Promise<{ data: (PaymentByPeriod & { id: string })[]; total: number; totalAmount: number }> {
     const from = (page - 1) * pageSize;
-    const to = from + pageSize - 1;
 
-    const { data, error, count } = await supabase
-      .from("financeiro_lancamentos")
-      .select(`
-        id,
-        data_pagamento,
-        tipo,
-        competencia_ano,
-        competencia_mes,
-        forma_pagamento,
-        valor,
-        created_at,
-        socios!inner (
-          nome,
-          cpf
-        )
-      `, { count: "exact" })
-      .eq("status", "pago")
-      .gte("data_pagamento", startDate)
-      .lte("data_pagamento", endDate)
-      .order(orderBy, { ascending: false })
-      .range(from, to);
+    const { data, error } = await supabase.rpc("get_payments_by_period_paginated", {
+      p_start_date: startDate,
+      p_end_date: endDate,
+      p_limit: pageSize,
+      p_offset: from,
+      p_order_by: orderBy,
+      p_order_dir: "DESC"
+    });
 
     if (error) throw error;
 
-    // Busca o valor total para o período (sem paginação)
-    const { data: sumData } = await supabase
-      .from("financeiro_lancamentos")
-      .select("valor")
-      .eq("status", "pago")
-      .gte("data_pagamento", startDate)
-      .lte("data_pagamento", endDate);
+    const total = data?.[0]?.total_count ? Number(data[0].total_count) : 0;
+    const totalAmount = data?.[0]?.total_amount ? Number(data[0].total_amount) : 0;
 
-    const totalAmount =
-      (sumData as { valor: number }[] | null)?.reduce(
-        (acc, row) => acc + (Number(row.valor) || 0),
-        0
-      ) ?? 0;
-
-    const mappedData = (data ?? []).map((row) => {
-      const r = row as unknown as {
-        id: string;
-        data_pagamento: string;
-        socios: { nome: string; cpf: string };
-        tipo: string;
-        competencia_ano: number;
-        competencia_mes: number;
-        forma_pagamento: string;
-        valor: number;
-      };
-      return {
-        id: r.id,
-        data_pagamento: r.data_pagamento,
-        nome: r.socios.nome,
-        cpf: r.socios.cpf,
-        tipo: r.tipo,
-        competencia_ano: r.competencia_ano,
-        competencia_mes: r.competencia_mes,
-        forma_pagamento: r.forma_pagamento,
-        valor: r.valor,
-      };
-    });
+    const items = (data || []).map((item: any) => ({
+      id: item.id,
+      data_pagamento: item.data_pagamento,
+      nome: item.socio_nome,
+      cpf: item.socio_cpf,
+      tipo: item.tipo,
+      competencia_ano: item.competencia_ano,
+      competencia_mes: item.competencia_mes,
+      forma_pagamento: item.forma_pagamento,
+      valor: Number(item.valor),
+      created_at: item.created_at
+    }));
 
     return {
-      data: mappedData,
-      total: count ?? 0,
-      totalAmount,
+      data: items as (PaymentByPeriod & { id: string })[],
+      total,
+      totalAmount
     };
   },
 

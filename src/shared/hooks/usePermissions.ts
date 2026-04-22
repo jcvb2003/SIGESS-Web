@@ -1,4 +1,5 @@
 import { useAuth } from "@/modules/auth/context/authContextStore";
+import { UserRole } from "@/shared/types/auth.types";
 
 /**
  * Hook para gerenciar as permissões do usuário logado.
@@ -9,7 +10,7 @@ export function usePermissions() {
 
   // O papel (role) é lido do app_metadata injetado no JWT (definido na migration)
   // Caso não exista, assume-se o papel padrão 'user' (Auxiliar)
-  const role = user?.app_metadata?.role ?? 'user';
+  const role = (user?.app_metadata?.role as UserRole) ?? 'user';
   const isAdmin = role === 'admin';
 
   return {

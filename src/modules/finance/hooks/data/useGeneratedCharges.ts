@@ -7,6 +7,7 @@ export function useGeneratedCharges(typeId?: string) {
     queryKey: financeQueryKeys.generatedCharges(typeId),
     queryFn: () => generatedChargesService.getByType(typeId ?? ""),
     enabled: !!typeId,
+    staleTime: 0,
   });
 
   return {

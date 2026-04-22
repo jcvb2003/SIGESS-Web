@@ -22,7 +22,7 @@ export function useUserMetadata() {
 
     const fetchMetadata = async () => {
       try {
-        const { data: configData, error: configError } = await (supabase as any)
+        const { data: configData, error: configError } = await supabase
           .from("configuracao_entidade")
           .select("max_socios, acesso_expira_em")
           .limit(1)

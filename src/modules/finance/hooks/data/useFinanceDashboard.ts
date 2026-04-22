@@ -7,6 +7,7 @@ export function useFinanceDashboard(params: FinanceDashboardParams) {
   const query = useQuery({
     queryKey: financeQueryKeys.dashboard(params),
     queryFn: () => financeService.getDashboard(params),
+    staleTime: 0,
   });
 
   return {

@@ -1,4 +1,5 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import type { FinanceDashboardParams } from "../../types/finance.types";
 
 const DEFAULT_PARAMS: FinanceDashboardParams = {
@@ -18,7 +19,41 @@ const DEFAULT_PARAMS: FinanceDashboardParams = {
 };
 
 export function useFinanceFilters() {
-  const [params, setParams] = useState<FinanceDashboardParams>(DEFAULT_PARAMS);
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  const getInitialParams = (): FinanceDashboardParams => {
+    const search = searchParams.get("search") || "";
+    return {
+      ...DEFAULT_PARAMS,
+      searchTerm: search,
+      tab: (searchParams.get("tab") as FinanceDashboardParams["tab"]) || "todos",
+      page: Number(searchParams.get("page")) || 1,
+      year: Number(searchParams.get("year")) || new Date().getFullYear(),
+    };
+  };
+
+  const [params, setParams] = useState<FinanceDashboardParams>(getInitialParams);
+
+  // Sincronizar URL quando os parâmetros mudam (opcional, mas bom para UX)
+  useEffect(() => {
+    const newParams = new URLSearchParams(searchParams);
+    if (params.searchTerm) newParams.set("search", params.searchTerm);
+    else newParams.delete("search");
+    
+    if (params.tab !== "todos") newParams.set("tab", params.tab);
+    else newParams.delete("tab");
+    
+    if (params.page !== 1) newParams.set("page", String(params.page));
+    else newParams.delete("page");
+    
+    if (params.year !== new Date().getFullYear()) newParams.set("year", String(params.year));
+    else newParams.delete("year");
+
+    // Evitar loop infinito se os params forem iguais
+    if (newParams.toString() !== searchParams.toString()) {
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [params.searchTerm, params.tab, params.page, params.year, setSearchParams, searchParams]);
 
   const setSearch = useCallback((searchTerm: string) => {
     setParams((prev) => ({ ...prev, searchTerm, page: 1 }));

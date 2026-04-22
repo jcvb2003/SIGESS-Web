@@ -6,6 +6,7 @@ import { memberQueryKeys } from "../../queryKeys";
 import { useMemberSearch } from "../search/useMemberSearch";
 import { useMemberFilters } from "../filters/useMemberFilters";
 import { useMemberActions } from "../edit/useMemberActions";
+import { useDebounce } from "@/shared/hooks/useDebounce";
 import type {
   MemberListItem,
   MemberSearchParams,
@@ -39,6 +40,8 @@ export function useMembersListController() {
   });
 
   const { searchTerm, setSearchTerm, handleSearchChange } = useMemberSearch();
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
   const {
     statusFilter,
     setStatusFilter,
@@ -70,7 +73,7 @@ export function useMembersListController() {
     () => ({
       page,
       pageSize,
-      searchTerm,
+      searchTerm: debouncedSearchTerm,
       statusFilter,
       localityCode: localityFilter,
       birthMonth: birthMonthFilter,
@@ -82,7 +85,7 @@ export function useMembersListController() {
     [
       page,
       pageSize,
-      searchTerm,
+      debouncedSearchTerm,
       statusFilter,
       localityFilter,
       birthMonthFilter,

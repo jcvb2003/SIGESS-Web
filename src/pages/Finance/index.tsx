@@ -10,6 +10,7 @@ import { useFinanceSettings } from "@/modules/finance/hooks/data/useFinanceSetti
 import { useFinanceFilters } from "@/modules/finance/hooks/filters/useFinanceFilters";
 import { useFinanceStats } from "@/modules/finance/hooks/data/useFinanceStats";
 import { useFinanceTabCounts } from "@/modules/finance/hooks/data/useFinanceTabCounts";
+import { useDebounce } from "@/shared/hooks/useDebounce";
 import { FinanceTable } from "@/modules/finance/components/table/FinanceTable";
 import { FinanceSearchBar } from "@/modules/finance/components/search/FinanceSearchBar";
 import { SummaryCards } from "@/modules/finance/components/shared/SummaryCards";
@@ -38,17 +39,22 @@ const MONTH_NAMES = [
 export default function FinancePage() {
   const navigate = useNavigate();
   const { params, setSearch, setTab, setPage, setPageSize, applyAdvancedFilters, clearAdvancedFilters, hasActiveAdvancedFilters } = useFinanceFilters();
+  const debouncedSearchTerm = useDebounce(params.searchTerm, 300);
   const { settings } = useFinanceSettings();
   const { isAdmin } = usePermissions();
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
   const anoBase = settings?.ano_base_cobranca ?? 2024;
 
-  const { members, total, isLoading } = useFinanceDashboard({ ...params, anoBase });
+  const { members, total, isLoading } = useFinanceDashboard({ 
+    ...params, 
+    searchTerm: debouncedSearchTerm,
+    anoBase 
+  });
 
   // Real stats from DB
   const { arrecadado, arrecadadoAno, qtdPagamentos, daePendente } = useFinanceStats(currentYear, currentMonth);
-  const { counts: tabCounts } = useFinanceTabCounts(params.searchTerm, params.year, anoBase);
+  const { counts: tabCounts } = useFinanceTabCounts(debouncedSearchTerm, params.year, anoBase);
 
   // Statement Modal
   const [statementCpf, setStatementCpf] = useState<string | null>(null);

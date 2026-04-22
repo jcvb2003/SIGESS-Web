@@ -16,7 +16,22 @@ export const pdfService = {
   ): Promise<boolean> {
     try {
       resetFontSystem();
-      const response = await fetch(template.fileUrl);
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds timeout
+
+      let response: Response;
+      try {
+        response = await fetch(template.fileUrl, { signal: controller.signal });
+        clearTimeout(timeoutId);
+      } catch (err) {
+        clearTimeout(timeoutId);
+        if (err instanceof DOMException && err.name === 'AbortError') {
+          throw new Error("O download do modelo de documento expirou (timeout).");
+        }
+        throw err;
+      }
+
       if (!response.ok) {
         throw new Error("Falha ao baixar o modelo de documento.");
       }

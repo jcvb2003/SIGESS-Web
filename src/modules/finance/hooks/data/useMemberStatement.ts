@@ -26,6 +26,7 @@ export function useMemberStatement(cpf: string | null) {
       return { lancamentos, daes, charges };
     },
     enabled: !!cpf,
+    staleTime: 0,
   });
 
   return {

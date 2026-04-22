@@ -42,5 +42,6 @@ export function useFinanceAudit(options: UseFinanceAuditOptions = {}) {
       if (error) throw error;
       return (data as AuditLogEntry[]) || [];
     },
+    staleTime: 0,
   });
 }

@@ -1,4 +1,4 @@
-import { supabase } from "@/shared/lib/supabase/client";
+import { supabaseReap as supabase } from "../types/supabase.reap";
 import { Reap, ReapAnoAnual, ReapAnoSimplificado, ReapWithMember } from "../types/reap.types";
 
 export const reapService = {
@@ -105,12 +105,12 @@ export const reapService = {
   ): Promise<void> {
     // Garante que o registro base existe
     await supabase
-      // @ts-expect-error PENDING TYPE GEN
+
       .from("reap")
       .upsert({ cpf }, { onConflict: "cpf", ignoreDuplicates: true });
 
     // Atualiza apenas o ano específico no JSONB usando jsonb_set no banco
-    // @ts-expect-error PENDING TYPE GEN
+
     const { error } = await supabase.rpc("reap_upsert_simplificado_ano", {
       p_cpf: cpf,
       p_ano: String(ano),
@@ -126,11 +126,11 @@ export const reapService = {
     data: Partial<ReapAnoAnual>
   ): Promise<void> {
     await supabase
-      // @ts-expect-error PENDING TYPE GEN
+
       .from("reap")
       .upsert({ cpf }, { onConflict: "cpf", ignoreDuplicates: true });
 
-    // @ts-expect-error PENDING TYPE GEN
+
     const { error } = await supabase.rpc("reap_upsert_anual_ano", {
       p_cpf: cpf,
       p_ano: String(ano),
@@ -146,7 +146,7 @@ export const reapService = {
     anual: Reap["anual"],
     observacoes: string | null
   ): Promise<void> {
-    // @ts-expect-error PENDING TYPE GEN
+
     const { error } = await supabase.rpc("reap_upsert_full", {
       p_cpf: cpf,
       p_simplificado: simplificado,
@@ -159,7 +159,7 @@ export const reapService = {
 
   async updateObservacoes(cpf: string, observacoes: string | null): Promise<void> {
     const { error } = await supabase
-      // @ts-expect-error PENDING TYPE GEN
+
       .from("reap")
       .upsert({ cpf, observacoes }, { onConflict: "cpf" });
 
@@ -200,7 +200,7 @@ export const reapService = {
 
     for (let i = 0; i < entries.length; i += CHUNK_SIZE) {
       const chunk = entries.slice(i, i + CHUNK_SIZE);
-      // @ts-expect-error PENDING TYPE GEN
+
       const { error } = await supabase.rpc("reap_batch_upsert_simplificado", {
         p_entries: chunk
       });
@@ -254,7 +254,7 @@ export const reapService = {
       let all: { cpf: string; anual: unknown }[] = [];
       let from = 0;
       while (true) {
-        // @ts-expect-error PENDING TYPE GEN
+
         const { data } = await supabase.from("reap").select("cpf, anual").range(from, from + 1000 - 1);
         if (!data || data.length === 0) break;
         all = all.concat(data as unknown as { cpf: string; anual: unknown }[]);

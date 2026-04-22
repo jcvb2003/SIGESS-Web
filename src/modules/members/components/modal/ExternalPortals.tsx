@@ -38,7 +38,7 @@ export function ExternalPortals({ cpf, senhaGov, nome, member }: ExternalPortals
               }
             >
               <img
-                src="https://www.gov.br/governodigital/pt-br/acessibilidade-e-usuario/atendimento-gov.br/imagens/gov-br_logo-svg.png/@@images/image.png"
+                src="/assets/images/govbr.png"
                 alt="GOV.BR"
                 className="w-[78%] h-[78%] object-contain"
               />
@@ -63,7 +63,7 @@ export function ExternalPortals({ cpf, senhaGov, nome, member }: ExternalPortals
               }
             >
               <img
-                src="https://www.gov.br/esocial/pt-br/arquivos/imagens/esocial-vertical/@@images/image.jpeg"
+                src="/assets/images/esocial.jpeg"
                 alt="eSocial"
                 className="w-[68%] h-[68%] object-contain"
               />
