@@ -1,49 +1,36 @@
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/shared/components/ui/tabs";
+import { EntityTabs, TabItem } from "@/shared/components/layout/EntityTabs";
 import { PersonalDataTabContent } from "./tabs/PersonalDataTabContent";
 import { DocumentsTabContent } from "./tabs/DocumentsTabContent";
 import { User, FileText } from "lucide-react";
+
 interface RegistrationTabsProps {
   isEditMode: boolean;
 }
 
 export function RegistrationTabs({ isEditMode }: Readonly<RegistrationTabsProps>) {
+  const items: TabItem[] = [
+    {
+      value: "personal",
+      label: "Dados Pessoais",
+      mobileLabel: "Dados",
+      icon: User,
+      content: <PersonalDataTabContent isEditMode={isEditMode} />,
+    },
+    {
+      value: "documents",
+      label: "Documentos",
+      mobileLabel: "Docs",
+      icon: FileText,
+      content: <DocumentsTabContent />,
+    },
+  ];
+
   return (
-    <Tabs defaultValue="personal" className="w-full space-y-6">
-      <TabsList>
-        <TabsTrigger
-          value="personal"
-          className="gap-2"
-        >
-          <User className="h-4 w-4" />
-          <span className="hidden sm:inline">Dados Pessoais</span>
-          <span className="sm:hidden">Dados</span>
-        </TabsTrigger>
-        <TabsTrigger
-          value="documents"
-          className="gap-2"
-        >
-          <FileText className="h-4 w-4" />
-          <span className="hidden sm:inline">Documentos</span>
-          <span className="sm:hidden">Docs</span>
-        </TabsTrigger>
-      </TabsList>
-      <TabsContent
-        value="personal"
-        className="mt-6 focus-visible:outline-none focus-visible:ring-0"
-      >
-        <PersonalDataTabContent isEditMode={isEditMode} />
-      </TabsContent>
-      <TabsContent
-        value="documents"
-        className="mt-6 focus-visible:outline-none focus-visible:ring-0"
-      >
-        <DocumentsTabContent />
-      </TabsContent>
-    </Tabs>
+    <EntityTabs 
+      items={items} 
+      defaultValue="personal"
+      variant="full-height"
+      className="animate-in fade-in slide-in-from-bottom-2 duration-500"
+    />
   );
 }

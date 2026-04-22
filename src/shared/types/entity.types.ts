@@ -22,6 +22,8 @@ export interface EntitySettings {
   corPrimaria: string;
   corSecundaria: string;
   corSidebar: string;
+  logoUrl?: string;
+  logoPath?: string;
 }
 export const defaultEntitySettings: EntitySettings = {
   id: undefined,
@@ -47,4 +49,6 @@ export const defaultEntitySettings: EntitySettings = {
   corPrimaria: "160 84% 39%",
   corSecundaria: "152 69% 41%",
   corSidebar: "160 84% 39%",
+  logoUrl: undefined,
+  logoPath: undefined,
 };

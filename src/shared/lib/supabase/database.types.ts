@@ -73,22 +73,37 @@ export type Database = {
       configuracao_entidade: {
         Row: {
           acesso_expira_em: string | null
+          cor_primaria: string
+          cor_secundaria: string
+          cor_sidebar: string
           created_at: string | null
+          extensao_license_key: string | null
           id: number
+          logo_path: string | null
           max_socios: number | null
           updated_at: string | null
         }
         Insert: {
           acesso_expira_em?: string | null
+          cor_primaria?: string
+          cor_secundaria?: string
+          cor_sidebar?: string
           created_at?: string | null
+          extensao_license_key?: string | null
           id?: number
+          logo_path?: string | null
           max_socios?: number | null
           updated_at?: string | null
         }
         Update: {
           acesso_expira_em?: string | null
+          cor_primaria?: string
+          cor_secundaria?: string
+          cor_sidebar?: string
           created_at?: string | null
+          extensao_license_key?: string | null
           id?: number
+          logo_path?: string | null
           max_socios?: number | null
           updated_at?: string | null
         }
@@ -103,9 +118,6 @@ export type Database = {
           cnpj: string | null
           comarca: string | null
           confederacao: string | null
-          cor_primaria: string | null
-          cor_secundaria: string | null
-          cor_sidebar: string | null
           cpf_do_presidente: string | null
           email: string | null
           endereco: string | null
@@ -128,9 +140,6 @@ export type Database = {
           cnpj?: string | null
           comarca?: string | null
           confederacao?: string | null
-          cor_primaria?: string | null
-          cor_secundaria?: string | null
-          cor_sidebar?: string | null
           cpf_do_presidente?: string | null
           email?: string | null
           endereco?: string | null
@@ -153,9 +162,6 @@ export type Database = {
           cnpj?: string | null
           comarca?: string | null
           confederacao?: string | null
-          cor_primaria?: string | null
-          cor_secundaria?: string | null
-          cor_sidebar?: string | null
           cpf_do_presidente?: string | null
           email?: string | null
           endereco?: string | null
@@ -806,6 +812,52 @@ export type Database = {
         }
         Relationships: []
       }
+      reap: {
+        Row: {
+          anual: Json
+          cpf: string
+          observacoes: string | null
+          simplificado: Json
+          updated_at: string
+        }
+        Insert: {
+          anual?: Json
+          cpf: string
+          observacoes?: string | null
+          simplificado?: Json
+          updated_at?: string
+        }
+        Update: {
+          anual?: Json
+          cpf?: string
+          observacoes?: string | null
+          simplificado?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reap_cpf_fkey"
+            columns: ["cpf"]
+            isOneToOne: true
+            referencedRelation: "socios"
+            referencedColumns: ["cpf"]
+          },
+          {
+            foreignKeyName: "reap_cpf_fkey"
+            columns: ["cpf"]
+            isOneToOne: true
+            referencedRelation: "v_debitos_socio"
+            referencedColumns: ["cpf"]
+          },
+          {
+            foreignKeyName: "reap_cpf_fkey"
+            columns: ["cpf"]
+            isOneToOne: true
+            referencedRelation: "v_situacao_financeira_socio"
+            referencedColumns: ["cpf"]
+          },
+        ]
+      }
       requerimentos: {
         Row: {
           ano_referencia: number
@@ -834,7 +886,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          ano_referencia?: number
+          ano_referencia: number
           beneficio_recebido?: boolean
           cod_req?: string | null
           cpf?: string | null
@@ -1169,6 +1221,7 @@ export type Database = {
           cpf: string | null
           isento: boolean | null
           liberado_presidente: boolean | null
+          meses_pagos_atual: number[] | null
           nome: string | null
           regime: string | null
           situacao_associativa: string | null
@@ -1198,29 +1251,73 @@ export type Database = {
       }
       get_finance_audit_log_v1: {
         Args: {
-          p_table_name?: string | null
-          p_operation?: string | null
           p_limit?: number
           p_offset?: number
+          p_operation?: string
+          p_table_name?: string
         }
         Returns: {
-          id: string
-          table_name: string
-          record_id: string
-          operation: string
-          old_data: Json | null
-          new_data: Json | null
           changed_by: string
-          user_nome: string
-          user_email: string
           created_at: string
+          id: string
+          new_data: Json
+          old_data: Json
+          operation: string
+          record_id: string
+          table_name: string
+          user_email: string
+          user_nome: string
         }[]
       }
       get_finance_tab_counts: {
         Args: { p_ano_base?: number; p_search_term?: string; p_year?: number }
         Returns: Json
       }
+      get_members_by_birth_month: {
+        Args: { p_limit?: number; p_month: number; p_offset?: number }
+        Returns: {
+          codigo_do_socio: string
+          cpf: string
+          data_de_nascimento: string
+          id: string
+          nome: string
+          total_count: number
+        }[]
+      }
       get_next_cod_req: { Args: never; Returns: string }
+      get_payments_by_period_paginated: {
+        Args: {
+          p_end_date: string
+          p_limit?: number
+          p_offset?: number
+          p_order_by?: string
+          p_order_dir?: string
+          p_start_date: string
+        }
+        Returns: {
+          competencia_ano: number
+          competencia_mes: number
+          created_at: string
+          data_pagamento: string
+          forma_pagamento: string
+          id: string
+          socio_cpf: string
+          socio_nome: string
+          tipo: string
+          total_amount: number
+          total_count: number
+          valor: number
+        }[]
+      }
+      get_socio_financial_status: {
+        Args: {
+          p_cpf: string
+          p_isento: boolean
+          p_liberado: boolean
+          p_regime: string
+        }
+        Returns: string
+      }
       launch_bulk_contribution: {
         Args: { p_tipo_cobranca_id: string }
         Returns: number
@@ -1229,8 +1326,26 @@ export type Database = {
         Args: { p_older_than_days: number }
         Returns: number
       }
-      purge_payment_v1: {
-        Args: { p_id: string }
+      purge_payment_v1: { Args: { p_id: string }; Returns: undefined }
+      reap_batch_upsert_simplificado: {
+        Args: { p_entries: Json }
+        Returns: undefined
+      }
+      reap_upsert_anual_ano: {
+        Args: { p_ano: string; p_cpf: string; p_data: Json }
+        Returns: undefined
+      }
+      reap_upsert_full: {
+        Args: {
+          p_anual: Json
+          p_cpf: string
+          p_observacoes?: string
+          p_simplificado: Json
+        }
+        Returns: undefined
+      }
+      reap_upsert_simplificado_ano: {
+        Args: { p_ano: string; p_cpf: string; p_data: Json }
         Returns: undefined
       }
       register_payment_session: {
@@ -1244,6 +1359,8 @@ export type Database = {
         }
         Returns: undefined
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       socio_inadimplente_ano: {
         Args: { p_ano: number; p_cpf: string }
         Returns: boolean
@@ -1252,6 +1369,7 @@ export type Database = {
         Args: { p_grupo_id: string; p_items: Json; p_new_year: number }
         Returns: undefined
       }
+      update_extension_license: { Args: { p_key: string }; Returns: undefined }
       update_member_regime: {
         Args: { p_cpf: string; p_novo_regime: string; p_observacao?: string }
         Returns: undefined
@@ -1349,12 +1467,10 @@ export type TablesUpdate<
       : never
     : never
 
-type UnionWithSchema<T> = [T] extends [never]
-  ? { schema: keyof DatabaseWithoutInternals }
-  : T | { schema: keyof DatabaseWithoutInternals }
-
 export type Enums<
-  DefaultSchemaEnumNameOrOptions extends UnionWithSchema<keyof DefaultSchema["Enums"]>,
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -1369,7 +1485,9 @@ export type Enums<
     : never
 
 export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends UnionWithSchema<keyof DefaultSchema["CompositeTypes"]>,
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }

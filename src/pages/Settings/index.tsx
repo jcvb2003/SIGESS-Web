@@ -1,5 +1,13 @@
-import { Tabs, TabsContent } from "@/shared/components/ui/tabs";
-import { SettingsTabsNav } from "@/modules/settings/components/navigation/SettingsTabsNav";
+import { EntityTabs, TabItem } from "@/shared/components/layout/EntityTabs";
+import { useAuth } from "@/modules/auth/context/authContextStore";
+import {
+  Settings as SettingsIcon,
+  Building,
+  Database,
+  KeyRound,
+  Palette,
+  Puzzle,
+} from "lucide-react";
 import { ImportExportCard } from "@/modules/settings/components/data/ImportExportCard";
 import { DocumentsCard } from "@/modules/settings/components/data/DocumentsCard";
 import { LocalitiesCard } from "@/modules/settings/components/data/LocalitiesCard";
@@ -13,6 +21,9 @@ import { ExtensionSettings } from "@/modules/settings/components/extension/Exten
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 export default function Settings() {
+  const { user } = useAuth();
+  const isAdmin = user?.app_metadata?.role === "admin";
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
       <PageHeader
@@ -20,59 +31,59 @@ export default function Settings() {
         description="Gerencie as preferências, dados da entidade e parâmetros do sistema."
       />
 
-      <Tabs defaultValue="dados" className="space-y-6">
-        <SettingsTabsNav />
-
-        <TabsContent
-          value="dados"
-          className="space-y-4 focus-visible:outline-none focus-visible:ring-0"
-        >
-          <div className="grid gap-4 lg:grid-cols-2">
-            <ImportExportCard />
-            <DocumentsCard />
-            <LocalitiesCard />
-            <PhotoImportCard />
-          </div>
-        </TabsContent>
-
-        <TabsContent
-          value="entidade"
-          className="space-y-4 focus-visible:outline-none focus-visible:ring-0"
-        >
-          <EntityForm />
-        </TabsContent>
-
-        <TabsContent
-          value="parametros"
-          className="space-y-4 focus-visible:outline-none focus-visible:ring-0"
-        >
-          <ParametersForm />
-        </TabsContent>
-
-        <TabsContent
-          value="senhas"
-          className="space-y-4 focus-visible:outline-none focus-visible:ring-0"
-        >
-          <div className="grid gap-4 lg:grid-cols-[1.1fr_1.4fr]">
-            <PasswordChangeForm />
-            <UserManagementSection />
-          </div>
-        </TabsContent>
-
-        <TabsContent
-          value="personalizacao"
-          className="space-y-4 focus-visible:outline-none focus-visible:ring-0"
-        >
-          <CustomizationForm />
-        </TabsContent>
-
-        <TabsContent
-          value="extensao"
-          className="space-y-4 focus-visible:outline-none focus-visible:ring-0"
-        >
-          <ExtensionSettings />
-        </TabsContent>
-      </Tabs>
+      <EntityTabs
+        defaultValue="dados"
+        items={[
+          {
+            value: "dados",
+            label: "Dados",
+            icon: Database,
+            content: (
+              <div className="grid gap-4 lg:grid-cols-2">
+                <ImportExportCard />
+                <DocumentsCard />
+                <LocalitiesCard />
+                <PhotoImportCard />
+              </div>
+            )
+          },
+          {
+            value: "entidade",
+            label: "Entidade",
+            icon: Building,
+            content: <EntityForm />
+          },
+          {
+            value: "parametros",
+            label: "Parâmetros",
+            icon: SettingsIcon,
+            content: <ParametersForm />
+          },
+          {
+            value: "senhas",
+            label: "Senhas",
+            icon: KeyRound,
+            content: (
+              <div className="grid gap-4 lg:grid-cols-[1.1fr_1.4fr]">
+                <PasswordChangeForm />
+                <UserManagementSection />
+              </div>
+            )
+          },
+          {
+            value: "personalizacao",
+            label: "Personalização",
+            icon: Palette,
+            content: <CustomizationForm />
+          },
+          ...(isAdmin ? [{
+            value: "extensao",
+            label: "Extensão",
+            icon: Puzzle,
+            content: <ExtensionSettings />
+          }] : []) as TabItem[]
+        ]}
+      />
     </div>
   );
 }

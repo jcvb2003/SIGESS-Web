@@ -1,5 +1,5 @@
 import { supabase } from "@/shared/lib/supabase/client";
-import { LoginCredentials } from "../types/auth.types";
+import { LoginCredentials } from "@/shared/types/auth.types";
 import { ServiceResponse } from "@/shared/services/base/serviceResponse";
 import { Session, User } from "@supabase/supabase-js";
 export const authService = {

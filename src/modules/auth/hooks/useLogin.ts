@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/authContextStore";
-import { LoginCredentials } from "../types/auth.types";
+import { LoginCredentials } from "@/shared/types/auth.types";
 export function useLogin() {
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();

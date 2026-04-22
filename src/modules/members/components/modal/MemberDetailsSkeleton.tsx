@@ -2,11 +2,6 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { 
   DialogHeader 
 } from "@/shared/components/ui/dialog";
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from "@/shared/components/ui/tabs";
 import { Loader2 } from "lucide-react";
 
 export function MemberDetailsSkeleton() {
@@ -34,19 +29,14 @@ export function MemberDetailsSkeleton() {
         </div>
       </DialogHeader>
 
-      <Tabs defaultValue="primary" className="flex-1 flex flex-col overflow-hidden min-h-0">
-        <div className="px-5 sm:px-6 w-full flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-0 pt-4 pb-3 sm:pb-0">
-          <TabsList className="w-full h-10 overflow-hidden bg-muted/50 border border-border/30">
-            <TabsTrigger value="primary" className="flex-1" disabled>
-              Dados Principais
-            </TabsTrigger>
-            <TabsTrigger value="complementary" className="flex-1" disabled>
-              Dados Complementares
-            </TabsTrigger>
-          </TabsList>
+      <div className="flex-1 flex flex-col overflow-hidden min-h-0">
+        {/* Header/Tabs Simulation */}
+        <div className="px-5 sm:px-6 pt-4 mb-4">
+          <Skeleton className="h-10 w-full sm:w-[350px] rounded-lg" />
         </div>
 
-        <div className="flex-1 overflow-hidden px-5 sm:px-6 pt-4 pb-0 sm:pb-6 bg-muted/20 min-h-0">
+        {/* Content Area Simulation */}
+        <div className="flex-1 overflow-hidden px-5 sm:px-6 pt-5 pb-6 bg-muted/20 min-h-0">
           <div className="h-full flex flex-col gap-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
@@ -60,7 +50,7 @@ export function MemberDetailsSkeleton() {
             </div>
           </div>
         </div>
-      </Tabs>
+      </div>
     </>
   );
 }

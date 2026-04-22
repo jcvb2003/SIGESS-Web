@@ -35,6 +35,7 @@ import {
   TooltipTrigger,
 } from "@/shared/components/ui/tooltip";
 import { useMobile } from "@/shared/hooks/useMobile";
+import { useEntityData } from "@/shared/hooks/useEntityData";
 const NAV_ITEMS = [
   { title: "Início", href: "/dashboard", icon: LayoutDashboard },
   { title: "Sócios", href: "/members", icon: Users },
@@ -63,10 +64,11 @@ function SidebarContent({
   onSignOut,
 }: Readonly<SidebarContentProps>) {
   const { isAdmin } = usePermissions();
+  const { entity, isLoading: isEntityLoading } = useEntityData();
   const [restrictedModalOpen, setRestrictedModalOpen] = useState(false);
 
   return (
-    <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out overflow-hidden">
+    <div className="flex h-full flex-col text-sidebar-foreground overflow-hidden">
       <FeatureRestrictedModal 
         open={restrictedModalOpen} 
         onOpenChange={setRestrictedModalOpen} 
@@ -81,8 +83,18 @@ function SidebarContent({
           to="/dashboard"
           className="flex items-center gap-3 group overflow-hidden"
         >
-          <div className="flex h-10 w-10 min-w-[2.5rem] items-center justify-center rounded-xl bg-primary-foreground/20 dark:bg-white/10 text-sidebar-foreground transition-all group-hover:bg-primary-foreground group-hover:text-primary dark:group-hover:bg-primary dark:group-hover:text-white shadow-sm">
-            <Fish className="h-6 w-6" />
+          <div className="flex h-10 w-10 min-w-[2.5rem] items-center justify-center rounded-xl bg-primary-foreground/20 dark:bg-white/10 text-sidebar-foreground transition-all group-hover:bg-primary-foreground group-hover:text-primary dark:group-hover:bg-primary dark:group-hover:text-white shadow-sm overflow-hidden">
+            {entity?.logoUrl ? (
+              <img 
+                src={entity.logoUrl} 
+                alt={entity.shortName || "Logo"} 
+                className="h-full w-full object-contain p-1.5 logo-multiply"
+              />
+            ) : isEntityLoading ? (
+              <div className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin opacity-50" />
+            ) : (
+              <Fish className="h-6 w-6" />
+            )}
           </div>
           <div
             className={cn(
@@ -286,7 +298,7 @@ export function AppSidebar({
   return (
     <aside
       className={cn(
-        "hidden lg:flex flex-col h-screen sticky top-0 z-50 transition-all duration-300 ease-in-out p-4",
+        "hidden lg:flex flex-col h-screen sticky top-0 z-50 transition-[width] duration-300 ease-in-out p-4",
         isHovered ? "w-72" : "w-[6.5rem]",
       )}
       onMouseEnter={onMouseEnter}
@@ -294,7 +306,7 @@ export function AppSidebar({
     >
       <div
         className={cn(
-          "flex-1 flex flex-col rounded-[24px] shadow-2xl border border-white/10 overflow-hidden bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out w-full",
+          "flex-1 flex flex-col rounded-[24px] shadow-2xl border border-white/10 overflow-hidden bg-sidebar text-sidebar-foreground transition-[width,transform] duration-300 ease-in-out w-full",
         )}
       >
         <SidebarContent

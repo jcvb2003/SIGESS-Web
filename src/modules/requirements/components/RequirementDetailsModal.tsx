@@ -54,18 +54,18 @@ export function RequirementDetailsModal({
   }, [requirement]);
 
   const handleSave = async () => {
-    if (!requirementId) return;
+    if (!requirementId || !requirement) return;
     
     setIsSaving(true);
     try {
       // 1. Atualizar Status e Num MTE
-      await requirementService.updateStatus(requirementId, status, {
+      await requirementService.updateStatus(requirementId, requirement.ano_referencia, status, {
         num_req_mte: numMte || null
       });
 
       // 2. Atualizar Recebimento se mudou
       if (recebido !== requirement?.beneficio_recebido) {
-        await requirementService.confirmBeneficio(requirementId, recebido);
+        await requirementService.confirmBeneficio(requirementId, requirement.ano_referencia, recebido);
       }
 
       toast.success("Alterações salvas com sucesso!");

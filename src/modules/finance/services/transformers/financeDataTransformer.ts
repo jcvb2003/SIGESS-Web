@@ -1,7 +1,6 @@
 import type {
   MemberFinancialSummary,
   FinancialStatusType,
-  SituacaoFinanceiraSocio,
 } from "../../types/finance.types";
 
 /**

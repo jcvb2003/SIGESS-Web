@@ -7,13 +7,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/shared/components/ui/tabs";
-import { Loader2 } from "lucide-react";
+import { EntityTabs, TabItem } from "@/shared/components/layout/EntityTabs";
+import { Loader2, Settings, CreditCard, Wrench } from "lucide-react";
 
 import { useFinanceSettings } from "../../hooks/data/useFinanceSettings";
 import { useChargeTypes } from "../../hooks/data/useChargeTypes";
@@ -40,9 +35,11 @@ interface FinanceSettingsDialogProps {
   readonly onOpenChange: (open: boolean) => void;
 }
 
-export function FinanceSettingsDialog({
-  open,
-  onOpenChange,
+
+
+export function FinanceSettingsDialog({ 
+  open, 
+  onOpenChange 
 }: FinanceSettingsDialogProps) {
   const { isAdmin } = usePermissions();
   // Data Fetching
@@ -159,43 +156,48 @@ export function FinanceSettingsDialog({
             </div>
           </DialogHeader>
 
-          <Tabs defaultValue="parametros" className="flex flex-col flex-1 overflow-hidden">
-            <div className="px-6 py-4 shrink-0 border-b">
-              <TabsList className="bg-transparent h-auto p-0">
-                <TabsTrigger value="parametros">Parâmetros</TabsTrigger>
-                <TabsTrigger value="tipos">Tipos de Cobrança</TabsTrigger>
-                {isAdmin && <TabsTrigger value="manutencao">Manutenção</TabsTrigger>}
-              </TabsList>
-            </div>
-
-            <TabsContent value="parametros" className="flex-1 overflow-hidden mt-0">
-              <GeneralSettingsTab 
-                control={control}
-                isPending={updateSettingsMutation.isPending}
-                isDirty={isDirty}
-                onSubmit={handleSubmit(handleSettingsSubmit)}
-                onCancel={handleClose}
-              />
-            </TabsContent>
-
-            <TabsContent value="tipos" className="flex-1 overflow-hidden mt-0">
-              <ChargeTypesTab 
-                chargeTypes={chargeTypes}
-                loadingChargeTypes={loadingChargeTypes}
-                onChargeSubmit={handleChargeSubmit}
-                onChargeDelete={handleChargeDelete}
-                onToggleActive={(id, ativo) => toggleActive.mutate({ id, ativo })}
-                isMutationPending={createChargeType.isPending || updateChargeType.isPending || deleteChargeType.isPending}
-              />
-            </TabsContent>
-
-
-            {isAdmin && (
-              <TabsContent value="manutencao" className="flex-1 overflow-hidden mt-0">
-                <MaintenanceTab />
-              </TabsContent>
-            )}
-          </Tabs>
+          <EntityTabs
+            defaultValue="parametros"
+            variant="full-height"
+            className="flex-1 min-h-0"
+            items={[
+              {
+                value: "parametros",
+                label: "Parâmetros",
+                icon: Settings,
+                content: (
+                  <GeneralSettingsTab 
+                    control={control}
+                    isPending={updateSettingsMutation.isPending}
+                    isDirty={isDirty}
+                    onSubmit={handleSubmit(handleSettingsSubmit)}
+                    onCancel={handleClose}
+                  />
+                )
+              },
+              {
+                value: "tipos",
+                label: "Tipos de Cobrança",
+                icon: CreditCard,
+                content: (
+                  <ChargeTypesTab 
+                    chargeTypes={chargeTypes}
+                    loadingChargeTypes={loadingChargeTypes}
+                    onChargeSubmit={handleChargeSubmit}
+                    onChargeDelete={handleChargeDelete}
+                    onToggleActive={(id, ativo) => toggleActive.mutate({ id, ativo })}
+                    isMutationPending={createChargeType.isPending || updateChargeType.isPending || deleteChargeType.isPending}
+                  />
+                )
+              },
+              ...(isAdmin ? [{
+                value: "manutencao",
+                label: "Manutenção",
+                icon: Wrench,
+                content: <MaintenanceTab />
+              }] : []) as TabItem[]
+            ]}
+          />
         </div>
       </DialogContent>
     </Dialog>

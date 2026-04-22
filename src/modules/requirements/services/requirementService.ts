@@ -108,9 +108,10 @@ export const requirementService = {
     } as unknown as RequirementWithMember;
   },
 
-  async updateStatus(id: string, status_mte: RequirementStatus, extras?: Partial<Requirement>): Promise<void> {
-    const payload: Partial<Requirement> & { status_mte: RequirementStatus } = { 
-      status_mte, 
+  async updateStatus(id: string, ano_referencia: number, status_mte: RequirementStatus, extras?: Partial<Requirement>): Promise<void> {
+    const payload: Partial<Requirement> & { status_mte: RequirementStatus, ano_referencia: number } = { 
+      status_mte,
+      ano_referencia,
       ...extras 
     };
     
@@ -209,7 +210,7 @@ export const requirementService = {
     return null;
   },
 
-  async batchUpdateBeneficio(ids: string[]) {
+  async batchUpdateBeneficio(ids: string[], ano_referencia: number) {
     const { data: { user } } = await supabase.auth.getUser();
 
     // 1. Atualizar requerimentos
@@ -217,7 +218,8 @@ export const requirementService = {
       .from("requerimentos")
       .update({ 
         beneficio_recebido: true,
-        status_mte: 'deferido'
+        status_mte: 'deferido',
+        ano_referencia
       })
       .in("id", ids);
 
@@ -234,10 +236,13 @@ export const requirementService = {
     await supabase.from("logs_eventos_requerimento").insert(logs);
   },
 
-  async confirmBeneficio(id: string, value: boolean = true): Promise<void> {
+  async confirmBeneficio(id: string, ano_referencia: number, value: boolean = true): Promise<void> {
     const { error } = await supabase
       .from("requerimentos")
-      .update({ beneficio_recebido: value })
+      .update({ 
+        beneficio_recebido: value,
+        ano_referencia
+      })
       .eq("id", id);
 
     if (error) throw error;

@@ -6,7 +6,7 @@ import {
   clearSupabaseClient,
 } from "@/shared/lib/supabase/client";
 import { authService } from "../services/authService";
-import type { LoginCredentials } from "../types/auth.types";
+import type { LoginCredentials } from "@/shared/types/auth.types";
 import { toast } from "sonner";
 import { AuthContext } from "./authContextStore";
 

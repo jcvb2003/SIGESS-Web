@@ -27,5 +27,7 @@ export const entitySchema = z.object({
   corPrimaria: z.string().optional(),
   corSecundaria: z.string().optional(),
   corSidebar: z.string().optional(),
+  logoUrl: z.string().optional(),
+  logoPath: z.string().optional(),
 });
 export type EntityFormData = z.infer<typeof entitySchema>;

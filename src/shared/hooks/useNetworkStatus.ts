@@ -1,28 +1,38 @@
 import { useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/shared/lib/supabase/client";
+import { resolveTenant } from "@/config/tenants";
 
 const PROBE_INTERVAL_MS = 15_000;
 const PROBE_TIMEOUT_MS = 5_000;
 
 async function checkRealConnectivity(): Promise<boolean> {
+  const savedTenant = typeof localStorage === 'undefined' ? null : localStorage.getItem('sigess_tenant');
+  if (!savedTenant) return navigator.onLine;
+
+  const tenant = resolveTenant(savedTenant);
+  if (!tenant) return navigator.onLine;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
+
   try {
-    // Se não houver um tenant selecionado, não podemos testar a conexão com o Supabase.
-    // Usamos o status do navegador para evitar falsos negativos na tela de login.
-    const savedTenant = typeof localStorage !== 'undefined' ? localStorage.getItem('sigess_tenant') : null;
-    if (!savedTenant) return navigator.onLine;
+    // Usamos um fetch direto para o endpoint REST do Supabase como probe.
+    // Isso garante que estamos testando a conectividade real com o backend
+    // e que o AbortSignal (timeout) será respeitado, ao contrário do getSession.
+    const response = await fetch(`${tenant.supabaseUrl}/rest/v1/`, {
+      method: "GET",
+      headers: {
+        apikey: tenant.supabaseAnonKey,
+      },
+      signal: controller.signal,
+    });
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
-
-    // Use the already-configured supabase client to probe connectivity,
-    // so the correct tenant URL and key are always used.
-    await supabase.auth.getSession();
-
-    clearTimeout(timeout);
-    return true;
+    return response.ok || response.status === 401 || response.status === 403;
   } catch {
+    // Se foi abortado por timeout ou erro de rede, consideramos offline
     return false;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 

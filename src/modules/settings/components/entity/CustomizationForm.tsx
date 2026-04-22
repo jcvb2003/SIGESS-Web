@@ -17,6 +17,8 @@ export function CustomizationForm() {
       corPrimaria: "160 84% 39%",
       corSecundaria: "152 69% 41%",
       corSidebar: "160 84% 39%",
+      logoUrl: "",
+      logoPath: "",
     },
   });
 
@@ -27,6 +29,8 @@ export function CustomizationForm() {
         corPrimaria: entity.corPrimaria || "160 84% 39%",
         corSecundaria: entity.corSecundaria || "152 69% 41%",
         corSidebar: entity.corSidebar || "160 84% 39%",
+        logoUrl: entity.logoUrl || "",
+        logoPath: entity.logoPath || "",
       });
     }
   }, [entity, methods]);
@@ -40,6 +44,8 @@ export function CustomizationForm() {
       corPrimaria: data.corPrimaria ?? "160 84% 39%",
       corSecundaria: data.corSecundaria ?? "152 69% 41%",
       corSidebar: data.corSidebar ?? "160 84% 39%",
+      logoUrl: data.logoUrl || undefined,
+      logoPath: data.logoPath || undefined,
     };
     await saveEntity(values);
   };

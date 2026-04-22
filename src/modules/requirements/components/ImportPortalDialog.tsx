@@ -190,7 +190,7 @@ export function ImportPortalDialog({
 
     setIsSaving(true);
     try {
-      await requirementService.batchUpdateBeneficio(selectedIds);
+      await requirementService.batchUpdateBeneficio(selectedIds, anoAtual);
       toast.success(`${selectedIds.length} requerimentos atualizados com sucesso!`);
       queryClient.invalidateQueries({ queryKey: requirementQueryKeys.all });
       onOpenChange(false);

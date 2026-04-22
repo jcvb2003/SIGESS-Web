@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { EntitySettings } from "@/modules/settings/types/settings.types";
 import { useAuth } from "@/modules/auth/context/authContextStore";
 import { generateAccessibleForeground } from "../utils/colorConversion";
+import { useTheme } from "next-themes";
 
 /**
  * CSS variables que o EntityThemeProvider gerencia diretamente das tabelas.
@@ -37,6 +38,9 @@ export function EntityThemeProvider({
 }: Readonly<{ children: ReactNode }>) {
   const { session } = useAuth();
   const queryClient = useQueryClient();
+  const { theme, resolvedTheme } = useTheme();
+
+  const currentTheme = theme === "system" ? resolvedTheme : theme;
 
   useEffect(() => {
     if (!session) {
@@ -65,7 +69,7 @@ export function EntityThemeProvider({
           | EntitySettings
           | null
           | undefined;
-        applyEntityColors(entity);
+        applyEntityColors(entity, currentTheme);
       }
     });
 
@@ -74,16 +78,24 @@ export function EntityThemeProvider({
       "entity",
     ]);
     if (cached) {
-      applyEntityColors(cached);
+      applyEntityColors(cached, currentTheme);
+    }
+
+    // Reaplica se o tema mudar
+    if (session && cached) {
+      applyEntityColors(cached, currentTheme);
     }
 
     return unsubscribe;
-  }, [session, queryClient]);
+  }, [session, queryClient, currentTheme]);
 
   return <>{children}</>;
 }
 
-function applyEntityColors(entity: EntitySettings | null | undefined): void {
+function applyEntityColors(
+  entity: EntitySettings | null | undefined,
+  theme: string | undefined
+): void {
   if (!entity) return;
 
   const root = document.documentElement;
@@ -93,15 +105,34 @@ function applyEntityColors(entity: EntitySettings | null | undefined): void {
     if (value) {
       // Aplica a cor do input principal
       for (const cssVar of cssVars) {
-        root.style.setProperty(cssVar, value);
+        // Se for modo dark e a variável for a da sidebar, removemos o override
+        // para que o globals.css (charcoal) assuma o controle.
+        if (theme === "dark" && cssVar === "--sidebar-background") {
+          root.style.removeProperty(cssVar);
+          continue;
+        }
+
+        if (root.style.getPropertyValue(cssVar) !== value) {
+          root.style.setProperty(cssVar, value);
+        }
       }
       
       // Avalia a luminância e aplica a var de contraste para os foregrounds atrelados
       const foregroundVars = FOREGROUND_MAPPINGS[field as keyof typeof FOREGROUND_MAPPINGS];
       if (foregroundVars) {
+        // Se for modo dark e estivermos tratando do foreground da sidebar, removemos o override
+        if (theme === "dark" && field === "corSidebar") {
+          for (const fgVar of foregroundVars) {
+            root.style.removeProperty(fgVar);
+          }
+          continue;
+        }
+
         const contrastColor = generateAccessibleForeground(value);
         for (const fgVar of foregroundVars) {
-          root.style.setProperty(fgVar, contrastColor);
+          if (root.style.getPropertyValue(fgVar) !== contrastColor) {
+            root.style.setProperty(fgVar, contrastColor);
+          }
         }
       }
     }

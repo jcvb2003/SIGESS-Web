@@ -1,4 +1,4 @@
-import { supabaseReap as supabase } from "../types/supabase.reap";
+import { supabase } from "@/shared/lib/supabase/client";
 import { Reap, ReapAnoAnual, ReapAnoSimplificado, ReapWithMember } from "../types/reap.types";
 
 export const reapService = {
@@ -149,9 +149,10 @@ export const reapService = {
 
     const { error } = await supabase.rpc("reap_upsert_full", {
       p_cpf: cpf,
-      p_simplificado: simplificado,
-      p_anual: anual,
-      p_observacoes: observacoes,
+      // p_simplificado e p_anual usam 'as any' pois o schema JSONB é dinâmico e processado no banco via RPC
+      p_simplificado: simplificado as any,
+      p_anual: anual as any,
+      p_observacoes: observacoes ?? undefined,
     });
 
     if (error) throw error;
@@ -159,9 +160,11 @@ export const reapService = {
 
   async updateObservacoes(cpf: string, observacoes: string | null): Promise<void> {
     const { error } = await supabase
-
       .from("reap")
-      .upsert({ cpf, observacoes }, { onConflict: "cpf" });
+      .upsert({ 
+        cpf, 
+        observacoes: observacoes ?? undefined 
+      }, { onConflict: "cpf" });
 
     if (error) throw error;
   },

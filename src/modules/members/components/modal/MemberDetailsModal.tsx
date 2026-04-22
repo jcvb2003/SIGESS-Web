@@ -7,12 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/shared/components/ui/tabs";
+import { EntityTabs } from "@/shared/components/layout/EntityTabs";
 import { memberService } from "../../services/memberService";
 import { memberQueryKeys } from "../../queryKeys";
 import { MemberRegistrationForm } from "../../types/member.types";
@@ -22,6 +17,8 @@ import { MemberDetailsSkeleton } from "./MemberDetailsSkeleton";
 import { PrimaryInfoTab } from "./tabs/PrimaryInfoTab";
 import { ComplementaryInfoTab } from "./tabs/ComplementaryInfoTab";
 import { ExternalPortals } from "./ExternalPortals";
+
+
 
 interface MemberDetailsModalProps {
   readonly open: boolean;
@@ -108,59 +105,42 @@ export function MemberDetailsModal({
           <MemberModalHeader member={member} />
         </DialogHeader>
 
-        <Tabs
+        <EntityTabs
           defaultValue="primary"
-          className="flex-1 flex flex-col overflow-hidden min-h-0"
-        >
-          <div className="px-5 sm:px-6 w-full flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-0 pt-4 pb-3 sm:pb-0">
-            <TabsList>
-              <TabsTrigger
-                value="primary"
-                className="flex-1 sm:px-5"
-              >
-                Dados Principais
-              </TabsTrigger>
-              <TabsTrigger
-                value="complementary"
-                className="flex-1 sm:px-5"
-              >
-                Dados Complementares
-              </TabsTrigger>
-            </TabsList>
-
-            <ExternalPortals
-              cpf={member.cpf || ""}
-              senhaGov={member.senhaGovInss || ""}
-              nome={member.nome || ""}
-              member={member}
-            />
-
-            <div className="hidden sm:flex items-center ml-4">
-              <div className="h-7 w-px bg-border/40 mr-4" />
-              <MemberModalActions
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onDocuments={handleDocuments}
-                onFinance={handleFinance}
+          variant="full-height"
+          className="flex-1 min-h-0"
+          items={[
+            {
+              value: "primary",
+              label: "Dados Principais",
+              content: <PrimaryInfoTab member={member} />
+            },
+            {
+              value: "complementary",
+              label: "Dados Complementares",
+              content: <ComplementaryInfoTab member={member} />
+            }
+          ]}
+          rightActions={
+            <>
+              <ExternalPortals
+                cpf={member.cpf || ""}
+                senhaGov={member.senhaGovInss || ""}
+                nome={member.nome || ""}
+                member={member}
               />
-            </div>
-          </div>
-
-          <div className="flex-1 overflow-hidden px-5 sm:px-6 pt-4 pb-0 sm:pb-6 bg-muted/20 min-h-0">
-            <TabsContent
-              value="primary"
-              className="h-full m-0 data-[state=active]:flex flex-col"
-            >
-              <PrimaryInfoTab member={member} />
-            </TabsContent>
-            <TabsContent
-              value="complementary"
-              className="h-full m-0 data-[state=active]:flex flex-col"
-            >
-              <ComplementaryInfoTab member={member} />
-            </TabsContent>
-          </div>
-        </Tabs>
+              <div className="hidden sm:flex items-center ml-2">
+                <div className="h-7 w-px bg-border/40 mr-4" />
+                <MemberModalActions
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  onDocuments={handleDocuments}
+                  onFinance={handleFinance}
+                />
+              </div>
+            </>
+          }
+        />
 
         <div className="sm:hidden border-t border-border/40 bg-background px-4 py-3 shrink-0">
           <MemberModalActions

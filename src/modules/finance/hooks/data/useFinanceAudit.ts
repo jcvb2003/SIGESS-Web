@@ -23,8 +23,8 @@ interface UseFinanceAuditOptions {
 
 export function useFinanceAudit(options: UseFinanceAuditOptions = {}) {
   const { 
-    tableName = null, 
-    operation = null, 
+    tableName, 
+    operation, 
     limit = 50, 
     offset = 0 
   } = options;

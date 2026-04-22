@@ -12,18 +12,6 @@ import {
   fromMemberRecord,
 } from "./memberDataTransformer";
 import { mapRowToListItem } from "../utils/memberTransformers";
-const toNullableString = (value: unknown): string | null => {
-  if (value === null || value === undefined) {
-    return null;
-  }
-  if (typeof value === "string") {
-    return value;
-  }
-  if (typeof value === "number" || typeof value === "boolean") {
-    return String(value);
-  }
-  return JSON.stringify(value);
-};
 export class DuplicateCpfError extends Error {
   code = "DUPLICATE_CPF";
   constructor(message = "CPF já cadastrado.") {

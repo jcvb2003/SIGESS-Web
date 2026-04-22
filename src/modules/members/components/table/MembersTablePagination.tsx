@@ -31,7 +31,7 @@ export function MembersTablePagination({
   onPageSizeChange,
   onPreviousPage,
   onNextPage,
-}: MembersTablePaginationProps) {
+}: Readonly<MembersTablePaginationProps>) {
   return (
     <div className="p-4 border-t border-border/50 bg-card rounded-b-xl flex flex-col gap-3 md:flex-row md:items-center md:justify-between text-xs sm:text-sm text-muted-foreground">
       <div className="flex items-center gap-2">

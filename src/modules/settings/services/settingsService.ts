@@ -9,9 +9,11 @@ import {
   PasswordChangeInput,
 } from "../types/settings.types";
 const ENTITY_TABLE = "entidade";
+const CONFIG_TABLE = "configuracao_entidade";
 const PARAMETERS_TABLE = "parametros";
 const DOCUMENT_TEMPLATES_TABLE = "templates";
 const DOCUMENT_TEMPLATES_BUCKET = "documentos";
+const BRANDING_BUCKET = "branding";
 const LOCALITIES_TABLE = "localidades";
 const toStringValue = (value: unknown, fallback = ""): string => {
   if (value === null || value === undefined) {
@@ -27,58 +29,91 @@ const toNullable = (value: string | undefined | null): string | null => {
   const trimmed = value?.trim();
   return trimmed || null;
 };
+
+const toOptional = (value: string | undefined | null): string | undefined => {
+  const trimmed = value?.trim();
+  return trimmed || undefined;
+};
 export const settingsService = {
   async getEntity(): Promise<ServiceResponse<EntitySettings>> {
-    const { data, error } = await supabase
+    // 1. Buscar dados institucionais
+    const { data: entityData, error: entityError } = await supabase
       .from(ENTITY_TABLE)
       .select("*")
       .limit(1)
       .maybeSingle();
-    if (error) {
-      console.error("Erro ao buscar entidade:", error);
-      return { data: null, error };
+
+    if (entityError) {
+      console.error("Erro ao buscar entidade:", entityError);
+      return { data: null, error: entityError };
     }
-    if (!data) {
+
+    // 2. Buscar dados de configuração/aparência
+    const { data: configData, error: configError } = await supabase
+      .from(CONFIG_TABLE)
+      .select("*")
+      .limit(1)
+      .maybeSingle();
+
+    if (configError) {
+      console.error("Erro ao buscar configurações da entidade:", configError);
+      return { data: null, error: configError };
+    }
+
+    if (!entityData) {
       return {
         data: { ...defaultEntitySettings },
         error: null,
       };
     }
+
+    // 3. Compor URL do logo se o path existir
+    let logoUrl: string | undefined = undefined;
+    if (configData?.logo_path) {
+      const { data: publicUrlData } = supabase.storage
+        .from(BRANDING_BUCKET)
+        .getPublicUrl(configData.logo_path);
+      logoUrl = publicUrlData.publicUrl;
+    }
+
     return {
-      data: data
-        ? {
-          id: data.id ? String(data.id) : undefined,
-          name: toStringValue(data.nome_entidade),
-          shortName: toStringValue(data.nome_abreviado),
-          cnpj: toStringValue(data.cnpj),
-          street: toStringValue(data.endereco),
-          district: toStringValue(data.bairro),
-          city: toStringValue(data.cidade),
-          state: toStringValue(data.uf),
-          cep: toStringValue(data.cep),
-          phone1: toStringValue(data.fone),
-          phone2: toStringValue(data.celular),
-          email: toStringValue(data.email),
-          federation: toStringValue(data.federacao),
-          confederation: toStringValue(data.confederacao),
-          pole: toStringValue(data.polo),
-          foundation: toStringValue(data.fundacao),
-          county: toStringValue(data.comarca),
-          number: toStringValue(data.numero),
-          presidentName: toStringValue(data.nome_do_presidente),
-          presidentCpf: toStringValue(data.cpf_do_presidente),
-          corPrimaria: toStringValue(data.cor_primaria, "160 84% 39%"),
-          corSecundaria: toStringValue(data.cor_secundaria, "152 69% 41%"),
-          corSidebar: toStringValue(data.cor_sidebar, "160 84% 39%"),
-        }
-        : null,
+      data: {
+        id: entityData.id ? String(entityData.id) : undefined,
+        name: toStringValue(entityData.nome_entidade),
+        shortName: toStringValue(entityData.nome_abreviado),
+        cnpj: toStringValue(entityData.cnpj),
+        street: toStringValue(entityData.endereco),
+        district: toStringValue(entityData.bairro),
+        city: toStringValue(entityData.cidade),
+        state: toStringValue(entityData.uf),
+        cep: toStringValue(entityData.cep),
+        phone1: toStringValue(entityData.fone),
+        phone2: toStringValue(entityData.celular),
+        email: toStringValue(entityData.email),
+        federation: toStringValue(entityData.federacao),
+        confederation: toStringValue(entityData.confederacao),
+        pole: toStringValue(entityData.polo),
+        foundation: toStringValue(entityData.fundacao),
+        county: toStringValue(entityData.comarca),
+        number: toStringValue(entityData.numero),
+        presidentName: toStringValue(entityData.nome_do_presidente),
+        presidentCpf: toStringValue(entityData.cpf_do_presidente),
+        
+        // Dados de Aparência (vindos de configuracao_entidade)
+        corPrimaria: toStringValue(configData?.cor_primaria, "160 84% 39%"),
+        corSecundaria: toStringValue(configData?.cor_secundaria, "152 69% 41%"),
+        corSidebar: toStringValue(configData?.cor_sidebar, "160 84% 39%"),
+        logoPath: configData?.logo_path ? String(configData.logo_path) : undefined,
+        logoUrl: logoUrl,
+      },
       error: null,
     };
   },
   async updateEntitySettings(
     settings: EntitySettings,
   ): Promise<ServiceResponse<EntitySettings>> {
-    const { error } = await supabase
+    // 1. Atualizar dados institucionais
+    const { error: entityError } = await supabase
       .from(ENTITY_TABLE)
       .upsert({
         id: settings.id,
@@ -101,16 +136,34 @@ export const settingsService = {
         comarca: toNullable(settings.county),
         nome_do_presidente: toNullable(settings.presidentName),
         cpf_do_presidente: toNullable(settings.presidentCpf),
-        cor_primaria: toNullable(settings.corPrimaria),
-        cor_secundaria: toNullable(settings.corSecundaria),
-        cor_sidebar: toNullable(settings.corSidebar),
-      })
-      .select()
-      .single();
-    if (error) {
-      console.error("Erro ao salvar entidade:", error);
-      return { data: null, error };
+      });
+
+    if (entityError) {
+      console.error("Erro ao salvar entidade:", entityError);
+      return { data: null, error: entityError };
     }
+
+    // 2. Atualizar dados de configuração/aparência
+    // Nota: Como é multi-tenant e só tem uma linha, buscamos o ID da config se necessário 
+    // ou usamos o fato de que o upsert lidará com isso se tivermos o ID da config.
+    // Para simplificar, buscamos o primeiro registro da config.
+    const { data: currentConfig } = await supabase.from(CONFIG_TABLE).select("id").limit(1).maybeSingle();
+
+    const { error: configError } = await supabase
+      .from(CONFIG_TABLE)
+      .upsert({
+        id: currentConfig?.id, // Garante que atualizamos o registro existente
+        cor_primaria: toOptional(settings.corPrimaria),
+        cor_secundaria: toOptional(settings.corSecundaria),
+        cor_sidebar: toOptional(settings.corSidebar),
+        logo_path: toNullable(settings.logoPath),
+      });
+
+    if (configError) {
+      console.error("Erro ao salvar configurações visuais:", configError);
+      return { data: null, error: configError };
+    }
+
     return this.getEntity();
   },
   async getParameters(): Promise<ServiceResponse<SystemParameters>> {

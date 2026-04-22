@@ -8,14 +8,7 @@ import {
   CardDescription,
 } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/shared/components/ui/table";
+import { DataTable } from "@/shared/components/layout/DataTable";
 import { Badge } from "@/shared/components/ui/badge";
 import { 
   UserPlus, 
@@ -48,15 +41,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/shared/components/ui/tabs";
+import { EntityTabs } from "@/shared/components/layout/EntityTabs";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { cn } from "@/shared/lib/utils";
 import { formatDate } from "@/shared/utils/formatters/dateFormatters";
+
 
 export function UserManagementSection() {
   const { users, loading, fetchUsers, toggleUserStatus, createUser, inviteUser } = useUserManagement();
@@ -130,112 +119,126 @@ export function UserManagementSection() {
               Novo Usuário
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <Tabs 
-              value={activeTab} 
-              onValueChange={(v) => setActiveTab(v as "invite" | "create")} 
-              className="w-full"
-            >
-              <DialogHeader>
-                <DialogTitle>Gerenciar Usuário</DialogTitle>
-                <DialogDescription>
-                  Escolha entre enviar um convite ou criar o usuário manualmente com uma senha definida.
-                </DialogDescription>
-                <TabsList className="grid w-full grid-cols-2 mt-4">
-                  <TabsTrigger value="invite">Convite</TabsTrigger>
-                  <TabsTrigger value="create">Criação Manual</TabsTrigger>
-                </TabsList>
-              </DialogHeader>
+          <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden">
+            <DialogHeader className="px-5 sm:px-6 pt-5 sm:pt-6 pb-0">
+              <DialogTitle>Gerenciar Usuário</DialogTitle>
+              <DialogDescription>
+                Escolha entre enviar um convite ou criar o usuário manualmente com uma senha definida.
+              </DialogDescription>
+            </DialogHeader>
 
-              <form onSubmit={handleSubmit} className="space-y-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="nome">Nome Completo</Label>
-                  <Input 
-                    id="nome" 
-                    placeholder="Ex: João Silva" 
-                    required 
-                    value={form.nome}
-                    onChange={e => setForm(prev => ({ ...prev, nome: e.target.value }))}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="email">E-mail</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="email@exemplo.com" 
-                    required 
-                    value={form.email}
-                    onChange={e => setForm(prev => ({ ...prev, email: e.target.value }))}
-                  />
-                </div>
-                
-                <TabsContent value="create" className="space-y-4 mt-0 border-none p-0">
-                  <div className="grid gap-2">
-                    <Label htmlFor="password">Senha Inicial</Label>
-                    <div className="relative">
-                      <Input 
-                        id="password" 
-                        type={showPassword ? "text" : "password"}
-                        placeholder="••••••••" 
-                        required={activeTab === "create"}
-                        minLength={6}
-                        value={form.password}
-                        onChange={e => setForm(prev => ({ ...prev, password: e.target.value }))}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
+            <EntityTabs
+              value={activeTab}
+              onValueChange={(v) => setActiveTab(v as "invite" | "create")}
+              items={[
+                {
+                  value: "invite",
+                  label: "Convite",
+                  content: (
+                    <div className="space-y-4">
+                      <div className="grid gap-2 text-sm text-muted-foreground bg-primary/5 p-3 rounded-lg border border-primary/10">
+                        <p>O usuário receberá um e-mail para definir sua própria senha e ativar a conta.</p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="auto-confirm" 
-                      checked={form.autoConfirm}
-                      onCheckedChange={(checked) => setForm(prev => ({ ...prev, autoConfirm: !!checked }))}
-                    />
-                    <Label 
-                      htmlFor="auto-confirm" 
-                      className="text-sm font-medium leading-none cursor-pointer"
-                    >
-                      Confirmar usuário automaticamente
-                    </Label>
-                  </div>
-                </TabsContent>
+                  )
+                },
+                {
+                  value: "create",
+                  label: "Criação Manual",
+                  content: (
+                    <div className="space-y-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="password">Senha Inicial</Label>
+                        <div className="relative">
+                          <Input 
+                            id="password" 
+                            type={showPassword ? "text" : "password"}
+                            placeholder="••••••••" 
+                            required={activeTab === "create"}
+                            minLength={6}
+                            value={form.password}
+                            onChange={e => setForm(prev => ({ ...prev, password: e.target.value }))}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="auto-confirm" 
+                          checked={form.autoConfirm}
+                          onCheckedChange={(checked) => setForm(prev => ({ ...prev, autoConfirm: !!checked }))}
+                        />
+                        <Label 
+                          htmlFor="auto-confirm" 
+                          className="text-sm font-medium leading-none cursor-pointer"
+                        >
+                          Confirmar usuário automaticamente
+                        </Label>
+                      </div>
+                    </div>
+                  )
+                }
+              ]}
+            />
 
-                <div className="grid gap-2">
-                  <Label htmlFor="role">Nível de Acesso (Perfil)</Label>
-                  <Select 
-                    value={form.role} 
-                    onValueChange={(v) => setForm(prev => ({ ...prev, role: v }))}
-                  >
-                    <SelectTrigger id="role">
-                      <SelectValue placeholder="Selecione o perfil" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="admin">Presidente (Administrador)</SelectItem>
-                      <SelectItem value="operador_administrativo">Auxiliar (Restrito)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    * Auxiliares não podem cancelar pagamentos ou alterar configurações críticas.
-                  </p>
-                </div>
+            <form onSubmit={handleSubmit} className="space-y-4 py-4 px-5 sm:px-6 pb-6">
+              <div className="grid gap-2">
+                <Label htmlFor="nome">Nome Completo</Label>
+                <Input 
+                  id="nome" 
+                  placeholder="Ex: João Silva" 
+                  required 
+                  value={form.nome}
+                  onChange={e => setForm(prev => ({ ...prev, nome: e.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="email">E-mail</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="email@exemplo.com" 
+                  required 
+                  value={form.email}
+                  onChange={e => setForm(prev => ({ ...prev, email: e.target.value }))}
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="role">Nível de Acesso (Perfil)</Label>
+                <Select 
+                  value={form.role} 
+                  onValueChange={(v) => setForm(prev => ({ ...prev, role: v }))}
+                >
+                  <SelectTrigger id="role">
+                    <SelectValue placeholder="Selecione o perfil" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Presidente (Administrador)</SelectItem>
+                    <SelectItem value="operador_administrativo">Auxiliar (Restrito)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  * Auxiliares não podem cancelar pagamentos ou alterar configurações críticas.
+                </p>
+              </div>
 
-                <DialogFooter className="pt-2">
-                  <Button type="submit" disabled={isProcessing} className="w-full font-bold">
-                    {(() => {
-                      if (isProcessing) return <Loader2 className="h-4 w-4 animate-spin" />;
-                      return activeTab === "invite" ? "Enviar Convite" : "Criar Usuário";
-                    })()}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Tabs>
+              <DialogFooter className="pt-2">
+                <Button type="submit" disabled={isProcessing} className="w-full font-bold">
+                  {isProcessing ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    activeTab === "invite" ? "Enviar Convite" : "Criar Usuário"
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
           </DialogContent>
         </Dialog>
       </CardHeader>
@@ -252,112 +255,102 @@ export function UserManagementSection() {
           />
         </div>
 
-        <div className="rounded-xl border border-border/60 overflow-hidden bg-background">
-          <Table>
-            <TableHeader className="bg-muted/40">
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[30%]">Nome / Usuário</TableHead>
-                <TableHead>Perfil</TableHead>
-                <TableHead className="hidden md:table-cell">Cadastro</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading && (
-                <TableRow>
-                  <TableCell colSpan={5} className="h-32 text-center">
-                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary/40" />
-                    <p className="text-xs text-muted-foreground mt-2">Carregando usuários...</p>
-                  </TableCell>
-                </TableRow>
-              )}
-
-              {!isLoading && filteredUsers.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
-                    Nenhum usuário encontrado.
-                  </TableCell>
-                </TableRow>
-              )}
-
-              {!isLoading && filteredUsers.length > 0 && filteredUsers.map((u) => (
-                <TableRow key={u.id} className="hover:bg-muted/10 transition-colors">
-                  <TableCell className="font-medium">
-                    <div className="flex flex-col">
-                      <span className="text-sm">{u.nome || "Sem nome"}</span>
-                      <span className="text-[10px] text-muted-foreground flex items-center gap-1 font-normal">
-                        <Mail className="h-2.5 w-2.5" />
-                        {u.email}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1.5">
-                      {u.role === 'admin' ? (
-                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 gap-1 py-0.5 px-2 font-bold uppercase text-[9px]">
-                          <ShieldCheck className="h-3 w-3" />
-                          Presidente
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 gap-1 py-0.5 px-2 font-bold uppercase text-[9px]">
-                          <ShieldAlert className="h-3 w-3" />
-                          Auxiliar
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground hidden md:table-cell font-mono">
-                    {formatDate(u.createdAt)}
-                  </TableCell>
-                  <TableCell>
-                    {u.ativo ? (
-                      <Badge className="bg-emerald-500/10 text-emerald-700 border-emerald-500/20 shadow-none font-bold text-[10px]">
-                        Ativo
-                      </Badge>
-                    ) : (
-                      <Badge variant="destructive" className="bg-red-500/10 text-red-700 border-red-500/20 shadow-none font-bold text-[10px] hover:bg-red-500/10">
-                        Inativo
-                      </Badge>
+        <DataTable
+          data={filteredUsers}
+          isLoading={isLoading}
+          onRetry={fetchUsers}
+          emptyMessage="Nenhum usuário encontrado"
+          emptyDescription="Não há usuários que correspondam aos filtros de busca atuais."
+          columns={[
+            {
+              header: "Nome / Usuário",
+              className: "w-[30%]",
+              cell: (u) => (
+                <div className="flex flex-col">
+                  <span className="text-sm">{u.nome || "Sem nome"}</span>
+                  <span className="text-[10px] text-muted-foreground flex items-center gap-1 font-normal">
+                    <Mail className="h-2.5 w-2.5" />
+                    {u.email}
+                  </span>
+                </div>
+              )
+            },
+            {
+              header: "Perfil",
+              cell: (u) => (
+                <div className="flex items-center gap-1.5">
+                  {u.role === 'admin' ? (
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 gap-1 py-0.5 px-2 font-bold uppercase text-[9px]">
+                      <ShieldCheck className="h-3 w-3" />
+                      Presidente
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 gap-1 py-0.5 px-2 font-bold uppercase text-[9px]">
+                      <ShieldAlert className="h-3 w-3" />
+                      Auxiliar
+                    </Badge>
+                  )}
+                </div>
+              )
+            },
+            {
+              header: "Cadastro",
+              className: "hidden md:table-cell",
+              cell: (u) => (
+                <span className="text-xs text-muted-foreground font-mono">
+                  {formatDate(u.createdAt)}
+                </span>
+              )
+            },
+            {
+              header: "Status",
+              cell: (u) => u.ativo ? (
+                <Badge className="bg-emerald-500/10 text-emerald-700 border-emerald-500/20 shadow-none font-bold text-[10px]">
+                  Ativo
+                </Badge>
+              ) : (
+                <Badge variant="destructive" className="bg-red-500/10 text-red-700 border-red-500/20 shadow-none font-bold text-[10px] hover:bg-red-500/10">
+                  Inativo
+                </Badge>
+              )
+            },
+            {
+              header: "Ações",
+              headerClassName: "text-right",
+              className: "text-right",
+              cell: (u) => {
+                const buttonStyles = u.ativo 
+                  ? "text-slate-700 hover:bg-red-600 hover:text-white hover:border-red-600" 
+                  : "text-slate-700 hover:bg-emerald-600 hover:text-white hover:border-emerald-600";
+                
+                return (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={isProcessing}
+                    className={cn(
+                      "h-8 gap-2 font-bold transition-all duration-200 shadow-sm hover:scale-105 active:scale-95",
+                      buttonStyles
                     )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {(() => {
-                      const buttonStyles = u.ativo 
-                        ? "text-slate-700 hover:bg-red-600 hover:text-white hover:border-red-600" 
-                        : "text-slate-700 hover:bg-emerald-600 hover:text-white hover:border-emerald-600";
-                      
-                      return (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={isProcessing}
-                          className={cn(
-                            "h-8 gap-2 font-bold transition-all duration-200 shadow-sm hover:scale-105 active:scale-95",
-                            buttonStyles
-                          )}
-                          onClick={() => toggleUserStatus(u.id, u.ativo)}
-                        >
-                          {u.ativo ? (
-                            <>
-                              <UserX className="h-4 w-4" />
-                              <span className="hidden sm:inline">Desativar</span>
-                            </>
-                          ) : (
-                            <>
-                              <UserCheck className="h-4 w-4" />
-                              <span className="hidden sm:inline">Ativar</span>
-                            </>
-                          )}
-                        </Button>
-                      );
-                    })()}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+                    onClick={() => toggleUserStatus(u.id, u.ativo)}
+                  >
+                    {u.ativo ? (
+                      <>
+                        <UserX className="h-4 w-4" />
+                        <span className="hidden sm:inline">Desativar</span>
+                      </>
+                    ) : (
+                      <>
+                        <UserCheck className="h-4 w-4" />
+                        <span className="hidden sm:inline">Ativar</span>
+                      </>
+                    )}
+                  </Button>
+                );
+              }
+            }
+          ]}
+        />
       </CardContent>
     </Card>
   );

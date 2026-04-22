@@ -11,7 +11,20 @@ import { useFinanceFilters } from "@/modules/finance/hooks/filters/useFinanceFil
 import { useFinanceStats } from "@/modules/finance/hooks/data/useFinanceStats";
 import { useFinanceTabCounts } from "@/modules/finance/hooks/data/useFinanceTabCounts";
 import { useDebounce } from "@/shared/hooks/useDebounce";
-import { FinanceTable } from "@/modules/finance/components/table/FinanceTable";
+import { DataTable } from "@/shared/components/layout/DataTable";
+import { MemberInfoCell } from "@/modules/finance/components/table/cells/MemberInfoCell";
+import { FinancialStatusCell } from "@/modules/finance/components/table/cells/FinancialStatusCell";
+import { AnnuitiesCell } from "@/modules/finance/components/table/cells/AnnuitiesCell";
+import { FinanceTablePagination } from "@/modules/finance/components/table/FinanceTablePagination";
+import { formatDate } from "@/shared/utils/formatters/dateFormatters";
+import { ClipboardList, FileText, Wallet } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/shared/components/ui/tooltip";
+import type { MemberFinancialSummary } from "@/modules/finance/types/finance.types";
 import { FinanceSearchBar } from "@/modules/finance/components/search/FinanceSearchBar";
 import { SummaryCards } from "@/modules/finance/components/shared/SummaryCards";
 import { MemberStatementModal } from "@/modules/finance/components/modal/MemberStatementModal";
@@ -198,20 +211,126 @@ export default function FinancePage() {
           ))}
         </div>
 
-        {/* Table */}
-        <FinanceTable
-          members={members}
+        {/* Table Content */}
+        <DataTable<MemberFinancialSummary>
+          data={members}
           isLoading={isLoading}
-          currentYear={currentYear}
-          anoBase={anoBase}
+          onRetry={() => window.location.reload()}
+          emptyMessage="Nenhum sócio encontrado"
+          emptyDescription="Tente ajustar seus filtros ou termos de busca para encontrar o que procura."
+          columns={[
+            {
+              header: "Sócio",
+              className: "w-[30%] min-w-[200px]",
+              cell: (m) => <MemberInfoCell nome={m.nome} status={m.status} />
+            },
+            {
+              header: "CPF",
+              className: "whitespace-nowrap",
+              cell: (m) => <span className="text-sm font-medium text-muted-foreground">{m.cpf}</span>
+            },
+            {
+              header: "Regime",
+              className: "whitespace-nowrap capitalize hidden lg:table-cell",
+              cell: (m) => <span className="text-sm font-medium">{m.regime}</span>
+            },
+            {
+              header: "Situação",
+              className: "whitespace-nowrap",
+              cell: (m) => <FinancialStatusCell member={m} anoBase={anoBase} />
+            },
+            {
+              header: "Último pag.",
+              className: "whitespace-nowrap hidden md:table-cell",
+              cell: (m) => (
+                <span className="text-sm font-medium text-muted-foreground">
+                  {m.ultimoPagamento ? formatDate(m.ultimoPagamento) : "—"}
+                </span>
+              )
+            },
+            {
+              header: "Anuidades",
+              cell: (m) => (
+                <AnnuitiesCell
+                  member={m}
+                  currentYear={currentYear}
+                  anoBase={anoBase}
+                />
+              )
+            },
+            {
+              header: "Ações",
+              headerClassName: "text-right",
+              className: "text-right w-[1%]",
+              cell: (m) => (
+                <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 transition-all duration-200 hover:bg-blue-600 hover:text-white hover:border-blue-600 hover:scale-110 active:scale-95 shadow-sm"
+                          onClick={() => handleOpenStatement(m.cpf)}
+                        >
+                          <ClipboardList className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Extrato</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className={cn(
+                            "h-8 w-8 transition-all duration-200 shadow-sm",
+                            !m.isento && "hover:bg-primary hover:text-white hover:border-primary hover:scale-110 active:scale-95",
+                          )}
+                          disabled={m.isento}
+                          onClick={() => handleOpenPayment(m.cpf)}
+                        >
+                          <Wallet className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Registrar Anuidades/Taxas</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className={cn(
+                            "h-8 w-8 transition-all duration-200 shadow-sm",
+                            !m.isento && "hover:bg-amber-600 hover:text-white hover:border-amber-600 hover:scale-110 active:scale-95",
+                          )}
+                          disabled={m.isento}
+                          onClick={() => handleOpenDAE(m.cpf)}
+                        >
+                          <FileText className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Registrar DAE</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              )
+            }
+          ]}
+        />
+
+        <FinanceTablePagination
+          total={total}
           page={params.page}
           pageSize={params.pageSize}
-          total={total}
           onPageChange={setPage}
           onPageSizeChange={setPageSize}
-          onOpenStatement={handleOpenStatement}
-          onOpenPayment={handleOpenPayment}
-          onOpenDAE={handleOpenDAE}
         />
       </Card>
 
