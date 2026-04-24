@@ -16,6 +16,11 @@
     - [x] Novo sistema de variantes no `DataTable` (`skeletonVariant`).
     - [x] Aplicação em `Members` (avatares circulares) e `Requirements` (badges de status).
 - [x] **Governança**: Eliminação do arquivo redundante `supabase.reap.ts`.
+- [x] **Performance & Estabilidade (REAP)**:
+    - [x] Correção de `ERR_INSUFFICIENT_RESOURCES` via batching de RPC.
+    - [x] Novas RPCs `reap_batch_upsert_simplificado_v2` e `reap_batch_upsert_anual_v2` com `SET search_path` (SEC-5).
+    - [x] Refatoração de `reapService.ts` com concorrência controlada (15 simultâneas).
+    - [x] Obrigatoriedade de `ano_referencia` no `Update` de Requerimentos.
 
 ## 🛡️ Regras de Governança (Vigentes)
 1. **Tipagem Obrigatória**: Após qualquer migration, a sincronização de `database.types.ts` DEVE ser feita via CLI. Edições manuais são proibidas (exceto ajustes de opcionalidade em chaves compostas no Update).

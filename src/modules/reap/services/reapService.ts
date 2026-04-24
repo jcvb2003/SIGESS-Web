@@ -204,7 +204,7 @@ export const reapService = {
     for (let i = 0; i < entries.length; i += CHUNK_SIZE) {
       const chunk = entries.slice(i, i + CHUNK_SIZE);
 
-      const { error } = await supabase.rpc("reap_batch_upsert_simplificado", {
+      const { error } = await supabase.rpc("reap_batch_upsert_simplificado_v2", {
         p_entries: chunk
       });
 
@@ -218,18 +218,66 @@ export const reapService = {
   async batchMarkSent(
     entries: { cpf: string; tipo: "simplificado" | "anual"; anos: number[] }[]
   ): Promise<void> {
-    for (const entry of entries) {
-      for (const ano of entry.anos) {
-        if (entry.tipo === "simplificado") {
-          await this.upsertSimplificadoYear(entry.cpf, ano, {
-            enviado: true,
-            tem_problema: false,
-          });
-        } else {
-          await this.upsertAnualYear(entry.cpf, ano, {
-            enviado: true,
-          });
+    const simplificadoRaw = entries.filter((e) => e.tipo === "simplificado");
+    const anualRaw = entries.filter((e) => e.tipo === "anual");
+
+    const CHUNK_SIZE = 50;
+
+    if (simplificadoRaw.length > 0) {
+      const batchData = simplificadoRaw.map((e) => ({
+        cpf: e.cpf,
+        simplificado: e.anos.reduce(
+          (acc, ano) => ({
+            ...acc,
+            [String(ano)]: { enviado: true, tem_problema: false },
+          }),
+          {}
+        ),
+      }));
+
+      const CONCURRENCY = 15;
+      for (let i = 0; i < batchData.length; i += CHUNK_SIZE * CONCURRENCY) {
+        const promises = [];
+        for (let j = 0; j < CONCURRENCY; j++) {
+          const start = i + j * CHUNK_SIZE;
+          if (start >= batchData.length) break;
+          promises.push(
+            supabase.rpc("reap_batch_upsert_simplificado_v2", {
+              p_entries: batchData.slice(start, start + CHUNK_SIZE),
+            })
+          );
         }
+        const results = await Promise.all(promises);
+        for (const res of results) if (res.error) throw res.error;
+      }
+    }
+
+    if (anualRaw.length > 0) {
+      const batchData = anualRaw.map((e) => ({
+        cpf: e.cpf,
+        anual: e.anos.reduce(
+          (acc, ano) => ({
+            ...acc,
+            [String(ano)]: { enviado: true, tem_problema: false },
+          }),
+          {}
+        ),
+      }));
+
+      const CONCURRENCY = 15;
+      for (let i = 0; i < batchData.length; i += CHUNK_SIZE * CONCURRENCY) {
+        const promises = [];
+        for (let j = 0; j < CONCURRENCY; j++) {
+          const start = i + j * CHUNK_SIZE;
+          if (start >= batchData.length) break;
+          promises.push(
+            supabase.rpc("reap_batch_upsert_anual_v2", {
+              p_entries: batchData.slice(start, start + CHUNK_SIZE),
+            })
+          );
+        }
+        const results = await Promise.all(promises);
+        for (const res of results) if (res.error) throw res.error;
       }
     }
   },
@@ -282,7 +330,7 @@ export const reapService = {
 
     const notFound: string[] = [];
     let found = 0;
-    const batches: Promise<void>[] = [];
+    const paraProcessar: { cpf: string; ano: number; dataEnvio: string }[] = [];
 
     for (const entry of entries) {
       if (!cpfSet.has(entry.cpf)) {
@@ -290,7 +338,6 @@ export const reapService = {
         continue;
       }
 
-      // Verifica em memória — sem round-trip ao banco
       const anualAtual = reapMap.get(entry.cpf) ?? {};
       const anoKey = String(entry.ano);
       if (anualAtual[anoKey]?.enviado && anualAtual[anoKey]?.data_envio) {
@@ -298,19 +345,51 @@ export const reapService = {
         continue;
       }
 
-      batches.push(
-        this.upsertAnualYear(entry.cpf, entry.ano, {
-          enviado: true,
-          data_envio: entry.dataEnvio,
-          tem_problema: false,
-        }).then(() => { found++; })
-      );
+      paraProcessar.push(entry);
     }
 
-    // Dispara em lotes de 25 concorrentes — mantém db_pool saudável
-    const CHUNK_SIZE = 25;
-    for (let i = 0; i < batches.length; i += CHUNK_SIZE) {
-      await Promise.all(batches.slice(i, i + CHUNK_SIZE));
+    // Agrupa por CPF para usar a RPC de lote
+    const batchDataMap = new Map<string, any>();
+    for (const entry of paraProcessar) {
+      if (!batchDataMap.has(entry.cpf)) {
+        batchDataMap.set(entry.cpf, { cpf: entry.cpf, anual: {} });
+      }
+      batchDataMap.get(entry.cpf).anual[String(entry.ano)] = {
+        enviado: true,
+        data_envio: entry.dataEnvio,
+        tem_problema: false,
+      };
+    }
+
+    const batchEntries = Array.from(batchDataMap.values());
+    const CHUNK_SIZE = 50;
+    const CONCURRENCY = 15;
+
+    for (let i = 0; i < batchEntries.length; i += CHUNK_SIZE * CONCURRENCY) {
+      const promises = [];
+      const currentChunks: any[][] = [];
+
+      for (let j = 0; j < CONCURRENCY; j++) {
+        const start = i + j * CHUNK_SIZE;
+        if (start >= batchEntries.length) break;
+        const chunk = batchEntries.slice(start, start + CHUNK_SIZE);
+        currentChunks.push(chunk);
+        promises.push(
+          supabase.rpc("reap_batch_upsert_anual_v2", {
+            p_entries: chunk,
+          })
+        );
+      }
+
+      const results = await Promise.all(promises);
+      for (const res of results) if (res.error) throw res.error;
+
+      // Conta quantos registros foram processados nestes chunks
+      for (const chunk of currentChunks) {
+        for (const item of chunk) {
+          found += Object.keys(item.anual).length;
+        }
+      }
     }
 
     return { found, notFound };
@@ -320,30 +399,40 @@ export const reapService = {
     entries: { cpf: string; anosSimplificado: number[] }[]
   ): Promise<void> {
     const ANOS_SIMPLIFICADO = [2021, 2022, 2023, 2024];
-    const batches = [];
 
-    for (const entry of entries) {
-      if (entry.anosSimplificado.length === 0) continue;
+    // Agrupa por CPF para enviar tudo em uma chamada por sócio
+    const batchData = entries
+      .map((entry) => {
+        const simplificado: any = {};
+        const anosNumericos = entry.anosSimplificado.map(Number);
+        const primeiroAnoPendente =
+          anosNumericos.length > 0 ? Math.min(...anosNumericos) : 9999;
 
-      const primeiroAnoPendente = Math.min(...entry.anosSimplificado);
+        for (const ano of ANOS_SIMPLIFICADO) {
+          if (ano < primeiroAnoPendente) continue;
+          simplificado[String(ano)] = {
+            enviado: !anosNumericos.includes(ano),
+          };
+        }
+        return { cpf: entry.cpf, simplificado };
+      })
+      .filter((e) => Object.keys(e.simplificado).length > 0);
 
-      for (const ano of ANOS_SIMPLIFICADO) {
-        if (ano < primeiroAnoPendente) continue;
-        const isPendente = entry.anosSimplificado.includes(ano);
-        
-        batches.push(
-          this.upsertSimplificadoYear(entry.cpf, ano, {
-            enviado: !isPendente,
+    const CHUNK_SIZE = 50;
+    const CONCURRENCY = 15;
+    for (let i = 0; i < batchData.length; i += CHUNK_SIZE * CONCURRENCY) {
+      const promises = [];
+      for (let j = 0; j < CONCURRENCY; j++) {
+        const start = i + j * CHUNK_SIZE;
+        if (start >= batchData.length) break;
+        promises.push(
+          supabase.rpc("reap_batch_upsert_simplificado_v2", {
+            p_entries: batchData.slice(start, start + CHUNK_SIZE),
           })
         );
       }
-    }
-
-    // Dispara requests concorrentes controlados (Chuncking) de 25 em 25
-    // Cada chamada executa 2 transações (upserts). Batch 25 mantem pico db_pool < 50
-    const CHUNK_SIZE = 25;
-    for (let i = 0; i < batches.length; i += CHUNK_SIZE) {
-      await Promise.all(batches.slice(i, i + CHUNK_SIZE));
+      const results = await Promise.all(promises);
+      for (const res of results) if (res.error) throw res.error;
     }
   },
 

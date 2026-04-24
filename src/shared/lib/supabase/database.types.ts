@@ -1327,7 +1327,15 @@ export type Database = {
         Returns: number
       }
       purge_payment_v1: { Args: { p_id: string }; Returns: undefined }
+      reap_batch_upsert_anual_v2: {
+        Args: { p_entries: Json }
+        Returns: undefined
+      }
       reap_batch_upsert_simplificado: {
+        Args: { p_entries: Json }
+        Returns: undefined
+      }
+      reap_batch_upsert_simplificado_v2: {
         Args: { p_entries: Json }
         Returns: undefined
       }
