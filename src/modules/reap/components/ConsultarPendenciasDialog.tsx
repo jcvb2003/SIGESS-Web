@@ -122,7 +122,7 @@ async function parsePdfRows(
 
         if (refAnos.anos.length > 0) {
           rows.push({
-            id: crypto.randomUUID(),
+            id: typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Math.random().toString(36).substring(2),
             nome,
             cpfMascarado: cpfMatch[0],
             anosPendentes: refAnos.anos
@@ -235,7 +235,8 @@ export function ConsultarPendenciasDialog({
       setProgress(100);
       setStep("results");
       toast.success(`${reconciled.length} correspondência(s) encontrada(s) no SIGESS.`);
-    } catch {
+    } catch (error) {
+      console.error("Erro no processamento do PDF REAP:", error);
       toast.error("Erro ao processar PDF.");
     } finally {
       setIsAnalyzing(false);

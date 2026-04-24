@@ -468,7 +468,7 @@ export const reapService = {
     return {
       entityUf: entity?.uf ?? "PA",
       members: members.map((m) => {
-        const r = Array.isArray(m.reap) ? m.reap[0] : m.reap;
+        const r = (Array.isArray(m.reap) ? m.reap[0] : m.reap) as any;
         return {
           cpf: m.cpf,
           nome: m.nome,
