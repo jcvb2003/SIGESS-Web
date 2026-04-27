@@ -271,7 +271,16 @@ export const financeService = {
       p_order_dir: "DESC"
     });
 
-    if (error) throw error;
+    if (error) {
+      console.error("Erro na RPC get_payments_by_period_paginated:", {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+        params: { startDate, endDate, page, pageSize, orderBy }
+      });
+      throw error;
+    }
 
     const total = data?.[0]?.total_count ? Number(data[0].total_count) : 0;
     const totalAmount = data?.[0]?.total_amount ? Number(data[0].total_amount) : 0;

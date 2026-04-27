@@ -6,30 +6,27 @@ const PROBE_INTERVAL_MS = 15_000;
 const PROBE_TIMEOUT_MS = 5_000;
 
 async function checkRealConnectivity(): Promise<boolean> {
-  const savedTenant = typeof localStorage === 'undefined' ? null : localStorage.getItem('sigess_tenant');
+  const savedTenant = typeof localStorage === "undefined" ? null : localStorage.getItem("sigess_tenant");
   if (!savedTenant) return navigator.onLine;
 
   const tenant = resolveTenant(savedTenant);
-  if (!tenant) return navigator.onLine;
+  if (!tenant || !tenant.supabaseUrl) return navigator.onLine;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
 
   try {
-    // Usamos um fetch direto para o endpoint REST do Supabase como probe.
-    // Isso garante que estamos testando a conectividade real com o backend
-    // e que o AbortSignal (timeout) será respeitado, ao contrário do getSession.
+    // Usamos um fetch nativo direto para o endpoint REST do Supabase como probe.
+    // Usamos o método OPTIONS para obter um 200 OK sem necessidade de apikey ou auth,
+    // eliminando os erros 401/403 no console do navegador.
     const response = await fetch(`${tenant.supabaseUrl}/rest/v1/`, {
-      method: "GET",
-      headers: {
-        apikey: tenant.supabaseAnonKey,
-      },
+      method: "OPTIONS",
       signal: controller.signal,
     });
 
-    return response.ok || response.status === 401 || response.status === 403;
+    return response.status !== 0;
   } catch {
-    // Se foi abortado por timeout ou erro de rede, consideramos offline
+    // Se houve erro de rede ou timeout (abort), consideramos offline
     return false;
   } finally {
     clearTimeout(timeoutId);

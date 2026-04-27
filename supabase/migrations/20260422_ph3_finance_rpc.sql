@@ -43,7 +43,7 @@ BEGIN
           AND fl.data_pagamento <= p_end_date
     ),
     stats AS (
-        SELECT count(*) as count, sum(valor) as amount FROM base
+        SELECT count(*) as count, sum(base.valor) as amount FROM base
     )
     SELECT 
         b.*, 
@@ -51,10 +51,10 @@ BEGIN
         st.amount as total_amount
     FROM base b, stats st
     ORDER BY 
-        CASE WHEN p_order_by = 'data_pagamento' AND p_order_dir = 'ASC' THEN data_pagamento END ASC,
-        CASE WHEN p_order_by = 'data_pagamento' AND p_order_dir = 'DESC' THEN data_pagamento END DESC,
-        CASE WHEN p_order_by = 'created_at' AND p_order_dir = 'ASC' THEN created_at END ASC,
-        CASE WHEN p_order_by = 'created_at' AND p_order_dir = 'DESC' THEN created_at END DESC
+        CASE WHEN p_order_by = 'data_pagamento' AND p_order_dir = 'ASC' THEN b.data_pagamento END ASC,
+        CASE WHEN p_order_by = 'data_pagamento' AND p_order_dir = 'DESC' THEN b.data_pagamento END DESC,
+        CASE WHEN p_order_by = 'created_at' AND p_order_dir = 'ASC' THEN b.created_at END ASC,
+        CASE WHEN p_order_by = 'created_at' AND p_order_dir = 'DESC' THEN b.created_at END DESC
     LIMIT p_limit
     OFFSET p_offset;
 END;
