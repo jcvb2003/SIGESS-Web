@@ -1,7 +1,7 @@
--- BUG-8: Cálculo dinâmico de situação financeira na VIEW e suporte a mensalidades
+-- BUG-8: Calculo dinamico de situacao financeira na VIEW e suporte a mensalidades
 -- Ref: v_situacao_financeira_socio logic update
 
--- 1. Função auxiliar para cálculo dinâmico
+-- 1. Funcao auxiliar para calculo dinamico
 CREATE OR REPLACE FUNCTION public.get_socio_financial_status(
     p_cpf text,
     p_regime text,
@@ -45,7 +45,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public, pg_temp;
 
--- 2. Atualizar VIEW (DROP/CREATE para evitar erro de ordenação de colunas)
+-- 2. Atualizar VIEW (DROP/CREATE para evitar erro de ordenacao de colunas)
 DROP VIEW IF EXISTS public.v_situacao_financeira_socio CASCADE;
 
 CREATE VIEW public.v_situacao_financeira_socio AS

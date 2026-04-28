@@ -145,6 +145,7 @@ export function fromMemberRecord(
         )
     : null;
   return {
+    id: getString(record.id),
     codigoDoSocio: getString(record.codigo_do_socio),
     codigoLocalidade: record.codigo_localidade
       ? String(record.codigo_localidade)

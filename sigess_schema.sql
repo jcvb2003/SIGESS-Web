@@ -45,7 +45,7 @@ DECLARE
   max_code_val integer;
   next_code text;
 BEGIN
-  SELECT COALESCE(MAX(NULLIF(regexp_replace(codigo_localidade, '\D', '', 'g'), '')::integer), 0) INTO max_code_val FROM public.localidades;
+  SELECT COALESCE(MAX(NULLIF(regexp_replace(codigo_localidade, '[^0-9]', '', 'g'), '')::integer), 0) INTO max_code_val FROM public.localidades;
   next_code := LPAD((max_code_val + 1)::text, 3, '0');
   IF (NEW.codigo_localidade IS NULL) OR (NEW.codigo_localidade = '') THEN
     NEW.codigo_localidade := next_code;

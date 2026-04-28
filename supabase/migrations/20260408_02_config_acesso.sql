@@ -14,4 +14,4 @@ INSERT INTO public.configuracao_entidade (id, max_socios)
 VALUES (1, 100)
 ON CONFLICT (id) DO NOTHING;
 
-COMMENT ON COLUMN public.configuracao_entidade.acesso_expira_em IS 'Data de expiração da licença do sindicato (centralizada)';
+COMMENT ON COLUMN public.configuracao_entidade.acesso_expira_em IS 'Data de expiracao da licenca do sindicato (centralizada)';

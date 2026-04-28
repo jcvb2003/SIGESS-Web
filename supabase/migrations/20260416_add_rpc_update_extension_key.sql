@@ -1,4 +1,4 @@
--- RPC para atualização segura da chave de licença da extensão
+-- RPC para atualizacao segura da chave de licenca da extensao
 -- Utiliza SECURITY DEFINER para bypassar RLS da tabela configuracao_entidade
 CREATE OR REPLACE FUNCTION public.update_extension_license(p_key text)
 RETURNS void
@@ -15,4 +15,4 @@ END;
 $$;
 
 COMMENT ON FUNCTION public.update_extension_license(text) 
-  IS 'Atualiza a chave de licença da extensão SIGESS ignorando restrições de RLS (Security Definer)';
+  IS 'Atualiza a chave de licenca da extensao SIGESS ignorando restricoes de RLS (Security Definer)';

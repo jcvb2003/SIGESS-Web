@@ -18,11 +18,11 @@ BEGIN
     -- Fallback safety
     v_limit := COALESCE(v_limit, 100);
     
-    -- Count all members except 'Excluído'
-    SELECT COUNT(*) INTO v_count FROM public.socios WHERE situacao != 'Excluído';
+    -- Count all members except 'Excluido'
+    SELECT COUNT(*) INTO v_count FROM public.socios WHERE situacao != 'Excluido';
     
-    IF v_count >= v_limit AND (TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND OLD.situacao = 'Excluído' AND NEW.situacao != 'Excluído')) THEN
-        RAISE EXCEPTION 'Limite de sócios atingido (%)', v_limit;
+    IF v_count >= v_limit AND (TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND OLD.situacao = 'Excluido' AND NEW.situacao != 'Excluido')) THEN
+        RAISE EXCEPTION 'Limite de socios atingido (%)', v_limit;
     END IF;
     
     RETURN NEW;

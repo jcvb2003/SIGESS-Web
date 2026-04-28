@@ -1,4 +1,4 @@
--- RPC: Atualiza todos os dados de um REAP em uma única transação
+-- RPC: Atualiza todos os dados de um REAP em uma unica transacao
 CREATE OR REPLACE FUNCTION public.reap_upsert_full(
   p_cpf text,
   p_simplificado jsonb,
@@ -22,7 +22,7 @@ BEGIN
 END;
 $$;
 
--- RPC: Marca múltiplos sócios como "Em Dia" no Simplificado em lote
+-- RPC: Marca multiplos socios como "Em Dia" no Simplificado em lote
 CREATE OR REPLACE FUNCTION public.reap_batch_upsert_simplificado(
   p_entries jsonb
 )

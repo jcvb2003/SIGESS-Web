@@ -32,6 +32,7 @@ export type EscolaridadeValue =
 export type SocioRow = Tables<"socios">;
 export type SocioInsert = TablesInsert<"socios">;
 export interface MemberRegistrationForm {
+  id?: string;
   codigoDoSocio: string;
   codigoLocalidade: string;
   nome: string;

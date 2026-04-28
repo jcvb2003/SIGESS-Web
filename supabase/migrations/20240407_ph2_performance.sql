@@ -2,11 +2,11 @@
 -- Data: 2024-04-07
 -- Objetivos: 
 -- 1. RPC `get_birthday_members` para otimizar Dashboard (Item S-01)
--- 2. Constraints de Auditoria em Lançamentos e DAEs (Item M-04)
+-- 2. Constraints de Auditoria em Lancamentos e DAEs (Item M-04)
 
 -- 1. PERFORMANCE: RPC para Aniversariantes do Dia
 -- Elimina o loop de 6-10 queries sequenciais que puxavam milhares de registros.
--- Agora o Dashboard faz uma única consulta indexada de < 50ms.
+-- Agora o Dashboard faz uma unica consulta indexada de < 50ms.
 
 CREATE OR REPLACE FUNCTION public.get_birthday_members(p_day int, p_month int)
 RETURNS TABLE (
@@ -30,11 +30,11 @@ BEGIN
 END;
 $$;
 
--- 2. SEGURANÇA: Auditoria Obrigatória de Cancelamento (M-04)
+-- 2. SEGURANCA: Auditoria Obrigatoria de Cancelamento (M-04)
 -- Garante que todo cancelamento (status='cancelado') tenha um autor identificado (cancelado_por).
--- Não usamos NOT NULL puro porque lançamentos ativos (status='pago') não têm esse campo preenchido.
+-- Nao usamos NOT NULL puro porque lancamentos ativos (status='pago') nao tem esse campo preenchido.
 
--- 2.1 Tabela de Lançamentos Financeiros
+-- 2.1 Tabela de Lancamentos Financeiros
 DO $$ 
 BEGIN 
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_cancelamento_audit_lancamentos') THEN
@@ -60,7 +60,7 @@ BEGIN
     END IF;
 END $$;
 
--- 2.3 Tabela de Cobranças Geradas (Compulsórias)
+-- 2.3 Tabela de Cobrancas Geradas (Compulsorias)
 DO $$ 
 BEGIN 
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_cancelamento_audit_cobrancas') THEN
@@ -73,6 +73,6 @@ BEGIN
     END IF;
 END $$;
 
--- 3. PERMISSÕES
+-- 3. PERMISSOES
 GRANT EXECUTE ON FUNCTION public.get_birthday_members(int, int) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_birthday_members(int, int) TO service_role;

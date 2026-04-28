@@ -1,13 +1,13 @@
 -- Migration: 20260411_evolution_requerimentos_full
--- Description: Reestruturação completa e idempotente (Oeiras <-> Z2/Breves)
+-- Description: Reestruturacao completa e idempotente (Oeiras <-> Z2/Breves)
 -- Author: Antigravity
 -- Date: 2026-04-11
 
--- DROP das views dependentes para permitir alteração de colunas na tabela base
+-- DROP das views dependentes para permitir alteracao de colunas na tabela base
 DROP VIEW IF EXISTS public.v_requerimentos_busca CASCADE;
 DROP VIEW IF EXISTS public.v_situacao_financeira_socio CASCADE;
 
--- 1. Renomear data → data_assinatura (só se ainda não foi renomeada)
+-- 1. Renomear data ? data_assinatura (so se ainda nao foi renomeada)
 DO $$ BEGIN
   IF EXISTS (
     SELECT 1 FROM information_schema.columns 
@@ -27,7 +27,7 @@ ALTER TABLE public.requerimentos
   ADD COLUMN IF NOT EXISTS created_at timestamptz DEFAULT now(),
   ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now();
 
--- 3. Remover status antigo se existir (Oeiras tinha 'status', Z2 não tem)
+-- 3. Remover status antigo se existir (Oeiras tinha 'status', Z2 nao tem)
 DO $$ BEGIN
   IF EXISTS (
     SELECT 1 FROM information_schema.columns 
@@ -42,7 +42,7 @@ UPDATE public.requerimentos
   SET ano_referencia = 2026 
   WHERE ano_referencia IS NULL;
 
--- 5. Tornar ano_referencia NOT NULL após popular
+-- 5. Tornar ano_referencia NOT NULL apos popular
 ALTER TABLE public.requerimentos 
   ALTER COLUMN ano_referencia SET NOT NULL;
 
@@ -66,7 +66,7 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- 8. View: Situação Financeira (CREATE OR REPLACE é idempotente)
+-- 8. View: Situacao Financeira (CREATE OR REPLACE e idempotente)
 CREATE OR REPLACE VIEW public.v_situacao_financeira_socio
 WITH (security_invoker = true) AS
 WITH base AS (

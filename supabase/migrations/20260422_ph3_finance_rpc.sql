@@ -1,5 +1,5 @@
--- BE-3: RPC para busca paginada de lançamentos por período
--- Otimiza a busca de grandes conjuntos de dados financeiros com join de sócios
+-- BE-3: RPC para busca paginada de lancamentos por periodo
+-- Otimiza a busca de grandes conjuntos de dados financeiros com join de socios
 
 CREATE OR REPLACE FUNCTION public.get_payments_by_period_paginated(
     p_start_date date,

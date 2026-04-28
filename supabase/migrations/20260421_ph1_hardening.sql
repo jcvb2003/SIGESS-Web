@@ -77,10 +77,10 @@ DECLARE
     v_count integer;
 BEGIN
     SELECT socio_limit INTO v_limit FROM entidade LIMIT 1;
-    SELECT COUNT(*) INTO v_count FROM socios WHERE situacao != 'Excluído';
+    SELECT COUNT(*) INTO v_count FROM socios WHERE situacao != 'Excluido';
     
-    IF v_count >= v_limit AND (TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND OLD.situacao = 'Excluído' AND NEW.situacao != 'Excluído')) THEN
-        RAISE EXCEPTION 'Limite de sócios atingido (%)', v_limit;
+    IF v_count >= v_limit AND (TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND OLD.situacao = 'Excluido' AND NEW.situacao != 'Excluido')) THEN
+        RAISE EXCEPTION 'Limite de socios atingido (%)', v_limit;
     END IF;
     
     RETURN NEW;

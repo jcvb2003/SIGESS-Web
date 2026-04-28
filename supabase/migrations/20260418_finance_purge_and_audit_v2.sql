@@ -1,32 +1,32 @@
 -- Migration: Purge & Auditoria Financeira v2
 -- Data: 2026-04-18
 
--- 1. RPC para Exclusão Física Individual (Purge)
+-- 1. RPC para Exclusao Fisica Individual (Purge)
 CREATE OR REPLACE FUNCTION public.purge_payment_v1(p_id uuid)
 RETURNS void AS $$
 DECLARE
     v_admin_count int;
     v_old_data jsonb;
 BEGIN
-    -- Validação de Admin
+    -- Validacao de Admin
     SELECT count(*) INTO v_admin_count FROM public."User" u
     WHERE u.id = auth.uid() AND u.role = 'admin';
     
     IF v_admin_count = 0 THEN
-        RAISE EXCEPTION 'Acesso negado: Requer privilégios de administrador.';
+        RAISE EXCEPTION 'Acesso negado: Requer privilegios de administrador.';
     END IF;
 
-    -- 1. Verificar se o registro existe e se o status é 'cancelado'
+    -- 1. Verificar se o registro existe e se o status e 'cancelado'
     SELECT to_jsonb(l.*) INTO v_old_data 
     FROM public.financeiro_lancamentos l 
     WHERE id = p_id;
 
     IF v_old_data IS NULL THEN
-        RAISE EXCEPTION 'Lançamento não encontrado.';
+        RAISE EXCEPTION 'Lancamento nao encontrado.';
     END IF;
 
     IF (v_old_data->>'status') != 'cancelado' THEN
-        RAISE EXCEPTION 'Apenas lançamentos com status "cancelado" podem ser excluídos permanentemente.';
+        RAISE EXCEPTION 'Apenas lancamentos com status "cancelado" podem ser excluidos permanentemente.';
     END IF;
 
     -- 2. Nular FKs em financeiro_cobrancas_geradas (Safety Net)
@@ -34,14 +34,14 @@ BEGIN
     SET lancamento_id = NULL
     WHERE lancamento_id = p_id;
 
-    -- 3. Registrar no log de auditoria (Operação PURGE)
+    -- 3. Registrar no log de auditoria (Operacao PURGE)
     INSERT INTO public.audit_log_financeiro (
         table_name, record_id, operation, old_data, changed_by
     ) VALUES (
         'financeiro_lancamentos', p_id, 'PURGE', v_old_data, auth.uid()
     );
 
-    -- 4. Executar DELETE físico
+    -- 4. Executar DELETE fisico
     DELETE FROM public.financeiro_lancamentos WHERE id = p_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
@@ -53,15 +53,15 @@ DECLARE
     v_count int;
     v_admin_count int;
 BEGIN
-    -- Validação de Admin
+    -- Validacao de Admin
     SELECT count(*) INTO v_admin_count FROM public."User" u
     WHERE u.id = auth.uid() AND u.role = 'admin';
     
     IF v_admin_count = 0 THEN
-        RAISE EXCEPTION 'Acesso negado: Requer privilégios de administrador.';
+        RAISE EXCEPTION 'Acesso negado: Requer privilegios de administrador.';
     END IF;
 
-    -- 1. Auditoria individual de cada registro que será removido (Compliance)
+    -- 1. Auditoria individual de cada registro que sera removido (Compliance)
     INSERT INTO public.audit_log_financeiro (
         table_name, record_id, operation, old_data, changed_by
     )
@@ -71,7 +71,7 @@ BEGIN
     WHERE status = 'cancelado' 
       AND cancelado_em < (now() - (p_older_than_days || ' days')::interval);
 
-    -- 2. Nular FKs em cobranças para evitar erro de integridade
+    -- 2. Nular FKs em cobrancas para evitar erro de integridade
     UPDATE public.financeiro_cobrancas_geradas
     SET lancamento_id = NULL
     WHERE lancamento_id IN (
@@ -80,7 +80,7 @@ BEGIN
           AND cancelado_em < (now() - (p_older_than_days || ' days')::interval)
     );
 
-    -- 3. Executar DELETE físico e capturar contagem
+    -- 3. Executar DELETE fisico e capturar contagem
     WITH deleted AS (
         DELETE FROM public.financeiro_lancamentos
         WHERE status = 'cancelado'
@@ -115,12 +115,12 @@ RETURNS TABLE (
 DECLARE
     v_admin_count int;
 BEGIN
-    -- Validação de Admin
+    -- Validacao de Admin
     SELECT count(*) INTO v_admin_count FROM public."User" u
     WHERE u.id = auth.uid() AND u.role = 'admin';
     
     IF v_admin_count = 0 THEN
-        RAISE EXCEPTION 'Acesso negado: Requer privilégios de administrador.';
+        RAISE EXCEPTION 'Acesso negado: Requer privilegios de administrador.';
     END IF;
 
     RETURN QUERY
@@ -145,12 +145,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
 
--- GRANTs de execução
+-- GRANTs de execucao
 GRANT EXECUTE ON FUNCTION public.purge_payment_v1(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.purge_cancelled_bulk_v1(int) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_finance_audit_log_v1(text, text, int, int) TO authenticated;
 
--- Comentários de segurança
-COMMENT ON FUNCTION public.purge_payment_v1 IS 'Exclui fisicamente um lançamento cancelado após auditoria. Apenas Admins.';
-COMMENT ON FUNCTION public.purge_cancelled_bulk_v1 IS 'Limpa lançamentos cancelados antigos em lote. Apenas Admins.';
-COMMENT ON FUNCTION public.get_finance_audit_log_v1 IS 'Busca logs de auditoria financeira com resolução de nome de usuário. Apenas Admins.';
+-- Comentarios de seguranca
+COMMENT ON FUNCTION public.purge_payment_v1 IS 'Exclui fisicamente um lancamento cancelado apos auditoria. Apenas Admins.';
+COMMENT ON FUNCTION public.purge_cancelled_bulk_v1 IS 'Limpa lancamentos cancelados antigos em lote. Apenas Admins.';
+COMMENT ON FUNCTION public.get_finance_audit_log_v1 IS 'Busca logs de auditoria financeira com resolucao de nome de usuario. Apenas Admins.';

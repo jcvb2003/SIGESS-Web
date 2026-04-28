@@ -1,5 +1,5 @@
 -- Migration: v_requerimentos_busca
--- Description: View estendida para busca global em requerimentos e sócios
+-- Description: View estendida para busca global em requerimentos e socios
 -- Author: Antigravity
 -- Date: 2026-04-11
 

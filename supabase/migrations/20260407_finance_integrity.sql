@@ -13,13 +13,13 @@ CREATE TABLE IF NOT EXISTS public.audit_log_financeiro (
 -- Habilitar RLS na tabela de auditoria
 ALTER TABLE public.audit_log_financeiro ENABLE ROW LEVEL SECURITY;
 
--- Política simples: Apenas admins podem ver auditoria
+-- Politica simples: Apenas admins podem ver auditoria
 DROP POLICY IF EXISTS "Admins podem ver auditoria" ON public.audit_log_financeiro;
 CREATE POLICY "Admins podem ver auditoria" ON public.audit_log_financeiro
     FOR SELECT TO authenticated
     USING (EXISTS (SELECT 1 FROM public."User" WHERE id = auth.uid() AND role = 'admin'));
 
--- 2. Função de Trigger de Auditoria
+-- 2. Funcao de Trigger de Auditoria
 CREATE OR REPLACE FUNCTION public.proc_audit_finance_change()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -43,21 +43,21 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 3. Aplicação do Trigger nas Tabelas Sensíveis
--- Configurações Financeiras
+-- 3. Aplicacao do Trigger nas Tabelas Sensiveis
+-- Configuracoes Financeiras
 DROP TRIGGER IF EXISTS tr_audit_parametros_financeiros ON public.parametros_financeiros;
 CREATE TRIGGER tr_audit_parametros_financeiros
 AFTER INSERT OR UPDATE OR DELETE ON public.parametros_financeiros
 FOR EACH ROW EXECUTE FUNCTION public.proc_audit_finance_change();
 
--- Tipos de Cobrança
+-- Tipos de Cobranca
 DROP TRIGGER IF EXISTS tr_audit_tipos_cobranca ON public.tipos_cobranca;
 CREATE TRIGGER tr_audit_tipos_cobranca
 AFTER INSERT OR UPDATE OR DELETE ON public.tipos_cobranca
 FOR EACH ROW EXECUTE FUNCTION public.proc_audit_finance_change();
 
--- 4. RPC de Cancelamento Atômico (M-05)
--- Esta RPC garante que o cancelamento do lançamento e a reversão da cobrança vinculada ocorram na mesma transação.
+-- 4. RPC de Cancelamento Atomico (M-05)
+-- Esta RPC garante que o cancelamento do lancamento e a reversao da cobranca vinculada ocorram na mesma transacao.
 CREATE OR REPLACE FUNCTION public.cancel_payment_v1(
     p_id uuid,
     p_obs text DEFAULT NULL
@@ -67,19 +67,19 @@ DECLARE
     v_socio_cpf text;
     v_lancamento_tipo text;
 BEGIN
-    -- 1. Verificar se o lançamento existe e se o status permite cancelamento
+    -- 1. Verificar se o lancamento existe e se o status permite cancelamento
     IF NOT EXISTS (
         SELECT 1 FROM public.financeiro_lancamentos 
         WHERE id = p_id AND status != 'cancelado'
     ) THEN
-        RAISE EXCEPTION 'Lançamento não encontrado ou já cancelado.';
+        RAISE EXCEPTION 'Lancamento nao encontrado ou ja cancelado.';
     END IF;
 
-    -- Capturar dados para auditoria interna (opcional) ou lógica condicional
+    -- Capturar dados para auditoria interna (opcional) ou logica condicional
     SELECT socio_cpf, tipo INTO v_socio_cpf, v_lancamento_tipo 
     FROM public.financeiro_lancamentos WHERE id = p_id;
 
-    -- 2. Marcar lançamento como cancelado
+    -- 2. Marcar lancamento como cancelado
     UPDATE public.financeiro_lancamentos
     SET 
         status = 'cancelado',
@@ -89,8 +89,8 @@ BEGIN
         updated_at = now()
     WHERE id = p_id;
 
-    -- 3. Reverter cobrança gerada (se houver vínculo via lancamento_id)
-    -- Ao cancelar o pagamento, a cobrança original volta a ficar 'pendente' 
+    -- 3. Reverter cobranca gerada (se houver vinculo via lancamento_id)
+    -- Ao cancelar o pagamento, a cobranca original volta a ficar 'pendente' 
     -- para que o associado continue devendo aquele valor.
     UPDATE public.financeiro_cobrancas_geradas
     SET 
@@ -99,7 +99,7 @@ BEGIN
         updated_at = now()
     WHERE lancamento_id = p_id;
 
-    -- 4. Registrar no log de auditoria (operação manual)
+    -- 4. Registrar no log de auditoria (operacao manual)
     INSERT INTO public.audit_log_financeiro (
         table_name,
         record_id,

@@ -1,6 +1,6 @@
 -- =============================================================================
 -- Migration: 20240407_ph1_hardening
--- Fase 1: Segurança (RLS), Correções Críticas (Negócio) e Hardening (SQL)
+-- Fase 1: Seguranca (RLS), Correcoes Criticas (Negocio) e Hardening (SQL)
 -- =============================================================================
 
 BEGIN;
@@ -9,7 +9,7 @@ BEGIN;
 -- 1. HARDENING: SECURITY DEFINER FUNCTIONS (SET search_path)
 -- -----------------------------------------------------------------------------
 
--- public.update_updated_at_column já possui search_path no schema dump.
+-- public.update_updated_at_column ja possui search_path no schema dump.
 -- Aplicando aos demais de forma segura:
 DO $$ 
 BEGIN 
@@ -37,7 +37,7 @@ USING (
 );
 
 -- -----------------------------------------------------------------------------
--- 3. M-01: INADIMPLÊNCIA RESPEITANDO "LIBERADO PELO PRESIDENTE"
+-- 3. M-01: INADIMPLENCIA RESPEITANDO "LIBERADO PELO PRESIDENTE"
 -- -----------------------------------------------------------------------------
 
 CREATE OR REPLACE FUNCTION public.socio_inadimplente_ano(p_cpf text, p_ano integer)
@@ -53,7 +53,7 @@ DECLARE
   v_ano_base            integer;
   v_tem_pagamento       boolean;
 BEGIN
-  -- Verifica isenção ou liberação manual
+  -- Verifica isencao ou liberacao manual
   SELECT 
     COALESCE(isento, false),
     COALESCE(liberado_pelo_presidente, false)
@@ -65,7 +65,7 @@ BEGIN
   SELECT ano_base_cobranca INTO v_ano_base FROM public.parametros_financeiros LIMIT 1;
   IF p_ano < v_ano_base THEN RETURN false; END IF;
 
-  -- Busca o regime vigente (fallback para o padrão global se não definido no sócio)
+  -- Busca o regime vigente (fallback para o padrao global se nao definido no socio)
   SELECT COALESCE(cfg.regime, pf.regime_padrao)
   INTO v_regime
   FROM (SELECT regime_padrao FROM public.parametros_financeiros LIMIT 1) pf
@@ -93,7 +93,7 @@ END;
 $function$;
 
 -- -----------------------------------------------------------------------------
--- 4. C-03: RENUMERAÇÃO E LOCK NA TRG_CHECK_MEMBER_LIMIT
+-- 4. C-03: RENUMERACAO E LOCK NA TRG_CHECK_MEMBER_LIMIT
 -- -----------------------------------------------------------------------------
 
 CREATE OR REPLACE FUNCTION public.check_member_limit()
@@ -106,10 +106,10 @@ DECLARE
     v_max_socios INTEGER;
     v_current_count INTEGER;
 BEGIN
-    -- LOCK na linha do dono da cota para serializar inserções concorrentes DESTE tenant
+    -- LOCK na linha do dono da cota para serializar insercoes concorrentes DESTE tenant
     PERFORM 1 FROM public."User" WHERE id = auth.uid() FOR UPDATE;
     
-    -- Se o registro do User ainda não foi propagado (onboarding), usa o default de 5
+    -- Se o registro do User ainda nao foi propagado (onboarding), usa o default de 5
     SELECT COALESCE(max_socios, 5) INTO v_max_socios 
     FROM public."User" 
     WHERE id = auth.uid();
@@ -117,13 +117,13 @@ BEGIN
     SELECT count(*) INTO v_current_count FROM public.socios;
     
     IF v_current_count >= v_max_socios THEN
-        RAISE EXCEPTION 'limite_cadastros: Limite de % sócios atingido.', v_max_socios;
+        RAISE EXCEPTION 'limite_cadastros: Limite de % socios atingido.', v_max_socios;
     END IF;
     RETURN NEW;
 END; $function$;
 
 -- -----------------------------------------------------------------------------
--- 5. M-02 & M-01 (VIEWS): RESILIÊNCIA CONTRA TABELA VAZIA E LIBERAÇÃO
+-- 5. M-02 & M-01 (VIEWS): RESILIENCIA CONTRA TABELA VAZIA E LIBERACAO
 -- -----------------------------------------------------------------------------
 
 CREATE OR REPLACE VIEW public.v_situacao_financeira_socio WITH (security_invoker = on) AS

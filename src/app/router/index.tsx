@@ -29,6 +29,8 @@ const PasswordPage = lazy(() => import("@/pages/Password"));
 const FotoUploadPage = lazy(() => import("@/pages/FotoUpload"));
 const RequirementsPage = lazy(() => import("@/pages/Requirements"));
 const ReapPage = lazy(() => import("@/pages/Reap"));
+const MemberFichaPage = lazy(() => import("@/pages/Members/MemberFichaPage"));
+const MemberCardPage = lazy(() => import("@/pages/Members/MemberCardPage"));
 
 function PublicRoute() {
   const { session, loading } = useAuth();
@@ -54,6 +56,14 @@ const router = createBrowserRouter([
   {
     path: "/foto-upload",
     element: <FotoUploadPage />,
+  },
+  {
+    path: "/ficha-socio/:id",
+    element: <MemberFichaPage />,
+  },
+  {
+    path: "/carteirinha/:id",
+    element: <MemberCardPage />,
   },
   // Rota independente: sem guard de sessão.
   // O token chega via hash da URL — não pode estar sob PublicRoute

@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS public.reap (
     CONSTRAINT reap_pkey PRIMARY KEY (cpf)
 );
 
--- Força a Foreign Key logic para RESTRICT sobre bancos que possivelmente nasceram com CASCADE manual
+-- Forca a Foreign Key logic para RESTRICT sobre bancos que possivelmente nasceram com CASCADE manual
 ALTER TABLE public.reap DROP CONSTRAINT IF EXISTS reap_cpf_fkey;
 ALTER TABLE public.reap ADD CONSTRAINT reap_cpf_fkey FOREIGN KEY (cpf) 
         REFERENCES public.socios(cpf) ON DELETE RESTRICT;

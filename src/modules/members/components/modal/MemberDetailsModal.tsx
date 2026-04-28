@@ -17,6 +17,7 @@ import { MemberDetailsSkeleton } from "./MemberDetailsSkeleton";
 import { PrimaryInfoTab } from "./tabs/PrimaryInfoTab";
 import { ComplementaryInfoTab } from "./tabs/ComplementaryInfoTab";
 import { ExternalPortals } from "./ExternalPortals";
+import { MemberPrintActions } from "./MemberPrintActions";
 
 
 
@@ -131,18 +132,22 @@ export function MemberDetailsModal({
               />
               <div className="hidden sm:flex items-center ml-2">
                 <div className="h-7 w-px bg-border/40 mr-4" />
-                <MemberModalActions
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  onDocuments={handleDocuments}
-                  onFinance={handleFinance}
-                />
+                <div className="flex items-center gap-4">
+                  <MemberPrintActions member={member} />
+                  <MemberModalActions
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    onDocuments={handleDocuments}
+                    onFinance={handleFinance}
+                  />
+                </div>
               </div>
             </>
           }
         />
 
-        <div className="sm:hidden border-t border-border/40 bg-background px-4 py-3 shrink-0">
+        <div className="sm:hidden border-t border-border/40 bg-background px-4 py-3 shrink-0 flex flex-col gap-3">
+          <MemberPrintActions member={member} />
           <MemberModalActions
             variant="mobile"
             onEdit={handleEdit}
