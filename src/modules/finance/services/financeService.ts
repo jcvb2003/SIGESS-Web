@@ -15,6 +15,21 @@ export interface FinanceDashboardResult {
   total: number;
 }
 
+interface PaymentByPeriodRow {
+  id: string;
+  data_pagamento: string;
+  socio_nome: string;
+  socio_cpf: string;
+  tipo: string;
+  competencia_ano: number;
+  competencia_mes: number | null;
+  forma_pagamento: string;
+  valor: number;
+  created_at: string;
+  total_count: number;
+  total_amount: number;
+}
+
 // Captura o tipo exato do builder para a view, evitando erros de tipagem manual ou de sobrecarga
 const _dashboardQuery = supabase.from("v_situacao_financeira_socio").select("*");
 type DashboardQuery = typeof _dashboardQuery;
@@ -134,7 +149,7 @@ export const financeService = {
       p_ano_base: anoBase,
     });
     if (error) throw error;
-    return data as unknown as Record<string, number>;
+    return data as Record<string, number>;
   },
 
   /**
@@ -282,10 +297,10 @@ export const financeService = {
       throw error;
     }
 
-    const total = data?.[0]?.total_count ? Number(data[0].total_count) : 0;
-    const totalAmount = data?.[0]?.total_amount ? Number(data[0].total_amount) : 0;
+    const total = (data as PaymentByPeriodRow[] | null)?.[0]?.total_count ? Number((data as PaymentByPeriodRow[])[0].total_count) : 0;
+    const totalAmount = (data as PaymentByPeriodRow[] | null)?.[0]?.total_amount ? Number((data as PaymentByPeriodRow[])[0].total_amount) : 0;
 
-    const items = (data || []).map((item: any) => ({
+    const items = (data as PaymentByPeriodRow[] || []).map((item) => ({
       id: item.id,
       data_pagamento: item.data_pagamento,
       nome: item.socio_nome,

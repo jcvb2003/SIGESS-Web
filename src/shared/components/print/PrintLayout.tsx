@@ -21,7 +21,7 @@ export const PrintLayout = React.forwardRef<HTMLDivElement, PrintLayoutProps>(
         ref={ref}
         id={id}
         className={cn(
-          "bg-white text-black",
+          "bg-background dark:bg-card text-foreground print:bg-white print:text-black",
           type === "thermal" ? "w-full max-w-[500px] p-4 text-[10pt] mx-auto" : "w-full p-8 text-sm",
           className
         )}
@@ -40,7 +40,7 @@ export const PrintLayout = React.forwardRef<HTMLDivElement, PrintLayoutProps>(
 
         {(showLogo || showEntityInfo) && (
           <header className={cn(
-            "flex flex-col items-center text-center border-b-2 border-black pb-4 mb-6 w-full",
+            "flex flex-col items-center text-center border-b-2 border-border print:border-black pb-4 mb-6 w-full",
             type === "thermal" && "pb-1 mb-2"
           )}>
             {showLogo && (
@@ -52,7 +52,7 @@ export const PrintLayout = React.forwardRef<HTMLDivElement, PrintLayoutProps>(
                   )} />
                 ) : (
                   <div className={cn(
-                    "flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 border border-slate-200",
+                    "flex items-center justify-center rounded-xl bg-muted text-muted-foreground border border-border print:bg-slate-50 print:text-slate-400 print:border-slate-200",
                     type === "thermal" ? "h-10 w-10" : "h-14 w-14"
                   )}>
                     <Fish className={type === "thermal" ? "h-5 w-5" : "h-8 w-8"} />
@@ -88,7 +88,7 @@ export const PrintLayout = React.forwardRef<HTMLDivElement, PrintLayoutProps>(
         <main>{children}</main>
 
         <footer className={cn(
-          "mt-8 pt-4 border-t border-dashed border-slate-300 text-center text-slate-400",
+          "mt-8 pt-4 border-t border-dashed border-border text-center text-muted-foreground print:border-slate-300 print:text-slate-400",
           type === "thermal" && "mt-4 pt-2 text-[7pt]"
         )}>
           <p className="font-bold">SIGESS - Sistema de Gestão de Entidades</p>

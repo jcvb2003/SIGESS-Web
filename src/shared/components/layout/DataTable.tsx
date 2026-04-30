@@ -43,6 +43,7 @@ interface DataTableProps<T> {
   customLoadingState?: ReactNode;
   customErrorState?: ReactNode;
   customEmptyState?: ReactNode;
+  getRowKey?: (item: T) => string | number;
 }
 
 /**
@@ -66,6 +67,7 @@ export function DataTable<T>({
   customLoadingState,
   customErrorState,
   customEmptyState,
+  getRowKey,
 }: DataTableProps<T>) {
   const showLoading = isLoading || (isFetching && data.length === 0);
 
@@ -94,7 +96,11 @@ export function DataTable<T>({
                   )}
                   onClick={column.sortable ? column.onSort : undefined}
                 >
-                  <div className="flex items-center">
+                  <div className={cn(
+                    "flex items-center",
+                    column.headerClassName?.includes("text-center") && "justify-center",
+                    column.headerClassName?.includes("text-right") && "justify-end"
+                  )}>
                     {column.header}
                     {column.sortable && (
                       <span className="ml-1.5 opacity-50">
@@ -188,10 +194,12 @@ export function DataTable<T>({
                 </TableRow>
               )
             ) : (
-              data.map((item, rowIndex) => (
-                <TableRow
-                  key={rowIndex}
-                  onClick={() => onRowClick?.(item)}
+              data.map((item, rowIndex) => {
+                const itemKey = getRowKey ? getRowKey(item) : ((item as any).id || (item as any).cpf || rowIndex);
+                return (
+                  <TableRow
+                    key={itemKey}
+                    onClick={() => onRowClick?.(item)}
                   className={cn(
                     "group transition-all duration-200 border-b border-border/20 last:border-0",
                     onRowClick && "cursor-pointer hover:bg-primary/[0.03]",
@@ -214,7 +222,8 @@ export function DataTable<T>({
                     </TableCell>
                   ))}
                 </TableRow>
-              ))
+                );
+              })
             )}
           </TableBody>
         </Table>

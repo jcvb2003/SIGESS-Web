@@ -1,4 +1,5 @@
 import { supabase } from "@/shared/lib/supabase/client";
+import { Json } from "@/shared/lib/supabase/database.types";
 import { Reap, ReapAnoAnual, ReapAnoSimplificado, ReapWithMember } from "../types/reap.types";
 
 export const reapService = {
@@ -17,6 +18,7 @@ export const reapService = {
         `
         cpf,
         nome,
+        nit,
         emissao_rgp,
         reap (
           simplificado,
@@ -50,15 +52,25 @@ export const reapService = {
     if (error) throw error;
 
     const items: ReapWithMember[] = (data || []).map((socio) => {
-      const reapRecord = Array.isArray(socio.reap) ? socio.reap[0] : socio.reap;
+      const reapRecord = (Array.isArray(socio.reap) ? socio.reap[0] : socio.reap) as any;
+      const simplificado = (reapRecord?.simplificado as Reap["simplificado"]) ?? {};
+      const anual = (reapRecord?.anual as Reap["anual"]) ?? {};
+      
+      // Calcula se existe algum problema em qualquer ano
+      const tem_problema = 
+        Object.values(simplificado).some(v => v.tem_problema) || 
+        Object.values(anual).some(v => v.tem_problema);
+
       return {
         cpf: socio.cpf!,
         member_nome: socio.nome ?? null,
+        member_nit: socio.nit ?? null,
         emissao_rgp: socio.emissao_rgp ?? null,
-        simplificado: (reapRecord?.simplificado as Reap["simplificado"]) ?? {},
-        anual: (reapRecord?.anual as Reap["anual"]) ?? {},
+        simplificado,
+        anual,
         observacoes: (reapRecord?.observacoes as string | null) ?? null,
         updated_at: reapRecord?.updated_at ?? "",
+        tem_problema,
       };
     });
 
@@ -72,6 +84,7 @@ export const reapService = {
         `
         cpf,
         nome,
+        nit,
         emissao_rgp,
         reap (
           simplificado,
@@ -86,15 +99,24 @@ export const reapService = {
 
     if (error || !data) return null;
 
-    const reapRecord = Array.isArray(data.reap) ? data.reap[0] : data.reap;
+    const reapRecord = (Array.isArray(data.reap) ? data.reap[0] : data.reap) as any;
+    const simplificado = (reapRecord?.simplificado as Reap["simplificado"]) ?? {};
+    const anual = (reapRecord?.anual as Reap["anual"]) ?? {};
+
+    const tem_problema = 
+      Object.values(simplificado).some(v => v.tem_problema) || 
+      Object.values(anual).some(v => v.tem_problema);
+
     return {
       cpf: data.cpf!,
       member_nome: data.nome ?? null,
+      member_nit: data.nit ?? null,
       emissao_rgp: data.emissao_rgp ?? null,
-      simplificado: (reapRecord?.simplificado as Reap["simplificado"]) ?? {},
-      anual: (reapRecord?.anual as Reap["anual"]) ?? {},
+      simplificado,
+      anual,
       observacoes: (reapRecord?.observacoes as string | null) ?? null,
       updated_at: reapRecord?.updated_at ?? "",
+      tem_problema,
     };
   },
 
@@ -149,9 +171,8 @@ export const reapService = {
 
     const { error } = await supabase.rpc("reap_upsert_full", {
       p_cpf: cpf,
-      // p_simplificado e p_anual usam 'as any' pois o schema JSONB é dinâmico e processado no banco via RPC
-      p_simplificado: simplificado as any,
-      p_anual: anual as any,
+      p_simplificado: simplificado as unknown as Json,
+      p_anual: anual as unknown as Json,
       p_observacoes: observacoes ?? undefined,
     });
 
@@ -321,11 +342,8 @@ export const reapService = {
     ]);
 
     const cpfSet = new Set((socios ?? []).map((s) => s.cpf));
-    const reapMap = new Map(
-      (reapRecords ?? []).map((r) => {
-        const rec = r as unknown as { cpf: string; anual: Reap["anual"] };
-        return [rec.cpf, rec.anual ?? {}];
-      })
+    const reapMap = new Map<string, Reap["anual"]>(
+      (reapRecords ?? []).map((r) => [r.cpf, (r.anual as Reap["anual"]) ?? {}])
     );
 
     const notFound: string[] = [];
@@ -349,12 +367,17 @@ export const reapService = {
     }
 
     // Agrupa por CPF para usar a RPC de lote
-    const batchDataMap = new Map<string, any>();
+    interface BatchAnualEntry {
+      cpf: string;
+      anual: Record<string, Partial<ReapAnoAnual>>;
+    }
+    const batchDataMap = new Map<string, BatchAnualEntry>();
     for (const entry of paraProcessar) {
       if (!batchDataMap.has(entry.cpf)) {
         batchDataMap.set(entry.cpf, { cpf: entry.cpf, anual: {} });
       }
-      batchDataMap.get(entry.cpf).anual[String(entry.ano)] = {
+      const batchEntry = batchDataMap.get(entry.cpf)!;
+      batchEntry.anual[String(entry.ano)] = {
         enviado: true,
         data_envio: entry.dataEnvio,
         tem_problema: false,
@@ -367,7 +390,7 @@ export const reapService = {
 
     for (let i = 0; i < batchEntries.length; i += CHUNK_SIZE * CONCURRENCY) {
       const promises = [];
-      const currentChunks: any[][] = [];
+      const currentChunks: BatchAnualEntry[][] = [];
 
       for (let j = 0; j < CONCURRENCY; j++) {
         const start = i + j * CHUNK_SIZE;
@@ -376,7 +399,7 @@ export const reapService = {
         currentChunks.push(chunk);
         promises.push(
           supabase.rpc("reap_batch_upsert_anual_v2", {
-            p_entries: chunk,
+            p_entries: chunk as unknown as Json,
           })
         );
       }
@@ -403,7 +426,7 @@ export const reapService = {
     // Agrupa por CPF para enviar tudo em uma chamada por sócio
     const batchData = entries
       .map((entry) => {
-        const simplificado: any = {};
+        const simplificado: Record<string, Partial<ReapAnoSimplificado>> = {};
         const anosNumericos = entry.anosSimplificado.map(Number);
         const primeiroAnoPendente =
           anosNumericos.length > 0 ? Math.min(...anosNumericos) : 9999;
@@ -452,7 +475,7 @@ export const reapService = {
     while (true) {
       const { data, error } = await supabase
         .from("socios")
-        .select(`cpf, nome, reap ( simplificado, anual, updated_at )`)
+        .select(`cpf, nome, reap ( simplificado, anual, updated_at, observacoes )`)
         .range(fromIndex, fromIndex + pageSize - 1);
 
       if (error) break;
@@ -468,17 +491,21 @@ export const reapService = {
     return {
       entityUf: entity?.uf ?? "PA",
       members: members.map((m) => {
-        const r = (Array.isArray(m.reap) ? m.reap[0] : m.reap) as any;
+        const r = (Array.isArray(m.reap) ? m.reap[0] : m.reap) as Reap | undefined;
         return {
           cpf: m.cpf,
           nome: m.nome,
           reap: r
-            ? ({
+            ? {
                 cpf: m.cpf,
-                simplificado: r.simplificado as Reap["simplificado"],
-                anual: r.anual as Reap["anual"],
+                simplificado: r.simplificado ?? {},
+                anual: r.anual ?? {},
                 updated_at: r.updated_at,
-              } as Reap)
+                observacoes: r.observacoes ?? null,
+                tem_problema: 
+                  Object.values(r.simplificado ?? {}).some(v => v.tem_problema) || 
+                  Object.values(r.anual ?? {}).some(v => v.tem_problema),
+              }
             : null,
         };
       }),

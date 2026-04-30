@@ -55,8 +55,8 @@ export function PaymentTypeSelector({
 
   return (
     <div className="space-y-3">
-      <Label className="text-[10px] font-black text-slate-500 flex items-center gap-2 uppercase tracking-widest">
-        <Tag className="h-3 w-3 text-emerald-500" />
+      <Label className="text-[10px] font-black text-muted-foreground flex items-center gap-2 uppercase tracking-widest">
+        <Tag className="h-3 w-3 text-primary" />
         CONTRIBUIÇÕES E CADASTROS
       </Label>
 
@@ -71,10 +71,10 @@ export function PaymentTypeSelector({
               size="sm"
               onClick={() => onToggle(ct)}
               className={cn(
-                "h-8 text-xs border-slate-200 gap-1.5 px-3 rounded-full font-bold transition-all max-w-[200px]",
+                "h-8 text-xs border-border gap-1.5 px-3 rounded-full font-bold transition-all max-w-[200px]",
                 isSelected
-                  ? "bg-emerald-600 border-emerald-600 text-white hover:bg-emerald-700"
-                  : "bg-white hover:bg-slate-50 text-slate-600",
+                  ? "bg-primary border-primary text-primary-foreground hover:bg-primary/90"
+                  : "bg-card hover:bg-muted/50 text-muted-foreground",
               )}
               title={ct.nome ?? undefined}
             >
@@ -85,7 +85,7 @@ export function PaymentTypeSelector({
                 <span
                   className={cn(
                     "text-[9px] font-black shrink-0",
-                    isSelected ? "text-emerald-200" : "text-slate-400",
+                    isSelected ? "text-primary-foreground/80" : "text-muted-foreground/50",
                   )}
                 >
                   {formatCurrency(ct.valor_padrao)}
@@ -109,26 +109,26 @@ export function PaymentTypeSelector({
       </div>
 
       {selected.length > 0 && (
-        <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/30 overflow-hidden divide-y divide-slate-100 ring-4 ring-slate-50">
+        <div className="rounded-2xl border border-dashed border-border bg-muted/10 overflow-hidden divide-y divide-border/50 ring-4 ring-muted/20">
           {selected.map((item) => (
             <div key={item.uid} className="flex items-center justify-between p-2.5">
               <div className="flex items-center gap-2 min-w-0">
-                <div className="bg-white p-1.5 rounded-md border border-slate-100 shadow-sm shrink-0">
-                  <Tag className="h-3.5 w-3.5 text-emerald-600" />
+                <div className="bg-card p-1.5 rounded-md border border-border/50 shadow-sm shrink-0">
+                  <Tag className="h-3.5 w-3.5 text-primary" />
                 </div>
-                <span className="text-xs font-bold text-slate-700 truncate">
+                <span className="text-xs font-bold text-foreground/80 truncate">
                   {item.chargeType.nome}
                 </span>
               </div>
               <div className="flex items-center gap-3 shrink-0">
                 <div className="relative">
-                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 pointer-events-none">
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground/60 pointer-events-none">
                     R$
                   </span>
                   <Input
                     type="text"
                     inputMode="numeric"
-                    className="h-7 w-24 text-[11px] font-bold text-right pl-6 pr-2 border-slate-200 focus-visible:ring-emerald-500 bg-white"
+                    className="h-7 w-24 text-[11px] font-bold text-right pl-6 pr-2 border-border focus-visible:ring-ring bg-card"
                     value={item.displayValue}
                     onChange={(e) => onValueChange(item.uid, e.target.value)}
                     onFocus={(e) => e.target.select()}
@@ -142,7 +142,7 @@ export function PaymentTypeSelector({
                         size="icon"
                         variant="outline"
                         onClick={() => onRemove(item.uid)}
-                        className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-red-600 hover:text-white hover:border-red-600"
+                        className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-red-600 dark:hover:bg-red-900/50 hover:text-white dark:hover:text-red-400 hover:border-red-600 dark:hover:border-red-800/50"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>

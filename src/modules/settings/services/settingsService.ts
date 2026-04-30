@@ -98,7 +98,7 @@ export const settingsService = {
         number: toStringValue(entityData.numero),
         presidentName: toStringValue(entityData.nome_do_presidente),
         presidentCpf: toStringValue(entityData.cpf_do_presidente),
-        
+
         // Dados de Aparência (vindos de configuracao_entidade)
         corPrimaria: toStringValue(configData?.cor_primaria, "160 84% 39%"),
         corSecundaria: toStringValue(configData?.cor_secundaria, "152 69% 41%"),
@@ -279,7 +279,7 @@ export const settingsService = {
   },
   async saveLocality(locality: Locality): Promise<ServiceResponse<Locality>> {
     const normalizedName = locality.name.trim().toUpperCase();
-    
+
     if (locality.id) {
       const { data, error } = await supabase
         .from(LOCALITIES_TABLE)
@@ -289,22 +289,22 @@ export const settingsService = {
         .eq("id", locality.id)
         .select("id, nome, codigo_localidade")
         .single();
-        
+
       if (error) {
         console.error("Erro ao atualizar localidade:", error);
         return { data: null, error };
       }
-      
-      return { 
+
+      return {
         data: {
           id: String(data.id),
           name: String(data.nome ?? ""),
           code: String(data.codigo_localidade ?? ""),
-        }, 
-        error: null 
+        },
+        error: null
       };
     }
-    
+
     const { data, error } = await supabase
       .from(LOCALITIES_TABLE)
       .insert({
@@ -312,19 +312,19 @@ export const settingsService = {
       })
       .select("id, nome, codigo_localidade")
       .single();
-      
+
     if (error) {
       console.error("Erro ao adicionar localidade:", error);
       return { data: null, error };
     }
-    
-    return { 
+
+    return {
       data: {
         id: String(data.id),
         name: String(data.nome ?? ""),
         code: String(data.codigo_localidade ?? ""),
-      }, 
-      error: null 
+      },
+      error: null
     };
   },
   async deleteLocality(id: string): Promise<ServiceResponse<void>> {
@@ -424,7 +424,7 @@ export const settingsService = {
       );
     }
     const storage = supabase.storage.from(DOCUMENT_TEMPLATES_BUCKET);
-    
+
     // Normalizar o nome do arquivo para evitar caracteres especiais e espaços que quebram o Storage
     const normalizeFileName = (fileName: string) => {
       return fileName
@@ -438,7 +438,7 @@ export const settingsService = {
 
     const cleanFileName = normalizeFileName(file.name);
     const path = `templates/${Date.now()}-${cleanFileName}`;
-    
+
     const { data: uploadData, error: uploadError } = await storage.upload(
       path,
       file,

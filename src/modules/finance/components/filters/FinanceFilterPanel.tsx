@@ -85,7 +85,7 @@ export function FinanceFilterPanel({
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 border-slate-200 transition-colors"
+              className="h-8 w-8 text-muted-foreground hover:text-red-600 hover:bg-red-50 border-border transition-colors"
               onClick={() => onOpenChange(false)}
             >
               <X className="h-4 w-4" />
@@ -218,7 +218,7 @@ function FilterCheckbox({
       />
       <Label
         htmlFor={id}
-        className="text-sm font-medium cursor-pointer text-slate-700"
+        className="text-sm font-medium cursor-pointer text-foreground"
       >
         {label}
       </Label>

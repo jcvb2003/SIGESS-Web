@@ -18,7 +18,7 @@ import { formatDate } from "@/shared/utils/date";
 import { Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { ReportExportButtons } from "@/modules/reports/components/ReportExportButtons";
 import { Button } from "@/shared/components/ui/button";
-import { FinanceTablePagination } from "@/modules/finance/components/table/FinanceTablePagination";
+import { DataTablePagination } from "@/shared/components/layout/DataTablePagination";
 import type { PaymentByPeriod } from "@/modules/finance/types/finance.types";
 import { cn } from "@/shared/lib/utils";
 import { useState } from "react";
@@ -136,14 +136,14 @@ export default function PaymentsByPeriodPage() {
           description="Liste todos os pagamentos recebidos em um período selecionado."
           actions={
             <div className="flex items-center gap-3 print:hidden">
-              <div className="flex bg-slate-100 p-1 rounded-xl gap-1">
+              <div className="flex bg-muted p-1 rounded-xl gap-1">
                 <Button
                   variant={orderBy === "data_pagamento" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setOrderBy("data_pagamento")}
                   className={cn(
                     "h-8 text-[10px] font-bold uppercase tracking-tight rounded-lg",
-                    orderBy === "data_pagamento" ? "bg-white text-primary shadow-sm hover:bg-white" : "text-slate-500"
+                    orderBy === "data_pagamento" ? "bg-background text-primary shadow-sm hover:bg-background" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   Data Pagamento
@@ -154,7 +154,7 @@ export default function PaymentsByPeriodPage() {
                   onClick={() => setOrderBy("created_at")}
                   className={cn(
                     "h-8 text-[10px] font-bold uppercase tracking-tight rounded-lg",
-                    orderBy === "created_at" ? "bg-white text-primary shadow-sm hover:bg-white" : "text-slate-500"
+                    orderBy === "created_at" ? "bg-background text-primary shadow-sm hover:bg-background" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   Data Registro
@@ -228,12 +228,16 @@ export default function PaymentsByPeriodPage() {
               </Table>
             </div>
 
-            <FinanceTablePagination
+            <DataTablePagination
               total={totalCount}
               page={page}
               pageSize={pageSize}
               onPageChange={setPage}
-              onPageSizeChange={setPageSize}
+              onPageSizeChange={(val) => {
+                setPageSize(Number(val));
+                setPage(1);
+              }}
+              entityName="pagamentos"
             />
 
             <div className="bg-primary/[0.03] border-t p-4 flex flex-col sm:flex-row items-center justify-between gap-4">

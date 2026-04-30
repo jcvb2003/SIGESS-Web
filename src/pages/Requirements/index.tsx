@@ -1,24 +1,25 @@
-import { DataTable } from "@/shared/components/layout/DataTable";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { useRequirementsListController } from "../../modules/requirements/hooks/data/useRequirementData";
-import { RequirementsTablePagination } from "../../modules/requirements/components/table/RequirementsTablePagination";
+import { DataTable, ColumnDef } from "@/shared/components/layout/DataTable";
+import { DataTablePagination } from "@/shared/components/layout/DataTablePagination";
 import { RequirementsFilterPanel } from "../../modules/requirements/components/RequirementsFilterPanel";
-import { SearchBar } from "@/modules/members/components/search/SearchBar";
+import { DataTableSearch } from "@/shared/components/layout/DataTableSearch";
 import { Button } from "@/shared/components/ui/button";
 import { FileUp, Plus, Eye } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { format, parseISO, isValid } from "date-fns";
 import { RequirementDetailsModal } from "../../modules/requirements/components/RequirementDetailsModal";
 import { ImportPortalDialog } from "../../modules/requirements/components/ImportPortalDialog";
 import { RequirementWithMember } from "../../modules/requirements/types/requirement.types";
-import { StatusBadge } from "../../modules/requirements/components/StatusBadge";
-import { cn } from "@/shared/lib/utils";
+import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/shared/components/ui/tooltip";
+import { MemberCpfCell } from "../../modules/members/components/table/cells/MemberCpfCell";
 
 export default function RequirementsPage() {
   const { 
@@ -30,6 +31,151 @@ export default function RequirementsPage() {
 
   const [selectedReqId, setSelectedReqId] = useState<string | null>(null);
   const [isImportOpen, setIsImportOpen] = useState(false);
+
+  const columns = useMemo<ColumnDef<RequirementWithMember>[]>(() => [
+    {
+      header: "Sócio",
+      skeletonVariant: "text",
+      skeletonWidth: "w-48",
+      cell: (req) => (
+        <div className="flex flex-col min-w-0">
+          <span className="truncate font-medium text-foreground/90 uppercase">
+            {req.member_nome}
+          </span>
+          <span className="text-[10px] md:text-xs text-muted-foreground truncate opacity-70">
+            NIT: {req.member_nit || "---"}
+          </span>
+        </div>
+      )
+    },
+    {
+      header: "CPF",
+      className: "whitespace-nowrap",
+      cell: (req) => <MemberCpfCell cpf={req.cpf} />
+    },
+    {
+      header: "Data de assinatura",
+      className: "whitespace-nowrap font-medium",
+      cell: (req) => {
+        if (!req.data_assinatura) return <span className="text-muted-foreground opacity-50">---</span>;
+        
+        try {
+          const date = parseISO(req.data_assinatura);
+          if (!isValid(date)) throw new Error("Invalid date");
+          return (
+            <span className="text-foreground/90 tabular-nums">
+              {format(date, "dd/MM/yyyy")}
+            </span>
+          );
+        } catch {
+          return <span className="text-muted-foreground opacity-50">---</span>;
+        }
+      }
+    },
+    {
+      header: "Data do RGP",
+      className: "whitespace-nowrap font-medium",
+      cell: (req) => {
+        if (!req.member_emissao_rgp) return <span className="text-muted-foreground opacity-50">---</span>;
+        
+        try {
+          const date = parseISO(req.member_emissao_rgp);
+          if (!isValid(date)) throw new Error("Invalid date");
+          return (
+            <span className="text-foreground/90 tabular-nums">
+              {format(date, "dd/MM/yyyy")}
+            </span>
+          );
+        } catch {
+          return <span className="text-muted-foreground opacity-50">---</span>;
+        }
+      }
+    },
+    {
+      header: "Ano",
+      skeletonVariant: "badge",
+      cell: (req) => (
+        <StatusBadge 
+          variant="info" 
+          label={req.ano_referencia} 
+        />
+      )
+    },
+    {
+      header: "Status",
+      skeletonVariant: "badge",
+      cell: (req) => {
+        const isHabilitado = req.status_mte === "deferido";
+        const isIndeferido = req.status_mte === "indeferido";
+        
+        let variant: "success" | "destructive" | "warning" | "outline" = "warning";
+        let label = "EM ANÁLISE";
+
+        if (isHabilitado) {
+          variant = "success";
+          label = "HABILITADO";
+        } else if (isIndeferido) {
+          variant = "destructive";
+          label = "INDEFERIDO";
+        } else if (req.status_mte === 'nao_assinado') {
+          variant = "outline";
+          label = "NÃO ASSINOU";
+        }
+
+        return <StatusBadge variant={variant} label={label} />;
+      }
+    },
+    {
+      header: "Financeiro",
+      skeletonVariant: "badge",
+      cell: (req) => {
+        const recebido = req.beneficio_recebido;
+        return (
+          <StatusBadge 
+            variant={recebido ? "success" : "secondary"}
+            label={recebido ? "RECEBIDO" : "AGUARDANDO"}
+          />
+        );
+      }
+    },
+    {
+      header: "Req. MTE",
+      className: "text-sm text-muted-foreground/70",
+      cell: (req) => req.num_req_mte || "---"
+    },
+    {
+      header: "Ações",
+      headerClassName: "text-right px-4",
+      skeletonVariant: "button",
+      className: "text-right w-[1%] px-4",
+      cell: (req) => {
+        if (req.status_mte === 'nao_assinado' || !req.id) return null;
+        
+        return (
+          <div className="flex justify-end items-center gap-2">
+            <TooltipProvider delayDuration={100}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="h-8 w-8 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-blue-600 hover:text-white hover:border-blue-600"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedReqId(req.id);
+                    }}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" sideOffset={5}>Visualizar Requerimento</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        );
+      }
+    }
+  ], []);
 
   const headerActions = (
     <div className="flex items-center gap-3">
@@ -52,12 +198,12 @@ export default function RequirementsPage() {
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
       <PageHeader
         title="Requerimentos de Seguro Defeso"
-        description="Gestao de protocolos, status MTE e integracao com Portal da Transparencia."
+        description="Gestão de protocolos, status MTE e integração com Portal da Transparência."
         actions={headerActions}
       />
 
       <Card className="border-border/50 shadow-sm overflow-hidden">
-        <SearchBar
+        <DataTableSearch
           value={search.value}
           onChange={search.onChange}
           onOpenFilters={search.onOpenFilters}
@@ -73,117 +219,10 @@ export default function RequirementsPage() {
             onRowClick={(req) => setSelectedReqId(req.id)}
             emptyMessage="Nenhum requerimento encontrado"
             emptyDescription="Ajuste os filtros ou cadastre um novo protocolo para começar."
-            columns={[
-              {
-                header: "Protocolo",
-                className: "font-mono text-sm font-semibold text-primary whitespace-nowrap",
-                cell: (req) => req.cod_req
-              },
-              {
-                header: "Sócio",
-                skeletonVariant: "text",
-                skeletonWidth: "w-48",
-                cell: (req) => {
-                  const isEmDia = req.situacao_financeira === 'em_dia';
-                  const isIsento = req.situacao_financeira === 'isento';
-                  
-                  let statusColor = "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)] animate-pulse";
-                  let statusTitle = "Financeiro: Em Atraso";
-
-                  if (isEmDia) {
-                    statusColor = "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]";
-                    statusTitle = "Financeiro: Em Dia";
-                  } else if (isIsento) {
-                    statusColor = "bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]";
-                    statusTitle = "Financeiro: Isento";
-                  }
-
-                  return (
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-foreground group-hover:text-primary transition-colors">
-                          {req.member_nome}
-                        </span>
-                        <div
-                          className={cn("w-2 h-2 rounded-full", statusColor)}
-                          title={statusTitle}
-                        />
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        NIT: {req.member_nit || "---"}
-                      </span>
-                    </div>
-                  );
-                }
-              },
-              {
-                header: "CPF",
-                className: "text-sm text-muted-foreground font-mono",
-                cell: (req) => req.cpf
-              },
-              {
-                header: "Ano",
-                skeletonVariant: "badge",
-                skeletonWidth: "w-12",
-                cell: (req) => (
-                  <span className="px-2 py-1 rounded bg-muted text-xs font-bold">
-                    {req.ano_referencia}
-                  </span>
-                )
-              },
-              {
-                header: "Status",
-                skeletonVariant: "badge",
-                cell: (req) => <StatusBadge status={req.status_mte} />
-              },
-              {
-                header: "Financeiro",
-                skeletonVariant: "badge",
-                cell: (req) => req.beneficio_recebido ? (
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold border border-emerald-200 shadow-sm">
-                    RECEBIDO
-                  </span>
-                ) : (
-                  <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[10px] font-bold border border-border">
-                    AGUARDANDO
-                  </span>
-                )
-              },
-              {
-                header: "Req. MTE",
-                className: "text-sm font-medium",
-                cell: (req) => req.num_req_mte || "---"
-              },
-              {
-                header: "",
-                skeletonVariant: "button",
-                cell: (req) => (
-                  <div className="flex justify-end items-center gap-2">
-                    <TooltipProvider delayDuration={100}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button 
-                            variant="outline" 
-                            size="icon" 
-                            className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-blue-600 hover:text-white hover:border-blue-600"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedReqId(req.id);
-                            }}
-                          >
-                            <Eye className="h-3.5 w-3.5" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" sideOffset={5}>Visualizar Requerimento</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                )
-              }
-            ]}
+            columns={columns}
           />
 
-          <RequirementsTablePagination
+          <DataTablePagination
             total={pagination.total}
             page={pagination.page}
             pageSize={pagination.pageSize}
@@ -193,6 +232,7 @@ export default function RequirementsPage() {
             onPageSizeChange={pagination.onPageSizeChange}
             onPreviousPage={pagination.onPreviousPage}
             onNextPage={pagination.onNextPage}
+            entityName="requerimentos"
           />
         </CardContent>
       </Card>

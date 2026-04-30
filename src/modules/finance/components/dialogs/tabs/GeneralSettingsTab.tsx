@@ -142,7 +142,6 @@ export function GeneralSettingsTab({
             variant="outline" 
             onClick={onCancel} 
             size="sm"
-            className="bg-transparent border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
           >
             Cancelar
           </Button>

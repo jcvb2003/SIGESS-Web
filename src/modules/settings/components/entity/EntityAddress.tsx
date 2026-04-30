@@ -9,6 +9,7 @@ import { TextField } from "@/shared/components/form-fields/fields/TextField";
 import { CepField } from "@/shared/components/form-fields/fields/CepField";
 import { StateSelect } from "@/shared/components/form-fields/fields/StateSelect";
 import { EntityFormData } from "../../hooks/useEntityValidation";
+
 export function EntityAddress() {
   const { control } = useFormContext<EntityFormData>();
   return (

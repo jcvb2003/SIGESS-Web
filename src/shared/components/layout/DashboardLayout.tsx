@@ -9,6 +9,7 @@ import { useUserMetadata } from "@/modules/auth/hooks/useUserMetadata";
 import { AccessExpiredModal } from "./AccessExpiredModal";
 import { Loader2 } from "lucide-react";
 import { useNetworkStatus } from "@/shared/hooks/useNetworkStatus";
+import { PWABanner } from "@/shared/components/feedback/PWABanner";
 
 export function DashboardLayout() {
   const { session, loading: authLoading, signOut } = useAuth();
@@ -55,6 +56,7 @@ export function DashboardLayout() {
       </div>
 
       {metadata?.isExpired && <AccessExpiredModal open={true} />}
+      <PWABanner />
     </div>
   );
 }

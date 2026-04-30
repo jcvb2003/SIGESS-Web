@@ -10,6 +10,7 @@ import { usePermissions } from "@/shared/hooks/usePermissions";
 import { Loader2 } from "lucide-react";
 import { RouteError } from "@/shared/components/feedback/RouteError";
 import { DashboardLayout } from "@/shared/components/layout/DashboardLayout";
+import { ErrorBoundary } from "@/shared/components/feedback/ErrorBoundary";
 const LoginPage = lazy(() => import("@/pages/Login"));
 const DashboardPage = lazy(() => import("@/pages/Dashboard"));
 const MembersPage = lazy(() => import("@/pages/Members"));
@@ -46,6 +47,16 @@ function PublicRoute() {
 
 function AdminRoute() {
   const { isAdmin } = usePermissions();
+  const { loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return isAdmin ? <Outlet /> : <Navigate to="/dashboard" replace />;
 }
 const router = createBrowserRouter([
@@ -143,16 +154,19 @@ const router = createBrowserRouter([
     element: <NotFoundPage />,
   },
 ]);
+
 export function AppRouter() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex h-screen items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      }
-    >
-      <RouterProvider router={router} />
-    </Suspense>
+    <ErrorBoundary>
+      <Suspense
+        fallback={
+          <div className="flex h-screen items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        }
+      >
+        <RouterProvider router={router} />
+      </Suspense>
+    </ErrorBoundary>
   );
 }

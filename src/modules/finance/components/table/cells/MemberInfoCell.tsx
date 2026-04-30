@@ -22,21 +22,6 @@ const STATUS_AVATAR_COLORS: Record<FinancialStatusType, string> = {
   alert: "bg-orange-100 text-orange-700",
 };
 
-/**
- * Capitaliza nomes corretamente (ex: JOSÉ DA SILVA -> José da Silva)
- */
-function capitalizeName(name: string): string {
-  if (!name) return "";
-  const words = name.toLowerCase().split(" ");
-  const lowers = new Set(["de", "da", "do", "das", "dos", "e"]);
-  return words
-    .map((word, index) => {
-      if (word.length === 0) return "";
-      if (index > 0 && lowers.has(word)) return word;
-      return word.charAt(0).toUpperCase() + word.slice(1);
-    })
-    .join(" ");
-}
 
 export function MemberInfoCell({ nome, status = "ok" }: MemberInfoCellProps) {
   const initials = nome
@@ -67,7 +52,7 @@ export function MemberInfoCell({ nome, status = "ok" }: MemberInfoCellProps) {
       </div>
       <div className="flex flex-col justify-center">
         <span className="text-sm font-medium leading-tight">
-          {capitalizeName(nome)}
+          {nome.toUpperCase()}
         </span>
       </div>
     </div>

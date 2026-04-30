@@ -16,11 +16,13 @@ export interface Reap {
   simplificado: Record<string, ReapAnoSimplificado>;
   anual: Record<string, ReapAnoAnual>;
   observacoes: string | null;
+  tem_problema: boolean;
   updated_at: string;
 }
 
 export interface ReapWithMember extends Reap {
   member_nome: string | null;
+  member_nit: string | null;
   emissao_rgp: string | null;
 }
 

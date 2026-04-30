@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { EntityTabs } from "@/shared/components/layout/EntityTabs";
 import { Label } from "@/shared/components/ui/label";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
@@ -172,46 +173,19 @@ export function PaymentItemForm({
   return (
     <div className="space-y-6 ring-0 border-none outline-none">
       {/* Category Selector */}
-      <div className="flex border rounded-xl p-1 bg-slate-50/50">
-        <button
-          type="button"
-          onClick={() => onPaymentCategoryChange("anuidade")}
-          className={cn(
-            "flex-1 py-2 text-xs font-bold rounded-lg transition-all",
-            paymentCategory === "anuidade" 
-              ? "bg-white text-emerald-700 shadow-sm border border-slate-200" 
-              : "text-slate-500 hover:text-slate-700"
-          )}
-        >
-          ANUIDADE
-        </button>
-        <button
-          type="button"
-          onClick={() => onPaymentCategoryChange("mensalidade")}
-          className={cn(
-            "flex-1 py-2 text-xs font-bold rounded-lg transition-all",
-            paymentCategory === "mensalidade" 
-              ? "bg-white text-emerald-700 shadow-sm border border-slate-200" 
-              : "text-slate-500 hover:text-slate-700"
-          )}
-        >
-          MENSALIDADE
-        </button>
-      </div>
-
-      {/* Recurrent Section */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <Label className="text-[10px] font-black text-slate-500 flex items-center gap-2 uppercase tracking-widest">
-            <Calendar className="h-3 w-3 text-emerald-500" />
-            {paymentCategory === "anuidade" ? "SELECIONAR ANOS" : "SELECIONAR MESES"}
-          </Label>
-          <div className={paymentCategory === "mensalidade" ? undefined : "hidden"}>
+      {/* Category Selector with Year Selector integrated in standard EntityTabs pattern */}
+      <EntityTabs 
+        value={paymentCategory} 
+        onValueChange={(val) => onPaymentCategoryChange(val as "anuidade" | "mensalidade")}
+        className="w-full"
+        rightActions={paymentCategory === "mensalidade" && (
+          <div className="flex items-center gap-2 bg-muted/50 px-2 py-1 rounded-lg border border-border/50">
+            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Ano:</span>
             <Select
               value={selectedYearForMensalidade.toString()}
               onValueChange={(v) => onYearForMensalidadeChange(Number(v))}
             >
-              <SelectTrigger className="h-7 w-20 text-[10px] font-bold border-slate-200 bg-white">
+              <SelectTrigger className="h-7 w-20 text-[10px] font-bold border-none bg-transparent hover:bg-muted/50 transition-colors focus:ring-0">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -221,6 +195,28 @@ export function PaymentItemForm({
               </SelectContent>
             </Select>
           </div>
+        )}
+        items={[
+          {
+            value: "anuidade",
+            label: "Anuidade",
+            content: null
+          },
+          {
+            value: "mensalidade",
+            label: "Mensalidade",
+            content: null
+          }
+        ]}
+      />
+
+      {/* Recurrent Section Content */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Label className="text-[10px] font-black text-muted-foreground flex items-center gap-2 uppercase tracking-widest">
+            <Calendar className="h-3 w-3 text-primary" />
+            {paymentCategory === "anuidade" ? "SELECIONAR ANOS" : "SELECIONAR MESES"}
+          </Label>
         </div>
         
         <div className={cn(
@@ -229,7 +225,7 @@ export function PaymentItemForm({
         )}>
           {isLoadingStatement ? (
             ["s1", "s2", "s3", "s4", "s5", "s6"].map((id) => (
-              <div key={`skeleton-item-${id}`} className="h-14 rounded-xl bg-slate-100 animate-pulse" />
+              <div key={`skeleton-item-${id}`} className="h-14 rounded-xl bg-muted/50 animate-pulse" />
             ))
           ) : (
             <>
@@ -247,14 +243,14 @@ export function PaymentItemForm({
 
                     if (!shouldShow) return null;
 
-                    let buttonClass = "bg-white border-slate-100 text-slate-600 hover:border-emerald-200 hover:bg-emerald-50/30";
+                    let buttonClass = "bg-card border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-primary/5";
                     
                     if (isPaidFull) {
-                      buttonClass = "bg-slate-50 border-slate-100 opacity-60 cursor-not-allowed";
+                      buttonClass = "bg-muted/50 border-border/30 opacity-60 cursor-not-allowed";
                     } else if (isMonthlyRegime) {
-                      buttonClass = "bg-slate-50 border-slate-100 opacity-60 cursor-not-allowed";
+                      buttonClass = "bg-muted/50 border-border/30 opacity-60 cursor-not-allowed";
                     } else if (isSelected) {
-                      buttonClass = "bg-emerald-600 border-emerald-600 text-white shadow-md scale-[1.02]";
+                      buttonClass = "bg-primary border-primary text-primary-foreground shadow-md scale-[1.02]";
                     }
 
                     return (
@@ -266,12 +262,12 @@ export function PaymentItemForm({
                         className={cn("relative flex flex-col items-center justify-center h-14 rounded-xl border-2 transition-all p-1 font-medium", buttonClass)}
                       >
                         <span className="text-sm font-bold">{year}</span>
-                        <span className={cn("text-[9px] font-bold tracking-tight", isSelected ? "text-emerald-100" : "text-slate-400")}>
+                        <span className={cn("text-[9px] font-bold tracking-tight", isSelected ? "text-primary-foreground/90" : "text-muted-foreground/70")}>
                           {isPaidFull && "JÁ PAGO"}
                           {!isPaidFull && isMonthlyRegime && "REGIME MENSAL"}
                           {!isPaidFull && !isMonthlyRegime && "ANUIDADE"}
                         </span>
-                        {isPaid && <Check className="absolute top-1 right-1 h-3 w-3 text-emerald-500" />}
+                        {isPaid && <Check className="absolute top-1 right-1 h-3 w-3 text-primary" />}
                       </button>
                     );
                   })}
@@ -281,7 +277,7 @@ export function PaymentItemForm({
                       key="show-more-years"
                       type="button"
                       onClick={() => setShowAllYears(true)}
-                      className="flex flex-col items-center justify-center h-14 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 text-slate-400 hover:border-emerald-200 hover:text-emerald-600 transition-all"
+                      className="flex flex-col items-center justify-center h-14 rounded-xl border-2 border-dashed border-border bg-muted/20 text-muted-foreground hover:border-primary/50 hover:text-primary transition-all"
                     >
                       <Plus className="h-4 w-4 mb-0.5" />
                       <span className="text-[10px] font-bold uppercase">Mais</span>
@@ -297,9 +293,9 @@ export function PaymentItemForm({
                 const isPaid = paidInYear.has(m) || isAnnuityPaid;
                 const isSelected = selectedMonths.includes(m);
 
-                let buttonClass = "bg-white border-slate-100 text-slate-600 hover:border-emerald-200 hover:bg-emerald-50/30";
-                if (isPaid) buttonClass = "bg-slate-50 border-slate-100 opacity-60 cursor-not-allowed";
-                else if (isSelected) buttonClass = "bg-emerald-600 border-emerald-600 text-white shadow-md scale-[1.02]";
+                let buttonClass = "bg-card border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-primary/5";
+                if (isPaid) buttonClass = "bg-muted/50 border-border/30 opacity-60 cursor-not-allowed";
+                else if (isSelected) buttonClass = "bg-primary border-primary text-primary-foreground shadow-md scale-[1.02]";
 
                 return (
                   <button
@@ -310,8 +306,8 @@ export function PaymentItemForm({
                     className={cn("relative flex flex-col items-center justify-center h-14 rounded-xl border-2 transition-all p-1 font-medium", buttonClass)}
                   >
                     <span className="text-xs font-bold leading-tight uppercase tracking-tighter">{MONTH_LABELS[m]}</span>
-                    {isPaid && <Check className="absolute top-1 right-1 h-3 w-3 text-emerald-500" />}
-                    {isSelected && <span className="text-[8px] font-bold text-emerald-100 mt-0.5 animate-in zoom-in-50">OK</span>}
+                    {isPaid && <Check className="absolute top-1 right-1 h-3 w-3 text-primary" />}
+                    {isSelected && <span className="text-[8px] font-bold text-primary-foreground/90 mt-0.5 animate-in zoom-in-50">OK</span>}
                   </button>
                 );
               })}
@@ -321,26 +317,26 @@ export function PaymentItemForm({
         
         {/* Selected Annuities List with Editable Values */}
         {paymentCategory === "anuidade" && selectedYears.length > 0 && (
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/30 overflow-hidden divide-y divide-slate-100 ring-4 ring-slate-50 mt-4">
+          <div className="rounded-2xl border border-dashed border-border bg-muted/10 overflow-hidden divide-y divide-border/50 ring-4 ring-muted/20 mt-4">
             {selectedYears.map((ann) => (
               <div key={`edit-ann-${ann.year}`} className="flex items-center justify-between p-2.5">
                 <div className="flex items-center gap-2">
-                  <div className="bg-white p-1.5 rounded-md border border-slate-100 shadow-sm">
-                    <Calendar className="h-3.5 w-3.5 text-emerald-600" />
+                  <div className="bg-card p-1.5 rounded-md border border-border/50 shadow-sm">
+                    <Calendar className="h-3.5 w-3.5 text-primary" />
                   </div>
-                  <span className="text-xs font-bold text-slate-700">
+                  <span className="text-xs font-bold text-foreground/80">
                     Anuidade {ann.year}
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="relative">
-                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 pointer-events-none">
+                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground/60 pointer-events-none">
                       R$
                     </span>
                     <Input
                       type="text"
                       inputMode="numeric"
-                      className="h-7 w-24 text-[11px] font-bold text-right pl-6 pr-2 border-slate-200 focus-visible:ring-emerald-500 bg-white"
+                      className="h-7 w-24 text-[11px] font-bold text-right pl-6 pr-2 border-border focus-visible:ring-ring bg-card"
                       value={ann.displayValue}
                       onChange={(e) => onAnnuityValueChange(ann.year, e.target.value)}
                       onFocus={(e) => e.target.select()}
@@ -354,7 +350,7 @@ export function PaymentItemForm({
                           size="icon"
                           variant="outline"
                           onClick={() => onToggleYear(ann.year)}
-                          className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-red-600 hover:text-white hover:border-red-600"
+                          className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-red-600 dark:hover:bg-red-900/50 hover:text-white dark:hover:text-red-400 hover:border-red-600 dark:hover:border-red-800/50"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
@@ -372,14 +368,14 @@ export function PaymentItemForm({
       {/* Extra Fees (Inscrição) */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <Label className="text-[10px] font-black text-slate-500 flex items-center gap-2 uppercase tracking-widest">
-            <Plus className="h-3 w-3 text-emerald-500" />
+          <Label className="text-[10px] font-black text-muted-foreground flex items-center gap-2 uppercase tracking-widest">
+            <Plus className="h-3 w-3 text-primary" />
             INSCRIÇÃO
           </Label>
 
-          <div className="flex items-center gap-2 bg-slate-50 px-2 py-1 rounded-full border border-slate-100">
-            <History className={cn("h-3 w-3", isHistoricMember ? "text-amber-500" : "text-slate-300")} />
-            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">Sócio Histórico</span>
+          <div className="flex items-center gap-2 bg-muted/50 px-2 py-1 rounded-full border border-border/50">
+            <History className={cn("h-3 w-3", isHistoricMember ? "text-amber-500" : "text-muted-foreground/40")} />
+            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-tighter">Sócio Histórico</span>
             <Switch 
               checked={isHistoricMember} 
               onCheckedChange={onToggleHistoricMember}
@@ -407,14 +403,14 @@ export function PaymentItemForm({
                 disabled={isDisabled}
                 onClick={() => onAddExtraFee(fee.value)}
                 className={cn(
-                  "h-8 text-xs border-slate-200 gap-1.5 px-3 rounded-full font-bold transition-all",
+                  "h-8 text-xs border-border gap-1.5 px-3 rounded-full font-bold transition-all",
                   isSelected 
-                    ? "bg-emerald-600 border-emerald-600 text-white hover:bg-emerald-700" 
-                    : "bg-white hover:bg-slate-50 text-slate-600",
-                  isPaid && "opacity-50 grayscale cursor-not-allowed bg-slate-100 border-slate-200"
+                    ? "bg-primary border-primary text-primary-foreground hover:bg-primary/90" 
+                    : "bg-card hover:bg-muted/50 text-muted-foreground",
+                  isPaid && "opacity-50 grayscale cursor-not-allowed bg-muted/30 border-border"
                 )}
               >
-                {isPaid ? <Check className="h-3.5 w-3.5" /> : fee.icon}
+                {isPaid ? <Check className="h-3.5 w-3.5 text-primary" /> : fee.icon}
                 {fee.label}
                 {isPaid && <span className="ml-1 text-[8px] opacity-70">JÁ PAGO</span>}
               </Button>
@@ -423,26 +419,26 @@ export function PaymentItemForm({
         </div>
 
         {extraFees.length > 0 && (
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/30 overflow-hidden divide-y divide-slate-100 ring-4 ring-slate-50">
+          <div className="rounded-2xl border border-dashed border-border bg-muted/10 overflow-hidden divide-y divide-border/50 ring-4 ring-muted/20">
             {extraFees.map((fee) => (
               <div key={fee.uid} className="flex items-center justify-between p-2.5">
                 <div className="flex items-center gap-2">
-                  <div className="bg-white p-1.5 rounded-md border border-slate-100 shadow-sm">
+                  <div className="bg-card p-1.5 rounded-md border border-border/50 shadow-sm">
                     {FEE_TYPES.find(f => f.value === fee.tipo)?.icon}
                   </div>
-                  <span className="text-xs font-bold text-slate-700">
+                  <span className="text-xs font-bold text-foreground/80">
                     {FEE_TYPES.find(f => f.value === fee.tipo)?.label}
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="relative">
-                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 pointer-events-none">
+                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground/60 pointer-events-none">
                       R$
                     </span>
                     <Input
                       type="text"
                       inputMode="numeric"
-                      className="h-7 w-24 text-[11px] font-bold text-right pl-6 pr-2 border-slate-200 focus-visible:ring-emerald-500 bg-white"
+                      className="h-7 w-24 text-[11px] font-bold text-right pl-6 pr-2 border-border focus-visible:ring-ring bg-card"
                       value={fee.displayValue}
                       onChange={(e) => onFeeValueChange(fee.uid, e.target.value)}
                       onFocus={(e) => e.target.select()}
@@ -456,7 +452,7 @@ export function PaymentItemForm({
                           size="icon"
                           variant="outline"
                           onClick={() => onRemoveExtraFee(fee.uid)}
-                          className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-red-600 hover:text-white hover:border-red-600"
+                          className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-red-600 dark:hover:bg-red-900/50 hover:text-white dark:hover:text-red-400 hover:border-red-600 dark:hover:border-red-800/50"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>

@@ -28,12 +28,12 @@ export default defineConfig({
                     },
                     {
                         urlPattern: /^https:\/\/.*supabase\.co\/storage\/v1\/object\/public\/.*/i,
-                        handler: 'CacheFirst',
+                        handler: 'StaleWhileRevalidate',
                         options: {
                             cacheName: 'supabase-storage-cache',
                             expiration: {
-                                maxEntries: 30,
-                                maxAgeSeconds: 60 * 60 * 24 * 7,
+                                maxEntries: 50,
+                                maxAgeSeconds: 60 * 60 * 24 * 7, // 7 dias
                             },
                             cacheableResponse: {
                                 statuses: [0, 200],

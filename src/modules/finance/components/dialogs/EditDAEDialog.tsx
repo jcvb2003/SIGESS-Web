@@ -113,7 +113,7 @@ export function EditDAEDialog({
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 border-slate-200 transition-colors"
+              className="h-8 w-8 text-muted-foreground hover:text-red-600 hover:bg-red-50 border-border transition-colors"
               onClick={() => onOpenChange(false)}
             >
               <X className="h-4 w-4" />
@@ -123,16 +123,16 @@ export function EditDAEDialog({
 
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5">
           {/* Ano de Competência - Somente Leitura */}
-          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between gap-4">
+          <div className="bg-muted p-4 rounded-xl border border-border/50 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm">
-                <Calendar className="h-4 w-4 text-slate-400" />
+              <div className="h-8 w-8 rounded-lg bg-card border border-border flex items-center justify-center shadow-sm">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
               </div>
               <div>
-                <Label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block leading-none">
+                <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block leading-none">
                   Ano de Competência
                 </Label>
-                <p className="text-[10px] text-slate-400 mt-1">Competência original (Não editável)</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Competência original (Não editável)</p>
               </div>
             </div>
             <Controller
@@ -142,7 +142,7 @@ export function EditDAEDialog({
                 <Input 
                   type="number" 
                   readOnly
-                  className="h-10 w-24 text-center text-sm font-bold bg-slate-100 border-slate-200 shadow-none cursor-not-allowed opacity-70" 
+                  className="h-10 w-24 text-center text-sm font-bold bg-muted/50 border-border shadow-none cursor-not-allowed opacity-70" 
                   {...field} 
                   onChange={(e) => field.onChange(Number(e.target.value))}
                 />
@@ -152,7 +152,7 @@ export function EditDAEDialog({
 
           <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
             <div className="space-y-1.5 text-left">
-              <Label className="text-xs font-bold text-slate-600 px-0.5">Mês de Competência</Label>
+              <Label className="text-xs font-bold text-muted-foreground px-0.5">Mês de Competência</Label>
               <Controller
                 control={control}
                 name="competencia_mes"
@@ -161,7 +161,7 @@ export function EditDAEDialog({
                     value={String(field.value)}
                     onValueChange={(v) => field.onChange(Number(v))}
                   >
-                    <SelectTrigger className="h-10 text-sm border-slate-200">
+                    <SelectTrigger className="h-10 text-sm border-border">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -201,11 +201,11 @@ export function EditDAEDialog({
             {errors.valor && <p className="text-[10px] text-red-500 font-medium px-1 mt-1">{errors.valor.message}</p>}
           </div>
 
-          <div className="pt-4 flex items-center gap-3 border-t border-slate-100 mt-2">
+          <div className="pt-4 flex items-center gap-3 border-t border-border/50 mt-2">
             <Button
               type="button"
               variant="ghost"
-              className="flex-1 h-11 text-xs font-bold text-slate-500 hover:bg-slate-50"
+              className="flex-1 h-11 text-xs font-bold text-muted-foreground hover:bg-muted"
               onClick={() => onOpenChange(false)}
               disabled={isPending}
             >

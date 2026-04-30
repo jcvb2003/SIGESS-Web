@@ -1,18 +1,18 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { useDataTableState } from "@/shared/hooks/useDataTableState";
 import { memberService } from "../../services/memberService";
 import { memberQueryKeys } from "../../queryKeys";
-import { useMemberSearch } from "../search/useMemberSearch";
 import { useMemberFilters } from "../filters/useMemberFilters";
 import { useMemberActions } from "../edit/useMemberActions";
-import { useDebounce } from "@/shared/hooks/useDebounce";
 import type {
   MemberListItem,
   MemberSearchParams,
   StatusFilter,
   RgpStatusFilter,
 } from "../../types/member.types";
+
 export function useMemberData(params: MemberSearchParams) {
   const query = useQuery({
     queryKey: memberQueryKeys.list(params),
@@ -27,10 +27,15 @@ export function useMemberData(params: MemberSearchParams) {
     refetch: query.refetch,
   };
 }
-const DEFAULT_PAGE_SIZE = 10;
+
 export function useMembersListController() {
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const { 
+    page, setPage, 
+    pageSize, setPageSize, 
+    searchTerm, debouncedTerm, 
+    setSearchTerm 
+  } = useDataTableState({ initialPageSize: 10 });
+
   const [sortConfig, setSortConfig] = useState<{
     field: string;
     direction: "asc" | "desc";
@@ -38,9 +43,6 @@ export function useMembersListController() {
     field: "data_de_admissao",
     direction: "desc",
   });
-
-  const { searchTerm, setSearchTerm, handleSearchChange } = useMemberSearch();
-  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   const {
     statusFilter,
@@ -73,7 +75,7 @@ export function useMembersListController() {
     () => ({
       page,
       pageSize,
-      searchTerm: debouncedSearchTerm,
+      searchTerm: debouncedTerm,
       statusFilter,
       localityCode: localityFilter,
       birthMonth: birthMonthFilter,
@@ -85,7 +87,7 @@ export function useMembersListController() {
     [
       page,
       pageSize,
-      debouncedSearchTerm,
+      debouncedTerm,
       statusFilter,
       localityFilter,
       birthMonthFilter,
@@ -128,31 +130,6 @@ export function useMembersListController() {
     }
     return Math.max(1, Math.ceil(total / pageSize));
   }, [total, pageSize]);
-
-  const handleSearchValueChange = (value: string) => {
-    handleSearchChange(value);
-    setPage(1);
-  };
-
-  const handlePreviousPage = () => {
-    if (page > 1) {
-      setPage((current) => current - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (showingCount < total) {
-      setPage((current) => current + 1);
-    }
-  };
-
-  const handlePageSizeChange = (value: string) => {
-    const parsed = Number(value);
-    if (!Number.isNaN(parsed) && parsed > 0) {
-      setPageSize(parsed);
-      setPage(1);
-    }
-  };
 
   const handleStatusFilterChange = (value: StatusFilter) => {
     setStatusFilter(value);
@@ -214,7 +191,7 @@ export function useMembersListController() {
   return {
     search: {
       value: searchTerm,
-      onChange: handleSearchValueChange,
+      onChange: setSearchTerm,
       onOpenFilters: () => setIsFiltersOpen(true),
     },
     table: {
@@ -239,9 +216,9 @@ export function useMembersListController() {
       totalPages,
       isLoading,
       isFetching,
-      onPageSizeChange: handlePageSizeChange,
-      onPreviousPage: handlePreviousPage,
-      onNextPage: handleNextPage,
+      onPageSizeChange: setPageSize,
+      onPreviousPage: () => setPage(page - 1),
+      onNextPage: () => setPage(page + 1),
     },
     filterPanel: {
       open: isFiltersOpen,

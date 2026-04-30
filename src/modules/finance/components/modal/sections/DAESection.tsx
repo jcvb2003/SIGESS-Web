@@ -218,11 +218,11 @@ export function DAESection({ daes }: DAESectionProps) {
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <div className="flex items-center justify-between px-1">
-        <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+        <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
           Boletos eSocial (DAE)
         </h3>
-        <span className="text-[10px] font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+        <span className="text-[10px] font-medium text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">
           {groupedData.length} {groupedData.length === 1 ? "documento" : "documentos"}
         </span>
       </div>
@@ -257,7 +257,7 @@ export function DAESection({ daes }: DAESectionProps) {
             <DialogTitle className="text-xl font-bold tracking-tight">
               {selectedItem?.boleto_pago ? "Desmarcar Pagamento" : "Confirmar Pagamento"}
             </DialogTitle>
-            <p className="text-xs text-slate-500 leading-relaxed px-2">
+            <p className="text-xs text-muted-foreground leading-relaxed px-2">
               {statusDialogDescription}
             </p>
           </DialogHeader>
@@ -265,7 +265,7 @@ export function DAESection({ daes }: DAESectionProps) {
           <div className="px-6 py-6 space-y-4">
             {!selectedItem?.boleto_pago && (
               <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
-                <Label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                   <Calendar className="h-3 w-3" />
                   Data do Pagamento
                 </Label>
@@ -273,7 +273,7 @@ export function DAESection({ daes }: DAESectionProps) {
                   type="date" 
                   value={statusDate}
                   onChange={(e) => setStatusDate(e.target.value)}
-                  className="h-10 text-sm focus:ring-emerald-500 border-slate-200"
+                  className="h-10 text-sm focus:ring-primary border-border"
                 />
               </div>
             )}

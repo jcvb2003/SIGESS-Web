@@ -1,3 +1,5 @@
+import { toast } from "sonner";
+
 export function isFirefox(): boolean {
   return navigator.userAgent.toLowerCase().includes("firefox");
 }
@@ -28,8 +30,8 @@ export function handleExternalLogin(
       },
       globalThis.location.origin
     );
-  } catch {
-    const hash = `#cpf=${encodeURIComponent(cpf)}&senha=${encodeURIComponent(senha)}&nome=${encodeURIComponent(nome || "")}`;
-    globalThis.open(url + hash, "_blank");
+  } catch (error) {
+    console.error("Falha na comunicação segura com a aba externa:", error);
+    toast.error("Não foi possível realizar o login automático. Por favor, tente novamente ou use outro navegador.");
   }
 }

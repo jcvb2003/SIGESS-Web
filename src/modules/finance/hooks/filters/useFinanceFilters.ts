@@ -40,14 +40,14 @@ export function useFinanceFilters() {
     if (params.searchTerm) newParams.set("search", params.searchTerm);
     else newParams.delete("search");
     
-    if (params.tab !== "todos") newParams.set("tab", params.tab);
-    else newParams.delete("tab");
+    if (params.tab === "todos") newParams.delete("tab");
+    else newParams.set("tab", params.tab);
     
-    if (params.page !== 1) newParams.set("page", String(params.page));
-    else newParams.delete("page");
+    if (params.page === 1) newParams.delete("page");
+    else newParams.set("page", String(params.page));
     
-    if (params.year !== new Date().getFullYear()) newParams.set("year", String(params.year));
-    else newParams.delete("year");
+    if (params.year === new Date().getFullYear()) newParams.delete("year");
+    else newParams.set("year", String(params.year));
 
     // Evitar loop infinito se os params forem iguais
     if (newParams.toString() !== searchParams.toString()) {
@@ -113,8 +113,11 @@ export function useFinanceFilters() {
     params.filterReleased ||
     params.filterExempt;
 
-  const setPageSize = useCallback((pageSize: number) => {
-    setParams((prev) => ({ ...prev, pageSize, page: 1 }));
+  const setPageSize = useCallback((pageSize: string | number) => {
+    const size = typeof pageSize === "string" ? Number(pageSize) : pageSize;
+    if (!Number.isNaN(size) && size > 0) {
+      setParams((prev) => ({ ...prev, pageSize: size, page: 1 }));
+    }
   }, []);
 
   const resetFilters = useCallback(() => {

@@ -3,7 +3,7 @@ import {
   useRecentMembers,
   useBirthdayMembers,
 } from "@/modules/dashboard/hooks/useDashboardData";
-import { StatCard } from "@/modules/dashboard/components/StatCard";
+import { StatCard } from "@/shared/components/ui/StatCard";
 import { RecentMembersList } from "@/modules/dashboard/components/RecentMembersList";
 import { BirthdayList } from "@/modules/dashboard/components/BirthdayList";
 import { Users, User, FileStack } from "lucide-react";

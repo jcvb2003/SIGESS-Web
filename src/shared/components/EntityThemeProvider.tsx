@@ -77,12 +77,8 @@ export function EntityThemeProvider({
       "settings",
       "entity",
     ]);
-    if (cached) {
-      applyEntityColors(cached, currentTheme);
-    }
 
-    // Reaplica se o tema mudar
-    if (session && cached) {
+    if (cached) {
       applyEntityColors(cached, currentTheme);
     }
 

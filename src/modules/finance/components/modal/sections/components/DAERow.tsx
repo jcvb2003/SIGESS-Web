@@ -48,18 +48,18 @@ interface DAERowProps {
 function DAEIcon({ isGroup, lead }: { readonly isGroup: boolean; readonly lead: FinanceDAE }) {
   if (isGroup) {
     return (
-      <div className="h-10 w-10 rounded-xl flex flex-col items-center justify-center border bg-blue-50 border-blue-100/50">
-        <Calendar className="h-5 w-5 text-blue-500" />
+      <div className="h-10 w-10 rounded-xl flex flex-col items-center justify-center border bg-blue-50 dark:bg-blue-900/20 border-blue-100/50 dark:border-blue-900/50">
+        <Calendar className="h-5 w-5 text-blue-500 dark:text-blue-400" />
       </div>
     );
   }
 
   return (
-    <div className="h-10 w-10 rounded-xl flex flex-col items-center justify-center border bg-slate-50 border-slate-100 group-hover:bg-emerald-50 group-hover:border-emerald-100 transition-colors">
-      <span className="text-[10px] font-bold text-slate-400 group-hover:text-emerald-600 leading-none uppercase">
+    <div className="h-10 w-10 rounded-xl flex flex-col items-center justify-center border bg-muted border-border/50 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-900/30 group-hover:border-emerald-100 dark:group-hover:border-emerald-800/50 transition-colors">
+      <span className="text-[10px] font-bold text-muted-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-400 leading-none uppercase">
         {MONTH_LABELS[lead.competencia_mes || 0]}
       </span>
-      <span className="text-[11px] font-black text-slate-600 group-hover:text-emerald-700">
+      <span className="text-[11px] font-black text-muted-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-500">
         {String(lead.competencia_ano || "").slice(-2)}
       </span>
     </div>
@@ -106,8 +106,8 @@ function DAEStatus({
               className={cn(
                 "h-5 text-[10px] cursor-pointer shadow-sm group-hover/status:shadow-md transition-all",
                 isPaid 
-                  ? "bg-emerald-500 text-white border-emerald-600 hover:bg-emerald-600" 
-                  : "bg-amber-100/50 border-amber-200/50 text-amber-700 hover:bg-amber-200/50"
+                  ? "bg-emerald-500 text-white border-emerald-600 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700 dark:border-emerald-700" 
+                  : "bg-amber-100/50 dark:bg-amber-900/30 border-amber-200/50 dark:border-amber-800/50 text-amber-700 dark:text-amber-500 hover:bg-amber-200/50 dark:hover:bg-amber-900/50"
               )}
             />
           </button>
@@ -161,7 +161,7 @@ function DAEActions({
               <Button 
                 variant="outline" 
                 size="icon" 
-                className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-blue-600 hover:text-white hover:border-blue-600"
+                className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-blue-600 dark:hover:bg-blue-900/50 hover:text-white dark:hover:text-blue-400 hover:border-blue-600 dark:hover:border-blue-800/50"
                 onClick={() => onViewReceipt(lead.sessao_id as string)}
                 disabled={isLoadingReceipt}
               >
@@ -182,7 +182,7 @@ function DAEActions({
                 size="icon" 
                 className={cn(
                   "h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95",
-                  isAdmin ? "hover:bg-emerald-600 hover:text-white hover:border-emerald-600" : "opacity-50 cursor-not-allowed"
+                  isAdmin ? "hover:bg-emerald-600 dark:hover:bg-emerald-900/50 hover:text-white dark:hover:text-emerald-400 hover:border-emerald-600 dark:hover:border-emerald-800/50" : "opacity-50 cursor-not-allowed"
                 )}
                 onClick={() => isAdmin && onEdit(lead)}
                 disabled={!isAdmin}
@@ -203,7 +203,7 @@ function DAEActions({
               size="icon" 
               className={cn(
                 "h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95",
-                isAdmin ? "hover:bg-red-600 hover:text-white hover:border-red-600" : "opacity-50 cursor-not-allowed"
+                isAdmin ? "hover:bg-red-600 dark:hover:bg-red-900/50 hover:text-white dark:hover:text-red-400 hover:border-red-600 dark:hover:border-red-800/50" : "opacity-50 cursor-not-allowed"
               )}
               onClick={() => isAdmin && onDelete(lead)}
               disabled={!isAdmin}
@@ -239,21 +239,21 @@ export function DAERow({
       className={cn(
         "group flex items-center justify-between p-3 rounded-xl border transition-all duration-300",
         isGroup 
-          ? "bg-slate-50/50 border-slate-200 hover:border-blue-200 hover:shadow-blue-500/5 hover:bg-blue-50/30" 
-          : "bg-white border-slate-200/60 hover:border-emerald-200 hover:shadow-emerald-500/5"
+          ? "bg-muted/50 border-border hover:border-blue-200 dark:hover:border-blue-800/50 hover:shadow-blue-500/5 hover:bg-blue-50/30 dark:hover:bg-blue-900/20" 
+          : "bg-card border-border/60 hover:border-emerald-200 dark:hover:border-emerald-800/50 hover:shadow-emerald-500/5"
       )}
     >
       <div className="flex items-center gap-4">
         <DAEIcon isGroup={isGroup} lead={lead} />
         
         <div>
-          <p className="text-xs font-bold text-slate-700">
+          <p className="text-xs font-bold text-foreground">
             {daeTypeLabel}
           </p>
           <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-[10px] text-slate-400 flex items-center gap-1">
+            <span className="text-[10px] text-muted-foreground flex items-center gap-1">
               {isGroup ? (
-                <span className="font-medium text-blue-600/70">{label}</span>
+                <span className="font-medium text-blue-600/70 dark:text-blue-400/70">{label}</span>
               ) : (
                 <>
                   <Calendar className="h-2.5 w-2.5" />
@@ -262,7 +262,7 @@ export function DAERow({
               )}
             </span>
             {isGroup && (
-              <span className="text-[8px] bg-blue-100 text-blue-700 px-1 py-0.5 rounded font-black uppercase tracking-tighter">
+              <span className="text-[8px] bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 px-1 py-0.5 rounded font-black uppercase tracking-tighter">
                 {items.length} Meses
               </span>
             )}
@@ -282,7 +282,7 @@ export function DAERow({
       <div className="text-right">
         <p className={cn(
           "text-xs font-bold leading-none",
-          isGroup ? "text-blue-700" : "text-slate-700"
+          isGroup ? "text-blue-700 dark:text-blue-500" : "text-foreground"
         )}>
           {formatCurrency(totalValue)}
         </p>

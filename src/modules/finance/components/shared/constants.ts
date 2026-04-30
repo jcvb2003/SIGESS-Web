@@ -46,3 +46,21 @@ export const FEE_TYPES: {
   { value: "contribuicao", label: "Contribuição" },
   { value: "cadastro_governamental", label: "Cadastro" },
 ];
+
+// ── Dicionários de Exibição (Labels) ──
+export const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  dinheiro: "Dinheiro",
+  pix: "PIX",
+  transferencia: "Transferência",
+  boleto: "Boleto",
+  cartao: "Cartão",
+};
+
+export const PAYMENT_TYPE_LABELS: Record<string, string> = {
+  anuidade: "Anuidade",
+  mensalidade: "Mensalidade",
+  inicial: "Inicial",
+  transferencia: "Transferência",
+  contribuicao: "Contribuição",
+  cadastro_governamental: "Cadastro Governamental",
+};

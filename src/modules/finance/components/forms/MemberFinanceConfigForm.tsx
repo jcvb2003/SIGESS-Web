@@ -102,7 +102,7 @@ export function MemberFinanceConfigForm({
           <p className="text-xs font-semibold text-primary uppercase tracking-wider">
             Isenção de Contribuições
           </p>
-          <div className="flex items-center justify-between rounded-lg border bg-white p-3">
+          <div className="flex items-center justify-between rounded-lg border bg-card p-3">
             <div className="space-y-0.5">
               <Label className="text-sm font-semibold">Sócio isento</Label>
               <p className="text-xs text-muted-foreground">
@@ -128,7 +128,7 @@ export function MemberFinanceConfigForm({
           <p className="text-xs font-semibold text-primary uppercase tracking-wider">
             Liberação Presidencial
           </p>
-          <div className="flex items-center justify-between rounded-lg border bg-white p-3">
+          <div className="flex items-center justify-between rounded-lg border bg-card p-3">
             <div className="space-y-0.5">
               <Label className="text-sm font-semibold">Liberado pelo presidente</Label>
               <p className="text-xs text-muted-foreground">
@@ -161,7 +161,7 @@ export function MemberFinanceConfigForm({
               name="regime"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger className="h-9 text-xs bg-white">
+                  <SelectTrigger className="h-9 text-xs bg-card">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -181,7 +181,7 @@ export function MemberFinanceConfigForm({
                 render={({ field }) => (
                   <Textarea
                     {...field}
-                    className="text-xs resize-none bg-white"
+                    className="text-xs resize-none bg-card"
                     rows={2}
                     placeholder="Motivo da mudança de regime..."
                   />
@@ -198,7 +198,7 @@ export function MemberFinanceConfigForm({
           variant="outline"
           size="sm"
           onClick={onClose}
-          className="bg-transparent border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
+          className="bg-transparent border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
         >
           Cancelar
         </Button>

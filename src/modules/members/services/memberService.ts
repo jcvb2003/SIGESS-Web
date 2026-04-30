@@ -12,6 +12,15 @@ import {
   fromMemberRecord,
 } from "./memberDataTransformer";
 import { mapRowToListItem } from "../utils/memberTransformers";
+
+interface MemberBirthMonthRow {
+  id: string;
+  codigo_do_socio: string | null;
+  nome: string | null;
+  cpf: string | null;
+  updated_at?: string | null;
+  total_count: number;
+}
 export class DuplicateCpfError extends Error {
   code = "DUPLICATE_CPF";
   constructor(message = "CPF já cadastrado.") {
@@ -117,8 +126,8 @@ export const memberService = {
       if (rpcError) throw rpcError;
 
       const total = rpcData?.[0]?.total_count ? Number(rpcData[0].total_count) : 0;
-      const items = (rpcData || []).map((record: any) => ({
-        ...mapRowToListItem(record, photoService.getPhotoUrl),
+      const items = (rpcData as MemberBirthMonthRow[] || []).map((record) => ({
+        ...mapRowToListItem(record as unknown as Record<string, unknown>, photoService.getPhotoUrl),
         data_de_admissao: null, // RPC simplificada
         situacao: "Ativo", // Assumido para aniversariantes
         codigo_localidade: null,
@@ -132,7 +141,7 @@ export const memberService = {
     if (error) {
       throw error;
     }
-    const items = (data || []).map((item) => mapRowToListItem(item as Record<string, unknown>, photoService.getPhotoUrl));
+    const items = (data || []).map((item) => mapRowToListItem(item as unknown as Record<string, unknown>, photoService.getPhotoUrl));
     return {
       items,
       total: count ?? items.length,

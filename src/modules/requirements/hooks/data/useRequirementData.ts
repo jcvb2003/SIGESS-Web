@@ -1,16 +1,17 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { requirementService } from "../../services/requirementService";
 import { requirementQueryKeys } from "../../queryKeys";
-import { useRequirementSearch } from "../search/useRequirementSearch";
 import { useRequirementFilters, BeneficioFilterType } from "../filters/useRequirementFilters";
 import { RequirementStatus } from "../../types/requirement.types";
+import { useDataTableState } from "@/shared/hooks/useDataTableState";
 
 export function useRequirementData(filters: {
   ano?: number;
   status?: RequirementStatus | 'all';
   beneficio_recebido?: boolean | 'all';
   searchTerm?: string;
+  carenciaFilter?: string;
   page: number;
   pageSize: number;
 }) {
@@ -29,13 +30,14 @@ export function useRequirementData(filters: {
   };
 }
 
-const DEFAULT_PAGE_SIZE = 10;
-
 export function useRequirementsListController() {
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const { 
+    page, setPage, 
+    pageSize, setPageSize, 
+    searchTerm, debouncedTerm, 
+    setSearchTerm 
+  } = useDataTableState({ initialPageSize: 10 });
 
-  const { searchTerm, setSearchTerm, handleSearchChange } = useRequirementSearch();
   const {
     statusFilter,
     setStatusFilter,
@@ -43,6 +45,8 @@ export function useRequirementsListController() {
     setBeneficioFilter,
     yearFilter,
     setYearFilter,
+    carenciaFilter,
+    setCarenciaFilter,
     isFiltersOpen,
     setIsFiltersOpen,
     clearFilters,
@@ -52,12 +56,13 @@ export function useRequirementsListController() {
     () => ({
       page,
       pageSize,
-      searchTerm,
+      searchTerm: debouncedTerm,
       status: statusFilter,
       beneficio_recebido: beneficioFilter === 'all' ? 'all' : beneficioFilter === 'recebido',
       ano: yearFilter,
+      carenciaFilter: carenciaFilter,
     }),
-    [page, pageSize, searchTerm, statusFilter, beneficioFilter, yearFilter]
+    [page, pageSize, debouncedTerm, statusFilter, beneficioFilter, yearFilter, carenciaFilter]
   );
 
   const { requirements, total, isLoading, isFetching, error, refetch } =
@@ -67,16 +72,6 @@ export function useRequirementsListController() {
     if (total === 0) return 1;
     return Math.ceil(total / pageSize);
   }, [total, pageSize]);
-
-  const handleSearchValueChange = (value: string) => {
-    handleSearchChange(value);
-    setPage(1);
-  };
-
-  const handlePageSizeChange = (value: string) => {
-    setPageSize(Number(value));
-    setPage(1);
-  };
 
   const handleStatusFilterChange = (value: RequirementStatus | 'all') => {
     setStatusFilter(value);
@@ -93,6 +88,11 @@ export function useRequirementsListController() {
     setPage(1);
   };
 
+  const handleCarenciaFilterChange = (value: string) => {
+    setCarenciaFilter(value as Parameters<typeof setCarenciaFilter>[0]);
+    setPage(1);
+  };
+
   const handleClearFilters = () => {
     clearFilters();
     setSearchTerm("");
@@ -102,7 +102,7 @@ export function useRequirementsListController() {
   return {
     search: {
       value: searchTerm,
-      onChange: handleSearchValueChange,
+      onChange: setSearchTerm,
       onOpenFilters: () => setIsFiltersOpen(true),
     },
     table: {
@@ -119,9 +119,9 @@ export function useRequirementsListController() {
       totalPages,
       isLoading,
       isFetching,
-      onPageSizeChange: handlePageSizeChange,
-      onPreviousPage: () => setPage((p) => Math.max(1, p - 1)),
-      onNextPage: () => setPage((p) => (p < totalPages ? p + 1 : p)),
+      onPageSizeChange: setPageSize,
+      onPreviousPage: () => setPage(page - 1),
+      onNextPage: () => setPage(page + 1),
     },
     filterPanel: {
       open: isFiltersOpen,
@@ -132,6 +132,8 @@ export function useRequirementsListController() {
       onBeneficioChange: handleBeneficioFilterChange,
       yearFilter,
       onYearChange: handleYearFilterChange,
+      carenciaFilter,
+      onCarenciaChange: handleCarenciaFilterChange,
       onClear: handleClearFilters,
       onApply: () => setIsFiltersOpen(false),
     },

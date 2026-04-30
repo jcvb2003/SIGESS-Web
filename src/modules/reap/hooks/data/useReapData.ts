@@ -1,9 +1,9 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { reapService } from "../../services/reapService";
 import { reapQueryKeys } from "../../queryKeys";
-import { useReapSearch } from "../search/useReapSearch";
 import { useReapFilters, ReapStatusFilter } from "../filters/useReapFilters";
+import { useDataTableState } from "@/shared/hooks/useDataTableState";
 
 export function useReapData(filters: {
   searchTerm?: string;
@@ -42,13 +42,14 @@ export function useReapDetail(cpf: string | null) {
   };
 }
 
-const DEFAULT_PAGE_SIZE = 10;
-
 export function useReapListController() {
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const { 
+    page, setPage, 
+    pageSize, setPageSize, 
+    searchTerm, debouncedTerm, 
+    setSearchTerm 
+  } = useDataTableState({ initialPageSize: 10 });
 
-  const { searchTerm, setSearchTerm, handleSearchChange } = useReapSearch();
   const { statusFilter, setStatusFilter, isFiltersOpen, setIsFiltersOpen, clearFilters } =
     useReapFilters();
 
@@ -56,10 +57,10 @@ export function useReapListController() {
     () => ({
       page,
       pageSize,
-      searchTerm,
+      searchTerm: debouncedTerm,
       statusFilter,
     }),
-    [page, pageSize, searchTerm, statusFilter]
+    [page, pageSize, debouncedTerm, statusFilter]
   );
 
   const { members, total, isLoading, isFetching, error, refetch } = useReapData(queryParams);
@@ -68,16 +69,6 @@ export function useReapListController() {
     if (total === 0) return 1;
     return Math.ceil(total / pageSize);
   }, [total, pageSize]);
-
-  const handleSearchValueChange = (value: string) => {
-    handleSearchChange(value);
-    setPage(1);
-  };
-
-  const handlePageSizeChange = (value: string) => {
-    setPageSize(Number(value));
-    setPage(1);
-  };
 
   const handleStatusFilterChange = (value: ReapStatusFilter) => {
     setStatusFilter(value);
@@ -93,7 +84,7 @@ export function useReapListController() {
   return {
     search: {
       value: searchTerm,
-      onChange: handleSearchValueChange,
+      onChange: setSearchTerm,
       onOpenFilters: () => setIsFiltersOpen(true),
     },
     table: {
@@ -110,9 +101,9 @@ export function useReapListController() {
       totalPages,
       isLoading,
       isFetching,
-      onPageSizeChange: handlePageSizeChange,
-      onPreviousPage: () => setPage((p) => Math.max(1, p - 1)),
-      onNextPage: () => setPage((p) => (p < totalPages ? p + 1 : p)),
+      onPageSizeChange: setPageSize,
+      onPreviousPage: () => setPage(page - 1),
+      onNextPage: () => setPage(page + 1),
     },
     filterPanel: {
       open: isFiltersOpen,

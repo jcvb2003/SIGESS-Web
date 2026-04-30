@@ -23,18 +23,18 @@ dist-ssr/
 .env.test.local
 .env.production.local
 *.env
-! .env.example
-.env.example
+!.env.example
 
 # Supabase & Runner
 .supabase/
 scripts/*.local.ts
 scripts/fix-*.ts
 scripts/audit-*.ts
+scripts/inspect-db.ts
+scripts/research-*.ts
+scripts/check-*.ts
 
 # Editor / OS
-.vscode/*
-!.vscode/extensions.json
 .idea/
 .DS_Store
 *.suo
@@ -44,18 +44,37 @@ scripts/audit-*.ts
 *.sw?
 Thumbs.db
 
-# Planning / Documentation  
-.planejamento
-C:\Users\José Carlos\.gemini\antigravity\brain/*
+# Temporary / generated files
+diff.txt
+
+# Orphaned schema snapshot (superseded by Web/supabase/migrations)
+sigess_schema.sql
+
+# Seed data (not for production version control)
+seed.sql
+
+# Internal planning and session documents
+SESSION.md
+Descrição.md
+implementation_plan.md
+implementation_plan*.md
 walkthrough*.md
 task.md
-implementation_plan*.md
+analise*.md
 
+# AI Agent tooling (all IDEs)
+.agents/
+.claude/
+.kiro/
+.trae/
+.windsurf/
+.vscode/
+.reversa/
+_reversa_sdd/
+skills-lock.json
 
-.agents
-.claude
-.kiro
-.trae
-.vscode
-.windsurf
-.windsurf\skills
+# AI Rules and configuration files
+.cursorrules
+.windsurfrules
+AGENTS.md
+CLAUDE.md

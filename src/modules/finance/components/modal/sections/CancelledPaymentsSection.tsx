@@ -53,10 +53,10 @@ export function CancelledPaymentsSection({ lancamentos }: CancelledPaymentsSecti
             key={l.id}
             className="flex items-center gap-3 rounded-lg py-2 px-2 bg-orange-50/20 border border-orange-100/30 opacity-70 grayscale-[0.5] hover:grayscale-0 transition-all"
           >
-            <div className="w-14 text-[11px] font-semibold text-slate-400">
+            <div className="w-14 text-[11px] font-semibold text-muted-foreground">
               {formatDate(l.data_pagamento)}
             </div>
-            <div className="flex-1 min-w-0 text-xs font-medium text-slate-500">
+            <div className="flex-1 min-w-0 text-xs font-medium text-muted-foreground">
               {l.descricao || l.tipo || "Sem descrição"}
               {l.cancelamento_obs && (
                 <span className="block text-[10px] text-orange-600/70 italic truncate">
@@ -65,7 +65,7 @@ export function CancelledPaymentsSection({ lancamentos }: CancelledPaymentsSecti
               )}
             </div>
             <div className="text-right">
-              <p className="text-xs font-semibold text-slate-400 line-through">
+              <p className="text-xs font-semibold text-muted-foreground line-through">
                 {formatCurrency(l.valor)}
               </p>
             </div>

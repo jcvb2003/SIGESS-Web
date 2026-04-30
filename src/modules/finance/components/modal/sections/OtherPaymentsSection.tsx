@@ -87,16 +87,16 @@ export function OtherPaymentsSection({ lancamentos }: OtherPaymentsSectionProps)
         {sorted.map((l) => (
           <div
             key={l.id}
-            className="flex items-center gap-3 rounded-lg py-2 px-2 hover:bg-emerald-50/40 border border-transparent hover:border-emerald-100/50 transition-colors"
+            className="flex items-center gap-3 rounded-lg py-2 px-2 hover:bg-emerald-50/40 dark:hover:bg-emerald-900/30 border border-transparent hover:border-emerald-100/50 dark:hover:border-emerald-800/50 transition-colors"
           >
-            <div className="w-14 text-[11px] font-semibold text-slate-500">
+            <div className="w-14 text-[11px] font-semibold text-muted-foreground">
               {formatDate(l.data_pagamento)}
             </div>
-            <div className="flex-1 min-w-0 text-xs font-medium text-slate-700">
+            <div className="flex-1 min-w-0 text-xs font-medium text-foreground">
               {l.descricao || (l.tipo ? TYPE_LABELS[l.tipo] : "") || l.tipo}
             </div>
             <div className="text-right">
-              <p className="text-xs font-semibold text-slate-700 leading-none">
+              <p className="text-xs font-semibold text-foreground leading-none">
                 {formatCurrency(l.valor)}
               </p>
             </div>
@@ -108,7 +108,7 @@ export function OtherPaymentsSection({ lancamentos }: OtherPaymentsSectionProps)
                       <Button 
                         variant="outline" 
                         size="icon" 
-                        className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-blue-600 hover:text-white hover:border-blue-600"
+                        className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-blue-600 dark:hover:bg-blue-900/50 hover:text-white dark:hover:text-blue-400 hover:border-blue-600 dark:hover:border-blue-800/50"
                         onClick={() => handleViewReceipt(l.sessao_id!)}
                         disabled={isLoadingReceipt}
                       >
@@ -128,7 +128,7 @@ export function OtherPaymentsSection({ lancamentos }: OtherPaymentsSectionProps)
                         size="icon" 
                         className={cn(
                           "h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95",
-                          isAdmin ? "hover:bg-emerald-600 hover:text-white hover:border-emerald-600" : "opacity-50 cursor-not-allowed"
+                          isAdmin ? "hover:bg-emerald-600 dark:hover:bg-emerald-900/50 hover:text-white dark:hover:text-emerald-400 hover:border-emerald-600 dark:hover:border-emerald-800/50" : "opacity-50 cursor-not-allowed"
                         )}
                         onClick={() => isAdmin && handleEdit(l)}
                         disabled={!isAdmin}
@@ -150,7 +150,7 @@ export function OtherPaymentsSection({ lancamentos }: OtherPaymentsSectionProps)
                         size="icon" 
                         className={cn(
                           "h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95",
-                          isAdmin ? "hover:bg-red-600 hover:text-white hover:border-red-600" : "opacity-50 cursor-not-allowed"
+                          isAdmin ? "hover:bg-red-600 dark:hover:bg-red-900/50 hover:text-white dark:hover:text-red-400 hover:border-red-600 dark:hover:border-red-800/50" : "opacity-50 cursor-not-allowed"
                         )}
                         onClick={() => isAdmin && handleDelete(l)}
                         disabled={!isAdmin}

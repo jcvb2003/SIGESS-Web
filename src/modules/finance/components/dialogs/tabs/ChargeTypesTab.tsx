@@ -64,12 +64,12 @@ export function ChargeTypesTab({
           <div
             key={ct.id}
             className={cn(
-              "flex items-center justify-between p-3 bg-white",
+              "flex items-center justify-between p-3 bg-card hover:bg-accent/50 transition-colors",
               !ct.ativo && "opacity-50",
             )}
           >
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-slate-800 truncate">
+              <p className="text-xs font-semibold text-foreground truncate">
                 {ct.nome}
               </p>
               <p className="text-[10px] text-muted-foreground capitalize">
@@ -135,7 +135,7 @@ export function ChargeTypesTab({
         ) : (
           <div className="space-y-4">
              <div className="flex items-center justify-between border-b pb-2">
-                <h3 className="text-sm font-bold text-slate-900">
+                <h3 className="text-sm font-bold text-foreground">
                   {editingCharge === "new" ? "Novo Tipo de Cobrança" : "Editar Tipo de Cobrança"}
                 </h3>
              </div>

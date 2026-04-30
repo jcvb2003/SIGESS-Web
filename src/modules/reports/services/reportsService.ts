@@ -7,6 +7,7 @@ export interface RequestReportItem {
   cod_req: number | string;
   nome: string;
   cpf: string;
+  nit?: string;
   data_req: string;
   status?: string;
   tipo_requerimento?: string;
@@ -18,12 +19,13 @@ export interface RequestReportItem {
 }
 
 function mapRequerimentoToItem(req: { id?: string | number, cod_req?: string | number | null, cpf?: string | null, data_assinatura?: string | null, socios?: unknown }): RequestReportItem {
-  const socioObj = req.socios as { id?: string; nome?: string; num_rgp?: string; emissao_rgp?: string } | null;
+  const socioObj = req.socios as { id?: string; nome?: string; num_rgp?: string; emissao_rgp?: string; nit?: string } | null;
   return {
     id: String(req.id),
     cod_req: String(req.cod_req || ""),
     nome: String(socioObj?.nome || ""),
     cpf: String(req.cpf || ""),
+    nit: socioObj?.nit ? String(socioObj.nit) : undefined,
     data_req: String(req.data_assinatura || ""),
     rgp: socioObj?.num_rgp ? String(socioObj.num_rgp) : undefined,
     emissao_rgp: socioObj?.emissao_rgp ? String(socioObj.emissao_rgp) : undefined,
@@ -47,7 +49,7 @@ export const reportsService = {
     const to = from + pageSize - 1;
     let query = supabase
       .from("requerimentos")
-      .select("id, cod_req, data_assinatura, cpf, socios!inner(id, nome, num_rgp, emissao_rgp)", { count: "exact" })
+      .select("id, cod_req, data_assinatura, cpf, socios!inner(id, nome, num_rgp, emissao_rgp, nit)", { count: "exact" })
       .order("cod_req", { ascending: false });
 
     if (searchTerm) {
@@ -69,9 +71,77 @@ export const reportsService = {
       total: count || 0,
     };
   },
+
+  async fetchNaoAssinadosReport(
+    page: number = 1,
+    pageSize: number = 10,
+    searchTerm: string = "",
+    carenciaFilter: string = "all",
+  ): Promise<RequestReportResponse> {
+    const { data, error } = await (supabase as any).rpc(
+      "list_requirements_extended",
+      {
+        p_ano: new Date().getFullYear(),
+        p_search: searchTerm,
+        p_status: "nao_assinado",
+        p_carencia: carenciaFilter,
+        p_page: page,
+        p_page_size: pageSize,
+      },
+      { count: "exact" }
+    );
+
+    if (error) throw error;
+
+    const mappedData: RequestReportItem[] = ((data as any[]) || []).map((item: any) => ({
+      id: item.socio_id, 
+      cod_req: item.cod_req || "---",
+      nome: item.socio_nome,
+      cpf: item.cpf,
+      nit: item.socio_nit,
+      data_req: item.data_assinatura || "",
+      rgp: item.socio_num_rgp || item.socio_nit,
+      emissao_rgp: item.socio_emissao_rgp,
+      socio_id: item.socio_id,
+    }));
+
+    return {
+      data: mappedData,
+      total: Number((data as any[])?.[0]?.total_count || 0),
+    };
+  },
+
   async fetchAllRequestsReport(
     searchTerm: string = "",
+    reportType: string = "requerimentos",
+    carenciaFilter: string = "all"
   ): Promise<RequestReportItem[]> {
+    if (reportType === "nao_assinados") {
+      const { data, error } = await (supabase as any).rpc(
+        "list_requirements_extended",
+        {
+          p_ano: new Date().getFullYear(),
+          p_search: searchTerm,
+          p_status: "nao_assinado",
+          p_carencia: carenciaFilter,
+          p_page: 1,
+          p_page_size: 5000,
+        }
+      );
+      if (error) throw error;
+      return ((data as any[]) || []).map((item: any) => ({
+        id: item.socio_id,
+        cod_req: item.cod_req || "---",
+        nome: item.socio_nome,
+        cpf: item.cpf,
+        nit: item.socio_nit,
+        data_req: item.data_assinatura || "",
+        rgp: item.socio_num_rgp || item.socio_nit,
+        emissao_rgp: item.socio_emissao_rgp,
+        socio_id: item.socio_id,
+      }));
+    }
+
     let allData: RequestReportItem[] = [];
     let page = 0;
     const pageSize = 1000;
@@ -81,7 +151,7 @@ export const reportsService = {
       const to = from + pageSize - 1;
       let query = supabase
         .from("requerimentos")
-        .select("id, cod_req, data_assinatura, cpf, socios!inner(id, nome, num_rgp, emissao_rgp)", { count: "exact" })
+        .select("id, cod_req, data_assinatura, cpf, socios!inner(id, nome, num_rgp, emissao_rgp, nit)", { count: "exact" })
         .order("cod_req", { ascending: false })
         .range(from, to);
 
@@ -118,6 +188,7 @@ export const reportsService = {
       Nome: item.nome,
       CPF: item.cpf,
       RGP: item.rgp || item.num_rgp || "",
+      "Data RGP": item.emissao_rgp ? new Date(item.emissao_rgp).toLocaleDateString() : "",
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(excelData);
@@ -141,10 +212,11 @@ export const reportsService = {
       item.nome,
       item.cpf,
       item.rgp || item.num_rgp || "",
+      item.emissao_rgp ? new Date(item.emissao_rgp).toLocaleDateString() : "",
     ]);
 
     autoTable(doc, {
-      head: [["Data", "Nome", "CPF", "RGP"]],
+      head: [["Data", "Nome", "CPF", "RGP", "Data RGP"]],
       body: tableData,
       startY: 30,
     });

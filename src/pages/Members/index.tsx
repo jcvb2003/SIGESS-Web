@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/shared/components/ui/card";
-import { SearchBar } from "@/modules/members/components/search/SearchBar";
+import { DataTableSearch } from "@/shared/components/layout/DataTableSearch";
 import { FilterPanel } from "@/modules/members/components/filters/FilterPanel";
-import { MembersTablePagination } from "@/modules/members/components/table/MembersTablePagination";
+import { DataTablePagination } from "@/shared/components/layout/DataTablePagination";
 import { MemberDeleteDialog } from "@/modules/members/components/dialogs/MemberDeleteDialog";
 import { MemberDetailsModal } from "@/modules/members/components/modal/MemberDetailsModal";
 import { DataTable } from "@/shared/components/layout/DataTable";
@@ -29,10 +29,11 @@ export default function Members() {
       />
 
       <Card className="border-border/50 shadow-sm overflow-hidden">
-        <SearchBar
+        <DataTableSearch
           value={search.value}
           onChange={search.onChange}
           onOpenFilters={search.onOpenFilters}
+          placeholder="Buscar por nome, CPF ou matrícula..."
         />
 
         <CardContent className="p-0">
@@ -108,7 +109,7 @@ export default function Members() {
             ]}
           />
 
-          <MembersTablePagination
+          <DataTablePagination
             total={pagination.total}
             page={pagination.page}
             pageSize={pagination.pageSize}
@@ -120,6 +121,7 @@ export default function Members() {
             onPageSizeChange={pagination.onPageSizeChange}
             onPreviousPage={pagination.onPreviousPage}
             onNextPage={pagination.onNextPage}
+            entityName="sócios"
           />
         </CardContent>
       </Card>

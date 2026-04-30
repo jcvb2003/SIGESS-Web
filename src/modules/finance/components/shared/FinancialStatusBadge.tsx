@@ -1,34 +1,35 @@
 import { cn } from "@/shared/lib/utils";
 import type { FinancialStatusType } from "../../types/finance.types";
+import { StatusBadge, type StatusBadgeVariant } from "@/shared/components/ui/StatusBadge";
 
 const STATUS_CONFIG: Record<
   FinancialStatusType,
-  { label: string; dotClass: string; badgeClass: string }
+  { label: string; dotClass: string; variant: StatusBadgeVariant }
 > = {
   ok: {
     label: "Em dia",
     dotClass: "bg-primary",
-    badgeClass: "bg-primary/10 dark:bg-primary/20 text-primary border-primary/20",
+    variant: "success",
   },
   overdue: {
     label: "Inadimplente",
-    dotClass: "bg-red-500",
-    badgeClass: "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border-red-100 dark:border-red-900/50",
+    dotClass: "bg-destructive",
+    variant: "destructive",
   },
   exempt: {
     label: "Isento",
     dotClass: "bg-blue-500",
-    badgeClass: "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-100 dark:border-blue-900/50",
+    variant: "info",
   },
   released: {
     label: "Liberado",
     dotClass: "bg-amber-500",
-    badgeClass: "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-900/50",
+    variant: "warning",
   },
   alert: {
     label: "Alerta",
     dotClass: "bg-orange-500",
-    badgeClass: "bg-orange-100 dark:bg-orange-950/40 text-orange-800 dark:text-orange-400 border-orange-200 dark:border-orange-900/50",
+    variant: "orange",
   },
 };
 
@@ -46,17 +47,15 @@ export function FinancialStatusBadge({
   const config = STATUS_CONFIG[status];
 
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider border",
-        config.badgeClass,
-        className,
-      )}
-    >
-      <span
-        className={cn("h-1.5 w-1.5 shrink-0 rounded-full", config.dotClass)}
-      />
-      {detail ?? config.label}
-    </span>
+    <StatusBadge
+      variant={config.variant}
+      label={
+        <span className="flex items-center gap-1.5">
+          <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", config.dotClass)} />
+          {detail ?? config.label}
+        </span>
+      }
+      className={cn("uppercase tracking-wider font-bold", className)}
+    />
   );
 }

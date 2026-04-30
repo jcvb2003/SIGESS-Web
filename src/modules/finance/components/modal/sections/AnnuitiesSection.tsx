@@ -21,13 +21,7 @@ import { SessionReceiptDialog } from "../../dialogs/SessionReceiptDialog";
 import { financeService } from "../../../services/financeService";
 import { daeService } from "../../../services/daeService";
 
-const PAYMENT_METHOD_LABELS: Record<string, string> = {
-  dinheiro: "Dinheiro",
-  pix: "PIX",
-  transferencia: "Transferência",
-  boleto: "Boleto",
-  cartao: "Cartão",
-};
+import { PAYMENT_METHOD_LABELS } from "../../shared/constants";
 
 interface AnnuitiesSectionProps {
   readonly anuidades: FinanceLancamento[];
@@ -90,20 +84,20 @@ export function AnnuitiesSection({ anuidades }: AnnuitiesSectionProps) {
           {sorted.map((a) => (
             <div
               key={a.id}
-              className="flex items-center gap-3 rounded-lg py-2 px-2 hover:bg-emerald-50/40 border border-transparent hover:border-emerald-100/50 transition-colors"
+              className="flex items-center gap-3 rounded-lg py-2 px-2 hover:bg-emerald-50/40 dark:hover:bg-emerald-900/30 border border-transparent hover:border-emerald-100/50 dark:hover:border-emerald-800/50 transition-colors"
             >
-              <div className="w-10 text-sm font-bold text-emerald-700">
+              <div className="w-10 text-sm font-bold text-emerald-700 dark:text-emerald-500">
                 {a.competencia_ano}
               </div>
               <div className="flex-1 min-w-0">
                 <FinancialStatusBadge
                   status="ok"
                   detail={`Pago em ${formatDate(a.data_pagamento)}`}
-                  className="h-5 text-[10px] bg-emerald-100/50 border-emerald-200/50 text-emerald-700"
+                  className="h-5 text-[10px] bg-emerald-100/50 dark:bg-emerald-900/30 border-emerald-200/50 dark:border-emerald-800/50 text-emerald-700 dark:text-emerald-500"
                 />
               </div>
               <div className="text-right">
-                <p className="text-xs font-semibold text-slate-700 leading-none">
+                <p className="text-xs font-semibold text-foreground leading-none">
                   {formatCurrency(a.valor)}
                 </p>
                 <p className="text-[10px] text-muted-foreground mt-1">
@@ -118,7 +112,7 @@ export function AnnuitiesSection({ anuidades }: AnnuitiesSectionProps) {
                         <Button 
                           variant="outline" 
                           size="icon" 
-                          className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-blue-600 hover:text-white hover:border-blue-600"
+                          className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-blue-600 dark:hover:bg-blue-900/50 hover:text-white dark:hover:text-blue-400 hover:border-blue-600 dark:hover:border-blue-800/50"
                           onClick={() => handleViewReceipt(a.sessao_id!)}
                           disabled={isLoadingReceipt}
                         >
@@ -138,7 +132,7 @@ export function AnnuitiesSection({ anuidades }: AnnuitiesSectionProps) {
                          size="icon" 
                          className={cn(
                            "h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95",
-                           isAdmin ? "hover:bg-emerald-600 hover:text-white hover:border-emerald-600" : "opacity-50 cursor-not-allowed"
+                           isAdmin ? "hover:bg-emerald-600 dark:hover:bg-emerald-900/50 hover:text-white dark:hover:text-emerald-400 hover:border-emerald-600 dark:hover:border-emerald-800/50" : "opacity-50 cursor-not-allowed"
                          )}
                          onClick={() => isAdmin && handleEdit(a)}
                          disabled={!isAdmin}
@@ -160,7 +154,7 @@ export function AnnuitiesSection({ anuidades }: AnnuitiesSectionProps) {
                         size="icon" 
                         className={cn(
                           "h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95",
-                          isAdmin ? "hover:bg-red-600 hover:text-white hover:border-red-600" : "opacity-50 cursor-not-allowed"
+                          isAdmin ? "hover:bg-red-600 dark:hover:bg-red-900/50 hover:text-white dark:hover:text-red-400 hover:border-red-600 dark:hover:border-red-800/50" : "opacity-50 cursor-not-allowed"
                         )}
                         onClick={() => isAdmin && handleDelete(a)}
                         disabled={!isAdmin}

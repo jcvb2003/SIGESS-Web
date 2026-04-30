@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useForm, DefaultValues } from "react-hook-form";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/shared/components/ui/form";
 import { memberQueryKeys } from "../../queryKeys";
@@ -49,11 +49,18 @@ export function RegistrationForm({
   onCancel,
 }: Readonly<RegistrationFormProps>) {
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [memberCount, setMemberCount] = useState<number | null>(null);
   const { metadata } = useUserMetadata();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const isEditMode = !!memberUuid;
+
+  const { data: countData } = useQuery({
+    queryKey: memberQueryKeys.count(),
+    queryFn: () => memberService.countMembers(),
+    enabled: !isEditMode,
+  });
+  const memberCount = countData?.count ?? null;
+
   const form = useForm<MemberRegistrationSchemaType, undefined, MemberRegistrationSchemaType>({
     resolver: zodResolver(memberRegistrationSchema) as import("react-hook-form").Resolver<MemberRegistrationSchemaType>,
     defaultValues: (initialData || initialMemberRegistrationForm) as DefaultValues<MemberRegistrationSchemaType>,
@@ -65,8 +72,6 @@ export function RegistrationForm({
   const { entity } = useEntityData();
 
   useEffect(() => {
-    // Somente preenche automaticamente em modo de criação (!isEditMode)
-    // e se os campos do formulário estiverem vazios
     if (!isEditMode && entity) {
       if (!form.getValues("cidade") && entity.city) {
         form.setValue("cidade", entity.city);
@@ -79,20 +84,6 @@ export function RegistrationForm({
       }
     }
   }, [isEditMode, entity, form]);
-
-  useEffect(() => {
-    async function fetchCount() {
-      if (!isEditMode) {
-        try {
-          const { count } = await memberService.countMembers();
-          setMemberCount(count);
-        } catch (error) {
-          console.error("Error fetching member count:", error);
-        }
-      }
-    }
-    fetchCount();
-  }, [isEditMode]);
 
   useEffect(() => {
     if (initialData) {

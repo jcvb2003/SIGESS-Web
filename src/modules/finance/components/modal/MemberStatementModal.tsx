@@ -6,7 +6,7 @@ import {
 } from "@/shared/components/ui/dialog";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { Button } from "@/shared/components/ui/button";
-import { Printer } from "lucide-react";
+import { Printer, X, FileText } from "lucide-react";
 import { useMemberStatement } from "../../hooks/data/useMemberStatement";
 import { MemberFinancePreview } from "../shared/MemberFinancePreview";
 import { AnnuitiesSection } from "./sections/AnnuitiesSection";
@@ -48,24 +48,38 @@ export function MemberStatementModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-xl p-0 outline-none overflow-hidden">
+      <DialogContent className="w-full max-w-2xl p-0 outline-none overflow-hidden [&>button]:hidden">
         <div className="flex flex-col h-full max-h-[90vh] sm:max-h-[85vh] overflow-hidden">
-          <DialogHeader className="px-6 pt-6 pb-2 border-b flex-shrink-0">
-            <div className="flex items-center justify-between">
-              <div>
-                <DialogTitle className="text-xl font-bold tracking-tight">Extrato Financeiro</DialogTitle>
-                <p className="mt-0.5 text-xs text-slate-500 font-medium tracking-tight">
-                  Histórico completo de lançamentos
-                </p>
+          <DialogHeader className="px-6 pt-6 pb-4 border-b flex-shrink-0">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 shadow-sm border border-emerald-100 dark:border-emerald-800/50">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <div>
+                  <DialogTitle className="text-xl font-bold tracking-tight">Extrato Financeiro</DialogTitle>
+                  <p className="mt-0.5 text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
+                    Histórico completo de lançamentos
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center gap-2 pr-12">
+              
+              <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-8 text-xs gap-1.5 border-emerald-200 text-emerald-700 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all font-bold"
+                  className="h-9 text-xs gap-1.5 border-emerald-200 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-600 dark:hover:bg-emerald-900/50 hover:text-white dark:hover:text-emerald-400 hover:border-emerald-600 dark:hover:border-emerald-800/50 transition-all font-bold px-4"
                 >
-                  <Printer className="h-3.5 w-3.5" />
-                  Imprimir
+                  <Printer className="h-4 w-4" />
+                  <span className="hidden sm:inline">Imprimir</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9 text-muted-foreground hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50 border-border transition-colors rounded-lg"
+                  onClick={() => onOpenChange(false)}
+                >
+                  <X className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -103,13 +117,13 @@ export function MemberStatementModal({
                       daeList.length === 0 &&
                       outros.length === 0 && (
                         <div className="py-12 flex flex-col items-center justify-center text-center">
-                          <div className="h-12 w-12 rounded-full bg-slate-50 flex items-center justify-center mb-3">
+                          <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
                             <Printer className="h-6 w-6 text-slate-300" />
                           </div>
-                          <p className="text-sm font-medium text-slate-500">
+                          <p className="text-sm font-medium text-muted-foreground">
                             Nenhum lançamento encontrado
                           </p>
-                          <p className="text-xs text-slate-400 mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             Este sócio ainda não possui histórico financeiro
                           </p>
                         </div>

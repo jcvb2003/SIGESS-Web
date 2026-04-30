@@ -20,7 +20,6 @@ import { Loader2, FileUp, AlertTriangle, CheckCircle2, UserX, Info } from "lucid
 import { Progress } from "@/shared/components/ui/progress";
 import { toast } from "sonner";
 import { cn } from "@/shared/lib/utils";
-import { RequirementStatus } from "../types/requirement.types";
 
 interface ImportPortalDialogProps {
   open: boolean;
@@ -28,74 +27,11 @@ interface ImportPortalDialogProps {
   anoAtual: number;
 }
 
-interface ReconciliationResult {
-  portalName: string;
-  portalNit: string;
-  member?: {
-    id: string;
-    cpf: string | null;
-    nome: string | null;
-    nit: string | null;
-    requerimentos: Array<{
-      id: string;
-      status_mte: RequirementStatus;
-      beneficio_recebido: boolean;
-      ano_referencia: number;
-    }>;
-  };
-  matchType: 'FULL' | 'NIT_ONLY' | 'NAME_ONLY' | 'NONE';
-  finance?: string;
-  hasReqCurrentYear: boolean;
-  selected: boolean;
-  existingReqId?: string;
-}
-
-type MemberFromIndex = Awaited<ReturnType<typeof requirementService.getReconciliationContext>>['members'][0];
-
-interface ReconciliationIndexes {
-  nitMap: Map<string, MemberFromIndex>;
-  nameMap: Map<string, MemberFromIndex>;
-}
-
-/**
- * Helper: Constrói os mapas de busca para performance O(1)
- */
-function buildMemberIndexes(members: MemberFromIndex[]): ReconciliationIndexes {
-  const nitMap = new Map<string, MemberFromIndex>();
-  const nameMap = new Map<string, MemberFromIndex>();
-  
-  members.forEach(m => {
-    if (m.nit) nitMap.set(String(m.nit).replaceAll(/\D/g, ""), m);
-    if (m.nome) nameMap.set(requirementService.normalizeName(m.nome), m);
-  });
-  
-  return { nitMap, nameMap };
-}
-
-/**
- * Helper: Tenta encontrar um sócio correspondente para uma linha do portal
- */
-function findMatchForPortalRow(
-  portalName: string, 
-  portalNit: string, 
-  indexes: ReconciliationIndexes
-): { member: MemberFromIndex | null, matchType: ReconciliationResult['matchType'] } {
-  // 1. Tentar Match por NIT
-  const matchedByNit = portalNit ? indexes.nitMap.get(portalNit) : null;
-  if (matchedByNit) {
-    const isFullMatch = matchedByNit.nome?.toUpperCase() === portalName.toUpperCase();
-    return { member: matchedByNit, matchType: isFullMatch ? 'FULL' : 'NIT_ONLY' };
-  }
-
-  // 2. Fallback por Nome Normalizado
-  const normalizedPortalName = requirementService.normalizeName(portalName);
-  const matchedByName = indexes.nameMap.get(normalizedPortalName);
-  
-  return { 
-    member: matchedByName || null, 
-    matchType: matchedByName ? 'NAME_ONLY' : 'NONE' 
-  };
-}
+import { 
+  ReconciliationResult, 
+  buildMemberIndexes, 
+  reconcileRow 
+} from "../services/reconciliationService";
 
 export function ImportPortalDialog({
   open,
@@ -134,32 +70,9 @@ export function ImportPortalDialog({
       const reconciled: ReconciliationResult[] = [];
 
       for (let i = 0; i < jsonData.length; i++) {
-        const row = jsonData[i];
-        if (row["UF"] !== context.entityUf) continue;
-
-        const pName = row["NOME FAVORECIDO"] || row["Nome"] || row["NOME"] || row["Beneficiário"] || "";
-        const pNit = String(row["NIS FAVORECIDO"] || row["NIT"] || row["PIS/PASEP"] || "").replaceAll(/\D/g, "");
-
-        if (!pName && !pNit) continue;
-
-        const { member, matchType } = findMatchForPortalRow(pName, pNit, indexes);
-
-        if (member) {
-          const reqThisYear = member.requerimentos?.find(r => r.ano_referencia === anoAtual);
-          
-          // Uma vez importado (beneficio confirmado), o registro deve ser ignorado
-          if (reqThisYear?.beneficio_recebido) continue;
-
-          reconciled.push({
-            portalName: pName,
-            portalNit: pNit,
-            member: member as ReconciliationResult['member'],
-            matchType,
-            finance: context.financeMap.get(member.cpf || "") ?? undefined,
-            hasReqCurrentYear: !!reqThisYear,
-            existingReqId: reqThisYear?.id,
-            selected: (matchType === 'FULL' || matchType === 'NIT_ONLY') && !!reqThisYear
-          });
+        const result = reconcileRow(jsonData[i], context, indexes, anoAtual);
+        if (result) {
+          reconciled.push(result);
         }
         
         if (i % 1000 === 0 || i === jsonData.length - 1) {

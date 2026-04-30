@@ -47,35 +47,43 @@ export function SelectField<T extends FieldValues>({
     <FormField
       control={control}
       name={name}
-      render={({ field }) => (
-        <FormItem className={className}>
-          <FormLabel>{label}</FormLabel>
-          <Select
-            onValueChange={(value) => {
-              field.onChange(value);
-              onChange?.(value);
-            }}
-            defaultValue={field.value}
-            value={field.value}
-            disabled={disabled}
-          >
-            <FormControl>
-              <SelectTrigger className={bgColor}>
-                <SelectValue placeholder={placeholder} />
-              </SelectTrigger>
-            </FormControl>
-            <SelectContent>
-              {options.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {description && <FormDescription>{description}</FormDescription>}
-          <FormMessage />
-        </FormItem>
-      )}
+      render={({ field }) => {
+        // Radix Select only renders item text when SelectContent is open (Portal).
+        // Items register themselves on mount — if the dropdown was never opened,
+        // SelectValue cannot look up the label for a programmatic value.
+        // Passing the label as children bypasses this registration requirement.
+        const selectedLabel = options.find((o) => o.value === field.value)?.label;
+        return (
+          <FormItem className={className}>
+            <FormLabel>{label}</FormLabel>
+            <Select
+              onValueChange={(value) => {
+                field.onChange(value);
+                onChange?.(value);
+              }}
+              value={field.value ?? undefined}
+              disabled={disabled}
+            >
+              <FormControl>
+                <SelectTrigger className={bgColor}>
+                  <SelectValue placeholder={placeholder}>
+                    {selectedLabel}
+                  </SelectValue>
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {options.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {description && <FormDescription>{description}</FormDescription>}
+            <FormMessage />
+          </FormItem>
+        );
+      }}
     />
   );
 }

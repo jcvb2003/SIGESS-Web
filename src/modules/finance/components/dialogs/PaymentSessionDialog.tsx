@@ -312,7 +312,7 @@ export function PaymentSessionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-xl p-0 outline-none [&>button]:hidden overflow-hidden bg-white shadow-2xl rounded-2xl border-none">
+      <DialogContent className="w-full max-w-xl p-0 outline-none [&>button]:hidden overflow-hidden bg-card shadow-2xl rounded-2xl border-none">
         <DialogHeader className="px-6 pt-6 pb-2 border-b flex-shrink-0">
           <div className="flex items-center justify-between">
             <div>
@@ -321,13 +321,13 @@ export function PaymentSessionDialog({
                 <DialogTitle className="text-xl font-bold tracking-tight">Novo Lançamento Financeiro</DialogTitle>
               </div>
               <p className="text-sm text-muted-foreground flex items-center gap-2">
-                Recibo de Sessão de Pagamento · <span className="font-bold text-slate-500 uppercase text-[10px] tracking-tight">{paymentMethod}</span>
+                Recibo de Sessão de Pagamento · <span className="font-bold text-muted-foreground uppercase text-[10px] tracking-tight">{paymentMethod}</span>
               </p>
             </div>
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 border-slate-200 transition-colors"
+              className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 border-border transition-colors"
               onClick={() => onOpenChange(false)}
             >
               <X className="h-4 w-4" />
@@ -348,7 +348,7 @@ export function PaymentSessionDialog({
                 variant="outline"
                 size="sm"
                 onClick={() => setConfigMode(configMode === "isencao" ? null : "isencao")}
-                className="h-8 pr-3 pl-2.5 text-[10px] font-bold gap-1.5 border-blue-200 text-blue-700 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all"
+                className="h-8 pr-3 pl-2.5 text-[10px] font-bold gap-1.5 border-blue-200 dark:border-blue-900/50 text-blue-700 dark:text-blue-400 hover:bg-blue-600 dark:hover:bg-blue-900/40 hover:text-white dark:hover:text-blue-400 hover:border-blue-600 dark:hover:border-blue-800/50 transition-all"
               >
                 <Pencil className="h-3 w-3" />
                 Isenção
@@ -357,7 +357,7 @@ export function PaymentSessionDialog({
                 variant="outline"
                 size="sm"
                 onClick={() => setConfigMode(configMode === "regime" ? null : "regime")}
-                className="h-8 pr-3 pl-2.5 text-[10px] font-bold gap-1.5 border-slate-200 text-slate-600 hover:bg-slate-600 hover:text-white transition-all"
+                className="h-8 pr-3 pl-2.5 text-[10px] font-bold gap-1.5 border-border text-muted-foreground hover:bg-foreground hover:text-background transition-all"
               >
                 <Settings2 className="h-3 w-3" />
                 Regime
@@ -366,7 +366,7 @@ export function PaymentSessionDialog({
                 variant="outline"
                 size="sm"
                 onClick={() => setConfigMode(configMode === "liberacao" ? null : "liberacao")}
-                className="h-8 pr-3 pl-2.5 text-[10px] font-bold gap-1.5 border-amber-200 text-amber-700 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all"
+                className="h-8 pr-3 pl-2.5 text-[10px] font-bold gap-1.5 border-amber-200 dark:border-amber-900/50 text-amber-700 dark:text-amber-500 hover:bg-amber-500 dark:hover:bg-amber-900/40 hover:text-white dark:hover:text-amber-400 hover:border-amber-500 dark:hover:border-amber-800/50 transition-all"
               >
                 <Unlock className="h-3 w-3" />
                 Liberar
@@ -418,22 +418,22 @@ export function PaymentSessionDialog({
                 onChange={setPaymentMethod}
               />
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Data do Recebimento</Label>
+                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">Data do Recebimento</Label>
                 <Input
                   type="date"
                   value={paymentDate}
                   onChange={(e) => setPaymentDate(e.target.value)}
-                  className="h-10 text-xs font-bold border-slate-200 focus:ring-emerald-500 bg-white"
+                  className="h-10 text-xs font-bold border-border focus:ring-primary bg-card"
                 />
               </div>
             </div>
 
             {/* Action Area */}
-            <div className="flex flex-col gap-4 pt-6 border-t border-slate-100">
-              <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-sm ring-8 ring-slate-50">
+            <div className="flex flex-col gap-4 pt-6 border-t border-border/50">
+              <div className="flex items-center justify-between bg-card p-4 rounded-2xl border border-border shadow-sm ring-8 ring-muted/20">
                 <div className="flex flex-col">
-                  <span className="text-[10px] uppercase tracking-widest text-slate-400 font-black">TOTAL A RECEBER</span>
-                  <span className="text-2xl font-black text-slate-900 tracking-tight">{formatCurrency(totalValue)}</span>
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-black">TOTAL A RECEBER</span>
+                  <span className="text-2xl font-black text-foreground tracking-tight">{formatCurrency(totalValue)}</span>
                 </div>
                 <div className="flex items-center gap-2">
                     <Button
@@ -446,7 +446,7 @@ export function PaymentSessionDialog({
                   <Button
                     onClick={handleSubmit}
                     disabled={paymentMutation.isPending || !canConfirm}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[11px] gap-2 h-10 px-6 shadow-xl shadow-emerald-100 transition-all hover:-translate-y-0.5"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[11px] gap-2 h-10 px-6 shadow-xl shadow-emerald-100 dark:shadow-none transition-all hover:-translate-y-0.5"
                   >
                     {paymentMutation.isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin" />

@@ -5,7 +5,7 @@ import {
   FileText,
   LucideIcon,
 } from "lucide-react";
-import { StatCard, StatCardVariant } from "@/modules/dashboard/components/StatCard";
+import { StatCard, StatCardVariant } from "@/shared/components/ui/StatCard";
 
 interface StatCardConfig {
   title: string;

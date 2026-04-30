@@ -1,4 +1,4 @@
-export type RequirementStatus = 'assinado' | 'analise' | 'recurso_acerto' | 'deferido' | 'indeferido';
+export type RequirementStatus = 'assinado' | 'analise' | 'recurso_acerto' | 'deferido' | 'indeferido' | 'nao_assinado';
 
 export interface Requirement {
   id: string;
@@ -17,6 +17,8 @@ export interface Requirement {
 export interface RequirementWithMember extends Requirement {
   member_nome?: string | null;
   member_nit?: string | null;
+  member_num_rgp?: string | null;
+  member_emissao_rgp?: string | null;
   situacao_financeira?: 'em_dia' | 'atraso' | 'isento';
 }
 

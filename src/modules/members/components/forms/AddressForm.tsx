@@ -23,10 +23,10 @@ export function AddressForm() {
   const { localities, loading } = useLocalitiesData();
 
   const localityOptions = localities
-    .filter((locality) => locality.code)
+    .filter((locality) => !!locality.code)
     .map((locality) => ({
       label: locality.name,
-      value: locality.code,
+      value: locality.code as string,
     }));
 
   const handleLocalityCreated = (code: string) => {

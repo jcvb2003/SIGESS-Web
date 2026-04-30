@@ -7,6 +7,7 @@ import {
 import { LucideIcon } from "lucide-react";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { cn } from "@/shared/lib/utils";
+
 export type StatCardVariant =
   | "primary"
   | "secondary"
@@ -15,6 +16,7 @@ export type StatCardVariant =
   | "destructive"
   | "warning"
   | "default";
+
 interface StatCardProps {
   title: string;
   value: string | number;
@@ -24,6 +26,7 @@ interface StatCardProps {
   className?: string;
   variant?: StatCardVariant;
 }
+
 const variants = {
   default: {
     bg: "bg-card",
@@ -33,25 +36,25 @@ const variants = {
     border: "border-border",
   },
   primary: {
-    bg: "bg-[hsl(var(--primary))]/5",
-    text: "text-[hsl(var(--primary))]",
-    iconBg: "bg-[hsl(var(--primary))]/10",
-    iconColor: "text-[hsl(var(--primary))]",
-    border: "border-[hsl(var(--primary))]/20",
+    bg: "bg-primary/5",
+    text: "text-primary",
+    iconBg: "bg-primary/10",
+    iconColor: "text-primary",
+    border: "border-primary/20",
   },
   secondary: {
-    bg: "bg-[hsl(var(--secondary))]/5",
-    text: "text-[hsl(var(--secondary))]",
-    iconBg: "bg-[hsl(var(--secondary))]/10",
-    iconColor: "text-[hsl(var(--secondary))]",
-    border: "border-[hsl(var(--secondary))]/20",
+    bg: "bg-secondary/5",
+    text: "text-secondary",
+    iconBg: "bg-secondary/10",
+    iconColor: "text-secondary",
+    border: "border-secondary/20",
   },
   accent: {
-    bg: "bg-[hsl(var(--accent))]/5",
-    text: "text-[hsl(var(--accent))]",
-    iconBg: "bg-[hsl(var(--accent))]/10",
-    iconColor: "text-[hsl(var(--accent))]",
-    border: "border-[hsl(var(--accent))]/20",
+    bg: "bg-accent/5",
+    text: "text-accent",
+    iconBg: "bg-accent/10",
+    iconColor: "text-accent",
+    border: "border-accent/20",
   },
   info: {
     bg: "bg-[hsl(var(--info))]/5",
@@ -61,11 +64,11 @@ const variants = {
     border: "border-[hsl(var(--info))]/20",
   },
   destructive: {
-    bg: "bg-[hsl(var(--destructive))]/5",
-    text: "text-[hsl(var(--destructive))]",
-    iconBg: "bg-[hsl(var(--destructive))]/10",
-    iconColor: "text-[hsl(var(--destructive))]",
-    border: "border-[hsl(var(--destructive))]/20",
+    bg: "bg-destructive/5",
+    text: "text-destructive",
+    iconBg: "bg-destructive/10",
+    iconColor: "text-destructive",
+    border: "border-destructive/20",
   },
   warning: {
     bg: "bg-[hsl(var(--warning))]/5",
@@ -75,6 +78,7 @@ const variants = {
     border: "border-[hsl(var(--warning))]/20",
   },
 };
+
 export function StatCard({
   title,
   value,
@@ -122,7 +126,7 @@ export function StatCard({
         ) : (
           <div className="space-y-1">
             <div
-              className={cn("text-3xl font-bold tracking-tight", styles.text)}
+              className={cn("text-3xl font-bold tracking-tight font-display", styles.text)}
             >
               {value}
             </div>

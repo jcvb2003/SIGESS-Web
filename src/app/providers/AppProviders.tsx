@@ -22,8 +22,8 @@ export function AppProviders({ children }: Readonly<{ children: ReactNode }>) {
         <AuthProvider>
           <EntityThemeProvider>
             {children}
+            <Toaster />
           </EntityThemeProvider>
-          <Toaster />
         </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>

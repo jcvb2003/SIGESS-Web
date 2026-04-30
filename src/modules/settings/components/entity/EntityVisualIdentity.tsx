@@ -91,8 +91,16 @@ function ImageUploadField({ label, description, aspectRatio = "auto" }: ImageUpl
       return;
     }
 
+    const oldPath = watch("logoPath");
+
     try {
       setIsUploading(true);
+
+      // Cleanup do arquivo anterior se existir
+      if (oldPath) {
+        await supabase.storage.from("branding").remove([oldPath]);
+      }
+
       const fileExt = file.name.split(".").pop();
       const fileName = `logo-${Date.now()}.${fileExt}`;
       const filePath = `${fileName}`;
@@ -118,7 +126,15 @@ function ImageUploadField({ label, description, aspectRatio = "auto" }: ImageUpl
     }
   };
 
-  const handleRemove = () => {
+  const handleRemove = async () => {
+    const oldPath = watch("logoPath");
+    if (oldPath) {
+      try {
+        await supabase.storage.from("branding").remove([oldPath]);
+      } catch (error) {
+        console.error("Erro ao remover arquivo do storage:", error);
+      }
+    }
     setValue("logoPath", "", { shouldDirty: true });
     setValue("logoUrl", "", { shouldDirty: true });
   };

@@ -7,43 +7,29 @@ export const requirementService = {
     status?: RequirementStatus | 'all';
     beneficio_recebido?: boolean | 'all';
     searchTerm?: string;
+    carenciaFilter?: string;
     page: number;
     pageSize: number;
   }): Promise<{ items: RequirementWithMember[]; total: number }> {
-    const from = (filters.page - 1) * filters.pageSize;
-    const to = from + filters.pageSize - 1;
+    const { data: rpcData, error: rpcError } = await (supabase as any).rpc("list_requirements_extended", {
+      p_ano: filters.ano || new Date().getFullYear(),
+      p_status: filters.status || 'all',
+      p_beneficio: filters.beneficio_recebido === 'all' ? 'all' : (filters.beneficio_recebido ? 'recebido' : 'pendente'),
+      p_search: filters.searchTerm || '',
+      p_carencia: filters.carenciaFilter || 'all',
+      p_page: filters.page,
+      p_page_size: filters.pageSize
+    });
 
-    let query = supabase
-      .from("v_requerimentos_busca")
-      .select("*", { count: "exact" });
+    if (rpcError) throw rpcError;
 
-    if (filters.ano) {
-      query = query.eq("ano_referencia", filters.ano);
-    }
-
-    if (filters.status && filters.status !== 'all') {
-      query = query.eq("status_mte", filters.status);
-    }
-
-    if (filters.beneficio_recebido !== undefined && filters.beneficio_recebido !== 'all') {
-      query = query.eq("beneficio_recebido", filters.beneficio_recebido);
-    }
-
-    if (filters.searchTerm) {
-      const term = `%${filters.searchTerm}%`;
-      query = query.or(`cpf.ilike.${term},cod_req.ilike.${term},socio_nome.ilike.${term}`);
-    }
-
-    const { data: reqsData, error: reqsError, count } = await query
-      .order("created_at", { ascending: false })
-      .range(from, to);
-
-    if (reqsError) throw reqsError;
+    const rpcArray = (rpcData as any[]) || [];
+    const total = rpcArray.length > 0 ? Number(rpcArray[0].total_count) : 0;
 
     // Join manual para evitar problemas de embedding com Views no PostgREST
-    const cpfs = (reqsData || [])
-      .map(r => r.cpf)
-      .filter((cpf): cpf is string => !!cpf);
+    const cpfs = rpcArray
+      .map((r: any) => r.cpf)
+      .filter((cpf: string | null): cpf is string => !!cpf);
 
     const { data: financeData } = cpfs.length > 0 
       ? await supabase
@@ -62,7 +48,7 @@ export const requirementService = {
       return 'atraso';
     };
 
-    const items = (reqsData || []).map((item) => {
+    const items = rpcArray.map((item: any) => {
       const situacaoGeral = financeMap[item.cpf || ""];
       const situacao_financeira = getSituacaoFinanceira(situacaoGeral);
 
@@ -70,13 +56,15 @@ export const requirementService = {
         ...item,
         member_nome: item.socio_nome ?? "",
         member_nit: item.socio_nit ?? "",
+        member_num_rgp: item.socio_num_rgp ?? "",
+        member_emissao_rgp: item.socio_emissao_rgp ?? "",
         situacao_financeira,
       } as RequirementWithMember;
     });
 
     return {
       items,
-      total: count || 0,
+      total,
     };
   },
 

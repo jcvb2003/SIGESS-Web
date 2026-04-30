@@ -150,7 +150,7 @@ export function FinanceSettingsDialog({
               <DialogTitle className="text-xl font-bold tracking-tight">
                 Configurações Financeiras
               </DialogTitle>
-              <p className="mt-0.5 text-xs text-slate-500 font-medium tracking-tight">
+              <p className="mt-0.5 text-xs text-muted-foreground font-medium tracking-tight">
                 Parâmetros globais e gestão de cobranças
               </p>
             </div>

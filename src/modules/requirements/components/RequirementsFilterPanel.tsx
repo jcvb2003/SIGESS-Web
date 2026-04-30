@@ -16,7 +16,10 @@ import {
 } from "@/shared/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/shared/components/ui/radio-group";
 import { RequirementStatus } from "../types/requirement.types";
-import { BeneficioFilterType } from "../hooks/filters/useRequirementFilters";
+import { BeneficioFilterType, CarenciaFilterType } from "../hooks/filters/useRequirementFilters";
+import { useParametersData } from "@/modules/settings/hooks/useParametersData";
+import { format, parseISO, isValid } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface RequirementsFilterPanelProps {
   open: boolean;
@@ -27,6 +30,8 @@ interface RequirementsFilterPanelProps {
   onBeneficioChange: (value: BeneficioFilterType) => void;
   yearFilter: number;
   onYearChange: (year: string) => void;
+  carenciaFilter: CarenciaFilterType;
+  onCarenciaChange: (value: string) => void;
   onClear: () => void;
   onApply: () => void;
 }
@@ -40,6 +45,8 @@ export function RequirementsFilterPanel({
   onBeneficioChange,
   yearFilter,
   onYearChange,
+  carenciaFilter,
+  onCarenciaChange,
   onClear,
   onApply,
 }: Readonly<RequirementsFilterPanelProps>) {
@@ -47,6 +54,21 @@ export function RequirementsFilterPanel({
     { length: 5 }, 
     (_, i) => (new Date().getFullYear() - i).toString()
   );
+  
+  const { parameters } = useParametersData();
+
+  const getFormattedDefeso = () => {
+    const rawDate = parameters?.defeso1Start;
+    if (!rawDate) return "(data configurada)";
+    
+    const parsedDate = parseISO(rawDate);
+    if (isValid(parsedDate)) {
+      return `(${format(parsedDate, "dd/MMM", { locale: ptBR })})`;
+    }
+    return `(${rawDate})`;
+  };
+
+  const defesoDateText = getFormattedDefeso();
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -110,6 +132,39 @@ export function RequirementsFilterPanel({
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="pendente" id="ben-pend" />
                 <Label htmlFor="ben-pend" className="font-normal">Pendente / Aguardando</Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          {/* Carência */}
+          <div className="space-y-3 pt-2">
+            <Label>Filtrar por Carência</Label>
+            <RadioGroup 
+              value={carenciaFilter} 
+              onValueChange={onCarenciaChange}
+              className="flex flex-col gap-2"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="all" id="car-all" />
+                <Label htmlFor="car-all" className="font-normal cursor-pointer">Todos</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="com_carencia" id="car-com" />
+                <div className="grid gap-1.5 leading-none">
+                  <Label htmlFor="car-com" className="font-normal cursor-pointer">Possui carência</Label>
+                  <p className="text-[10px] text-muted-foreground">
+                    RGP ativo há pelo menos 1 ano antes do defeso {defesoDateText}.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="sem_carencia" id="car-sem" />
+                <div className="grid gap-1.5 leading-none">
+                  <Label htmlFor="car-sem" className="font-normal cursor-pointer">Sem carência</Label>
+                  <p className="text-[10px] text-muted-foreground">
+                    Não atingiu o tempo mínimo de RGP.
+                  </p>
+                </div>
               </div>
             </RadioGroup>
           </div>

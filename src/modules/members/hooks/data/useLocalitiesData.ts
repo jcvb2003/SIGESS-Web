@@ -1,30 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/shared/lib/supabase/client";
-interface Locality {
-  id: string;
-  name: string;
-  code: string;
-}
+import { memberQueryKeys } from "../../queryKeys";
+import { settingsService } from "@/modules/settings/services/settingsService";
+import { Locality } from "@/modules/settings/types/settings.types";
+
 export function useLocalitiesData() {
   const {
     data: localities,
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: ["localities"],
+    queryKey: memberQueryKeys.localities(),
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("localidades")
-        .select("id, nome, codigo_localidade")
-        .order("nome", { ascending: true });
-      if (error) {
-        throw error;
-      }
-      return (data || []).map((item) => ({
-        id: String(item.id),
-        name: String(item.nome ?? ""),
-        code: String(item.codigo_localidade ?? ""),
-      }));
+      const response = await settingsService.getLocalities();
+      if (response.error) throw response.error;
+      return response.data || [];
     },
     staleTime: 30 * 60 * 1000,
   });

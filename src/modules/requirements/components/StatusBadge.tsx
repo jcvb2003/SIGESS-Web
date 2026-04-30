@@ -1,41 +1,46 @@
-import { Badge } from "@/shared/components/ui/badge";
+import { StatusBadge, type StatusBadgeVariant } from "@/shared/components/ui/StatusBadge";
 import { RequirementStatus } from "../types/requirement.types";
-import { cn } from "@/shared/lib/utils";
 
 interface StatusBadgeProps {
   status: RequirementStatus;
   className?: string;
 }
 
-const statusConfig: Record<RequirementStatus, { label: string; className: string }> = {
+const statusConfig: Record<RequirementStatus, { label: string; variant: StatusBadgeVariant }> = {
   assinado: { 
     label: "Assinado", 
-    className: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800" 
+    variant: "info"
   },
   analise: { 
     label: "Em Análise", 
-    className: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800" 
+    variant: "warning"
   },
   recurso_acerto: { 
     label: "Recurso / Acerto", 
-    className: "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800" 
+    variant: "purple"
   },
   deferido: { 
     label: "Deferido", 
-    className: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800" 
+    variant: "success"
   },
   indeferido: { 
     label: "Indeferido", 
-    className: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800" 
+    variant: "destructive"
+  },
+  nao_assinado: {
+    label: "Não Assinou",
+    variant: "outline"
   },
 };
 
-export function StatusBadge({ status, className }: Readonly<StatusBadgeProps>) {
+export function RequirementStatusBadge({ status, className }: Readonly<StatusBadgeProps>) {
   const config = statusConfig[status];
   
   return (
-    <Badge variant="outline" className={cn("font-medium", config.className, className)}>
-      {config.label}
-    </Badge>
+    <StatusBadge 
+      variant={config.variant} 
+      label={config.label} 
+      className={className} 
+    />
   );
 }

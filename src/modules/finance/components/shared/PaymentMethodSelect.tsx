@@ -26,14 +26,14 @@ export function PaymentMethodSelect({
 }: PaymentMethodSelectProps) {
   return (
     <div className="space-y-1.5">
-      <Label className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
+      <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">
         {label}
       </Label>
       <Select
         value={value}
         onValueChange={(v) => onChange(v as PaymentMethod)}
       >
-        <SelectTrigger className="h-10 text-xs border-slate-200 focus:ring-emerald-500 bg-white">
+        <SelectTrigger className="h-10 text-xs border-border focus:ring-primary bg-card">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

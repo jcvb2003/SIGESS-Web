@@ -152,7 +152,7 @@ export function AuditLogDialog({ open, onOpenChange }: AuditLogDialogProps) {
                           </TableCell>
                           <TableCell className="max-w-md">
                             <div className="flex flex-col gap-2">
-                              <p className="text-xs font-medium text-slate-700 leading-relaxed">
+                              <p className="text-xs font-medium text-foreground leading-relaxed">
                                 {buildAuditSummary(log.operation, log.old_data, log.new_data)}
                               </p>
 
