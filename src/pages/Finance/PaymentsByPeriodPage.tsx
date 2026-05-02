@@ -4,49 +4,95 @@ import { Card } from "@/shared/components/ui/card";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { DateField } from "@/shared/components/form-fields/fields/DateField";
 import { usePaymentsByPeriod } from "@/modules/finance/hooks/data/usePaymentsByPeriod";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/shared/components/ui/table";
-import { Badge } from "@/shared/components/ui/badge";
+import { DataTable, ColumnDef } from "@/shared/components/layout/DataTable";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { formatDate } from "@/shared/utils/date";
-import { Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { 
+  ArrowLeft, 
+  Calendar, 
+  History,
+  DollarSign
+} from "lucide-react";
 import { ReportExportButtons } from "@/modules/reports/components/ReportExportButtons";
 import { Button } from "@/shared/components/ui/button";
 import { DataTablePagination } from "@/shared/components/layout/DataTablePagination";
 import type { PaymentByPeriod } from "@/modules/finance/types/finance.types";
-import { cn } from "@/shared/lib/utils";
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { DataTableSearch } from "@/shared/components/layout/DataTableSearch";
+
+
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetHeader, 
+  SheetTitle, 
+  SheetDescription,
+  SheetFooter
+} from "@/shared/components/ui/sheet";
+
+import { useSearchParams } from "react-router-dom";
+import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 
 interface FilterForm {
   startDate: string;
   endDate: string;
+  searchTerm: string;
 }
 
 export default function PaymentsByPeriodPage() {
   const navigate = useNavigate();
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
-  const [orderBy, setOrderBy] = useState<"data_pagamento" | "created_at">("data_pagamento");
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Estados de controle local
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [page, setPage] = useState(Number(searchParams.get("page")) || 1);
+  const [pageSize, setPageSize] = useState(Number(searchParams.get("pageSize")) || 20);
+  const [orderBy, setOrderBy] = useState<"data_pagamento" | "created_at">(
+    (searchParams.get("orderBy") as any) || "data_pagamento"
+  );
 
   const methods = useForm<FilterForm>({
     defaultValues: {
-      startDate: `${new Date().getFullYear()}-01-01`,
-      endDate: new Date().toISOString().split("T")[0],
+      startDate: searchParams.get("startDate") || `${new Date().getFullYear()}-01-01`,
+      endDate: searchParams.get("endDate") || new Date().toISOString().split("T")[0],
+      searchTerm: searchParams.get("search") || "",
     },
   });
 
-  const startDate = useWatch({ control: methods.control, name: "startDate" }) || "";
-  const endDate = useWatch({ control: methods.control, name: "endDate" }) || "";
+  const startDate = useWatch({ control: methods.control, name: "startDate" });
+  const endDate = useWatch({ control: methods.control, name: "endDate" });
+  const searchTerm = useWatch({ control: methods.control, name: "searchTerm" });
+
+  // Sincronização com a URL
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    if (startDate) params.set("startDate", startDate);
+    if (endDate) params.set("endDate", endDate);
+    if (searchTerm) params.set("search", searchTerm);
+    else params.delete("search");
+    
+    params.set("page", String(page));
+    params.set("pageSize", String(pageSize));
+    params.set("orderBy", orderBy);
+
+    if (params.toString() !== searchParams.toString()) {
+      setSearchParams(params, { replace: true });
+    }
+  }, [startDate, endDate, searchTerm, page, pageSize, orderBy, searchParams, setSearchParams]);
 
   const { data, isLoading, isFetching } = usePaymentsByPeriod(startDate, endDate, page, pageSize, orderBy);
   
-  const payments = data?.data ?? [];
+  const payments = useMemo(() => {
+    const list = data?.data ?? [];
+    if (!searchTerm) return list;
+    
+    const term = searchTerm.toLowerCase();
+    return list.filter(p => 
+      p.nome?.toLowerCase().includes(term) || 
+      p.cpf?.includes(term) ||
+      p.tipo?.toLowerCase().includes(term)
+    );
+  }, [data?.data, searchTerm]);
   const totalAmount = data?.totalAmount ?? 0;
   const totalCount = data?.total ?? 0;
 
@@ -61,6 +107,169 @@ export default function PaymentsByPeriodPage() {
     return "—";
   };
 
+  const columns = useMemo<ColumnDef<any>[]>(() => [
+    {
+      header: "Data Pag.",
+      cell: (p) => (
+        <span className="text-xs md:text-sm font-medium text-foreground/80 tabular-nums">
+          {formatDate(p.data_pagamento)}
+        </span>
+      ),
+      className: "w-[120px]"
+    },
+    {
+      header: "Sócio",
+      cell: (p) => (
+        <div className="flex flex-col gap-0.5 min-w-0">
+          <span className="truncate font-medium text-xs md:text-sm text-foreground/90 uppercase leading-none">
+            {p.nome}
+          </span>
+          <span className="text-[10px] md:text-xs text-muted-foreground truncate opacity-70 leading-none">
+            {p.cpf}
+          </span>
+        </div>
+      )
+    },
+    {
+      header: "Tipo",
+      cell: (p) => (
+        <StatusBadge 
+          variant="info" 
+          label={p.tipo.replaceAll("_", " ").toUpperCase()} 
+        />
+      ),
+      className: "w-[140px]"
+    },
+    {
+      header: "Competência",
+      cell: (p) => (
+        <span className="text-xs md:text-sm font-medium text-foreground/70">
+          {renderCompetencia(p)}
+        </span>
+      ),
+      className: "w-[120px]"
+    },
+    {
+      header: "Forma",
+      cell: (p) => (
+        <span className="text-xs md:text-sm text-muted-foreground capitalize">
+          {p.forma_pagamento}
+        </span>
+      ),
+      className: "w-[120px]"
+    },
+    {
+      header: "Valor",
+      headerClassName: "text-right px-4",
+      className: "text-right px-4",
+      cell: (p) => (
+        <span className="text-xs md:text-sm font-bold text-emerald-600 tabular-nums">
+          {formatCurrency(p.valor)}
+        </span>
+      )
+    }
+  ], []);
+
+  const renderContent = () => (
+    <Card className="border-border/50 shadow-sm overflow-hidden">
+      {/* Toolbar / Search */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b bg-muted/5">
+        <div className="flex-1">
+          <DataTableSearch
+            value={searchTerm}
+            onChange={(val) => methods.setValue("searchTerm", val)}
+            onOpenFilters={() => setIsFiltersOpen(true)}
+            placeholder="Filtrar por nome, CPF ou tipo..."
+          />
+        </div>
+        
+        <div className="flex items-center gap-1 p-3 border-t sm:border-t-0 sm:border-l bg-muted/5">
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mr-2 px-2 hidden lg:inline">
+            Ordenar por:
+          </span>
+          <Button
+            variant={orderBy === "data_pagamento" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setOrderBy("data_pagamento")}
+            className="h-8 rounded-lg text-[10px] font-bold uppercase tracking-tight"
+          >
+            <Calendar className="h-3 w-3 mr-1.5" />
+            Pagamento
+          </Button>
+          <Button
+            variant={orderBy === "created_at" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setOrderBy("created_at")}
+            className="h-8 rounded-lg text-[10px] font-bold uppercase tracking-tight"
+          >
+            <History className="h-3 w-3 mr-1.5" />
+            Registro
+          </Button>
+        </div>
+      </div>
+
+      <DataTable
+        columns={columns}
+        data={payments}
+        isLoading={isLoading}
+        isFetching={isFetching}
+        variant="minimal"
+        skeletonCount={10}
+        emptyMessage="Nenhum pagamento encontrado"
+        emptyDescription="Tente ajustar o período ou o termo de busca."
+      />
+
+      <DataTablePagination
+        total={totalCount}
+        page={page}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={(val) => {
+          setPageSize(Number(val));
+          setPage(1);
+        }}
+        entityName="pagamentos"
+        showNumbers
+      />
+
+      {/* Footer de Resumo Financeiro */}
+      <div className="bg-muted/30 border-t p-6 flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="flex items-center gap-10">
+          <div className="flex flex-col">
+            <span className="text-[10px] text-muted-foreground uppercase tracking-[0.15em] font-bold mb-1">
+              Transações
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-black text-foreground tracking-tight">{totalCount}</span>
+              <span className="text-xs text-muted-foreground font-medium">recibos</span>
+            </div>
+          </div>
+          
+          <div className="h-10 w-px bg-border hidden sm:block" />
+
+          <div className="flex flex-col">
+            <span className="text-[10px] text-muted-foreground uppercase tracking-[0.15em] font-bold mb-1">
+              Ticket Médio
+            </span>
+            <span className="text-xl font-bold text-foreground/70 tracking-tight">
+              {totalCount > 0 ? formatCurrency(totalAmount / totalCount) : "R$ 0,00"}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex flex-col items-center sm:items-end bg-primary/5 p-4 rounded-2xl border border-primary/10 shadow-sm min-w-[260px]">
+          <span className="text-[10px] text-primary uppercase tracking-[0.15em] font-black mb-1 flex items-center gap-1.5">
+            <DollarSign className="h-3 w-3" />
+            Total Arrecadado
+          </span>
+          <div className="text-3xl font-black text-primary tracking-tighter">
+            {formatCurrency(totalAmount)}
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+
   const handleExportExcel = () => {
     // Implementação futura ou via lib
     console.log("Exportar Excel");
@@ -70,103 +279,23 @@ export default function PaymentsByPeriodPage() {
     globalThis.print();
   };
 
-  const renderTableBody = () => {
-    if (isLoading) {
-      return (
-        <TableRow>
-          <TableCell colSpan={7} className="h-32 text-center">
-            <div className="flex flex-col items-center justify-center gap-2">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <span className="text-sm text-muted-foreground">Carregando pagamentos...</span>
-            </div>
-          </TableCell>
-        </TableRow>
-      );
-    }
 
-    if (payments.length === 0) {
-      return (
-        <TableRow>
-          <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
-            Nenhum pagamento encontrado para este período.
-          </TableCell>
-        </TableRow>
-      );
-    }
-
-    return payments.map((payment) => (
-      <TableRow key={payment.id} className="hover:bg-muted/30 transition-colors">
-        <TableCell className="font-medium">
-          {formatDate(payment.data_pagamento)}
-        </TableCell>
-        <TableCell className="text-[10px] text-muted-foreground font-medium">
-          {payment.created_at ? formatDate(payment.created_at) : "—"}
-        </TableCell>
-        <TableCell>
-          <div className="flex flex-col">
-            <span className="font-semibold text-foreground">{payment.nome}</span>
-            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-mono">
-              {payment.cpf}
-            </span>
-          </div>
-        </TableCell>
-        <TableCell>
-          <Badge variant="outline" className="capitalize text-[10px] font-bold">
-            {payment.tipo.replaceAll("_", " ")}
-          </Badge>
-        </TableCell>
-        <TableCell className="text-sm font-medium">
-          {renderCompetencia(payment)}
-        </TableCell>
-        <TableCell className="text-sm capitalize">
-          {payment.forma_pagamento}
-        </TableCell>
-        <TableCell className="text-right font-bold text-primary">
-          {formatCurrency(payment.valor)}
-        </TableCell>
-      </TableRow>
-    ));
-  };
 
   return (
     <FormProvider {...methods}>
-      <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500 pb-10 print:p-0">
+      <div className="space-y-8 animate-in fade-in duration-500 pb-10 print:p-0">
         <PageHeader
           title="Pagamentos por Período"
-          description="Liste todos os pagamentos recebidos em um período selecionado."
+          description="Relatório detalhado de entradas financeiras identificadas no sistema."
           actions={
             <div className="flex items-center gap-3 print:hidden">
-              <div className="flex bg-muted p-1 rounded-xl gap-1">
-                <Button
-                  variant={orderBy === "data_pagamento" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setOrderBy("data_pagamento")}
-                  className={cn(
-                    "h-8 text-[10px] font-bold uppercase tracking-tight rounded-lg",
-                    orderBy === "data_pagamento" ? "bg-background text-primary shadow-sm hover:bg-background" : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  Data Pagamento
-                </Button>
-                <Button
-                  variant={orderBy === "created_at" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setOrderBy("created_at")}
-                  className={cn(
-                    "h-8 text-[10px] font-bold uppercase tracking-tight rounded-lg",
-                    orderBy === "created_at" ? "bg-background text-primary shadow-sm hover:bg-background" : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  Data Registro
-                </Button>
-              </div>
-
               {totalCount > 0 && (
                 <ReportExportButtons 
                   onExportExcel={handleExportExcel}
                   onExportPdf={handleExportPdf}
                 />
               )}
+              
               <Button
                 variant="ghost"
                 size="sm"
@@ -180,83 +309,66 @@ export default function PaymentsByPeriodPage() {
           }
         />
 
-        <Card className="p-6 print:hidden">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
-            <DateField
-              control={methods.control}
-              name="startDate"
-              label="Data Início"
-              onChange={() => setPage(1)}
-            />
-            <DateField
-              control={methods.control}
-              name="endDate"
-              label="Data Fim"
-              onChange={() => setPage(1)}
-            />
-          </div>
-        </Card>
+        {renderContent()}
 
-        {startDate && endDate ? (
-          <Card className="overflow-hidden border-none shadow-lg">
-            <div className="bg-primary/5 border-b p-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold text-foreground">
-                  Resultados de {formatDate(startDate)} até {formatDate(endDate)}
-                </h3>
-              </div>
-              {isFetching && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
-            </div>
+        {/* Painel Lateral de Filtros (Padrão SIGESS) */}
+        <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
+          <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>Filtros de relatórios</SheetTitle>
+              <SheetDescription>
+                Refine a listagem de pagamentos por período e outros critérios.
+              </SheetDescription>
+            </SheetHeader>
 
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    <TableHead className="w-[120px]">Data Pagamento</TableHead>
-                    <TableHead className="w-[120px]">Data Registro</TableHead>
-                    <TableHead>Sócio</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Competência</TableHead>
-                    <TableHead>Forma</TableHead>
-                    <TableHead className="text-right">Valor</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {renderTableBody()}
-                </TableBody>
-              </Table>
-            </div>
-
-            <DataTablePagination
-              total={totalCount}
-              page={page}
-              pageSize={pageSize}
-              onPageChange={setPage}
-              onPageSizeChange={(val) => {
-                setPageSize(Number(val));
-                setPage(1);
-              }}
-              entityName="pagamentos"
-            />
-
-            <div className="bg-primary/[0.03] border-t p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="text-sm text-muted-foreground font-medium">
-                Total de pagamentos: <span className="text-foreground font-bold">{totalCount}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-muted-foreground font-medium uppercase tracking-wider">Total Arrecadado</span>
-                <div className="text-2xl font-black text-primary">
-                  {formatCurrency(totalAmount)}
+            <div className="mt-8 flex flex-col gap-6">
+              <div className="space-y-3">
+                <span className="text-xs font-semibold text-muted-foreground uppercase">
+                  Período de Referência
+                </span>
+                <div className="grid gap-4">
+                  <DateField
+                    control={methods.control}
+                    name="startDate"
+                    label="Data Inicial"
+                  />
+                  <DateField
+                    control={methods.control}
+                    name="endDate"
+                    label="Data Final"
+                  />
                 </div>
               </div>
             </div>
-          </Card>
-        ) : (
-          <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-3xl bg-muted/20 text-muted-foreground gap-3">
-            <p className="text-sm font-medium">Selecione um intervalo de datas para visualizar os pagamentos.</p>
-          </div>
-        )}
+
+            <SheetFooter className="mt-8 mb-6 flex flex-col sm:flex-row gap-3">
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="flex-1 h-11"
+                onClick={() => {
+                  methods.reset({
+                    startDate: `${new Date().getFullYear()}-01-01`,
+                    endDate: new Date().toISOString().split("T")[0],
+                    searchTerm: ""
+                  });
+                }}
+              >
+                Limpar filtros
+              </Button>
+              <Button 
+                type="button"
+                className="flex-1 h-11"
+                onClick={() => {
+                  setPage(1);
+                  setIsFiltersOpen(false);
+                }}
+              >
+                Aplicar filtros
+              </Button>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
       </div>
     </FormProvider>
   );

@@ -35,12 +35,12 @@ import {
 } from "@/shared/components/ui/select";
 import {
   FileText,
+  Loader2,
   PlusCircle,
   Trash,
   ExternalLink,
   FileUp,
   Upload,
-  Loader2,
 } from "lucide-react";
 import { settingsService } from "../../services/settingsService";
 import type { DocumentTemplate } from "../../types/settings.types";
@@ -324,7 +324,7 @@ export function DocumentsCard() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-3 w-full">
+            <div className="flex flex-col gap-3 w-full border-t border-border/10 pt-6">
               <h3 className="text-sm font-medium">Enviar novo template</h3>
               <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                 <div className="space-y-2">

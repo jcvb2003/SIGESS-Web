@@ -39,7 +39,11 @@ const parametersSchema = z.object({
 
 type ParametersFormData = z.infer<typeof parametersSchema>;
 
-export function ParametersForm() {
+interface ParametersFormProps {
+  readOnly?: boolean;
+}
+
+export function ParametersForm({ readOnly = false }: ParametersFormProps = {}) {
   const { parameters, isLoading, isSaving, saveParameters } =
     useParametersData();
 
@@ -104,12 +108,13 @@ export function ParametersForm() {
           <ParametersFormHeader
             isSaving={isSaving}
             isDisabled={isLoading || isSaving}
+            readOnly={readOnly}
           />
           <CardContent className="space-y-4 border-t border-border/10">
-            <div className="grid gap-4 lg:grid-cols-2">
+            <fieldset disabled={readOnly} className="grid gap-4 lg:grid-cols-2">
               <FishingPeriodsSection />
               <PublicationSection />
-            </div>
+            </fieldset>
           </CardContent>
         </Card>
       </form>

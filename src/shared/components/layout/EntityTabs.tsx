@@ -14,6 +14,7 @@ export interface TabItem {
   mobileLabel?: string;
   icon?: LucideIcon;
   content: React.ReactNode;
+  disabled?: boolean;
 }
 
 interface EntityTabsProps {
@@ -66,6 +67,7 @@ export function EntityTabs({
             <TabsTrigger
               key={item.value}
               value={item.value}
+              disabled={item.disabled}
               className="min-w-[100px] sm:min-w-[140px] gap-2"
             >
               {item.icon && <item.icon className="h-4 w-4 shrink-0" />}

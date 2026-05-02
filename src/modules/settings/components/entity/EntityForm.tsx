@@ -10,7 +10,11 @@ import { EntityInstitutional } from "./EntityInstitutional";
 import { useEntityData } from "@/shared/hooks/useEntityData";
 import type { EntitySettings } from "../../types/settings.types";
 import { entitySchema, EntityFormData } from "../../hooks/useEntityValidation";
-export function EntityForm() {
+interface EntityFormProps {
+  readOnly?: boolean;
+}
+
+export function EntityForm({ readOnly = false }: EntityFormProps = {}) {
   const { entity, isLoading, isSaving, saveEntity } = useEntityData();
   const methods = useForm<EntityFormData>({
     resolver: zodResolver(entitySchema),
@@ -99,21 +103,23 @@ export function EntityForm() {
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-4">
         <div className="flex justify-end">
-          <Button type="submit" disabled={isLoading || isSaving} size="sm">
-            {isSaving ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Salvando...
-              </>
-            ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Salvar dados da entidade
-              </>
-            )}
-          </Button>
+          {!readOnly && (
+            <Button type="submit" disabled={isLoading || isSaving} size="sm">
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Salvar dados da entidade
+                </>
+              )}
+            </Button>
+          )}
         </div>
-        <div className="grid gap-4 lg:grid-cols-2">
+        <fieldset disabled={readOnly} className="grid gap-4 lg:grid-cols-2">
           <div className="space-y-4">
             <EntityBasicInfo />
             <EntityAddress />
@@ -122,7 +128,7 @@ export function EntityForm() {
             <EntityContact />
             <EntityInstitutional />
           </div>
-        </div>
+        </fieldset>
       </form>
     </FormProvider>
   );

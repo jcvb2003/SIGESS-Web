@@ -108,6 +108,93 @@ async function handleActivate(admin: SupabaseClient, payload: Record<string, str
   return { success: true, message: 'Usuário ativado' };
 }
 
+async function handleDelete(admin: SupabaseClient, payload: Record<string, string>) {
+  const { userId } = payload;
+  if (!userId) throw new Error('userId é obrigatório para exclusão');
+
+  console.log(`[ManageUser] Excluindo usuário: ${userId}`);
+
+  // 1. Remover da tabela pública primeiro (evitar FK orphan)
+  const { error: tableErr } = await admin.from('User').delete().eq('id', userId);
+  if (tableErr) console.warn(`[ManageUser] Aviso: falha ao remover de User:`, tableErr.message);
+
+  // 2. Remover do Auth (operação principal)
+  const { error: authError } = await admin.auth.admin.deleteUser(userId);
+  if (authError) throw authError;
+
+  return { success: true, message: 'Usuário excluído permanentemente' };
+}
+
+async function handleResendConfirmation(admin: SupabaseClient, payload: Record<string, string>) {
+  const { email, tenantCode } = payload;
+  if (!email) throw new Error('email é obrigatório para reenvio de confirmação');
+
+  console.log(`[ManageUser] Reenviando confirmação para: ${email}`);
+
+  const appOrigin = Deno.env.get('APP_ORIGIN') || 'https://app.sigess.com.br';
+  const redirectTo = tenantCode
+    ? `${appOrigin}/password?tenant=${tenantCode}`
+    : `${appOrigin}/password`;
+
+  // Reenviar convite via admin API (isso dispara o e-mail real e atualiza o token)
+  const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
+    redirectTo,
+  });
+  if (error) throw error;
+
+  return { success: true, message: 'E-mail de confirmação reenviado com sucesso' };
+}
+
+async function handleList(admin: SupabaseClient, currentUser: any) {
+  const isAdmin = currentUser.app_metadata?.role === 'admin';
+  console.log(`[ManageUser] Listando usuários (Filtro Admin: ${isAdmin})...`);
+  
+  // Buscar na tabela pública (traz nomes atualizados e status ativo)
+  let dbQuery = admin.from('User').select('*');
+  
+  // Se não for admin, só pode ver a si mesmo
+  if (!isAdmin) {
+    dbQuery = dbQuery.eq('id', currentUser.id);
+  }
+
+  const { data: publicUsers, error: dbErr } = await dbQuery;
+  if (dbErr) throw dbErr;
+
+  if (!isAdmin) {
+    // Se não for admin e achou na tabela pública, retorna apenas o merge desse usuário
+    const pu = publicUsers?.[0];
+    if (!pu) return [];
+    
+    return [{
+      id: pu.id,
+      email: pu.email,
+      nome: pu.nome,
+      role: pu.role,
+      ativo: pu.ativo,
+      createdAt: pu.createdAt,
+      emailConfirmedAt: currentUser.email_confirmed_at
+    }];
+  }
+
+  // Buscar no Auth (apenas para admins)
+  const { data: { users }, error: authError } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  if (authError) throw authError;
+
+  // Fazer o merge (apenas para admins)
+  return users.map(u => {
+    const pu = publicUsers?.find(p => p.id === u.id);
+    return {
+      id: u.id,
+      email: u.email,
+      nome: pu?.nome || u.user_metadata?.nome || null,
+      role: pu?.role || u.app_metadata?.role || 'user',
+      ativo: pu?.ativo ?? true,
+      createdAt: pu?.createdAt || u.created_at,
+      emailConfirmedAt: u.email_confirmed_at
+    };
+  });
+}
+
 // ---------- Dispatcher ----------
 
 const ACTION_HANDLERS: Record<
@@ -118,6 +205,14 @@ const ACTION_HANDLERS: Record<
   create: handleCreate,
   deactivate: handleDeactivate,
   activate: handleActivate,
+  delete: handleDelete,
+  resend_confirmation: handleResendConfirmation,
+  list: handleList,
+  toggleUserStatus: (admin, payload) => {
+    // Aceita tanto 'ativo' canto 'isActive' para flexibilidade
+    const isActive = payload.ativo !== undefined ? payload.ativo : payload.isActive;
+    return isActive ? handleDeactivate(admin, payload) : handleActivate(admin, payload);
+  },
 };
 
 // ---------- Entry point ----------
@@ -147,16 +242,22 @@ serve(async (req: Request) => {
        throw new Error('Acesso não autorizado ou token expirado.');
     }
 
-    if (user.app_metadata?.role !== 'admin') {
-      console.warn(`[ManageUser] Tentativa de acesso não-admin por: ${user.email}`);
+    const { action, payload } = await req.json();
+    
+    // Apenas 'list' é permitido para não-admins
+    if (user.app_metadata?.role !== 'admin' && action !== 'list') {
+      console.warn(`[ManageUser] Tentativa de ação proibida (${action}) por não-admin: ${user.email}`);
       return jsonResponse({ error: 'Operação restrita a Presidentes (admin).' }, 403);
     }
 
-    const { action, payload } = await req.json();
     const handler = ACTION_HANDLERS[action];
     if (!handler) throw new Error(`Ação '${action}' desconhecida.`);
 
-    const result = await handler(supabaseAdmin, payload);
+    // Passamos o usuário atual para o handler de listagem para aplicar o filtro
+    const result = action === 'list' 
+      ? await handleList(supabaseAdmin, user)
+      : await handler(supabaseAdmin, payload);
+
     return jsonResponse(result);
 
   } catch (error: unknown) {

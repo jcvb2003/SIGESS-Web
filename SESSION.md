@@ -22,5 +22,15 @@
 2. **DRY & Types**: Tipagem forte mantida em todos os novos componentes e hooks.
 3. **Consistência Visual**: Uso estrito de tokens do sistema (Emerald #059668) em componentes refatorados.
 
+## 🛠️ Correções de Emergência & Acesso Granular (02/Mai)
+- [x] **Manage-User Edge Function & Auth**:
+    - [x] Corrigido erro 400 causado por action `toggleUserStatus` desconhecida.
+    - [x] Adicionado alias `toggleUserStatus` na Edge Function para maior robustez.
+    - [x] **Eliminado Erro 403**: Adicionada proteção de permissão no Hook `useUserManagement` e no componente `UserManagementSection` para prevenir chamadas de API por não-admins.
+- [x] **Acesso Granular Restaurado**:
+    - [x] **Localidades e Documentos**: Acesso TOTAL restaurado para todos os usuários (Criar, Editar, Excluir).
+    - [x] **Áreas Sensíveis**: Gestão de Usuários, Importação/Exportação e Financeiro permanecem restritos a Administradores.
+- [x] **Estabilidade**: Sistema compilando 100% (Build validado).
+
 ---
-_Status da Sessão: **Concluída**. Refatoração DRY finalizada com sucesso e build validado._
+_Status da Sessão: **Concluída**. Acesso administrativo finalizado, seguro e sem erros de console._

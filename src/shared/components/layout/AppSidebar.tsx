@@ -18,7 +18,6 @@ import {
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/components/ui/button";
 import { useAuth } from "@/modules/auth/context/authContextStore";
-import { usePermissions } from "@/shared/hooks/usePermissions";
 import { useTheme } from "next-themes";
 import {
   Sheet,
@@ -27,7 +26,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/shared/components/ui/sheet";
-import { FeatureRestrictedModal } from "./FeatureRestrictedModal";
 import { useState } from "react";
 import {
   Tooltip,
@@ -46,7 +44,7 @@ const NAV_ITEMS = [
   { title: "Relatórios", href: "/reports", icon: ChartNoAxesCombined },
   { title: "Requerimentos", href: "/requirements", icon: FileText },
   { title: "REAP", href: "/reap", icon: ClipboardList },
-  { title: "Configurações", href: "/settings", icon: Settings, adminOnly: true },
+  { title: "Configurações", href: "/settings", icon: Settings },
 ];
 type SidebarContentProps = {
   isCollapsed: boolean;
@@ -64,16 +62,9 @@ function SidebarContent({
   onNavigate,
   onSignOut,
 }: Readonly<SidebarContentProps>) {
-  const { isAdmin } = usePermissions();
   const { entity, isLoading: isEntityLoading } = useEntityData();
-  const [restrictedModalOpen, setRestrictedModalOpen] = useState(false);
-
   return (
     <div className="flex h-full flex-col text-sidebar-foreground overflow-hidden">
-      <FeatureRestrictedModal 
-        open={restrictedModalOpen} 
-        onOpenChange={setRestrictedModalOpen} 
-      />
       <div
         className={cn(
           "flex h-20 items-center px-4 transition-all duration-300 shrink-0",
@@ -113,34 +104,26 @@ function SidebarContent({
       <div className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-3">
         <nav className="space-y-1">
           {NAV_ITEMS.map((item) => {
-            const isRestricted = item.adminOnly && !isAdmin;
             const isActive =
-              !isRestricted && (
+              (
                 pathname === item.href ||
                 (item.href !== "/dashboard" &&
                   pathname.startsWith(`${item.href}/`))
               );
 
-            const handleItemClick = (e: React.MouseEvent) => {
-              if (isRestricted) {
-                e.preventDefault();
-                setRestrictedModalOpen(true);
-              } else {
-                onNavigate();
-              }
+            const handleItemClick = () => {
+              onNavigate();
             };
 
             let linkStatusClasses = "text-sidebar-foreground/80 hover:bg-primary-foreground/20 hover:text-sidebar-foreground dark:hover:bg-white/10 dark:hover:text-white";
 
             if (isActive) {
               linkStatusClasses = "bg-background text-primary shadow-md dark:bg-primary/15 dark:text-primary dark:shadow-primary/10";
-            } else if (isRestricted) {
-              linkStatusClasses = "opacity-40 grayscale cursor-not-allowed pointer-events-auto";
             }
 
             const LinkContent = (
               <Link
-                to={isRestricted ? "#" : item.href}
+                to={item.href}
                 onClick={handleItemClick}
                 className={cn(
                   "flex items-center rounded-xl py-3 text-sm font-semibold transition-all whitespace-nowrap relative overflow-hidden group my-1",
@@ -151,7 +134,7 @@ function SidebarContent({
                 <item.icon
                   className={cn(
                     "h-[18px] w-[18px] shrink-0 transition-transform duration-200",
-                    !isRestricted && "group-hover:scale-110",
+                    "group-hover:scale-110",
                     isActive
                       ? "text-primary"
                       : "text-sidebar-foreground/80 group-hover:text-sidebar-foreground",

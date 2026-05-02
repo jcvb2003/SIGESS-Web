@@ -24,6 +24,7 @@ interface SummaryCardsProps {
   readonly inadimplentes: number;
   readonly inadimplentes1Ano: number;
   readonly daePendente: number;
+  readonly isAdmin?: boolean;
 }
 
 export function SummaryCards({
@@ -35,19 +36,20 @@ export function SummaryCards({
   inadimplentes,
   inadimplentes1Ano,
   daePendente,
+  isAdmin = false,
 }: SummaryCardsProps) {
   const cards: StatCardConfig[] = [
     {
       title: "Arrecadado no Ano",
-      value: formatCurrency(arrecadadoAno),
+      value: isAdmin ? formatCurrency(arrecadadoAno) : "R$ ********",
       description: `Total acumulado em ${yearLabel}`,
       icon: DollarSign,
       variant: "primary",
     },
     {
       title: "Arrecadado no Mês",
-      value: formatCurrency(arrecadadoMes),
-      description: `${qtdPagamentosMes} pagamentos em ${mesLabel}`,
+      value: isAdmin ? formatCurrency(arrecadadoMes) : "R$ ********",
+      description: isAdmin ? `${qtdPagamentosMes} pagamentos em ${mesLabel}` : `*** pagamentos em ${mesLabel}`,
       icon: DollarSign,
       variant: "info",
     },

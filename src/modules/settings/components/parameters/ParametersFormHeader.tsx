@@ -9,11 +9,13 @@ interface ParametersFormHeaderProps {
   onSave?: () => void;
   isSaving?: boolean;
   isDisabled?: boolean;
+  readOnly?: boolean;
 }
 export function ParametersFormHeader({
   onSave,
   isSaving,
   isDisabled,
+  readOnly = false,
 }: ParametersFormHeaderProps) {
   return (
     <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -31,14 +33,16 @@ export function ParametersFormHeader({
           </CardDescription>
         </div>
       </div>
-      <Button
-        type="submit"
-        onClick={onSave}
-        className="mt-2 md:mt-0"
-        disabled={isDisabled}
-      >
-        {isSaving ? "Salvando..." : "Salvar alterações"}
-      </Button>
+      {!readOnly && (
+        <Button
+          type="submit"
+          onClick={onSave}
+          className="mt-2 md:mt-0"
+          disabled={isDisabled}
+        >
+          {isSaving ? "Salvando..." : "Salvar alterações"}
+        </Button>
+      )}
     </CardHeader>
   );
 }

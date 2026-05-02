@@ -11,7 +11,6 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { settingsService } from "../../services/settingsService";
 import { LocalityManagementDialog } from "./LocalityManagementDialog";
-
 export function LocalitiesCard() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 

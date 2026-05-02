@@ -189,40 +189,38 @@ export function LocalityManagementDialog({
                         {locality.name}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <TooltipProvider delayDuration={100}>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-emerald-600 hover:text-white hover:border-emerald-600"
-                                  onClick={() => handleEdit(locality)}
-                                >
-                                  <Edit className="w-3.5 h-3.5" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent side="top" sideOffset={5}>Editar Localidade</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                        <TooltipProvider delayDuration={100}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-emerald-600 hover:text-white hover:border-emerald-600"
+                                onClick={() => handleEdit(locality)}
+                              >
+                                <Edit className="w-3.5 h-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" sideOffset={5}>Editar Localidade</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
 
-                          <TooltipProvider delayDuration={100}>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-red-600 hover:text-white hover:border-red-600"
-                                  onClick={() => locality.id && handleDelete(locality.id)}
-                                  disabled={deleteMutation.isPending || !locality.id}
-                                >
-                                  <Trash className="w-3.5 h-3.5" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent side="top" sideOffset={5}>Excluir Localidade</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
+                        <TooltipProvider delayDuration={100}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-red-600 hover:text-white hover:border-red-600"
+                                onClick={() => locality.id && handleDelete(locality.id)}
+                                disabled={deleteMutation.isPending || !locality.id}
+                              >
+                                <Trash className="w-3.5 h-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" sideOffset={5}>Excluir Localidade</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </TableCell>
                     </TableRow>
                   ))

@@ -25,7 +25,7 @@ const passwordChangeSchema = z
     path: ["confirmPassword"],
   });
 type PasswordChangeFormData = z.infer<typeof passwordChangeSchema>;
-export function PasswordChangeForm() {
+export function PasswordChangeForm({ onSuccess }: { onSuccess?: () => void }) {
   const { changePassword, isLoading } = usePasswordChange();
   const methods = useForm<PasswordChangeFormData>({
     resolver: zodResolver(passwordChangeSchema),
@@ -41,6 +41,7 @@ export function PasswordChangeForm() {
       newPassword: data.newPassword,
     });
     methods.reset();
+    onSuccess?.();
   };
   return (
     <Card className="border-border/50 shadow-sm">

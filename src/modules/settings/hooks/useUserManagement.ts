@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/shared/lib/supabase/client';
 import { toast } from 'sonner';
-
 import { UserRole } from '@/shared/types/auth.types';
 
 export interface User {
@@ -12,6 +11,7 @@ export interface User {
   ativo: boolean;
   max_socios: number | null;
   createdAt: string;
+  emailConfirmedAt?: string | null;
 }
 
 export function useUserManagement() {
@@ -21,19 +21,11 @@ export function useUserManagement() {
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      /**
-       * Nota de RLS (N-01):
-       * A policy foi corrigida via migration 20240407_ph1_hardening.sql.
-       * Agora admins autenticados podem listar todos os usuários nativamente
-       * sem necessidade de bypass ou Edge Functions para visualização.
-       */
-      const { data, error } = await supabase
-        .from('User')
-        .select('*')
-        .order('nome');
-
+      const { data, error } = await supabase.functions.invoke('manage-user', {
+        body: { action: 'list' }
+      });
       if (error) throw error;
-      setUsers((data as unknown as User[]) || []);
+      setUsers((data as User[])?.sort((a, b) => (a.nome || '').localeCompare(b.nome || '')) || []);
     } catch (err: unknown) {
       console.error('Erro ao buscar usuários:', err);
       toast.error('Ocorreu um erro ao carregar os usuários');
@@ -58,10 +50,10 @@ export function useUserManagement() {
     }
   };
 
-  const createUser = async (payload: { 
-    email: string; 
-    nome: string; 
-    role: string; 
+  const createUser = async (payload: {
+    email: string;
+    nome: string;
+    role: string;
     password?: string;
     email_confirm?: boolean;
   }) => {
@@ -85,15 +77,12 @@ export function useUserManagement() {
     try {
       const action = currentStatus ? 'deactivate' : 'activate';
       const { error } = await supabase.functions.invoke('manage-user', {
-        body: { action, payload: { userId } },
+        body: { action, payload: { userId, ativo: !currentStatus } },
       });
-
       if (error) throw error;
-      
-      setUsers(prev => prev.map(u => 
+      setUsers(prev => prev.map(u =>
         u.id === userId ? { ...u, ativo: !currentStatus } : u
       ));
-      
       toast.success(`Usuário ${currentStatus ? 'desativado' : 'ativado'} com sucesso`);
     } catch (err: unknown) {
       console.error('Erro ao alterar status:', err);
@@ -103,12 +92,44 @@ export function useUserManagement() {
     }
   };
 
+  const deleteUser = async (userId: string) => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.functions.invoke('manage-user', {
+        body: { action: 'delete', payload: { userId } },
+      });
+      if (error) throw error;
+      setUsers(prev => prev.filter(u => u.id !== userId));
+      toast.success('Usuário excluído com sucesso');
+    } catch (err: unknown) {
+      console.error('Erro ao excluir usuário:', err);
+      toast.error('Erro ao excluir usuário');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resendConfirmation = async (email: string) => {
+    try {
+      const { error } = await supabase.functions.invoke('manage-user', {
+        body: { action: 'resend_confirmation', payload: { email } },
+      });
+      if (error) throw error;
+      toast.success('Link de confirmação reenviado com sucesso');
+    } catch (err: unknown) {
+      console.error('Erro ao reenviar confirmação:', err);
+      toast.error('Erro ao reenviar link de confirmação');
+    }
+  };
+
   return {
     users,
     loading,
     fetchUsers,
     toggleUserStatus,
     inviteUser,
-    createUser
+    createUser,
+    deleteUser,
+    resendConfirmation,
   };
 }

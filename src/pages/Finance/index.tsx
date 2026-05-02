@@ -232,16 +232,18 @@ export default function FinancePage() {
                 <span className="hidden md:inline text-xs font-bold uppercase transition-all">Auditoria</span>
               </Button>
             )}
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="h-9 w-9 md:h-11 md:w-auto md:px-4 bg-background shrink-0 rounded-xl"
-              onClick={() => setSettingsOpen(true)}
-            >
-              <SettingsIcon className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline text-xs font-bold uppercase transition-all">Configurar</span>
-            </Button>
+            {isAdmin && (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 md:h-11 md:w-auto md:px-4 bg-background shrink-0 rounded-xl"
+                onClick={() => setSettingsOpen(true)}
+              >
+                <SettingsIcon className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline text-xs font-bold uppercase transition-all">Configurar</span>
+              </Button>
+            )}
           </div>
         }
       />
@@ -256,6 +258,7 @@ export default function FinancePage() {
         inadimplentes={tabCounts.inadimplentes}
         inadimplentes1Ano={0}
         daePendente={daePendente}
+        isAdmin={isAdmin}
       />
 
       {/* Table Card */}

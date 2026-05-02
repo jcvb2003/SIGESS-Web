@@ -1,5 +1,7 @@
 -- Atualização da view de busca de requerimentos para incluir emissao_rgp
-CREATE OR REPLACE VIEW public.v_requerimentos_busca AS
+DROP VIEW IF EXISTS public.v_requerimentos_busca;
+CREATE OR REPLACE VIEW public.v_requerimentos_busca
+WITH (security_invoker = true) AS
  SELECT r.id,
     r.cod_req,
     r.data_assinatura,
@@ -18,15 +20,15 @@ CREATE OR REPLACE VIEW public.v_requerimentos_busca AS
      LEFT JOIN socios s ON r.cpf = s.cpf;
 
 -- RPC estendida para suportar filtros de "Não assinou" e "Possui carência" (3 estados)
--- DROP FUNCTION IF EXISTS public.list_requirements_extended(integer, text, text, text, boolean, integer, integer);
--- DROP FUNCTION IF EXISTS public.list_requirements_extended(integer, text, text, text, text, integer, integer);
+DROP FUNCTION IF EXISTS public.list_requirements_extended(integer, text, text, text, boolean, integer, integer);
+DROP FUNCTION IF EXISTS public.list_requirements_extended(integer, text, text, text, text, integer, integer);
 
 CREATE OR REPLACE FUNCTION public.list_requirements_extended(
   p_ano integer,
   p_status text DEFAULT 'all',
   p_beneficio text DEFAULT 'all',
   p_search text DEFAULT '',
-  p_carencia text DEFAULT 'all', -- Mudado de boolean para text para suportar 3 estados
+  p_carencia text DEFAULT 'all',
   p_page integer DEFAULT 1,
   p_page_size integer DEFAULT 10
 )
@@ -46,19 +48,23 @@ RETURNS TABLE (
   socio_nome text,
   socio_nit text,
   socio_num_rgp text,
-  socio_emissao_rgp date, -- Adicionado para exibição na tabela
+  socio_emissao_rgp date,
   total_count bigint
-) AS $$
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public', 'pg_temp'
+AS $$
 DECLARE
   v_offset integer;
   v_defeso_start date;
 BEGIN
   v_offset := (p_page - 1) * p_page_size;
-  v_defeso_start := make_date(p_ano, 11, 15); -- Estimativa de início do defeso (15/Nov)
-  
+  v_defeso_start := make_date(p_ano, 11, 15);
+
   RETURN QUERY
   WITH filtered_data AS (
-    SELECT 
+    SELECT
       r.id as requirement_id,
       s.id as member_id,
       r.cod_req,
@@ -77,28 +83,21 @@ BEGIN
       s.emissao_rgp as socio_emissao_rgp
     FROM socios s
     LEFT JOIN requerimentos r ON s.cpf = r.cpf AND r.ano_referencia = p_ano
-    WHERE 
-      -- Filtro de Status (incluindo o estado virtual 'nao_assinado')
+    WHERE
       (p_status = 'all' OR (CASE WHEN p_status = 'nao_assinado' THEN r.id IS NULL ELSE r.status_mte = p_status END))
-      
-      -- Filtro de Benefício
       AND (p_beneficio = 'all' OR (CASE WHEN p_beneficio = 'recebido' THEN r.beneficio_recebido IS TRUE ELSE r.beneficio_recebido IS FALSE OR r.beneficio_recebido IS NULL END))
-      
-      -- Busca Global
       AND (p_search = '' OR (s.cpf ILIKE '%' || p_search || '%' OR s.nome ILIKE '%' || p_search || '%' OR r.cod_req ILIKE '%' || p_search || '%'))
-      
-      -- Filtro de Carência (all, com_carencia, sem_carencia)
       AND (
-        CASE 
+        CASE
           WHEN p_carencia = 'com_carencia' THEN (s.emissao_rgp <= v_defeso_start - INTERVAL '1 year')
           WHEN p_carencia = 'sem_carencia' THEN (s.emissao_rgp > v_defeso_start - INTERVAL '1 year' OR s.emissao_rgp IS NULL)
           ELSE TRUE
         END
       )
   )
-  SELECT 
-    fd.requirement_id, fd.member_id, fd.cod_req, fd.data_assinatura, fd.cpf, fd.ano_referencia, 
-    fd.status_mte, fd.data_envio, fd.num_req_mte, fd.created_at, fd.updated_at, 
+  SELECT
+    fd.requirement_id, fd.member_id, fd.cod_req, fd.data_assinatura, fd.cpf, fd.ano_referencia,
+    fd.status_mte, fd.data_envio, fd.num_req_mte, fd.created_at, fd.updated_at,
     fd.beneficio_recebido, fd.socio_nome, fd.socio_nit, fd.socio_num_rgp, fd.socio_emissao_rgp,
     count(*) OVER() as total_count
   FROM filtered_data fd
@@ -106,4 +105,8 @@ BEGIN
   LIMIT p_page_size
   OFFSET v_offset;
 END;
-$$ LANGUAGE plpgsql;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.list_requirements_extended(
+  integer, text, text, text, text, integer, integer
+) TO authenticated, anon, service_role;

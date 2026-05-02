@@ -71,10 +71,10 @@ export function PaymentTypeSelector({
               size="sm"
               onClick={() => onToggle(ct)}
               className={cn(
-                "h-8 text-xs border-border gap-1.5 px-3 rounded-full font-bold transition-all max-w-[200px]",
+                "h-9 text-[11px] border-border gap-2 px-4 rounded-xl font-bold transition-all max-w-[220px] shadow-sm",
                 isSelected
-                  ? "bg-primary border-primary text-primary-foreground hover:bg-primary/90"
-                  : "bg-card hover:bg-muted/50 text-muted-foreground",
+                  ? "bg-primary border-primary text-primary-foreground hover:bg-primary/90 shadow-primary/10"
+                  : "bg-background hover:bg-accent hover:text-accent-foreground text-muted-foreground",
               )}
               title={ct.nome ?? undefined}
             >
@@ -100,9 +100,9 @@ export function PaymentTypeSelector({
             variant="ghost"
             size="sm"
             onClick={() => setShowAll(true)}
-            className="h-8 text-xs text-muted-foreground hover:text-foreground rounded-full gap-1"
+            className="h-9 text-[11px] text-muted-foreground hover:text-foreground rounded-xl gap-1.5"
           >
-            <Plus className="h-3 w-3" />
+            <Plus className="h-3.5 w-3.5" />
             {chargeTypes.length - 4} mais
           </Button>
         )}

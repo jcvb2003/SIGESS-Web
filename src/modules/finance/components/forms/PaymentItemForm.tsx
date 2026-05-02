@@ -403,10 +403,10 @@ export function PaymentItemForm({
                 disabled={isDisabled}
                 onClick={() => onAddExtraFee(fee.value)}
                 className={cn(
-                  "h-8 text-xs border-border gap-1.5 px-3 rounded-full font-bold transition-all",
+                  "h-9 text-[11px] border-border gap-2 px-4 rounded-xl font-bold transition-all shadow-sm",
                   isSelected 
-                    ? "bg-primary border-primary text-primary-foreground hover:bg-primary/90" 
-                    : "bg-card hover:bg-muted/50 text-muted-foreground",
+                    ? "bg-primary border-primary text-primary-foreground hover:bg-primary/90 shadow-primary/10" 
+                    : "bg-background hover:bg-accent hover:text-accent-foreground text-muted-foreground",
                   isPaid && "opacity-50 grayscale cursor-not-allowed bg-muted/30 border-border"
                 )}
               >

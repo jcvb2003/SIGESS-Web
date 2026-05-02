@@ -1,5 +1,5 @@
-import { EntityTabs, TabItem } from "@/shared/components/layout/EntityTabs";
-import { useAuth } from "@/modules/auth/context/authContextStore";
+import { EntityTabs } from "@/shared/components/layout/EntityTabs";
+import { usePermissions } from "@/shared/hooks/usePermissions";
 import {
   Settings as SettingsIcon,
   Building,
@@ -15,14 +15,12 @@ import { PhotoImportCard } from "@/modules/settings/components/data/PhotoImportC
 import { EntityForm } from "@/modules/settings/components/entity/EntityForm";
 import { CustomizationForm } from "@/modules/settings/components/entity/CustomizationForm";
 import { ParametersForm } from "@/modules/settings/components/parameters/ParametersForm";
-import { PasswordChangeForm } from "@/modules/settings/components/passwords/PasswordChangeForm";
 import { UserManagementSection } from "@/modules/settings/components/passwords/UserManagementSection";
 import { ExtensionSettings } from "@/modules/settings/components/extension/ExtensionSettings";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 export default function Settings() {
-  const { user } = useAuth();
-  const isAdmin = user?.app_metadata?.role === "admin";
+  const { isAdmin } = usePermissions();
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
@@ -40,10 +38,14 @@ export default function Settings() {
             icon: Database,
             content: (
               <div className="grid gap-4 lg:grid-cols-2">
-                <ImportExportCard />
+                <fieldset disabled={!isAdmin} className={!isAdmin ? "opacity-50 grayscale pointer-events-none" : ""}>
+                  <ImportExportCard />
+                </fieldset>
                 <DocumentsCard />
                 <LocalitiesCard />
-                <PhotoImportCard />
+                <fieldset disabled={!isAdmin} className={!isAdmin ? "opacity-50 grayscale pointer-events-none" : ""}>
+                  <PhotoImportCard />
+                </fieldset>
               </div>
             )
           },
@@ -51,37 +53,36 @@ export default function Settings() {
             value: "entidade",
             label: "Entidade",
             icon: Building,
-            content: <EntityForm />
+            content: <EntityForm readOnly={!isAdmin} />
           },
           {
             value: "parametros",
             label: "Parâmetros",
             icon: SettingsIcon,
-            content: <ParametersForm />
+            content: <ParametersForm readOnly={!isAdmin} />
           },
           {
             value: "senhas",
             label: "Senhas",
             icon: KeyRound,
             content: (
-              <div className="grid gap-4 lg:grid-cols-[1.1fr_1.4fr]">
-                <PasswordChangeForm />
-                <UserManagementSection />
-              </div>
+              <UserManagementSection />
             )
           },
           {
             value: "personalizacao",
             label: "Personalização",
             icon: Palette,
-            content: <CustomizationForm />
+            content: <CustomizationForm />,
+            disabled: !isAdmin
           },
-          ...(isAdmin ? [{
+          {
             value: "extensao",
             label: "Extensão",
             icon: Puzzle,
-            content: <ExtensionSettings />
-          }] : []) as TabItem[]
+            content: <ExtensionSettings />,
+            disabled: !isAdmin
+          }
         ]}
       />
     </div>

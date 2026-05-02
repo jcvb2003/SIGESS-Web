@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useLogin } from "../hooks/useLogin";
 import { authService } from "../services/authService";
+import { initSupabaseClient } from "@/shared/lib/supabase/client";
 import { Button } from "@/shared/components/ui/button";
 import { Loader2, Fish } from "lucide-react";
 import {
@@ -23,6 +24,7 @@ const loginSchema = z.object({
 });
 
 const forgotPasswordSchema = z.object({
+  tenantCode: z.string().min(1, "O código da entidade é obrigatório"),
   email: z.string().regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Email inválido"),
 });
 
@@ -49,6 +51,7 @@ export function LoginForm() {
   const resetMethods = useForm<ForgotPasswordFormData>({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: {
+      tenantCode: initialTenantCode,
       email: "",
     },
   });
@@ -60,9 +63,15 @@ export function LoginForm() {
   const onResetPasswordSubmit = async (data: ForgotPasswordFormData) => {
     setResetLoading(true);
     try {
+      // Inicializar o cliente Supabase com o tenant informado antes de enviar o reset
+      try {
+        initSupabaseClient(data.tenantCode);
+      } catch {
+        throw new Error(`Entidade "${data.tenantCode}" não encontrada. Verifique o código e tente novamente.`);
+      }
       const { error } = await authService.resetPassword(data.email);
       if (error) throw error;
-      toast.success("Link de recuperação enviado para o seu e-mail!");
+      toast.success("Link de recuperação enviado! Verifique seu e-mail.");
       setIsForgotPassword(false);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Erro ao enviar link";
@@ -93,7 +102,7 @@ export function LoginForm() {
           </h2>
           <p className="text-sm text-muted-foreground">
             {isForgotPassword
-              ? "Enviaremos um link de recuperação para o seu email."
+              ? "Informe o código da sua entidade e o e-mail cadastrado para receber o link de recuperação."
               : "Entre com suas credenciais para acessar o sistema."}
           </p>
         </div>
@@ -103,11 +112,36 @@ export function LoginForm() {
             <form onSubmit={resetMethods.handleSubmit(onResetPasswordSubmit)} className="space-y-4">
               <FormField
                 control={resetMethods.control}
+                name="tenantCode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-muted-foreground text-sm font-medium">
+                      Código da Entidade
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="text"
+                        placeholder="Ex: Colonia z-x"
+                        autoComplete="organization"
+                        required
+                        className="h-11 bg-white/5 border-white/10 text-foreground placeholder:text-muted-foreground/30 focus:border-primary/50 focus:ring-primary/20 rounded-xl"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-red-300" />
+                    <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                      Mesmo código usado na tela de login (ex: z-6, colonia-z1)
+                    </p>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={resetMethods.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-muted-foreground text-sm font-medium">
-                      Email cadastrado
+                      E-mail cadastrado
                     </FormLabel>
                     <FormControl>
                       <Input

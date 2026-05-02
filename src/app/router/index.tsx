@@ -6,7 +6,6 @@ import {
   Outlet,
 } from "react-router-dom";
 import { useAuth } from "@/modules/auth/context/authContextStore";
-import { usePermissions } from "@/shared/hooks/usePermissions";
 import { Loader2 } from "lucide-react";
 import { RouteError } from "@/shared/components/feedback/RouteError";
 import { DashboardLayout } from "@/shared/components/layout/DashboardLayout";
@@ -45,20 +44,6 @@ function PublicRoute() {
   return session ? <Navigate to="/dashboard" replace /> : <Outlet />;
 }
 
-function AdminRoute() {
-  const { isAdmin } = usePermissions();
-  const { loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  return isAdmin ? <Outlet /> : <Navigate to="/dashboard" replace />;
-}
 const router = createBrowserRouter([
   {
     path: "/",
@@ -139,13 +124,8 @@ const router = createBrowserRouter([
         element: <ReapPage />,
       },
       {
-        element: <AdminRoute />,
-        children: [
-          {
-            path: "/settings",
-            element: <SettingsPage />,
-          },
-        ]
+        path: "/settings",
+        element: <SettingsPage />,
       },
     ],
   },
