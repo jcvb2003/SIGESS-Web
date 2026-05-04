@@ -67,7 +67,7 @@ export function SelectField<T extends FieldValues>({
               <FormControl>
                 <SelectTrigger className={bgColor}>
                   <SelectValue placeholder={placeholder}>
-                    {selectedLabel}
+                    {selectedLabel && <span>{selectedLabel}</span>}
                   </SelectValue>
                 </SelectTrigger>
               </FormControl>

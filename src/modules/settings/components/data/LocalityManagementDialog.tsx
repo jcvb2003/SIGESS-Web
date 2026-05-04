@@ -27,6 +27,7 @@ import {
 } from "@/shared/components/ui/tooltip";
 import { Input } from "@/shared/components/ui/input";
 import { settingsService } from "../../services/settingsService";
+import { settingsQueryKeys } from "../../queryKeys";
 import type { Locality } from "../../types/settings.types";
 
 interface LocalityManagementDialogProps {
@@ -45,7 +46,7 @@ export function LocalityManagementDialog({
   const [name, setName] = useState("");
 
   const localitiesQuery = useQuery({
-    queryKey: ["localities"],
+    queryKey: settingsQueryKeys.localities(),
     queryFn: async () => {
       const { data, error } = await settingsService.getLocalities();
       if (error) throw error;
@@ -66,7 +67,7 @@ export function LocalityManagementDialog({
     onSuccess: async (newLocality) => {
       // Aguarda o refetch completo para garantir que a nova localidade esteja na lista global
       await queryClient.refetchQueries({
-        queryKey: ["localities"],
+        queryKey: settingsQueryKeys.localities(),
       });
       
       toast.success("Localidade salva com sucesso.");
@@ -102,7 +103,7 @@ export function LocalityManagementDialog({
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: ["localities"],
+        queryKey: settingsQueryKeys.localities(),
       });
       toast.success("Localidade excluída com sucesso.");
     },
@@ -165,31 +166,31 @@ export function LocalityManagementDialog({
 
         {!editingLocality && (
           <div className="max-h-80 overflow-y-auto border border-border/40 rounded-md">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {localities.length === 0 ? (
+            <TooltipProvider delayDuration={100}>
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell
-                      colSpan={2}
-                      className="py-6 text-sm text-muted-foreground text-center"
-                    >
-                      Nenhuma localidade cadastrada.
-                    </TableCell>
+                    <TableHead>Nome</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
-                ) : (
-                  localities.map((locality) => (
-                    <TableRow key={locality.id}>
-                      <TableCell className="text-sm">
-                        {locality.name}
+                </TableHeader>
+                <TableBody>
+                  {localities.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={2}
+                        className="py-6 text-sm text-muted-foreground text-center"
+                      >
+                        Nenhuma localidade cadastrada.
                       </TableCell>
-                      <TableCell className="text-right">
-                        <TooltipProvider delayDuration={100}>
+                    </TableRow>
+                  ) : (
+                    localities.map((locality) => (
+                      <TableRow key={locality.id}>
+                        <TableCell className="text-sm">
+                          {locality.name}
+                        </TableCell>
+                        <TableCell className="text-right space-x-2">
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
@@ -203,9 +204,7 @@ export function LocalityManagementDialog({
                             </TooltipTrigger>
                             <TooltipContent side="top" sideOffset={5}>Editar Localidade</TooltipContent>
                           </Tooltip>
-                        </TooltipProvider>
 
-                        <TooltipProvider delayDuration={100}>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
@@ -220,13 +219,13 @@ export function LocalityManagementDialog({
                             </TooltipTrigger>
                             <TooltipContent side="top" sideOffset={5}>Excluir Localidade</TooltipContent>
                           </Tooltip>
-                        </TooltipProvider>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TooltipProvider>
           </div>
         )}
 

@@ -141,7 +141,7 @@ export function MemberDocumentsForm() {
               name="senhaGovInss"
               label="Senha Gov/INSS"
               placeholder="Senha"
-              type="password"
+              type="text"
             />
           </div>
         </div>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { memberService } from "../../services/memberService";
-import { memberQueryKeys } from "../../queryKeys";
+import { settingsQueryKeys } from "@/modules/settings/queryKeys";
 import type {
   LocalityOption,
   StatusFilter,
@@ -16,7 +16,7 @@ export function useMemberFilters() {
     useState<RgpStatusFilter>("all");
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const localitiesQuery = useQuery<LocalityOption[]>({
-    queryKey: memberQueryKeys.localities(),
+    queryKey: settingsQueryKeys.localities(),
     queryFn: () => memberService.getLocalities(),
   });
   const clearFilters = () => {

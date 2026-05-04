@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { memberQueryKeys } from "../../queryKeys";
+import { settingsQueryKeys } from "@/modules/settings/queryKeys";
 import { settingsService } from "@/modules/settings/services/settingsService";
 import { Locality } from "@/modules/settings/types/settings.types";
 
@@ -9,7 +9,7 @@ export function useLocalitiesData() {
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: memberQueryKeys.localities(),
+    queryKey: settingsQueryKeys.localities(),
     queryFn: async () => {
       const response = await settingsService.getLocalities();
       if (response.error) throw response.error;
