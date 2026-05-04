@@ -1,6 +1,7 @@
 import { MemberDatabase } from "../../types/document.types";
 import { EntitySettings } from "@/shared/types/entity.types";
 import { formatDate } from "@/shared/utils/formatters/dateFormatters";
+import { getRgpNumber } from "@/modules/members/utils/fisherIdentity";
 export function processDocumentData(
   member: MemberDatabase,
   entity: EntitySettings | null,
@@ -76,7 +77,7 @@ export function processDocumentData(
     cpf_presidente: entity?.presidentCpf || "",
 
     // Embarcação / RGP
-    num_rgp: member.num_rgp || member.rgp || "",
+    num_rgp: getRgpNumber(member) ?? "",
     rgp_uf: member.rgp_uf || member.uf_rgp || "",
     data_rgp: dataRgp,
 

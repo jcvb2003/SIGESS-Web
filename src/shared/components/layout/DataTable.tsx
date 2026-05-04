@@ -46,6 +46,17 @@ interface DataTableProps<T> {
   getRowKey?: (item: T) => string | number;
 }
 
+function getRowKeyCandidate(item: unknown, property: "id" | "cpf") {
+  if (typeof item !== "object" || item === null || !(property in item)) {
+    return undefined;
+  }
+
+  const value = Reflect.get(item, property);
+  return typeof value === "string" || typeof value === "number"
+    ? value
+    : undefined;
+}
+
 /**
  * DataTable - Componente de listagem resiliente do SIGESS.
  * Refatorado para seguir princípios de composição e tipagem forte.
@@ -195,7 +206,11 @@ export function DataTable<T>({
               )
             ) : (
               data.map((item, rowIndex) => {
-                const itemKey = getRowKey ? getRowKey(item) : ((item as any).id || (item as any).cpf || rowIndex);
+                const itemKey =
+                  getRowKey?.(item) ??
+                  getRowKeyCandidate(item, "id") ??
+                  getRowKeyCandidate(item, "cpf") ??
+                  rowIndex;
                 return (
                   <TableRow
                     key={itemKey}

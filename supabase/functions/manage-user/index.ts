@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient, SupabaseClient, User } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -137,7 +137,7 @@ async function handleResendConfirmation(admin: SupabaseClient, payload: Record<s
     : `${appOrigin}/password`;
 
   // Reenviar convite via admin API (isso dispara o e-mail real e atualiza o token)
-  const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
+  const { error } = await admin.auth.admin.inviteUserByEmail(email, {
     redirectTo,
   });
   if (error) throw error;
@@ -145,7 +145,7 @@ async function handleResendConfirmation(admin: SupabaseClient, payload: Record<s
   return { success: true, message: 'E-mail de confirmação reenviado com sucesso' };
 }
 
-async function handleList(admin: SupabaseClient, currentUser: any) {
+async function handleList(admin: SupabaseClient, currentUser: User) {
   const isAdmin = currentUser.app_metadata?.role === 'admin';
   console.log(`[ManageUser] Listando usuários (Filtro Admin: ${isAdmin})...`);
   
@@ -199,7 +199,7 @@ async function handleList(admin: SupabaseClient, currentUser: any) {
 
 const ACTION_HANDLERS: Record<
   string,
-  (admin: SupabaseClient, payload: Record<string, any>) => Promise<unknown>
+  (admin: SupabaseClient, payload: Record<string, string | boolean>) => Promise<unknown>
 > = {
   invite: handleInvite,
   create: handleCreate,

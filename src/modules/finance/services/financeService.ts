@@ -30,9 +30,11 @@ interface PaymentByPeriodRow {
   total_amount: number;
 }
 
-// Captura o tipo exato do builder para a view, evitando erros de tipagem manual ou de sobrecarga
-const _dashboardQuery = supabase.from("v_situacao_financeira_socio").select("*");
-type DashboardQuery = typeof _dashboardQuery;
+const createDashboardQuery = (withCount = false) =>
+  withCount
+    ? supabase.from("v_situacao_financeira_socio").select("*", { count: "exact" })
+    : supabase.from("v_situacao_financeira_socio").select("*");
+type DashboardQuery = ReturnType<typeof createDashboardQuery>;
 
 export const financeService = {
   /**
@@ -63,9 +65,7 @@ export const financeService = {
       return { items: [], total: 0 };
     }
 
-    let query = supabase
-      .from("v_situacao_financeira_socio")
-      .select("*", { count: "exact" });
+    let query = createDashboardQuery(true);
 
     if (searchTerm) {
       query = query.or(`nome.ilike.%${searchTerm}%,cpf.ilike.%${searchTerm}%`);

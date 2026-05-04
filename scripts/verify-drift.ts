@@ -1,5 +1,3 @@
-import * as fs from 'node:fs';
-import * as path from 'node:path';
 import { Client } from 'pg';
 import * as dotenv from 'dotenv';
 import * as dns from 'node:dns';

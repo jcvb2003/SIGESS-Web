@@ -2,6 +2,11 @@ import { supabase } from "@/shared/lib/supabase/client";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+import type {
+  ExtendedRequirementRow,
+  RequirementsRpcClient,
+} from "@/modules/requirements/types/requirement.types";
+import { getFishingRegistryDisplay } from "@/modules/members/utils/fisherIdentity";
 export interface RequestReportItem {
   id: string;
   cod_req: number | string;
@@ -36,6 +41,22 @@ function mapRequerimentoToItem(req: { id?: string | number, cod_req?: string | n
 export interface RequestReportResponse {
   data: RequestReportItem[];
   total: number;
+}
+
+const requirementsRpc = supabase as unknown as RequirementsRpcClient;
+
+function mapExtendedRequirementToItem(item: ExtendedRequirementRow): RequestReportItem {
+  return {
+    id: item.socio_id ?? item.id ?? "",
+    cod_req: item.cod_req || "---",
+    nome: item.socio_nome ?? "",
+    cpf: item.cpf ?? "",
+    nit: item.socio_nit ?? undefined,
+    data_req: item.data_assinatura || "",
+    rgp: getFishingRegistryDisplay(item),
+    emissao_rgp: item.socio_emissao_rgp ?? undefined,
+    socio_id: item.socio_id ?? item.id,
+  };
 }
 
 
@@ -78,12 +99,13 @@ export const reportsService = {
     searchTerm: string = "",
     carenciaFilter: string = "all",
   ): Promise<RequestReportResponse> {
-    const { data, error } = await (supabase as any).rpc(
+    const { data, error } = await requirementsRpc.rpc(
       "list_requirements_extended",
       {
         p_ano: new Date().getFullYear(),
         p_search: searchTerm,
         p_status: "nao_assinado",
+        p_beneficio: "all",
         p_carencia: carenciaFilter,
         p_page: page,
         p_page_size: pageSize,
@@ -93,21 +115,12 @@ export const reportsService = {
 
     if (error) throw error;
 
-    const mappedData: RequestReportItem[] = ((data as any[]) || []).map((item: any) => ({
-      id: item.socio_id, 
-      cod_req: item.cod_req || "---",
-      nome: item.socio_nome,
-      cpf: item.cpf,
-      nit: item.socio_nit,
-      data_req: item.data_assinatura || "",
-      rgp: item.socio_num_rgp || item.socio_nit,
-      emissao_rgp: item.socio_emissao_rgp,
-      socio_id: item.socio_id,
-    }));
+    const rows = data ?? [];
+    const mappedData = rows.map(mapExtendedRequirementToItem);
 
     return {
       data: mappedData,
-      total: Number((data as any[])?.[0]?.total_count || 0),
+      total: Number(rows[0]?.total_count || 0),
     };
   },
 
@@ -117,29 +130,20 @@ export const reportsService = {
     carenciaFilter: string = "all"
   ): Promise<RequestReportItem[]> {
     if (reportType === "nao_assinados") {
-      const { data, error } = await (supabase as any).rpc(
+      const { data, error } = await requirementsRpc.rpc(
         "list_requirements_extended",
         {
           p_ano: new Date().getFullYear(),
           p_search: searchTerm,
           p_status: "nao_assinado",
+          p_beneficio: "all",
           p_carencia: carenciaFilter,
           p_page: 1,
           p_page_size: 5000,
         }
       );
       if (error) throw error;
-      return ((data as any[]) || []).map((item: any) => ({
-        id: item.socio_id,
-        cod_req: item.cod_req || "---",
-        nome: item.socio_nome,
-        cpf: item.cpf,
-        nit: item.socio_nit,
-        data_req: item.data_assinatura || "",
-        rgp: item.socio_num_rgp || item.socio_nit,
-        emissao_rgp: item.socio_emissao_rgp,
-        socio_id: item.socio_id,
-      }));
+      return (data ?? []).map(mapExtendedRequirementToItem);
     }
 
     let allData: RequestReportItem[] = [];
@@ -187,7 +191,7 @@ export const reportsService = {
       Data: item.data_req ? new Date(item.data_req).toLocaleDateString() : "",
       Nome: item.nome,
       CPF: item.cpf,
-      RGP: item.rgp || item.num_rgp || "",
+      RGP: getFishingRegistryDisplay(item) ?? "",
       "Data RGP": item.emissao_rgp ? new Date(item.emissao_rgp).toLocaleDateString() : "",
     }));
 
@@ -211,7 +215,7 @@ export const reportsService = {
       item.data_req ? new Date(item.data_req).toLocaleDateString() : "",
       item.nome,
       item.cpf,
-      item.rgp || item.num_rgp || "",
+      getFishingRegistryDisplay(item) ?? "",
       item.emissao_rgp ? new Date(item.emissao_rgp).toLocaleDateString() : "",
     ]);
 

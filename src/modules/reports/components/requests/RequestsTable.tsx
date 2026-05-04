@@ -12,6 +12,7 @@ import { Button } from "@/shared/components/ui/button";
 import { CardContent } from "@/shared/components/ui/card";
 import { DataTable, ColumnDef } from "@/shared/components/layout/DataTable";
 import { DataTablePagination } from "@/shared/components/layout/DataTablePagination";
+import { getFishingRegistryDisplay } from "@/modules/members/utils/fisherIdentity";
 
 interface RequestsTableProps {
   data: RequestReportItem[];
@@ -60,7 +61,7 @@ export function RequestsTable({
     {
       header: "RGP",
       className: "font-medium",
-      cell: (item) => item.rgp || item.num_rgp || "---"
+      cell: (item) => getFishingRegistryDisplay(item) ?? "---"
     },
     {
       header: "Data do RGP",

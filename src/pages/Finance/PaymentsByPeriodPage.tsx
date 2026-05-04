@@ -17,7 +17,7 @@ import { ReportExportButtons } from "@/modules/reports/components/ReportExportBu
 import { Button } from "@/shared/components/ui/button";
 import { DataTablePagination } from "@/shared/components/layout/DataTablePagination";
 import type { PaymentByPeriod } from "@/modules/finance/types/finance.types";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { DataTableSearch } from "@/shared/components/layout/DataTableSearch";
 
 
@@ -39,6 +39,15 @@ interface FilterForm {
   searchTerm: string;
 }
 
+const PAYMENT_ORDER_FIELDS = ["data_pagamento", "created_at"] as const;
+type PaymentOrderField = (typeof PAYMENT_ORDER_FIELDS)[number];
+
+function parsePaymentOrderField(value: string | null): PaymentOrderField {
+  return PAYMENT_ORDER_FIELDS.includes(value as PaymentOrderField)
+    ? (value as PaymentOrderField)
+    : "data_pagamento";
+}
+
 export default function PaymentsByPeriodPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -47,8 +56,8 @@ export default function PaymentsByPeriodPage() {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [page, setPage] = useState(Number(searchParams.get("page")) || 1);
   const [pageSize, setPageSize] = useState(Number(searchParams.get("pageSize")) || 20);
-  const [orderBy, setOrderBy] = useState<"data_pagamento" | "created_at">(
-    (searchParams.get("orderBy") as any) || "data_pagamento"
+  const [orderBy, setOrderBy] = useState<PaymentOrderField>(
+    parsePaymentOrderField(searchParams.get("orderBy")),
   );
 
   const methods = useForm<FilterForm>({
@@ -96,7 +105,7 @@ export default function PaymentsByPeriodPage() {
   const totalAmount = data?.totalAmount ?? 0;
   const totalCount = data?.total ?? 0;
 
-  const renderCompetencia = (payment: PaymentByPeriod) => {
+  const renderCompetencia = useCallback((payment: PaymentByPeriod) => {
     if (payment.tipo === "anuidade") {
       return payment.competencia_ano;
     }
@@ -105,9 +114,9 @@ export default function PaymentsByPeriodPage() {
       return `${mes}/${payment.competencia_ano}`;
     }
     return "—";
-  };
+  }, []);
 
-  const columns = useMemo<ColumnDef<any>[]>(() => [
+  const columns = useMemo<ColumnDef<PaymentByPeriod>[]>(() => [
     {
       header: "Data Pag.",
       cell: (p) => (
@@ -168,7 +177,7 @@ export default function PaymentsByPeriodPage() {
         </span>
       )
     }
-  ], []);
+  ], [renderCompetencia]);
 
   const renderContent = () => (
     <Card className="border-border/50 shadow-sm overflow-hidden">

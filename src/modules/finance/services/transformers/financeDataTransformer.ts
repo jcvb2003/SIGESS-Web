@@ -1,6 +1,7 @@
 import type {
   MemberFinancialSummary,
   FinancialStatusType,
+  SituacaoFinanceiraSocio,
 } from "../../types/finance.types";
 
 /**
@@ -8,7 +9,7 @@ import type {
  * consumido pela UI (MemberFinancialSummary).
  */
 export function toMemberFinancialSummary(
-  row: any, // Temporariamente any até regenerar types
+  row: SituacaoFinanceiraSocio,
   currentYear: number,
   anoBase: number,
 ): MemberFinancialSummary {
@@ -36,7 +37,7 @@ function resolveStatus(
   dbStatus: string | null,
   isento: boolean,
   liberado: boolean,
-  regime: string,
+  regime: string | null,
   anuidadesPagas: number[],
   mesesPagosAtual: number[],
   currentYear: number,

@@ -1,5 +1,12 @@
 import { supabase } from "@/shared/lib/supabase/client";
-import { Requirement, RequirementStatus, RequirementWithMember } from "../types/requirement.types";
+import type {
+  Requirement,
+  RequirementStatus,
+  RequirementWithMember,
+  RequirementsRpcClient,
+} from "../types/requirement.types";
+
+const requirementsRpc = supabase as unknown as RequirementsRpcClient;
 
 export const requirementService = {
   async list(filters: {
@@ -11,7 +18,7 @@ export const requirementService = {
     page: number;
     pageSize: number;
   }): Promise<{ items: RequirementWithMember[]; total: number }> {
-    const { data: rpcData, error: rpcError } = await (supabase as any).rpc("list_requirements_extended", {
+    const { data: rpcData, error: rpcError } = await requirementsRpc.rpc("list_requirements_extended", {
       p_ano: filters.ano || new Date().getFullYear(),
       p_status: filters.status || 'all',
       p_beneficio: filters.beneficio_recebido === 'all' ? 'all' : (filters.beneficio_recebido ? 'recebido' : 'pendente'),
@@ -23,12 +30,12 @@ export const requirementService = {
 
     if (rpcError) throw rpcError;
 
-    const rpcArray = (rpcData as any[]) || [];
+    const rpcArray = rpcData ?? [];
     const total = rpcArray.length > 0 ? Number(rpcArray[0].total_count) : 0;
 
     // Join manual para evitar problemas de embedding com Views no PostgREST
     const cpfs = rpcArray
-      .map((r: any) => r.cpf)
+      .map((r) => r.cpf)
       .filter((cpf: string | null): cpf is string => !!cpf);
 
     const { data: financeData } = cpfs.length > 0 
@@ -48,7 +55,7 @@ export const requirementService = {
       return 'atraso';
     };
 
-    const items = rpcArray.map((item: any) => {
+    const items = rpcArray.map((item) => {
       const situacaoGeral = financeMap[item.cpf || ""];
       const situacao_financeira = getSituacaoFinanceira(situacaoGeral);
 

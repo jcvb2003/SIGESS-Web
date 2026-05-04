@@ -2,6 +2,13 @@ import { supabase } from "@/shared/lib/supabase/client";
 import { Json } from "@/shared/lib/supabase/database.types";
 import { Reap, ReapAnoAnual, ReapAnoSimplificado, ReapWithMember } from "../types/reap.types";
 
+type ReapRecordShape = Pick<Reap, "simplificado" | "anual" | "observacoes" | "updated_at">;
+
+function firstReapRecord(value: unknown): ReapRecordShape | null {
+  const record = Array.isArray(value) ? value[0] : value;
+  return (record ?? null) as ReapRecordShape | null;
+}
+
 export const reapService = {
   async list(filters: {
     searchTerm?: string;
@@ -52,7 +59,7 @@ export const reapService = {
     if (error) throw error;
 
     const items: ReapWithMember[] = (data || []).map((socio) => {
-      const reapRecord = (Array.isArray(socio.reap) ? socio.reap[0] : socio.reap) as any;
+      const reapRecord = firstReapRecord(socio.reap);
       const simplificado = (reapRecord?.simplificado as Reap["simplificado"]) ?? {};
       const anual = (reapRecord?.anual as Reap["anual"]) ?? {};
       
@@ -99,7 +106,7 @@ export const reapService = {
 
     if (error || !data) return null;
 
-    const reapRecord = (Array.isArray(data.reap) ? data.reap[0] : data.reap) as any;
+    const reapRecord = firstReapRecord(data.reap);
     const simplificado = (reapRecord?.simplificado as Reap["simplificado"]) ?? {};
     const anual = (reapRecord?.anual as Reap["anual"]) ?? {};
 

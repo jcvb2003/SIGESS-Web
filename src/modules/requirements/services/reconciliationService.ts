@@ -30,6 +30,16 @@ export interface ReconciliationIndexes {
   nameMap: Map<string, MemberFromIndex>;
 }
 
+function getText(row: Record<string, unknown>, keys: string[]): string {
+  for (const key of keys) {
+    const value = row[key];
+    if (value !== undefined && value !== null && String(value).trim()) {
+      return String(value);
+    }
+  }
+  return "";
+}
+
 /**
  * Constrói os mapas de busca para performance O(1)
  */
@@ -74,15 +84,15 @@ export function findMatchForPortalRow(
  * Executa a reconciliação de uma linha do CSV com o contexto do banco
  */
 export function reconcileRow(
-  row: Record<string, any>,
+  row: Record<string, unknown>,
   context: Awaited<ReturnType<typeof requirementService.getReconciliationContext>>,
   indexes: ReconciliationIndexes,
   anoAtual: number
 ): ReconciliationResult | null {
   if (row["UF"] !== context.entityUf) return null;
 
-  const pName = row["NOME FAVORECIDO"] || row["Nome"] || row["NOME"] || row["Beneficiário"] || "";
-  const pNit = String(row["NIS FAVORECIDO"] || row["NIT"] || row["PIS/PASEP"] || "").replaceAll(/\D/g, "");
+  const pName = getText(row, ["NOME FAVORECIDO", "Nome", "NOME", "Beneficiário"]);
+  const pNit = getText(row, ["NIS FAVORECIDO", "NIT", "PIS/PASEP"]).replaceAll(/\D/g, "");
 
   if (!pName && !pNit) return null;
 

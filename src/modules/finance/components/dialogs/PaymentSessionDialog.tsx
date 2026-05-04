@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useReducer } from "react";
 import {
   Dialog,
   DialogContent,
@@ -48,6 +48,233 @@ interface PaymentSessionDialogProps {
   readonly regime?: string;
 }
 
+type PaymentCategory = "anuidade" | "mensalidade";
+type ConfigMode = "isencao" | "liberacao" | "regime" | null;
+
+const EXCLUSIVE_EXTRA_FEE_TYPES: Partial<Record<PaymentType, PaymentType[]>> = {
+  inicial: ["transferencia"],
+  transferencia: ["inicial"],
+};
+
+function isExtraFeeBlockedByHistoricMember(paymentType: PaymentType) {
+  return paymentType === "inicial" || paymentType === "transferencia";
+}
+
+function isCompatibleExtraFee(existingType: PaymentType, nextType: PaymentType) {
+  return !EXCLUSIVE_EXTRA_FEE_TYPES[nextType]?.includes(existingType);
+}
+
+interface PaymentFormState {
+  paymentCategory: PaymentCategory;
+  selectedYears: SelectedAnnuity[];
+  selectedMonths: number[];
+  selectedYearForMensalidade: number;
+  extraFees: ExtraFeeItem[];
+  selectedCharges: SelectedCharge[];
+  paymentMethod: PaymentMethod;
+  paymentDate: string;
+  isHistoricMember: boolean;
+  configMode: ConfigMode;
+}
+
+type PaymentFormAction =
+  | { type: "reset"; currentYear: number }
+  | { type: "setConfigMode"; mode: ConfigMode }
+  | { type: "setHistoricMember"; checked: boolean }
+  | { type: "setPaymentCategory"; category: PaymentCategory }
+  | { type: "toggleYear"; year: number; valorAnuidade: number }
+  | { type: "updateAnnuityValue"; year: number; rawValue: string }
+  | { type: "setSelectedMonths"; months: number[] }
+  | { type: "setSelectedYearForMensalidade"; year: number }
+  | { type: "toggleExtraFee"; paymentType: PaymentType; value: number; uid: string }
+  | { type: "removeExtraFee"; uid: string }
+  | { type: "updateExtraFeeValue"; uid: string; rawValue: string }
+  | { type: "toggleCharge"; chargeType: ChargeType; uid: string }
+  | { type: "updateChargeValue"; uid: string; rawValue: string }
+  | { type: "removeCharge"; uid: string }
+  | { type: "setPaymentMethod"; method: PaymentMethod }
+  | { type: "setPaymentDate"; date: string };
+
+function getTodayLocalDate() {
+  return new Date().toLocaleDateString("sv");
+}
+
+function numericValueFromCurrencyInput(rawValue: string) {
+  const digits = rawValue.replaceAll(/\D/g, "");
+  return Number(digits) / 100;
+}
+
+function createPaymentFormState(currentYear: number): PaymentFormState {
+  return {
+    paymentCategory: "anuidade",
+    selectedYears: [],
+    selectedMonths: [],
+    selectedYearForMensalidade: currentYear,
+    extraFees: [],
+    selectedCharges: [],
+    paymentMethod: "dinheiro",
+    paymentDate: getTodayLocalDate(),
+    isHistoricMember: false,
+    configMode: null,
+  };
+}
+
+function paymentFormReducer(
+  state: PaymentFormState,
+  action: PaymentFormAction,
+): PaymentFormState {
+  switch (action.type) {
+    case "reset":
+      return createPaymentFormState(action.currentYear);
+    case "setConfigMode":
+      return { ...state, configMode: action.mode };
+    case "setHistoricMember":
+      return {
+        ...state,
+        isHistoricMember: action.checked,
+        extraFees: action.checked
+          ? state.extraFees.filter(
+              (fee) => !isExtraFeeBlockedByHistoricMember(fee.tipo),
+            )
+          : state.extraFees,
+      };
+    case "setPaymentCategory":
+      return { ...state, paymentCategory: action.category };
+    case "toggleYear": {
+      const exists = state.selectedYears.some((year) => year.year === action.year);
+      const selectedYears = exists
+        ? state.selectedYears.filter((year) => year.year !== action.year)
+        : [
+            ...state.selectedYears,
+            {
+              year: action.year,
+              valor: action.valorAnuidade,
+              displayValue: formatNumericInput(action.valorAnuidade),
+            },
+          ].sort((a, b) => b.year - a.year);
+      return { ...state, selectedYears };
+    }
+    case "updateAnnuityValue": {
+      const numericValue = numericValueFromCurrencyInput(action.rawValue);
+      return {
+        ...state,
+        selectedYears: state.selectedYears.map((year) =>
+          year.year === action.year
+            ? {
+                ...year,
+                valor: numericValue,
+                displayValue: formatNumericInput(numericValue),
+              }
+            : year,
+        ),
+      };
+    }
+    case "setSelectedMonths":
+      return { ...state, selectedMonths: action.months };
+    case "setSelectedYearForMensalidade":
+      return { ...state, selectedYearForMensalidade: action.year };
+    case "toggleExtraFee": {
+      const alreadyExists = state.extraFees.some((fee) => fee.tipo === action.paymentType);
+      if (alreadyExists) {
+        return {
+          ...state,
+          extraFees: state.extraFees.filter((fee) => fee.tipo !== action.paymentType),
+        };
+      }
+
+      const filteredFees = state.extraFees.filter((fee) =>
+        isCompatibleExtraFee(fee.tipo, action.paymentType),
+      );
+
+      return {
+        ...state,
+        extraFees: [
+          ...filteredFees,
+          {
+            tipo: action.paymentType,
+            valor: action.value,
+            displayValue: formatNumericInput(action.value),
+            uid: action.uid,
+          },
+        ],
+      };
+    }
+    case "removeExtraFee":
+      return {
+        ...state,
+        extraFees: state.extraFees.filter((item) => item.uid !== action.uid),
+      };
+    case "updateExtraFeeValue": {
+      const numericValue = numericValueFromCurrencyInput(action.rawValue);
+      return {
+        ...state,
+        extraFees: state.extraFees.map((item) =>
+          item.uid === action.uid
+            ? {
+                ...item,
+                valor: numericValue,
+                displayValue: formatNumericInput(numericValue),
+              }
+            : item,
+        ),
+      };
+    }
+    case "toggleCharge": {
+      const exists = state.selectedCharges.some(
+        (charge) => charge.chargeType.id === action.chargeType.id,
+      );
+      if (exists) {
+        return {
+          ...state,
+          selectedCharges: state.selectedCharges.filter(
+            (charge) => charge.chargeType.id !== action.chargeType.id,
+          ),
+        };
+      }
+
+      const value = action.chargeType.valor_padrao ?? 0;
+      return {
+        ...state,
+        selectedCharges: [
+          ...state.selectedCharges,
+          {
+            chargeType: action.chargeType,
+            valor: value,
+            displayValue: formatNumericInput(value),
+            uid: action.uid,
+          },
+        ],
+      };
+    }
+    case "updateChargeValue": {
+      const numericValue = numericValueFromCurrencyInput(action.rawValue);
+      return {
+        ...state,
+        selectedCharges: state.selectedCharges.map((charge) =>
+          charge.uid === action.uid
+            ? {
+                ...charge,
+                valor: numericValue,
+                displayValue: formatNumericInput(numericValue),
+              }
+            : charge,
+        ),
+      };
+    }
+    case "removeCharge":
+      return {
+        ...state,
+        selectedCharges: state.selectedCharges.filter(
+          (charge) => charge.uid !== action.uid,
+        ),
+      };
+    case "setPaymentMethod":
+      return { ...state, paymentMethod: action.method };
+    case "setPaymentDate":
+      return { ...state, paymentDate: action.date };
+  }
+}
+
 export function PaymentSessionDialog({
   open,
   onOpenChange,
@@ -60,72 +287,57 @@ export function PaymentSessionDialog({
   const { lancamentos, isLoading: isLoadingStatement } = useMemberStatement(open ? socioCpf : null);
   const paymentMutation = usePaymentSession();
 
-  const [paymentCategory, setPaymentCategory] = useState<"anuidade" | "mensalidade">("anuidade");
-  const [selectedYears, setSelectedYears] = useState<SelectedAnnuity[]>([]);
-  const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
-  const [configMode, setConfigMode] = useState<"isencao" | "liberacao" | "regime" | null>(null);
-  
   const currentYear = new Date().getFullYear();
-  const [selectedYearForMensalidade, setSelectedYearForMensalidade] = useState(currentYear);
-  const [extraFees, setExtraFees] = useState<ExtraFeeItem[]>([]);
-  const [selectedCharges, setSelectedCharges] = useState<SelectedCharge[]>([]);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("dinheiro");
-  const [paymentDate, setPaymentDate] = useState(
-    new Date().toLocaleDateString("sv"), // YYYY-MM-DD local
+  const [paymentForm, dispatchPaymentForm] = useReducer(
+    paymentFormReducer,
+    currentYear,
+    createPaymentFormState,
   );
-  const [isHistoricMember, setIsHistoricMember] = useState(false);
+  const {
+    paymentCategory,
+    selectedYears,
+    selectedMonths,
+    selectedYearForMensalidade,
+    extraFees,
+    selectedCharges,
+    paymentMethod,
+    paymentDate,
+    isHistoricMember,
+    configMode,
+  } = paymentForm;
 
   const anoBase = settings?.ano_base_cobranca ?? 2024;
   const valorAnuidade = settings?.valor_anuidade ?? 0;
   const valorMensalidade = settings?.valor_mensalidade ?? (valorAnuidade / 12);
 
+  const resetPaymentForm = () => {
+    dispatchPaymentForm({ type: "reset", currentYear });
+  };
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      resetPaymentForm();
+    }
+    onOpenChange(nextOpen);
+  };
+
   const toggleYear = (year: number) => {
-    setSelectedYears((prev) => {
-      const exists = prev.find((y) => y.year === year);
-      if (exists) {
-        return prev.filter((y) => y.year !== year);
-      }
-      return [
-        ...prev,
-        {
-          year,
-          valor: valorAnuidade,
-          displayValue: formatNumericInput(valorAnuidade),
-        },
-      ].sort((a, b) => b.year - a.year);
-    });
+    dispatchPaymentForm({ type: "toggleYear", year, valorAnuidade });
   };
 
   const handleAnnuityValueChange = (year: number, rawValue: string) => {
-    const digits = rawValue.replaceAll(/\D/g, "");
-    const numericValue = Number(digits) / 100;
-    setSelectedYears((prev) =>
-      prev.map((y) =>
-        y.year === year
-          ? { ...y, valor: numericValue, displayValue: formatNumericInput(numericValue) }
-          : y,
-      ),
-    );
+    dispatchPaymentForm({ type: "updateAnnuityValue", year, rawValue });
   };
-
-  useEffect(() => {
-    if (open) {
-      setSelectedYears([]);
-      setSelectedMonths([]);
-      setExtraFees([]);
-      setSelectedCharges([]);
-      setPaymentCategory("anuidade");
-      setSelectedYearForMensalidade(currentYear);
-      setPaymentDate(new Date().toLocaleDateString("sv"));
-    }
-  }, [open, currentYear]);
 
   useEffect(() => {
     async function loadConfig() {
       if (open && socioCpf) {
         try {
           const config = await memberFinanceConfigService.getConfig(socioCpf);
-          setIsHistoricMember(config?.socio_historico ?? false);
+          dispatchPaymentForm({
+            type: "setHistoricMember",
+            checked: config?.socio_historico ?? false,
+          });
         } catch (error) {
           console.error("Erro ao carregar configuração financeira:", error);
         }
@@ -148,7 +360,10 @@ export function PaymentSessionDialog({
     if (paidInYear.has(m)) return;
 
     if (selectedMonths.includes(m)) {
-      setSelectedMonths(prev => prev.filter(month => month < m));
+      dispatchPaymentForm({
+        type: "setSelectedMonths",
+        months: selectedMonths.filter((month) => month < m),
+      });
     } else {
       const newSelection: number[] = [];
       for (let i = 1; i <= m; i++) {
@@ -156,16 +371,12 @@ export function PaymentSessionDialog({
           newSelection.push(i);
         }
       }
-      setSelectedMonths(newSelection);
+      dispatchPaymentForm({ type: "setSelectedMonths", months: newSelection });
     }
   };
 
   const handleToggleHistoricMember = (checked: boolean) => {
-    setIsHistoricMember(checked);
-    if (checked) {
-      // Remover taxas iniciais se marcar como histórico
-      setExtraFees(prev => prev.filter(f => f.tipo !== "inicial" && f.tipo !== "transferencia"));
-    }
+    dispatchPaymentForm({ type: "setHistoricMember", checked });
     
     // Persistir no banco de dados
     if (socioCpf) {
@@ -177,80 +388,42 @@ export function PaymentSessionDialog({
   };
 
   const addExtraFee = (type: PaymentType) => {
-    if (isHistoricMember && (type === "inicial" || type === "transferencia")) return;
+    if (isHistoricMember && isExtraFeeBlockedByHistoricMember(type)) return;
     
     let valor = 0;
     if (type === "inicial") valor = settings?.valor_inscricao ?? 0;
     if (type === "transferencia") valor = settings?.valor_transferencia ?? 0;
 
-    setExtraFees(prev => {
-      const alreadyExists = prev.find(f => f.tipo === type);
-      if (alreadyExists) {
-        return prev.filter(f => f.tipo !== type);
-      }
-
-      let filtered = [...prev];
-      if (type === "inicial") {
-        filtered = filtered.filter(f => f.tipo !== "transferencia");
-      } else if (type === "transferencia") {
-        filtered = filtered.filter(f => f.tipo !== "inicial");
-      }
-
-      return [...filtered, { 
-        tipo: type, 
-        valor, 
-        displayValue: formatNumericInput(valor),
-        uid: generateUUID()
-      }];
+    dispatchPaymentForm({
+      type: "toggleExtraFee",
+      paymentType: type,
+      value: valor,
+      uid: generateUUID(),
     });
   };
 
   const removeExtraFee = (uid: string) => {
-    setExtraFees(prev => prev.filter((item) => item.uid !== uid));
+    dispatchPaymentForm({ type: "removeExtraFee", uid });
   };
 
   const handleFeeValueChange = (uid: string, rawValue: string) => {
-    const digits = rawValue.replaceAll(/\D/g, "");
-    const numericValue = Number(digits) / 100;
-    
-    setExtraFees(prev => prev.map((item) => 
-      item.uid === uid 
-        ? { ...item, valor: numericValue, displayValue: formatNumericInput(numericValue) }
-        : item
-    ));
+    dispatchPaymentForm({ type: "updateExtraFeeValue", uid, rawValue });
   };
 
   const toggleCharge = (chargeType: ChargeType) => {
-    setSelectedCharges((prev) => {
-      const exists = prev.find((c) => c.chargeType.id === chargeType.id);
-      if (exists) return prev.filter((c) => c.chargeType.id !== chargeType.id);
-      const valor = chargeType.valor_padrao ?? 0;
-      return [
-        ...prev,
-        {
-          chargeType,
-          valor,
-          displayValue: formatNumericInput(valor),
-          uid: generateUUID(),
-        },
-      ];
+    dispatchPaymentForm({
+      type: "toggleCharge",
+      chargeType,
+      uid: generateUUID(),
     });
   };
 
   const handleChargeValueChange = (uid: string, rawValue: string) => {
-    const digits = rawValue.replaceAll(/\D/g, "");
-    const numericValue = Number(digits) / 100;
-    setSelectedCharges((prev) =>
-      prev.map((c) =>
-        c.uid === uid
-          ? { ...c, valor: numericValue, displayValue: formatNumericInput(numericValue) }
-          : c,
-      ),
-    );
+    dispatchPaymentForm({ type: "updateChargeValue", uid, rawValue });
   };
 
   const removeCharge = (uid: string) => {
-    setSelectedCharges((prev) => prev.filter((c) => c.uid !== uid));
+    dispatchPaymentForm({ type: "removeCharge", uid });
   };
 
   const totalAnnuities = selectedYears.reduce((sum, item) => sum + (item.valor || 0), 0);
@@ -303,15 +476,11 @@ export function PaymentSessionDialog({
       paymentDate,
     });
 
-    onOpenChange(false);
-    setSelectedYears([]);
-    setSelectedMonths([]);
-    setExtraFees([]);
-    setSelectedCharges([]);
+    handleOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="w-full max-w-xl p-0 outline-none [&>button]:hidden overflow-hidden bg-card shadow-2xl rounded-2xl border-none">
         <DialogHeader className="px-6 pt-6 pb-2 border-b flex-shrink-0">
           <div className="flex items-center justify-between">
@@ -328,7 +497,7 @@ export function PaymentSessionDialog({
               variant="outline"
               size="icon"
               className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 border-border transition-colors"
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleOpenChange(false)}
             >
               <X className="h-4 w-4" />
             </Button>
@@ -347,7 +516,12 @@ export function PaymentSessionDialog({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setConfigMode(configMode === "isencao" ? null : "isencao")}
+                onClick={() =>
+                  dispatchPaymentForm({
+                    type: "setConfigMode",
+                    mode: configMode === "isencao" ? null : "isencao",
+                  })
+                }
                 className="h-8 pr-3 pl-2.5 text-[10px] font-bold gap-1.5 border-blue-200 dark:border-blue-900/50 text-blue-700 dark:text-blue-400 hover:bg-blue-600 dark:hover:bg-blue-900/40 hover:text-white dark:hover:text-blue-400 hover:border-blue-600 dark:hover:border-blue-800/50 transition-all"
               >
                 <Pencil className="h-3 w-3" />
@@ -356,7 +530,12 @@ export function PaymentSessionDialog({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setConfigMode(configMode === "regime" ? null : "regime")}
+                onClick={() =>
+                  dispatchPaymentForm({
+                    type: "setConfigMode",
+                    mode: configMode === "regime" ? null : "regime",
+                  })
+                }
                 className="h-8 pr-3 pl-2.5 text-[10px] font-bold gap-1.5 border-border text-muted-foreground hover:bg-foreground hover:text-background transition-all"
               >
                 <Settings2 className="h-3 w-3" />
@@ -365,7 +544,12 @@ export function PaymentSessionDialog({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setConfigMode(configMode === "liberacao" ? null : "liberacao")}
+                onClick={() =>
+                  dispatchPaymentForm({
+                    type: "setConfigMode",
+                    mode: configMode === "liberacao" ? null : "liberacao",
+                  })
+                }
                 className="h-8 pr-3 pl-2.5 text-[10px] font-bold gap-1.5 border-amber-200 dark:border-amber-900/50 text-amber-700 dark:text-amber-500 hover:bg-amber-500 dark:hover:bg-amber-900/40 hover:text-white dark:hover:text-amber-400 hover:border-amber-500 dark:hover:border-amber-800/50 transition-all"
               >
                 <Unlock className="h-3 w-3" />
@@ -379,7 +563,9 @@ export function PaymentSessionDialog({
                 <MemberFinanceConfigForm
                   cpf={socioCpf}
                   mode={configMode}
-                  onClose={() => setConfigMode(null)}
+                  onClose={() =>
+                    dispatchPaymentForm({ type: "setConfigMode", mode: null })
+                  }
                 />
               </div>
             )}
@@ -391,14 +577,18 @@ export function PaymentSessionDialog({
               lancamentos={lancamentos}
               isLoadingStatement={isLoadingStatement}
               paymentCategory={paymentCategory}
-              onPaymentCategoryChange={setPaymentCategory}
+              onPaymentCategoryChange={(category) =>
+                dispatchPaymentForm({ type: "setPaymentCategory", category })
+              }
               selectedYears={selectedYears}
               onToggleYear={toggleYear}
               onAnnuityValueChange={handleAnnuityValueChange}
               selectedMonths={selectedMonths}
               onToggleMonth={toggleMonth}
               selectedYearForMensalidade={selectedYearForMensalidade}
-              onYearForMensalidadeChange={setSelectedYearForMensalidade}
+              onYearForMensalidadeChange={(year) =>
+                dispatchPaymentForm({ type: "setSelectedYearForMensalidade", year })
+              }
               extraFees={extraFees}
               onAddExtraFee={addExtraFee}
               onRemoveExtraFee={removeExtraFee}
@@ -415,14 +605,21 @@ export function PaymentSessionDialog({
             <div className="grid grid-cols-2 gap-4 pt-2">
               <PaymentMethodSelect
                 value={paymentMethod}
-                onChange={setPaymentMethod}
+                onChange={(method) =>
+                  dispatchPaymentForm({ type: "setPaymentMethod", method })
+                }
               />
               <div className="space-y-1.5">
                 <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">Data do Recebimento</Label>
                 <Input
                   type="date"
                   value={paymentDate}
-                  onChange={(e) => setPaymentDate(e.target.value)}
+                  onChange={(e) =>
+                    dispatchPaymentForm({
+                      type: "setPaymentDate",
+                      date: e.target.value,
+                    })
+                  }
                   className="h-10 text-xs font-bold border-border focus:ring-primary bg-card"
                 />
               </div>
@@ -438,7 +635,7 @@ export function PaymentSessionDialog({
                 <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
-                      onClick={() => onOpenChange(false)}
+                      onClick={() => handleOpenChange(false)}
                       className="text-xs font-bold h-10 px-4 transition-colors rounded-lg"
                     >
                       Cancelar

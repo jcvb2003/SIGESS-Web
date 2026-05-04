@@ -91,7 +91,7 @@ async function generateSchema() {
         }
         if (c.character_maximum_length) type += `(${c.character_maximum_length})`;
         
-        let defaultStr = c.column_default ? ` DEFAULT ${c.column_default}` : '';
+        const defaultStr = c.column_default ? ` DEFAULT ${c.column_default}` : '';
         out += `ALTER TABLE public.${t.table_name} ADD COLUMN IF NOT EXISTS ${c.column_name} ${type}${defaultStr};\n`;
       }
       out += '\n';
@@ -114,8 +114,8 @@ async function generateSchema() {
     const { rows: policies } = await client.query(`SELECT tablename, policyname, roles, cmd, qual, with_check FROM pg_policies WHERE schemaname = 'public'`);
     for (const p of policies) {
         out += `DROP POLICY IF EXISTS "${p.policyname}" ON public.${p.tablename};\n`;
-        let using = p.qual ? ` USING (${p.qual})` : '';
-        let withCheck = p.with_check ? ` WITH CHECK (${p.with_check})` : '';
+        const using = p.qual ? ` USING (${p.qual})` : '';
+        const withCheck = p.with_check ? ` WITH CHECK (${p.with_check})` : '';
         out += `CREATE POLICY "${p.policyname}" ON public.${p.tablename} FOR ${p.cmd} TO ${p.roles[0].replace(/{|}/g, '')}${using}${withCheck};\n`;
     }
 

@@ -1,5 +1,6 @@
-const fs = require('fs');
-const path = require('path');
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { Client } from 'pg';
 
 // Uso: npx ts-node scripts/setup-client.ts --project-id=XXXXX --project-ref=YYYYY --admin-email=teste@teste.com --db-password=ZZZZZ
 
@@ -73,7 +74,6 @@ async function setupClient() {
         console.warn('-> Adicione o parâmetro --db-password=SenhaBanco e instale o pacote `pg` se quiser que o script execute via Client Postgres.\n');
     } else {
         // Se decidirmos embutir injeção SQL no Node diretamente:
-        const { Client } = require('pg');
         const dbUrl = `postgres://postgres.${projectRef}:${encodeURIComponent(dbPassword)}@aws-0-sa-east-1.pooler.supabase.com:6543/postgres`;
         const client = new Client({ connectionString: dbUrl });
         await client.connect();
@@ -88,8 +88,9 @@ async function setupClient() {
 
     console.log(`\n🎉 PROJETO ${projectId} - ${projectRef} finalizado e pré-pronto!\n`);
 
-  } catch (error) {
-    console.error('\n❌ ERRO FATAL no Onboarding:', error.message);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('\n❌ ERRO FATAL no Onboarding:', message);
     process.exit(1);
   }
 }

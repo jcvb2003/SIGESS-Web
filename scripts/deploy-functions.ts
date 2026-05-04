@@ -55,6 +55,7 @@ async function deployFunctions() {
       console.log(`   ✅ Deploy concluído com sucesso em [${code}]`);
     } catch (err) {
       console.error(`   🛑 Erro no deploy para o tenant ${code}.`);
+      console.error(`   Detalhe: ${err instanceof Error ? err.message : String(err)}`);
       console.error(`   Isso pode ocorrer por falta de permissões na sua conta Supabase.`);
     }
   }

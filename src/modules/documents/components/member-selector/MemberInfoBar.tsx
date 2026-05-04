@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useDocumentMember } from "../../context/useDocumentMember";
 import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
@@ -22,12 +22,7 @@ export function MemberInfoBar() {
   const { fullMemberData, isLoading, refetchMember } = useDocumentMember();
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [photoError, setPhotoError] = useState(false);
-
-  // Reseta o erro de foto quando o membro muda
-  useEffect(() => {
-    setPhotoError(false);
-  }, [fullMemberData?.id]);
+  const [photoErrorMemberId, setPhotoErrorMemberId] = useState<string | null>(null);
   if (isLoading) {
     return (
       <div className="flex items-center gap-4 p-4 border rounded-lg bg-card mt-4">
@@ -41,7 +36,8 @@ export function MemberInfoBar() {
   }
   if (!fullMemberData) return null;
 
-  const hasPhoto = !!fullMemberData.foto_url && !photoError;
+  const hasPhoto =
+    !!fullMemberData.foto_url && photoErrorMemberId !== fullMemberData.id;
   return (
     <div className="flex items-center gap-4 p-4 border rounded-lg bg-card text-card-foreground shadow-sm mt-4">
       <Dialog>
@@ -54,7 +50,7 @@ export function MemberInfoBar() {
                 src={fullMemberData.foto_url!}
                 alt={fullMemberData.nome}
                 loading="lazy"
-                onError={() => setPhotoError(true)}
+                onError={() => setPhotoErrorMemberId(fullMemberData.id)}
                 className="h-full w-full object-cover"
               />
             ) : (

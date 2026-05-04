@@ -57,7 +57,6 @@ export default function Members() {
                   <MemberBasicInfoCell 
                     name={m.nome} 
                     code={m.codigo_do_socio} 
-                    photoUrl={m.foto_url}
                   />
                 )
               },

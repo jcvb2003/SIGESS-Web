@@ -104,9 +104,14 @@ export function useChargeTypeMutations() {
       toast.success("Tipo de cobrança excluído.");
       queryClient.invalidateQueries({ queryKey: financeQueryKeys.chargeTypes() });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       // Postgres Error code 23503 is Foreign Key Violation
-      if (error?.code === "23503") {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        error.code === "23503"
+      ) {
         toast.error("Este tipo de cobrança não pode ser excluído pois está em uso.");
       } else {
         toast.error("Erro ao excluir tipo de cobrança.");

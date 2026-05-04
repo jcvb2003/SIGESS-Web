@@ -27,13 +27,14 @@ export function DocumentsDashboard() {
   const { selectedMember, fullMemberData } = useDocumentMember();
   const { entity } = useEntityData();
   const [activeModal, setActiveModal] = useState<
-    "residence" | "representation" | null
+    "residence" | "representation" | "other" | null
   >(null);
 
   const {
     residenceTemplates,
     representationTemplates,
     defesoTemplates,
+    otherTemplates,
     isLoading: isLoadingTemplates,
   } = usePdfTemplates();
 
@@ -117,7 +118,7 @@ export function DocumentsDashboard() {
       toast.error("Dados incompletos para geração do documento.");
       return;
     }
-    const model = (residenceTemplates as any[]).find((m) => m.id === data.modelId);
+    const model = residenceTemplates.find((m) => m.id === data.modelId);
     if (!model || !model.fileUrl) {
       toast.error("Modelo inválido.");
       return;
@@ -186,7 +187,7 @@ export function DocumentsDashboard() {
       toast.error("Dados incompletos para geração do documento.");
       return;
     }
-    const model = (representationTemplates as any[]).find((m) => m.id === data.modelId);
+    const model = representationTemplates.find((m) => m.id === data.modelId);
     if (!model || !model.fileUrl) {
       toast.error("Modelo inválido.");
       return;
@@ -231,8 +232,78 @@ export function DocumentsDashboard() {
   };
 
   const residenceModels = residenceTemplates;
+  const handleGenerateOther = async (data: {
+    witnesses?: {
+      witness1: {
+        name: string;
+        cpf: string;
+        rg: string;
+      };
+      witness2: {
+        name: string;
+        cpf: string;
+        rg: string;
+      };
+    };
+    modelId?: string;
+    documentDate?: string;
+  }) => {
+    if (financialIssues?.type === "blocking") {
+      toast.error(financialIssues.message);
+      return;
+    }
+
+    if (!fullMemberData || !data.modelId) {
+      toast.error("Dados incompletos para geração do documento.");
+      return;
+    }
+    const model = otherTemplates.find((m) => m.id === data.modelId);
+    if (!model || !model.fileUrl) {
+      toast.error("Modelo inválido.");
+      return;
+    }
+    const toastId = toast.loading(`Gerando ${model.name}...`);
+    try {
+      const witnessData: Record<string, string> = {};
+      if (data.witnesses) {
+        if (data.witnesses.witness1) {
+          witnessData["nome_testemunha1"] = data.witnesses.witness1.name || "";
+          witnessData["cpf_testemunha1"] = data.witnesses.witness1.cpf || "";
+          witnessData["rg_testemunha1"] = data.witnesses.witness1.rg || "";
+        }
+        if (data.witnesses.witness2) {
+          witnessData["nome_testemunha2"] = data.witnesses.witness2.name || "";
+          witnessData["cpf_testemunha2"] = data.witnesses.witness2.cpf || "";
+          witnessData["rg_testemunha2"] = data.witnesses.witness2.rg || "";
+        }
+      }
+      const dataMap = processSimpleStatementData(
+        fullMemberData,
+        entity ?? null,
+        witnessData,
+        data.documentDate,
+      );
+      const success = await pdfService.generatePdfDocument(
+        model as unknown as DocumentTemplate,
+        dataMap,
+        `${model.name.toLowerCase().replace(/\s+/g, "_")}_${fullMemberData.cpf}.pdf`,
+      );
+      if (success) {
+        toast.success(`${model.name} gerado com sucesso!`, {
+          id: toastId,
+        });
+      } else {
+        toast.dismiss(toastId);
+      }
+    } catch (error) {
+      toast.error("Erro ao gerar documento.", { id: toastId });
+      console.error(error);
+    }
+  };
+
   const representationModels = representationTemplates;
   const defesoModels = defesoTemplates;
+  const otherModels = otherTemplates;
 
   if (isLoadingTemplates || isFinanceLoading) {
     return (
@@ -263,7 +334,7 @@ export function DocumentsDashboard() {
         </Alert>
       )}
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         <Button
           variant="outline"
           className="h-auto min-h-24 py-4 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 hover:border-primary/30 hover:text-primary border-dashed text-center whitespace-normal transition-all"
@@ -298,6 +369,23 @@ export function DocumentsDashboard() {
             <span className="text-xs text-muted-foreground">(Sem modelos)</span>
           )}
         </Button>
+
+        <Button
+          variant="outline"
+          className="h-auto min-h-24 py-4 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 hover:border-primary/30 hover:text-primary border-dashed text-center whitespace-normal transition-all"
+          onClick={() => setActiveModal("other")}
+          disabled={
+            otherModels.length === 0 || financialIssues?.type === "blocking"
+          }
+        >
+          <FileText className="h-8 w-8 text-muted-foreground shrink-0" />
+          <span className="font-medium text-sm sm:text-base leading-tight">
+            Outros Documentos
+          </span>
+          {otherModels.length === 0 && (
+            <span className="text-xs text-muted-foreground">(Sem modelos)</span>
+          )}
+        </Button>
       </div>
 
       <div className="bg-card border rounded-xl p-6 shadow-sm">
@@ -326,7 +414,16 @@ export function DocumentsDashboard() {
         onConfirm={handleGenerateRepresentation}
         availableModels={representationModels}
       />
+
+      <WitnessDialog
+        open={activeModal === "other"}
+        onOpenChange={(open) => !open && setActiveModal(null)}
+        title="Outros Documentos"
+        description="Selecione o modelo do documento que deseja gerar."
+        storageKey="doc:model:other"
+        onConfirm={handleGenerateOther}
+        availableModels={otherModels}
+      />
     </div>
   );
 }
-

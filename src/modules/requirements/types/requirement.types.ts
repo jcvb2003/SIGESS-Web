@@ -22,3 +22,30 @@ export interface RequirementWithMember extends Requirement {
   situacao_financeira?: 'em_dia' | 'atraso' | 'isento';
 }
 
+export interface ListRequirementsExtendedArgs {
+  p_ano: number;
+  p_status: RequirementStatus | "all";
+  p_beneficio: "all" | "recebido" | "pendente";
+  p_search: string;
+  p_carencia: string;
+  p_page: number;
+  p_page_size: number;
+}
+
+export type ExtendedRequirementRow = Partial<Requirement> & {
+  cpf: string | null;
+  socio_id?: string | null;
+  socio_nome?: string | null;
+  socio_nit?: string | null;
+  socio_num_rgp?: string | null;
+  socio_emissao_rgp?: string | null;
+  total_count?: number | string | null;
+};
+
+export type RequirementsRpcClient = {
+  rpc: (
+    fn: "list_requirements_extended",
+    args: ListRequirementsExtendedArgs,
+    options?: { count?: "exact" },
+  ) => Promise<{ data: ExtendedRequirementRow[] | null; error: unknown }>;
+};

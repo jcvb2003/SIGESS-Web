@@ -19,6 +19,7 @@ export const usePdfTemplates = () => {
   const residenceTemplates = getTemplatesByType("residence_declaration");
   const representationTemplates = getTemplatesByType("representation_term");
   const defesoTemplates = getTemplatesByType("inss_application");
+  const otherTemplates = getTemplatesByType("other");
   return {
     templates,
     isLoading,
@@ -26,5 +27,6 @@ export const usePdfTemplates = () => {
     residenceTemplates,
     representationTemplates,
     defesoTemplates,
+    otherTemplates,
   };
 };
