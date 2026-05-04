@@ -97,9 +97,21 @@ function getGroupedDAEs(daes: FinanceDAE[]) {
 
 interface DAESectionProps {
   readonly daes: FinanceDAE[];
+  readonly memberName?: string;
+  readonly memberCpf?: string;
+  readonly isSelectionMode?: boolean;
+  readonly selectedIds?: string[];
+  readonly onToggleSelection?: (id: string, type: 'lancamento' | 'dae', items?: FinanceDAE[]) => void;
 }
 
-export function DAESection({ daes }: DAESectionProps) {
+export function DAESection({ 
+  daes, 
+  memberName, 
+  memberCpf,
+  isSelectionMode,
+  selectedIds,
+  onToggleSelection
+}: DAESectionProps) {
   const [selectedItem, setSelectedItem] = useState<FinanceDAE | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -239,6 +251,9 @@ export function DAESection({ daes }: DAESectionProps) {
             onViewReceipt={handleViewReceipt}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            isSelectionMode={isSelectionMode}
+            isSelected={selectedIds?.includes(g.id)}
+            onToggleSelection={(id, items) => onToggleSelection?.(id, 'dae', items)}
           />
         ))}
       </div>
@@ -329,7 +344,8 @@ export function DAESection({ daes }: DAESectionProps) {
         onOpenChange={setIsReceiptOpen}
         lancamentos={receiptData.lancamentos}
         daes={receiptData.daes}
-        memberCpf={daes[0]?.socio_cpf ?? undefined}
+        memberName={memberName}
+        memberCpf={memberCpf ?? daes[0]?.socio_cpf ?? undefined}
       />
 
       <EditDAEDialog

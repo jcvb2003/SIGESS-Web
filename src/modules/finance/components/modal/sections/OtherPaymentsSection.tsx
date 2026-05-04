@@ -2,7 +2,7 @@ import { useState } from "react";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { formatDate } from "@/shared/utils/formatters/dateFormatters";
 import { Button } from "@/shared/components/ui/button";
-import { Pencil, Trash2, FileText } from "lucide-react";
+import { Pencil, Trash2, FileText, Check } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -31,9 +31,21 @@ import { daeService } from "../../../services/daeService";
 
 interface OtherPaymentsSectionProps {
   readonly lancamentos: FinanceLancamento[];
+  readonly memberName?: string;
+  readonly memberCpf?: string;
+  readonly isSelectionMode?: boolean;
+  readonly selectedIds?: string[];
+  readonly onToggleSelection?: (id: string, type: 'lancamento' | 'dae') => void;
 }
 
-export function OtherPaymentsSection({ lancamentos }: OtherPaymentsSectionProps) {
+export function OtherPaymentsSection({ 
+  lancamentos, 
+  memberName, 
+  memberCpf,
+  isSelectionMode,
+  selectedIds,
+  onToggleSelection
+}: OtherPaymentsSectionProps) {
   const [selectedItem, setSelectedItem] = useState<FinanceLancamento | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -87,8 +99,24 @@ export function OtherPaymentsSection({ lancamentos }: OtherPaymentsSectionProps)
         {sorted.map((l) => (
           <div
             key={l.id}
-            className="flex items-center gap-3 rounded-lg py-2 px-2 hover:bg-emerald-50/40 dark:hover:bg-emerald-900/30 border border-transparent hover:border-emerald-100/50 dark:hover:border-emerald-800/50 transition-colors"
+            className={cn(
+              "flex items-center gap-3 rounded-lg py-2 px-2 hover:bg-emerald-50/40 dark:hover:bg-emerald-900/30 border border-transparent hover:border-emerald-100/50 dark:hover:border-emerald-800/50 transition-colors",
+              isSelectionMode && "cursor-pointer"
+            )}
+            onClick={() => isSelectionMode && onToggleSelection?.(l.id, 'lancamento')}
           >
+            {isSelectionMode && (
+              <div className="flex-shrink-0 mr-1">
+                <div className={cn(
+                  "h-4 w-4 rounded-sm border flex items-center justify-center transition-colors",
+                  selectedIds?.includes(l.id) 
+                    ? "bg-emerald-600 border-emerald-600 text-white" 
+                    : "border-input bg-background"
+                )}>
+                  {selectedIds?.includes(l.id) && <Check className="h-3 w-3 stroke-[3]" />}
+                </div>
+              </div>
+            )}
             <div className="w-14 text-[11px] font-semibold text-muted-foreground">
               {formatDate(l.data_pagamento)}
             </div>
@@ -100,7 +128,8 @@ export function OtherPaymentsSection({ lancamentos }: OtherPaymentsSectionProps)
                 {formatCurrency(l.valor)}
               </p>
             </div>
-            <div className="flex items-center gap-1 ml-2 border-l pl-3">
+            {!isSelectionMode && (
+              <div className="flex items-center gap-1 ml-2 border-l pl-3">
               {l.sessao_id && (
                 <TooltipProvider delayDuration={100}>
                   <Tooltip>
@@ -163,7 +192,8 @@ export function OtherPaymentsSection({ lancamentos }: OtherPaymentsSectionProps)
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-            </div>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -173,7 +203,8 @@ export function OtherPaymentsSection({ lancamentos }: OtherPaymentsSectionProps)
         onOpenChange={setIsReceiptOpen}
         lancamentos={receiptData.lancamentos}
         daes={receiptData.daes}
-        memberCpf={lancamentos[0]?.socio_cpf ?? undefined}
+        memberName={memberName}
+        memberCpf={memberCpf ?? lancamentos[0]?.socio_cpf ?? undefined}
       />
 
       {/* Diálogos de Ação */}

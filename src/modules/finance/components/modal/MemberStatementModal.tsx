@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +15,9 @@ import { DAESection } from "./sections/DAESection";
 import { OtherPaymentsSection } from "./sections/OtherPaymentsSection";
 import { CancelledPaymentsSection } from "./sections/CancelledPaymentsSection";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import type { FinancialStatusType } from "../../types/finance.types";
+import type { FinancialStatusType, FinanceDAE } from "../../types/finance.types";
+import { SessionReceiptDialog } from "../dialogs/SessionReceiptDialog";
+import { cn } from "@/shared/lib/utils";
 
 interface MemberStatementModalProps {
   readonly open: boolean;
@@ -44,7 +47,47 @@ export function MemberStatementModal({
   );
   const cancelados = lancamentos.filter((l) => l.status === "cancelado");
 
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
 
+  const toggleSelection = (id: string, _type: 'lancamento' | 'dae', items?: FinanceDAE[]) => {
+    if (items) {
+      const allItemIds = items.map((i) => i.id);
+      const isSelected = selectedIds.includes(id);
+      
+      if (isSelected) {
+        setSelectedIds((prev) => prev.filter((p) => p !== id && !allItemIds.includes(p)));
+      } else {
+        setSelectedIds((prev) => [...prev, id, ...allItemIds]);
+      }
+    } else {
+      setSelectedIds((prev) => 
+        prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
+      );
+    }
+  };
+
+  const handlePrintClick = () => {
+    if (isSelectionMode) {
+      if (selectedIds.length > 0) {
+        setIsReceiptOpen(true);
+      } else {
+        setIsSelectionMode(false);
+      }
+    } else {
+      setIsSelectionMode(true);
+      setSelectedIds([]);
+    }
+  };
+
+  let printButtonText = "Imprimir";
+  if (isSelectionMode) {
+    printButtonText = selectedIds.length > 0 ? "Gerar Comprovante" : "Cancelar Seleção";
+  }
+
+  const receiptLancamentos = lancamentos.filter((l) => selectedIds.includes(l.id));
+  const receiptDaes = daes.filter((d) => selectedIds.includes(d.id));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -66,18 +109,30 @@ export function MemberStatementModal({
               
               <div className="flex items-center gap-2">
                 <Button
-                  variant="outline"
+                  variant={isSelectionMode && selectedIds.length > 0 ? "default" : "outline"}
                   size="sm"
-                  className="h-9 text-xs gap-1.5 border-emerald-200 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-600 dark:hover:bg-emerald-900/50 hover:text-white dark:hover:text-emerald-400 hover:border-emerald-600 dark:hover:border-emerald-800/50 transition-all font-bold px-4"
+                  onClick={handlePrintClick}
+                  className={cn(
+                    "h-9 text-xs gap-1.5 font-bold px-4 transition-all",
+                    isSelectionMode && selectedIds.length > 0
+                      ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+                      : "border-emerald-200 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-600 dark:hover:bg-emerald-900/50 hover:text-white dark:hover:text-emerald-400 hover:border-emerald-600 dark:hover:border-emerald-800/50"
+                  )}
                 >
                   <Printer className="h-4 w-4" />
-                  <span className="hidden sm:inline">Imprimir</span>
+                  <span className="hidden sm:inline">
+                    {printButtonText}
+                  </span>
                 </Button>
                 <Button
                   variant="outline"
                   size="icon"
                   className="h-9 w-9 text-muted-foreground hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50 border-border transition-colors rounded-lg"
-                  onClick={() => onOpenChange(false)}
+                  onClick={() => {
+                    setIsSelectionMode(false);
+                    setSelectedIds([]);
+                    onOpenChange(false);
+                  }}
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -107,9 +162,34 @@ export function MemberStatementModal({
                   </div>
                 ) : (
                   <>
-                    <AnnuitiesSection anuidades={anuidades} />
-                    {daeList.length > 0 && <DAESection daes={daeList} />}
-                    {outros.length > 0 && <OtherPaymentsSection lancamentos={outros} />}
+                    <AnnuitiesSection 
+                      anuidades={anuidades} 
+                      memberName={memberName} 
+                      memberCpf={cpf ?? undefined} 
+                      isSelectionMode={isSelectionMode}
+                      selectedIds={selectedIds}
+                      onToggleSelection={toggleSelection}
+                    />
+                    {daeList.length > 0 && (
+                      <DAESection 
+                        daes={daeList} 
+                        memberName={memberName} 
+                        memberCpf={cpf ?? undefined} 
+                        isSelectionMode={isSelectionMode}
+                        selectedIds={selectedIds}
+                        onToggleSelection={toggleSelection}
+                      />
+                    )}
+                    {outros.length > 0 && (
+                      <OtherPaymentsSection 
+                        lancamentos={outros} 
+                        memberName={memberName} 
+                        memberCpf={cpf ?? undefined} 
+                        isSelectionMode={isSelectionMode}
+                        selectedIds={selectedIds}
+                        onToggleSelection={toggleSelection}
+                      />
+                    )}
 
                     <CancelledPaymentsSection lancamentos={cancelados} />
 
@@ -137,6 +217,21 @@ export function MemberStatementModal({
           </ScrollArea>
         </div>
       </DialogContent>
+
+      <SessionReceiptDialog
+        open={isReceiptOpen}
+        onOpenChange={(open) => {
+          setIsReceiptOpen(open);
+          if (!open) {
+            setIsSelectionMode(false);
+            setSelectedIds([]);
+          }
+        }}
+        lancamentos={receiptLancamentos}
+        daes={receiptDaes}
+        memberName={memberName}
+        memberCpf={cpf ?? undefined}
+      />
     </Dialog>
   );
 }

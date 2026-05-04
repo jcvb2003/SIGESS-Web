@@ -3,7 +3,7 @@ import { FinancialStatusBadge } from "../../shared/FinancialStatusBadge";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { formatDate } from "@/shared/utils/formatters/dateFormatters";
 import { Button } from "@/shared/components/ui/button";
-import { Pencil, Trash2, FileText } from "lucide-react";
+import { Pencil, Trash2, FileText, Check } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -25,9 +25,21 @@ import { PAYMENT_METHOD_LABELS } from "../../shared/constants";
 
 interface AnnuitiesSectionProps {
   readonly anuidades: FinanceLancamento[];
+  readonly memberName?: string;
+  readonly memberCpf?: string;
+  readonly isSelectionMode?: boolean;
+  readonly selectedIds?: string[];
+  readonly onToggleSelection?: (id: string, type: 'lancamento' | 'dae') => void;
 }
 
-export function AnnuitiesSection({ anuidades }: AnnuitiesSectionProps) {
+export function AnnuitiesSection({ 
+  anuidades, 
+  memberName, 
+  memberCpf,
+  isSelectionMode,
+  selectedIds,
+  onToggleSelection
+}: AnnuitiesSectionProps) {
   const [selectedItem, setSelectedItem] = useState<FinanceLancamento | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -84,8 +96,24 @@ export function AnnuitiesSection({ anuidades }: AnnuitiesSectionProps) {
           {sorted.map((a) => (
             <div
               key={a.id}
-              className="flex items-center gap-3 rounded-lg py-2 px-2 hover:bg-emerald-50/40 dark:hover:bg-emerald-900/30 border border-transparent hover:border-emerald-100/50 dark:hover:border-emerald-800/50 transition-colors"
+              className={cn(
+                "flex items-center gap-3 rounded-lg py-2 px-2 hover:bg-emerald-50/40 dark:hover:bg-emerald-900/30 border border-transparent hover:border-emerald-100/50 dark:hover:border-emerald-800/50 transition-colors",
+                isSelectionMode && "cursor-pointer"
+              )}
+              onClick={() => isSelectionMode && onToggleSelection?.(a.id, 'lancamento')}
             >
+              {isSelectionMode && (
+                <div className="flex-shrink-0 mr-1">
+                  <div className={cn(
+                    "h-4 w-4 rounded-sm border flex items-center justify-center transition-colors",
+                    selectedIds?.includes(a.id) 
+                      ? "bg-emerald-600 border-emerald-600 text-white" 
+                      : "border-input bg-background"
+                  )}>
+                    {selectedIds?.includes(a.id) && <Check className="h-3 w-3 stroke-[3]" />}
+                  </div>
+                </div>
+              )}
               <div className="w-10 text-sm font-bold text-emerald-700 dark:text-emerald-500">
                 {a.competencia_ano}
               </div>
@@ -104,7 +132,8 @@ export function AnnuitiesSection({ anuidades }: AnnuitiesSectionProps) {
                   {a.forma_pagamento ? PAYMENT_METHOD_LABELS[a.forma_pagamento] : ""}
                 </p>
               </div>
-              <div className="flex items-center gap-1 ml-2 border-l pl-3">
+              {!isSelectionMode && (
+                <div className="flex items-center gap-1 ml-2 border-l pl-3">
                 {a.sessao_id && (
                   <TooltipProvider delayDuration={100}>
                     <Tooltip>
@@ -167,7 +196,8 @@ export function AnnuitiesSection({ anuidades }: AnnuitiesSectionProps) {
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-              </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -197,7 +227,8 @@ export function AnnuitiesSection({ anuidades }: AnnuitiesSectionProps) {
         onOpenChange={setIsReceiptOpen}
         lancamentos={receiptData.lancamentos}
         daes={receiptData.daes}
-        memberCpf={anuidades[0]?.socio_cpf ?? undefined}
+        memberName={memberName}
+        memberCpf={memberCpf ?? anuidades[0]?.socio_cpf ?? undefined}
       />
 
       <EditLancamentoDialog

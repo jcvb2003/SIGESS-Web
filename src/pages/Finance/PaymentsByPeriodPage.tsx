@@ -1,5 +1,5 @@
 import { useForm, useWatch, FormProvider } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card } from "@/shared/components/ui/card";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { DateField } from "@/shared/components/form-fields/fields/DateField";
@@ -10,8 +10,7 @@ import { formatDate } from "@/shared/utils/date";
 import { 
   ArrowLeft, 
   Calendar, 
-  History,
-  DollarSign
+  History
 } from "lucide-react";
 import { ReportExportButtons } from "@/modules/reports/components/ReportExportButtons";
 import { Button } from "@/shared/components/ui/button";
@@ -30,7 +29,7 @@ import {
   SheetFooter
 } from "@/shared/components/ui/sheet";
 
-import { useSearchParams } from "react-router-dom";
+
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 
 interface FilterForm {
@@ -102,7 +101,7 @@ export default function PaymentsByPeriodPage() {
       p.tipo?.toLowerCase().includes(term)
     );
   }, [data?.data, searchTerm]);
-  const totalAmount = data?.totalAmount ?? 0;
+
   const totalCount = data?.total ?? 0;
 
   const renderCompetencia = useCallback((payment: PaymentByPeriod) => {
@@ -241,41 +240,7 @@ export default function PaymentsByPeriodPage() {
         showNumbers
       />
 
-      {/* Footer de Resumo Financeiro */}
-      <div className="bg-muted/30 border-t p-6 flex flex-col sm:flex-row items-center justify-between gap-6">
-        <div className="flex items-center gap-10">
-          <div className="flex flex-col">
-            <span className="text-[10px] text-muted-foreground uppercase tracking-[0.15em] font-bold mb-1">
-              Transações
-            </span>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-black text-foreground tracking-tight">{totalCount}</span>
-              <span className="text-xs text-muted-foreground font-medium">recibos</span>
-            </div>
-          </div>
-          
-          <div className="h-10 w-px bg-border hidden sm:block" />
 
-          <div className="flex flex-col">
-            <span className="text-[10px] text-muted-foreground uppercase tracking-[0.15em] font-bold mb-1">
-              Ticket Médio
-            </span>
-            <span className="text-xl font-bold text-foreground/70 tracking-tight">
-              {totalCount > 0 ? formatCurrency(totalAmount / totalCount) : "R$ 0,00"}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex flex-col items-center sm:items-end bg-primary/5 p-4 rounded-2xl border border-primary/10 shadow-sm min-w-[260px]">
-          <span className="text-[10px] text-primary uppercase tracking-[0.15em] font-black mb-1 flex items-center gap-1.5">
-            <DollarSign className="h-3 w-3" />
-            Total Arrecadado
-          </span>
-          <div className="text-3xl font-black text-primary tracking-tighter">
-            {formatCurrency(totalAmount)}
-          </div>
-        </div>
-      </div>
     </Card>
   );
 

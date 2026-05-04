@@ -33,14 +33,14 @@ export function SessionReceiptDialog({
   const { print } = usePrint();
 
   const handlePrint = useCallback(() => {
-    print("receipt-content");
+    print("receipt-content", { rotated: true });
   }, [print]);
 
   if (lancamentos.length === 0 && daes.length === 0) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[500px] p-0 outline-none [&>button]:hidden overflow-hidden border-none shadow-2xl">
+      <DialogContent className="max-w-[380px] p-0 outline-none [&>button]:hidden overflow-hidden border-none shadow-2xl">
         <DialogHeader className="px-4 pt-6 pb-2 border-b flex-shrink-0 text-left">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-primary mb-1">

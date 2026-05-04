@@ -3,7 +3,8 @@ import {
   Trash2, 
   Pencil, 
   FileText, 
-  Calendar 
+  Calendar,
+  Check
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
@@ -40,6 +41,9 @@ interface DAERowProps {
   readonly onViewReceipt: (sessaoId: string) => void;
   readonly onEdit: (item: FinanceDAE) => void;
   readonly onDelete: (item: FinanceDAE) => void;
+  readonly isSelectionMode?: boolean;
+  readonly isSelected?: boolean;
+  readonly onToggleSelection?: (id: string, items: FinanceDAE[]) => void;
 }
 
 /**
@@ -227,6 +231,9 @@ export function DAERow({
   onViewReceipt,
   onEdit,
   onDelete,
+  isSelectionMode,
+  isSelected,
+  onToggleSelection,
 }: DAERowProps) {
   const { lead, isGroup, label, items, totalValue } = group;
 
@@ -240,10 +247,24 @@ export function DAERow({
         "group flex items-center justify-between p-3 rounded-xl border transition-all duration-300",
         isGroup 
           ? "bg-muted/50 border-border hover:border-blue-200 dark:hover:border-blue-800/50 hover:shadow-blue-500/5 hover:bg-blue-50/30 dark:hover:bg-blue-900/20" 
-          : "bg-card border-border/60 hover:border-emerald-200 dark:hover:border-emerald-800/50 hover:shadow-emerald-500/5"
+          : "bg-card border-border/60 hover:border-emerald-200 dark:hover:border-emerald-800/50 hover:shadow-emerald-500/5",
+        isSelectionMode && "cursor-pointer"
       )}
+      onClick={() => isSelectionMode && onToggleSelection?.(group.id, items)}
     >
       <div className="flex items-center gap-4">
+        {isSelectionMode && (
+          <div className="flex-shrink-0 mr-1">
+            <div className={cn(
+              "h-4 w-4 rounded-sm border flex items-center justify-center transition-colors",
+              isSelected 
+                ? "bg-emerald-600 border-emerald-600 text-white" 
+                : "border-input bg-background"
+            )}>
+              {isSelected && <Check className="h-3 w-3 stroke-[3]" />}
+            </div>
+          </div>
+        )}
         <DAEIcon isGroup={isGroup} lead={lead} />
         
         <div>
@@ -288,14 +309,16 @@ export function DAERow({
         </p>
       </div>
 
-      <DAEActions 
-        group={group}
-        isAdmin={isAdmin}
-        isLoadingReceipt={isLoadingReceipt}
-        onViewReceipt={onViewReceipt}
-        onEdit={onEdit}
-        onDelete={onDelete}
-      />
+      {!isSelectionMode && (
+        <DAEActions 
+          group={group}
+          isAdmin={isAdmin}
+          isLoadingReceipt={isLoadingReceipt}
+          onViewReceipt={onViewReceipt}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
+      )}
     </div>
   );
 }

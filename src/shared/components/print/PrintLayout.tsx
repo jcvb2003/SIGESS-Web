@@ -22,59 +22,66 @@ export const PrintLayout = React.forwardRef<HTMLDivElement, PrintLayoutProps>(
         id={id}
         className={cn(
           "bg-background dark:bg-card text-foreground print:bg-white print:text-black",
-          type === "thermal" ? "w-full max-w-[500px] p-4 text-[10pt] mx-auto" : "w-full p-8 text-sm",
+          type === "thermal" ? "w-full max-w-[340px] p-1 text-[10pt] mx-auto" : "w-full p-8 text-sm",
           className
         )}
       >
-        <style dangerouslySetInnerHTML={{ __html: `
+        <style dangerouslySetInnerHTML={{
+          __html: `
           @media print {
-            body { background: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            body { margin: 0 !important; padding: 0 !important; background: white !important; }
             .no-print { display: none !important; }
-            @page { 
-              margin: 0; 
-              size: ${type === "thermal" ? "80mm auto" : "auto"};
+            @page {
+              size: portrait;
+              margin: 5mm;
             }
-            body, #receipt-content { margin: 0 !important; padding: 0 !important; width: 80mm !important; }
+            #receipt-content {
+              filter: grayscale(1) !important;
+              -webkit-filter: grayscale(1) !important;
+              width: 100% !important;
+              max-width: none !important;
+              padding: 0 !important;
+            }
           }
         `}} />
 
         {(showLogo || showEntityInfo) && (
           <header className={cn(
-            "flex flex-col items-center text-center border-b-2 border-border print:border-black pb-4 mb-6 w-full",
-            type === "thermal" && "pb-1 mb-2"
+            "flex flex-col items-center text-center border-b-2 border-border print:border-black pb-2 mb-2 w-full",
+            type === "thermal" && "pb-1 mb-1"
           )}>
             {showLogo && (
               <div className="mb-1">
                 {entity?.logoUrl ? (
                   <img src={entity.logoUrl} alt="Logo" className={cn(
                     "object-contain logo-multiply",
-                    type === "thermal" ? "h-12 w-auto" : "h-16 w-auto"
+                    type === "thermal" ? "h-10 w-auto" : "h-16 w-auto"
                   )} />
                 ) : (
                   <div className={cn(
-                    "flex items-center justify-center rounded-xl bg-muted text-muted-foreground border border-border print:bg-slate-50 print:text-slate-400 print:border-slate-200",
-                    type === "thermal" ? "h-10 w-10" : "h-14 w-14"
+                    "flex items-center justify-center rounded-xl bg-muted text-muted-foreground border border-border",
+                    type === "thermal" ? "h-8 w-8" : "h-14 w-14"
                   )}>
-                    <Fish className={type === "thermal" ? "h-5 w-5" : "h-8 w-8"} />
+                    <Fish className={type === "thermal" ? "h-4 w-4" : "h-8 w-8"} />
                   </div>
                 )}
               </div>
             )}
 
             {showEntityInfo && (
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 <h1 className={cn(
-                  "font-black uppercase tracking-tight leading-none",
-                  type === "thermal" ? "text-base" : "text-2xl"
+                  "font-bold uppercase leading-tight",
+                  type === "thermal" ? "text-xs" : "text-lg"
                 )}>
                   {entity?.name || "SIGESS"}
                 </h1>
                 {entity?.cnpj && (
-                  <p className="text-[10px] font-bold opacity-70">CNPJ: {entity.cnpj}</p>
+                  <p className="text-[9px] font-medium opacity-70">CNPJ: {entity.cnpj}</p>
                 )}
                 <p className={cn(
                   "opacity-60 leading-tight",
-                  type === "thermal" ? "text-[8pt] max-w-[200px]" : "text-xs"
+                  type === "thermal" ? "text-[8px]" : "text-xs"
                 )}>
                   {entity?.street && `${entity.street}, ${entity.number} - ${entity.district}`}
                   <br />
@@ -88,11 +95,10 @@ export const PrintLayout = React.forwardRef<HTMLDivElement, PrintLayoutProps>(
         <main>{children}</main>
 
         <footer className={cn(
-          "mt-8 pt-4 border-t border-dashed border-border text-center text-muted-foreground print:border-slate-300 print:text-slate-400",
-          type === "thermal" && "mt-4 pt-2 text-[7pt]"
+          "mt-3 text-center text-muted-foreground",
+          type === "thermal" && "mt-1 text-[7px]"
         )}>
-          <p className="font-bold">SIGESS - Sistema de Gestão de Entidades</p>
-          <p>Documento gerado em {new Date().toLocaleString("pt-BR")}</p>
+          <p>Gerado em {new Date().toLocaleString("pt-BR")}</p>
         </footer>
       </div>
     );
@@ -100,3 +106,4 @@ export const PrintLayout = React.forwardRef<HTMLDivElement, PrintLayoutProps>(
 );
 
 PrintLayout.displayName = "PrintLayout";
+
