@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { extensionService, LicenseInfo } from "../../services/extensionService";
 import { cn } from "@/shared/lib/utils";
 import { Separator } from "@/shared/components/ui/separator";
+import { formatDate } from "@/shared/utils/date";
 
 export function ExtensionSettings() {
   const [licenseKey, setLicenseKey] = useState("");
@@ -200,7 +201,7 @@ export function ExtensionSettings() {
                     <span className="text-xs font-semibold uppercase tracking-wider">Validade</span>
                   </div>
                   <p className="text-sm font-bold">
-                    {licenseInfo.expires_at ? new Date(licenseInfo.expires_at).toLocaleDateString() : "Indeterminada"}
+                    {licenseInfo.expires_at ? formatDate(licenseInfo.expires_at) : "Indeterminada"}
                   </p>
                 </div>
 

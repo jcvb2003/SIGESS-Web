@@ -4,6 +4,7 @@ import { ANOS_SIMPLIFICADO, ANO_INICIAL_ANUAL, ANO_ATUAL } from "@/modules/reap/
 import { Badge } from "@/shared/components/ui/badge";
 import { Loader2, ClipboardList } from "lucide-react";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
+import { formatDate } from "@/shared/utils/date";
 
 interface ReapTabProps {
   cpf: string | null;
@@ -111,7 +112,7 @@ export function ReapTab({ cpf, emissaoRgp }: Readonly<ReapTabProps>) {
                     />
                     {d?.enviado && d?.data_envio && (
                       <span className="text-[10px] text-muted-foreground">
-                        {new Date(d.data_envio).toLocaleDateString("pt-BR")}
+                        {formatDate(d.data_envio)}
                       </span>
                     )}
                     {d?.obs && (

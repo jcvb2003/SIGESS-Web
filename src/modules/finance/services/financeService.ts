@@ -344,4 +344,31 @@ export const financeService = {
 
     if (error) throw error;
   },
-};
+
+  async fetchAllPayments(
+    startDate: string,
+    endDate: string,
+    orderBy: "data_pagamento" | "created_at" = "data_pagamento"
+  ): Promise<any[]> {
+    const { data, error } = await supabase.rpc("get_payments_by_period_paginated", {
+      p_start_date: startDate,
+      p_end_date: endDate,
+      p_limit: 10000,
+      p_offset: 0,
+      p_order_by: orderBy,
+      p_order_dir: "DESC"
+    });
+    if (error) throw error;
+    return (data as any[] || []).map((item) => ({
+      id: item.id,
+      data_pagamento: item.data_pagamento,
+      nome: item.socio_nome,
+      cpf: item.socio_cpf,
+      tipo: item.tipo,
+      competencia_ano: item.competencia_ano,
+      competencia_mes: item.competencia_mes,
+      forma_pagamento: item.forma_pagamento,
+      valor: Number(item.valor),
+      created_at: item.created_at
+    }));
+  },};

@@ -9,7 +9,11 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "remove-comments": "node ./scripts/remove-comments.mjs",
-    "sonar": "sonar-scanner"
+    "sonar": "sonar-scanner",
+    "migrate:dry-run": "tsx scripts/propagate-from-oeiras.ts --dry-run",
+    "migrate:propagate": "tsx scripts/propagate-from-oeiras.ts",
+    "backup:tenant": "tsx scripts/backup-tenant.ts --tenant=",
+    "backup:all": "tsx scripts/backup-tenant.ts --all"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

@@ -196,52 +196,48 @@ export default function FinancePage() {
         title="Financeiro"
         description="Gestão de anuidades, taxas e saúde financeira. Controle pagamentos e inadimplência de forma centralizada."
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               type="button"
               variant="outline"
-              size="icon"
-              className="h-9 w-9 md:h-11 md:w-auto md:px-4 bg-background shrink-0 rounded-xl relative"
+              className="gap-2"
               onClick={() => setFiltersOpen(true)}
             >
-              <SlidersHorizontal className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline text-xs font-bold uppercase transition-all">Filtros</span>
+              <SlidersHorizontal className="h-4 w-4" />
+              <span className="inline text-xs font-bold uppercase">Filtros</span>
               {hasActiveAdvancedFilters && (
-                <span className="absolute -top-1 -right-1 md:top-2 md:right-2 h-2 w-2 rounded-full bg-primary animate-pulse" />
+                <span className="ml-1 h-2 w-2 rounded-full bg-primary animate-pulse" />
               )}
             </Button>
             <Button
               type="button"
               variant="outline"
-              size="icon"
-              className="h-9 w-9 md:h-11 md:w-auto md:px-4 bg-background shrink-0 rounded-xl"
+              className="gap-2"
               onClick={() => navigate("/finance/payments-report")}
             >
-              <Receipt className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline text-xs font-bold uppercase transition-all">Pagamentos</span>
+              <Receipt className="h-4 w-4" />
+              <span className="inline text-xs font-bold uppercase">Pagamentos</span>
             </Button>
             {isAdmin && (
               <Button
                 type="button"
                 variant="outline"
-                size="icon"
-                className="h-9 w-9 md:h-11 md:w-auto md:px-4 bg-background shrink-0 rounded-xl"
+                className="gap-2"
                 onClick={() => setAuditOpen(true)}
               >
-                <History className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline text-xs font-bold uppercase transition-all">Auditoria</span>
+                <History className="h-4 w-4" />
+                <span className="inline text-xs font-bold uppercase">Auditoria</span>
               </Button>
             )}
             {isAdmin && (
               <Button
                 type="button"
                 variant="outline"
-                size="icon"
-                className="h-9 w-9 md:h-11 md:w-auto md:px-4 bg-background shrink-0 rounded-xl"
+                className="gap-2"
                 onClick={() => setSettingsOpen(true)}
               >
-                <SettingsIcon className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline text-xs font-bold uppercase transition-all">Configurar</span>
+                <SettingsIcon className="h-4 w-4" />
+                <span className="inline text-xs font-bold uppercase">Configurar</span>
               </Button>
             )}
           </div>

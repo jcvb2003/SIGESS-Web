@@ -7,6 +7,7 @@ import type {
   RequirementsRpcClient,
 } from "@/modules/requirements/types/requirement.types";
 import { getFishingRegistryDisplay } from "@/modules/members/utils/fisherIdentity";
+import { formatDate } from "@/shared/utils/date";
 export interface RequestReportItem {
   id: string;
   cod_req: number | string;
@@ -188,11 +189,11 @@ export const reportsService = {
 
   async exportToExcel(data: RequestReportItem[]): Promise<void> {
     const excelData = data.map((item) => ({
-      Data: item.data_req ? new Date(item.data_req).toLocaleDateString() : "",
+      Data: formatDate(item.data_req),
       Nome: item.nome,
       CPF: item.cpf,
       RGP: getFishingRegistryDisplay(item) ?? "",
-      "Data RGP": item.emissao_rgp ? new Date(item.emissao_rgp).toLocaleDateString() : "",
+      "Data RGP": formatDate(item.emissao_rgp),
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(excelData);
@@ -212,11 +213,11 @@ export const reportsService = {
     doc.text(`Gerado em: ${new Date().toLocaleDateString()}`, 14, 22);
 
     const tableData = data.map((item) => [
-      item.data_req ? new Date(item.data_req).toLocaleDateString() : "",
+      formatDate(item.data_req),
       item.nome,
       item.cpf,
       getFishingRegistryDisplay(item) ?? "",
-      item.emissao_rgp ? new Date(item.emissao_rgp).toLocaleDateString() : "",
+      formatDate(item.emissao_rgp),
     ]);
 
     autoTable(doc, {
@@ -227,6 +228,56 @@ export const reportsService = {
 
     doc.save(
       `relatorio_requerimentos_${new Date().toISOString().slice(0, 10)}.pdf`,
+    );
+  },
+
+  async exportPaymentsToExcel(data: any[]): Promise<void> {
+    const excelData = data.map((item) => ({
+      "Data Pag.": formatDate(item.data_pagamento),
+      Nome: item.nome,
+      CPF: item.cpf,
+      Tipo: item.tipo,
+      "Competência": item.competencia_mes ? `${String(item.competencia_mes).padStart(2, '0')}/${item.competencia_ano}` : item.competencia_ano,
+      Forma: item.forma_pagamento,
+      Valor: item.valor,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Pagamentos");
+
+    XLSX.writeFile(
+      workbook,
+      `relatorio_pagamentos_${new Date().toISOString().slice(0, 10)}.xlsx`,
+    );
+  },
+
+  async exportPaymentsToPdf(data: any[]): Promise<void> {
+    const doc = new jsPDF();
+    doc.text("Relatório de Pagamentos por Período", 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Gerado em: ${new Date().toLocaleDateString()}`, 14, 22);
+
+    const tableData = data.map((item) => [
+      formatDate(item.data_pagamento),
+      item.nome,
+      item.cpf,
+      item.tipo,
+      item.competencia_mes ? `${String(item.competencia_mes).padStart(2, '0')}/${item.competencia_ano}` : item.competencia_ano,
+      item.forma_pagamento,
+      item.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+    ]);
+
+    autoTable(doc, {
+      head: [["Data Pag.", "Nome", "CPF", "Tipo", "Competência", "Forma", "Valor"]],
+      body: tableData,
+      startY: 30,
+      theme: 'grid',
+      headStyles: { fillColor: [16, 185, 129] } // Emerald-600
+    });
+
+    doc.save(
+      `relatorio_pagamentos_${new Date().toISOString().slice(0, 10)}.pdf`,
     );
   },
 };

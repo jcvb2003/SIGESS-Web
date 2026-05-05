@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from "react";
+import { useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,15 +10,18 @@ import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { usePaymentSession } from "../../hooks/edit/usePaymentSession";
+import {
+  isExtraFeeBlockedByHistoricMember,
+  usePaymentSessionForm,
+} from "../../hooks/edit/usePaymentSessionForm";
 import { useFinanceSettings } from "../../hooks/data/useFinanceSettings";
 import { useMemberStatement } from "../../hooks/data/useMemberStatement";
 import { memberFinanceConfigService } from "../../services/memberFinanceConfigService";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
-import { formatNumericInput } from "../shared/formatters";
 import { generateUUID } from "@/shared/utils/uuid";
 import { MemberFinancePreview } from "../shared/MemberFinancePreview";
 import { PaymentMethodSelect } from "../shared/PaymentMethodSelect";
-import { PaymentItemForm, type ExtraFeeItem, type SelectedCharge } from "../forms/PaymentItemForm";
+import { PaymentItemForm } from "../forms/PaymentItemForm";
 import {
   Loader2,
   Check,
@@ -31,11 +34,9 @@ import {
 import type {
   PaymentSessionItem,
   PaymentType,
-  PaymentMethod,
   FinancialStatusType,
   ChargeType,
   FinanceLancamento,
-  SelectedAnnuity,
 } from "../../types/finance.types";
 import { MemberFinanceConfigForm } from "../forms/MemberFinanceConfigForm";
 
@@ -46,233 +47,6 @@ interface PaymentSessionDialogProps {
   readonly socioName?: string;
   readonly status?: FinancialStatusType;
   readonly regime?: string;
-}
-
-type PaymentCategory = "anuidade" | "mensalidade";
-type ConfigMode = "isencao" | "liberacao" | "regime" | null;
-
-const EXCLUSIVE_EXTRA_FEE_TYPES: Partial<Record<PaymentType, PaymentType[]>> = {
-  inicial: ["transferencia"],
-  transferencia: ["inicial"],
-};
-
-function isExtraFeeBlockedByHistoricMember(paymentType: PaymentType) {
-  return paymentType === "inicial" || paymentType === "transferencia";
-}
-
-function isCompatibleExtraFee(existingType: PaymentType, nextType: PaymentType) {
-  return !EXCLUSIVE_EXTRA_FEE_TYPES[nextType]?.includes(existingType);
-}
-
-interface PaymentFormState {
-  paymentCategory: PaymentCategory;
-  selectedYears: SelectedAnnuity[];
-  selectedMonths: number[];
-  selectedYearForMensalidade: number;
-  extraFees: ExtraFeeItem[];
-  selectedCharges: SelectedCharge[];
-  paymentMethod: PaymentMethod;
-  paymentDate: string;
-  isHistoricMember: boolean;
-  configMode: ConfigMode;
-}
-
-type PaymentFormAction =
-  | { type: "reset"; currentYear: number }
-  | { type: "setConfigMode"; mode: ConfigMode }
-  | { type: "setHistoricMember"; checked: boolean }
-  | { type: "setPaymentCategory"; category: PaymentCategory }
-  | { type: "toggleYear"; year: number; valorAnuidade: number }
-  | { type: "updateAnnuityValue"; year: number; rawValue: string }
-  | { type: "setSelectedMonths"; months: number[] }
-  | { type: "setSelectedYearForMensalidade"; year: number }
-  | { type: "toggleExtraFee"; paymentType: PaymentType; value: number; uid: string }
-  | { type: "removeExtraFee"; uid: string }
-  | { type: "updateExtraFeeValue"; uid: string; rawValue: string }
-  | { type: "toggleCharge"; chargeType: ChargeType; uid: string }
-  | { type: "updateChargeValue"; uid: string; rawValue: string }
-  | { type: "removeCharge"; uid: string }
-  | { type: "setPaymentMethod"; method: PaymentMethod }
-  | { type: "setPaymentDate"; date: string };
-
-function getTodayLocalDate() {
-  return new Date().toLocaleDateString("sv");
-}
-
-function numericValueFromCurrencyInput(rawValue: string) {
-  const digits = rawValue.replaceAll(/\D/g, "");
-  return Number(digits) / 100;
-}
-
-function createPaymentFormState(currentYear: number): PaymentFormState {
-  return {
-    paymentCategory: "anuidade",
-    selectedYears: [],
-    selectedMonths: [],
-    selectedYearForMensalidade: currentYear,
-    extraFees: [],
-    selectedCharges: [],
-    paymentMethod: "dinheiro",
-    paymentDate: getTodayLocalDate(),
-    isHistoricMember: false,
-    configMode: null,
-  };
-}
-
-function paymentFormReducer(
-  state: PaymentFormState,
-  action: PaymentFormAction,
-): PaymentFormState {
-  switch (action.type) {
-    case "reset":
-      return createPaymentFormState(action.currentYear);
-    case "setConfigMode":
-      return { ...state, configMode: action.mode };
-    case "setHistoricMember":
-      return {
-        ...state,
-        isHistoricMember: action.checked,
-        extraFees: action.checked
-          ? state.extraFees.filter(
-              (fee) => !isExtraFeeBlockedByHistoricMember(fee.tipo),
-            )
-          : state.extraFees,
-      };
-    case "setPaymentCategory":
-      return { ...state, paymentCategory: action.category };
-    case "toggleYear": {
-      const exists = state.selectedYears.some((year) => year.year === action.year);
-      const selectedYears = exists
-        ? state.selectedYears.filter((year) => year.year !== action.year)
-        : [
-            ...state.selectedYears,
-            {
-              year: action.year,
-              valor: action.valorAnuidade,
-              displayValue: formatNumericInput(action.valorAnuidade),
-            },
-          ].sort((a, b) => b.year - a.year);
-      return { ...state, selectedYears };
-    }
-    case "updateAnnuityValue": {
-      const numericValue = numericValueFromCurrencyInput(action.rawValue);
-      return {
-        ...state,
-        selectedYears: state.selectedYears.map((year) =>
-          year.year === action.year
-            ? {
-                ...year,
-                valor: numericValue,
-                displayValue: formatNumericInput(numericValue),
-              }
-            : year,
-        ),
-      };
-    }
-    case "setSelectedMonths":
-      return { ...state, selectedMonths: action.months };
-    case "setSelectedYearForMensalidade":
-      return { ...state, selectedYearForMensalidade: action.year };
-    case "toggleExtraFee": {
-      const alreadyExists = state.extraFees.some((fee) => fee.tipo === action.paymentType);
-      if (alreadyExists) {
-        return {
-          ...state,
-          extraFees: state.extraFees.filter((fee) => fee.tipo !== action.paymentType),
-        };
-      }
-
-      const filteredFees = state.extraFees.filter((fee) =>
-        isCompatibleExtraFee(fee.tipo, action.paymentType),
-      );
-
-      return {
-        ...state,
-        extraFees: [
-          ...filteredFees,
-          {
-            tipo: action.paymentType,
-            valor: action.value,
-            displayValue: formatNumericInput(action.value),
-            uid: action.uid,
-          },
-        ],
-      };
-    }
-    case "removeExtraFee":
-      return {
-        ...state,
-        extraFees: state.extraFees.filter((item) => item.uid !== action.uid),
-      };
-    case "updateExtraFeeValue": {
-      const numericValue = numericValueFromCurrencyInput(action.rawValue);
-      return {
-        ...state,
-        extraFees: state.extraFees.map((item) =>
-          item.uid === action.uid
-            ? {
-                ...item,
-                valor: numericValue,
-                displayValue: formatNumericInput(numericValue),
-              }
-            : item,
-        ),
-      };
-    }
-    case "toggleCharge": {
-      const exists = state.selectedCharges.some(
-        (charge) => charge.chargeType.id === action.chargeType.id,
-      );
-      if (exists) {
-        return {
-          ...state,
-          selectedCharges: state.selectedCharges.filter(
-            (charge) => charge.chargeType.id !== action.chargeType.id,
-          ),
-        };
-      }
-
-      const value = action.chargeType.valor_padrao ?? 0;
-      return {
-        ...state,
-        selectedCharges: [
-          ...state.selectedCharges,
-          {
-            chargeType: action.chargeType,
-            valor: value,
-            displayValue: formatNumericInput(value),
-            uid: action.uid,
-          },
-        ],
-      };
-    }
-    case "updateChargeValue": {
-      const numericValue = numericValueFromCurrencyInput(action.rawValue);
-      return {
-        ...state,
-        selectedCharges: state.selectedCharges.map((charge) =>
-          charge.uid === action.uid
-            ? {
-                ...charge,
-                valor: numericValue,
-                displayValue: formatNumericInput(numericValue),
-              }
-            : charge,
-        ),
-      };
-    }
-    case "removeCharge":
-      return {
-        ...state,
-        selectedCharges: state.selectedCharges.filter(
-          (charge) => charge.uid !== action.uid,
-        ),
-      };
-    case "setPaymentMethod":
-      return { ...state, paymentMethod: action.method };
-    case "setPaymentDate":
-      return { ...state, paymentDate: action.date };
-  }
 }
 
 export function PaymentSessionDialog({
@@ -288,11 +62,8 @@ export function PaymentSessionDialog({
   const paymentMutation = usePaymentSession();
 
   const currentYear = new Date().getFullYear();
-  const [paymentForm, dispatchPaymentForm] = useReducer(
-    paymentFormReducer,
-    currentYear,
-    createPaymentFormState,
-  );
+  const { state: paymentForm, dispatch: dispatchPaymentForm } =
+    usePaymentSessionForm(currentYear);
   const {
     paymentCategory,
     selectedYears,
@@ -344,7 +115,7 @@ export function PaymentSessionDialog({
       }
     }
     loadConfig();
-  }, [open, socioCpf]);
+  }, [dispatchPaymentForm, open, socioCpf]);
 
   const toggleMonth = (m: number) => {
     const paidMonthsByYear = new Map<number, Set<number>>();

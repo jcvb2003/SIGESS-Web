@@ -18,6 +18,9 @@ import { DataTablePagination } from "@/shared/components/layout/DataTablePaginat
 import type { PaymentByPeriod } from "@/modules/finance/types/finance.types";
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { DataTableSearch } from "@/shared/components/layout/DataTableSearch";
+import { financeService } from "@/modules/finance/services/financeService";
+import { reportsService } from "@/modules/reports/services/reportsService";
+import { toast } from "sonner";
 
 
 import { 
@@ -244,16 +247,35 @@ export default function PaymentsByPeriodPage() {
     </Card>
   );
 
-  const handleExportExcel = () => {
-    // Implementação futura ou via lib
-    console.log("Exportar Excel");
+  const handleExportExcel = async () => {
+    const toastId = toast.loading("Gerando exportação Excel...");
+    try {
+      const allData = await financeService.fetchAllPayments(startDate, endDate, orderBy);
+      if (!allData.length) { toast.dismiss(toastId); toast.error("Sem dados para exportar."); return; }
+      await reportsService.exportPaymentsToExcel(allData);
+      toast.dismiss(toastId);
+      toast.success("Excel exportado com sucesso!");
+    } catch (err) {
+      console.error(err);
+      toast.dismiss(toastId);
+      toast.error("Erro ao exportar Excel.");
+    }
   };
 
-  const handleExportPdf = () => {
-    globalThis.print();
+  const handleExportPdf = async () => {
+    const toastId = toast.loading("Gerando PDF...");
+    try {
+      const allData = await financeService.fetchAllPayments(startDate, endDate, orderBy);
+      if (!allData.length) { toast.dismiss(toastId); toast.error("Sem dados para exportar."); return; }
+      await reportsService.exportPaymentsToPdf(allData);
+      toast.dismiss(toastId);
+      toast.success("PDF gerado com sucesso!");
+    } catch (err) {
+      console.error(err);
+      toast.dismiss(toastId);
+      toast.error("Erro ao gerar PDF.");
+    }
   };
-
-
 
   return (
     <FormProvider {...methods}>

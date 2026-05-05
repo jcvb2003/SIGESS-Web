@@ -25,6 +25,7 @@ import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { formatNumericInput } from "../shared/formatters";
 import { generateUUID } from "@/shared/utils/uuid";
 import { isNotFutureDate } from "@/shared/utils/validators/dateValidators";
+import { getTodayISO } from "@/shared/utils/date";
 import { toast } from "sonner";
 
 import { MemberFinancePreview } from "../shared/MemberFinancePreview";
@@ -78,10 +79,10 @@ export function DAEDialog({
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("pix");
   const [boletoPago, setBoletoPago] = useState(false);
   const [dataPagamentoBoleto, setDataPagamentoBoleto] = useState(
-    new Date().toLocaleDateString("sv"),
+    getTodayISO(),
   );
   const [dataRecebimento, setDataRecebimento] = useState(
-    new Date().toLocaleDateString("sv"),
+    getTodayISO(),
   );
 
   // Mapeia meses já pagos para o ano selecionado (ignora cancelados)

@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/components/ui/card";
+import { formatDateOrDash } from "@/shared/utils/date";
 import { Button } from "@/shared/components/ui/button";
 import {
   Table,
@@ -158,15 +159,8 @@ export function DocumentsCard() {
     }
     return `${(size / (1024 * 1024)).toFixed(1)} MB`;
   };
-  const formatDate = (value: string) => {
-    if (!value) {
-      return "-";
-    }
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) {
-      return value;
-    }
-    return date.toLocaleDateString("pt-BR");
+  const renderFormattedDate = (value: string) => {
+    return formatDateOrDash(value);
   };
   const getDocumentTypeLabel = (type: string) => {
     switch (type) {
@@ -280,7 +274,7 @@ export function DocumentsCard() {
                             {formatSize(template.fileSize)}
                           </TableCell>
                           <TableCell className="px-4 py-2 text-sm text-muted-foreground hidden md:table-cell">
-                            {formatDate(template.createdAt)}
+                            {renderFormattedDate(template.createdAt)}
                           </TableCell>
                           <TableCell className="px-4 py-2 text-right">
                             <div className="flex items-center justify-end gap-2">
