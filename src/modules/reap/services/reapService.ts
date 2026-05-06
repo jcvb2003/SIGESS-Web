@@ -9,6 +9,19 @@ function firstReapRecord(value: unknown): ReapRecordShape | null {
   return (record ?? null) as ReapRecordShape | null;
 }
 
+interface ReapListViewRow {
+  cpf: string;
+  nome: string | null;
+  nit: string | null;
+  emissao_rgp: string | null;
+  situacao: string | null;
+  simplificado: Json;
+  anual: Json;
+  observacoes: string | null;
+  updated_at: string;
+  reap_status: "sem_reap" | "tem_problema" | "pendente" | "em_dia";
+}
+
 export const reapService = {
   async list(filters: {
     searchTerm?: string;
@@ -19,36 +32,22 @@ export const reapService = {
     const from = (filters.page - 1) * filters.pageSize;
     const to = from + filters.pageSize - 1;
 
-    let query = supabase
-      .from("socios")
-      .select(
-        `
-        cpf,
-        nome,
-        nit,
-        emissao_rgp,
-        reap (
-          simplificado,
-          anual,
-          observacoes,
-          updated_at
-        )
-      `,
-        { count: "exact" }
-      );
+    const query = supabase
+      .from("reap_list_view" as unknown as "socios") // Hack para manter compatibilidade com PostgrestQueryBuilder sem 'any'
+      .select("*", { count: "exact" });
 
     if (filters.searchTerm) {
       const term = `%${filters.searchTerm}%`;
-      query = query.or(`cpf.ilike.${term},nome.ilike.${term}`);
+      query.or(`cpf.ilike.${term},nome.ilike.${term}`);
     }
 
-    // Filtro de status: filtra sócios que têm pelo menos um registro REAP com o status solicitado
+    // Filtro de status usando a nova View
     if (filters.statusFilter && filters.statusFilter !== "todos") {
-      if (filters.statusFilter === "tem_problema") {
-        // Sócios que têm reap cadastrado (filtro mais específico aplicado no cliente)
-        query = query.not("reap", "is", null);
-      } else if (filters.statusFilter === "sem_reap") {
-        query = query.is("reap", null);
+      if (filters.statusFilter === "pendente") {
+        // Para "pendente", mostramos quem tem pendência real ou quem ainda não tem registro
+        query.or("reap_status.eq.pendente,reap_status.eq.sem_reap");
+      } else {
+        query.eq("reap_status", filters.statusFilter);
       }
     }
 
@@ -58,25 +57,23 @@ export const reapService = {
 
     if (error) throw error;
 
-    const items: ReapWithMember[] = (data || []).map((socio) => {
-      const reapRecord = firstReapRecord(socio.reap);
-      const simplificado = (reapRecord?.simplificado as Reap["simplificado"]) ?? {};
-      const anual = (reapRecord?.anual as Reap["anual"]) ?? {};
+    const items: ReapWithMember[] = ((data as unknown as ReapListViewRow[]) || []).map((row) => {
+      const simplificado = (row.simplificado as unknown as Reap["simplificado"]) ?? {};
+      const anual = (row.anual as unknown as Reap["anual"]) ?? {};
       
-      // Calcula se existe algum problema em qualquer ano
       const tem_problema = 
         Object.values(simplificado).some(v => v.tem_problema) || 
         Object.values(anual).some(v => v.tem_problema);
 
       return {
-        cpf: socio.cpf!,
-        member_nome: socio.nome ?? null,
-        member_nit: socio.nit ?? null,
-        emissao_rgp: socio.emissao_rgp ?? null,
+        cpf: row.cpf,
+        member_nome: row.nome ?? null,
+        member_nit: row.nit ?? null,
+        emissao_rgp: row.emissao_rgp ?? null,
         simplificado,
         anual,
-        observacoes: (reapRecord?.observacoes as string | null) ?? null,
-        updated_at: reapRecord?.updated_at ?? "",
+        observacoes: row.observacoes ?? null,
+        updated_at: row.updated_at ?? "",
         tem_problema,
       };
     });
@@ -200,13 +197,25 @@ export const reapService = {
   async consolidateSimplificadoCompleteness(pendencyCpfs: string[]): Promise<number> {
     const pendencySet = new Set(pendencyCpfs);
 
-    // Busca todos os CPFs de sócios ativos
-    const { data: allMembers, error: fetchError } = await supabase
-      .from("socios")
-      .select("cpf")
-      .eq("situacao", "ATIVO");
+    // Busca todos os CPFs de sócios ativos com paginação (evita limite de 1000 do PostgREST)
+    let allMembers: { cpf: string | null }[] = [];
+    let fromOffset = 0;
+    const pageSize = 1000;
 
-    if (fetchError) throw fetchError;
+    while (true) {
+      const { data, error: fetchError } = await supabase
+        .from("socios")
+        .select("cpf")
+        .eq("situacao", "ATIVO")
+        .range(fromOffset, fromOffset + pageSize - 1);
+
+      if (fetchError) throw fetchError;
+      if (!data || data.length === 0) break;
+
+      allMembers = allMembers.concat(data);
+      if (data.length < pageSize) break;
+      fromOffset += pageSize;
+    }
 
     const membersToMark = (allMembers || [])
       .map(m => m.cpf)
