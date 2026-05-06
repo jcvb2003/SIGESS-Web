@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
-import { resolveTenant } from "@/config/tenants";
+import { getCachedTenantConfig } from "@/config/tenants";
 
 const PROBE_INTERVAL_MS = 15_000;
 const PROBE_TIMEOUT_MS = 5_000;
@@ -9,7 +9,7 @@ async function checkRealConnectivity(): Promise<boolean> {
   const savedTenant = typeof localStorage === "undefined" ? null : localStorage.getItem("sigess_tenant");
   if (!savedTenant) return navigator.onLine;
 
-  const tenant = resolveTenant(savedTenant);
+  const tenant = getCachedTenantConfig(savedTenant);
   if (!tenant || !tenant.supabaseUrl) return navigator.onLine;
 
   const controller = new AbortController();

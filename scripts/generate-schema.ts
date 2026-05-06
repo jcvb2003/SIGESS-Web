@@ -3,7 +3,7 @@ import * as path from 'node:path';
 import { Client } from 'pg';
 import * as dotenv from 'dotenv';
 import * as dns from 'node:dns';
-import { buildTenants } from '../src/config/tenants.js';
+import { buildTenantsFromEnv } from './lib/build-tenants-from-env.js';
 
 dns.setDefaultResultOrder('ipv4first');
 dotenv.config();
@@ -13,7 +13,7 @@ type EnvSource = Record<string, string | undefined>;
 async function generateSchema() {
   const targetTenant = process.argv.slice(2).find(a => a.startsWith('--tenant='))?.split('=')[1] || 'oeiras';
   
-  const tenants = buildTenants(process.env as EnvSource);
+  const tenants = buildTenantsFromEnv(process.env as EnvSource);
   const config = tenants[targetTenant];
   
   if (!config) {

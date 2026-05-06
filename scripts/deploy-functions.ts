@@ -1,6 +1,6 @@
 import { execSync } from 'node:child_process';
 import * as dotenv from 'dotenv';
-import { buildTenants } from '../src/config/tenants.js';
+import { buildTenantsFromEnv } from './lib/build-tenants-from-env.js';
 
 // Carrega o .env local
 dotenv.config();
@@ -22,7 +22,7 @@ async function deployFunctions() {
   }
 
   // Constrói mapa de tenants
-  const tenants = buildTenants(process.env as EnvSource);
+  const tenants = buildTenantsFromEnv(process.env as EnvSource);
   let tenantEntries = Object.entries(tenants);
 
   if (targetTenant) {
