@@ -65,11 +65,11 @@ export function LoginForm() {
     try {
       // Inicializar o cliente Supabase com o tenant informado antes de enviar o reset
       try {
-        initSupabaseClient(data.tenantCode);
+        await initSupabaseClient(data.tenantCode);
       } catch {
         throw new Error(`Entidade "${data.tenantCode}" não encontrada. Verifique o código e tente novamente.`);
       }
-      const { error } = await authService.resetPassword(data.email);
+      const { error } = await authService.resetPassword(data.email, data.tenantCode);
       if (error) throw error;
       toast.success("Link de recuperação enviado! Verifique seu e-mail.");
       setIsForgotPassword(false);

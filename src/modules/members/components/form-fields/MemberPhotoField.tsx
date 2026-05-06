@@ -4,7 +4,6 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { compressMemberPhoto } from "@/shared/utils/image-compression";
 import { supabase } from "@/shared/lib/supabase/client";
-import { resolveTenantBySupabaseUrl } from "@/config/tenants";
 import { photoService } from "../../services/photoService";
 import { QRCodeCanvas } from "qrcode.react";
 import {
@@ -318,7 +317,7 @@ export function MemberPhotoField() {
     );
   };
 
-  const tenantCode = localStorage.getItem('sigess_tenant') || resolveTenantBySupabaseUrl(import.meta.env.VITE_SUPABASE_URL) || '';
+  const tenantCode = localStorage.getItem('sigess_tenant') || '';
   const uploadUrl = `${globalThis.location.origin}/foto-upload?t=${qrToken}&tenant=${tenantCode}`;
 
   return (

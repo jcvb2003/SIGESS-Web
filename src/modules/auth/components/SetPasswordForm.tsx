@@ -15,7 +15,7 @@ import { Input } from "@/shared/components/ui/input";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { createClient } from "@supabase/supabase-js";
-import { resolveTenant, resolveTenantBySupabaseUrl } from "@/config/tenants";
+import { resolveAndCacheTenant } from "@/config/tenants";
 import { initSupabaseClient } from "@/shared/lib/supabase/client";
 
 const passwordSchema = z.object({
@@ -49,35 +49,11 @@ function extractTokensFromHash(): { accessToken: string | null; refreshToken: st
 }
 
 /**
- * Tenta decodificar o tenant a partir do access_token presente no hash da URL.
- * O access_token é um JWT onde o "iss" (issuer) tem a URL do Supabase Project.
+ * Lê o código do tenant do query param `?tenant=` da URL.
  */
-function extractTenantFromToken(token: string | null): string | null {
-  if (!token) return null;
-  try {
-    const payloadPayload = token.split('.')[1];
-    if (!payloadPayload) return null;
-    const payloadString = globalThis.atob(payloadPayload);
-    const payload = JSON.parse(payloadString);
-    if (payload.iss) {
-      return resolveTenantBySupabaseUrl(payload.iss);
-    }
-  } catch {
-    // Ignorar falhas de decodificação no client
-  }
-  return null;
-}
-
-/**
- * Lê o código do tenant do query param `?tenant=` da URL, ou tenta deduzir do access_token.
- */
-function extractTenantFromUrl(accessToken: string | null): string | null {
+function extractTenantFromUrl(): string | null {
   if (globalThis.window === undefined) return null;
-
-  const param = new URLSearchParams(globalThis.location.search).get("tenant");
-  if (param) return param;
-
-  return extractTenantFromToken(accessToken);
+  return new URLSearchParams(globalThis.location.search).get("tenant");
 }
 
 export function SetPasswordForm() {
@@ -88,7 +64,7 @@ export function SetPasswordForm() {
 
   // Tokens lidos UMA vez no mount — não re-leituras reativas
   const tokensRef = useRef(extractTokensFromHash());
-  const tenantCodeRef = useRef(extractTenantFromUrl(tokensRef.current.accessToken));
+  const tenantCodeRef = useRef(extractTenantFromUrl());
 
   useEffect(() => {
     const { accessToken, refreshToken } = tokensRef.current;
@@ -98,9 +74,13 @@ export function SetPasswordForm() {
       setTokenError("Link inválido ou já utilizado. Solicite um novo convite.");
       return;
     }
-    if (!tenantCode || !resolveTenant(tenantCode)) {
+    if (!tenantCode) {
       setTokenError("Link inválido: entidade não identificada. Solicite um novo convite.");
+      return;
     }
+    resolveAndCacheTenant(tenantCode).catch(() => {
+      setTokenError("Link inválido: entidade não identificada. Solicite um novo convite.");
+    });
   }, []);
 
   const methods = useForm<PasswordFormData>({
@@ -120,7 +100,7 @@ export function SetPasswordForm() {
       return;
     }
 
-    const tenant = resolveTenant(tenantCode);
+    const tenant = await resolveAndCacheTenant(tenantCode).catch(() => null);
     if (!tenant) {
       toast.error("Entidade não encontrada. Verifique o link.");
       return;
@@ -149,8 +129,8 @@ export function SetPasswordForm() {
       if (updateError) throw updateError;
 
       // Promove a sessão para o cliente principal e inicializa o tenant
-      initSupabaseClient(tenantCode);
-      await initSupabaseClient(tenantCode).auth.setSession({
+      const mainClient = await initSupabaseClient(tenantCode);
+      await mainClient.auth.setSession({
         access_token: accessToken,
         refresh_token: refreshToken,
       });

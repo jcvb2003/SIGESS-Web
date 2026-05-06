@@ -54,9 +54,11 @@ export const authService = {
     }
     return { data: null, error: null };
   },
-  async resetPassword(email: string): Promise<ServiceResponse<void>> {
+  async resetPassword(email: string, tenantCode?: string): Promise<ServiceResponse<void>> {
+    const origin = typeof globalThis === 'undefined' ? '' : globalThis.location.origin;
+    const tenantParam = tenantCode ? `?tenant=${encodeURIComponent(tenantCode)}` : '';
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${typeof globalThis === 'undefined' ? '' : globalThis.location.origin}/password`,
+      redirectTo: `${origin}/password${tenantParam}`,
     });
     if (error) {
       return { data: null, error };

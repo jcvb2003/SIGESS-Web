@@ -1,6 +1,6 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { Database } from "./database.types";
-import { resolveTenant } from "@/config/tenants";
+import { resolveTenant, resolveAndCacheTenant, TENANT_CONFIG_CACHE_KEY } from "@/config/tenants";
 
 const TENANT_KEY = 'sigess_tenant';
 
@@ -18,13 +18,8 @@ function injectPreconnect(url: string) {
 
 let _client: SupabaseClient<Database> | null = null;
 
-export function initSupabaseClient(tenantCode: string): SupabaseClient<Database> {
-  const tenant = resolveTenant(tenantCode);
-  if (!tenant) throw new Error('Entidade não encontrada');
-
-  if (!tenant.supabaseUrl || !tenant.supabaseAnonKey) {
-    throw new Error(`Entidade não encontrada: ${tenantCode}`);
-  }
+export async function initSupabaseClient(tenantCode: string): Promise<SupabaseClient<Database>> {
+  const tenant = await resolveAndCacheTenant(tenantCode);
 
   const saved = typeof globalThis === 'undefined' ? null : globalThis.localStorage.getItem(TENANT_KEY);
   if (_client && saved === tenantCode) {
@@ -48,6 +43,23 @@ export function getSupabaseClient(): SupabaseClient<Database> {
   // Restaurar sessão após o reload
   const saved = typeof globalThis === 'undefined' ? null : globalThis.localStorage.getItem(TENANT_KEY);
   if (saved) {
+    // Tenta config cache primeiro (cobre tenants resolvidos dinamicamente)
+    try {
+      const configRaw = globalThis.localStorage.getItem(TENANT_CONFIG_CACHE_KEY);
+      if (configRaw) {
+        const cached = JSON.parse(configRaw) as { code: string; supabaseUrl: string; supabaseAnonKey: string };
+        if (cached.code === saved && cached.supabaseUrl && cached.supabaseAnonKey) {
+          const isPasswordRoute = globalThis.location.pathname.startsWith('/password');
+          _client = createClient<Database>(cached.supabaseUrl, cached.supabaseAnonKey, {
+            auth: { detectSessionInUrl: !isPasswordRoute }
+          });
+          injectPreconnect(cached.supabaseUrl);
+          return _client;
+        }
+      }
+    } catch { /* ignorar — fallback abaixo */ }
+
+    // Fallback: env map (tenants buildados sem cache ainda)
     const tenant = resolveTenant(saved);
     if (tenant?.supabaseUrl && tenant?.supabaseAnonKey) {
       const isPasswordRoute = typeof globalThis !== 'undefined' && globalThis.location.pathname.startsWith('/password');
@@ -67,6 +79,12 @@ export function clearSupabaseClient(): void {
   if (typeof globalThis !== 'undefined') {
     globalThis.localStorage.removeItem(TENANT_KEY);
     globalThis.localStorage.removeItem("last_activity_timestamp");
+  }
+}
+
+export function clearTenantConfigCache(): void {
+  if (typeof globalThis !== 'undefined') {
+    globalThis.localStorage.removeItem(TENANT_CONFIG_CACHE_KEY);
   }
 }
 
@@ -95,4 +113,3 @@ export const supabase = new Proxy({} as SupabaseClient<Database>, {
     return client[prop as keyof SupabaseClient<Database>];
   }
 });
-

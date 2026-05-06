@@ -77,7 +77,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
         }
 
         /**
-         * CASO 3: Modo multi-tenant sem tenant salvo.
+         * CASO 2: Modo multi-tenant sem tenant salvo.
          * Nenhum cliente é inicializado. A aplicação permanece na tela de login.
          * Não há erro aqui — é o estado inicial esperado.
          */
@@ -100,7 +100,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
 
   const signIn = async (credentials: LoginCredentials): Promise<boolean> => {
     try {
-      initSupabaseClient(credentials.tenantCode);
+      await initSupabaseClient(credentials.tenantCode);
       attachListener();
 
       const { data, error } = await authService.signIn(credentials);
