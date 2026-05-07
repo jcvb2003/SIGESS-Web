@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,7 +8,6 @@ import {
   DialogFooter,
 } from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Badge } from "@/shared/components/ui/badge";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
@@ -19,6 +18,7 @@ import { reapService } from "../services/reapService";
 import { reapQueryKeys } from "../queryKeys";
 import { toast } from "sonner";
 import { cn } from "@/shared/lib/utils";
+import { DataTable, ColumnDef } from "@/shared/components/layout/DataTable";
 import { Switch } from "@/shared/components/ui/switch";
 import { Label } from "@/shared/components/ui/label";
 import * as pdfjs from "pdfjs-dist";
@@ -292,6 +292,81 @@ export function ConsultarPendenciasDialog({
     onOpenChange(false);
   };
 
+  const columns = useMemo<ColumnDef<ReconciliationResult>[]>(() => [
+    {
+      header: (
+        <div className="flex justify-center w-full">
+          <Checkbox 
+            checked={results.length > 0 && results.every(r => r.selected)}
+            onCheckedChange={handleToggleAll}
+          />
+        </div>
+      ),
+      className: "w-12 text-center px-0",
+      cell: (res) => (
+        <div className="flex justify-center w-full">
+          <Checkbox 
+            checked={res.selected}
+            onCheckedChange={(checked) => {
+              const index = results.indexOf(res);
+              if (index !== -1) handleToggleItem(index, !!checked);
+            }}
+          />
+        </div>
+      )
+    },
+    {
+      header: "PDF (Lista Gov.)",
+      className: "min-w-[180px]",
+      cell: (res) => (
+        <div className="flex flex-col">
+          <span className="font-medium text-sm text-foreground/90">{res.pdfNome}</span>
+          <span className="text-[10px] text-muted-foreground opacity-70 uppercase">{res.pdfCpf}</span>
+        </div>
+      )
+    },
+    {
+      header: "Sócio (SIGESS)",
+      className: "min-w-[180px]",
+      cell: (res) => (
+        <div className="flex flex-col">
+          <span className="font-medium text-sm text-foreground/90 uppercase">{res.nomeMatch}</span>
+          <span className="text-[10px] text-muted-foreground opacity-70">CPF: {res.cpfMatch}</span>
+        </div>
+      )
+    },
+    {
+      header: "Confiança",
+      className: "text-center",
+      headerClassName: "text-center",
+      cell: (res) => res.matchType === "FULL" ? (
+        <Badge variant="secondary" className="bg-emerald-600/10 text-emerald-600 hover:bg-emerald-600/20 border-emerald-600/20 text-[10px]">
+          CPF + NOME
+        </Badge>
+      ) : (
+        <Badge variant="secondary" className="bg-amber-600 text-white hover:bg-amber-700 text-[10px]">
+          PARCIAL
+        </Badge>
+      )
+    },
+    {
+      header: "Anos Pendentes",
+      cell: (res) => (
+        <div className="flex flex-wrap gap-1">
+          {res.anosPendentes.map((ano) => (
+            <Badge 
+              key={ano} 
+              variant="secondary" 
+              className="text-[10px] bg-sky-600/10 text-sky-600 hover:bg-sky-600/20 border-sky-600/20"
+            >
+              {ano}
+            </Badge>
+          ))}
+        </div>
+      )
+    }
+  ], [results, handleToggleAll, handleToggleItem]);
+
   const selectedCount = results.filter((r) => r.selected).length;
   const fullCount = results.filter((r) => r.matchType === "FULL").length;
   const parcialCount = results.filter((r) => r.matchType === "PARCIAL").length;
@@ -335,11 +410,19 @@ export function ConsultarPendenciasDialog({
             <div className="py-8 flex flex-col items-center justify-center border-2 border-dashed rounded-xl gap-4 hover:border-primary/50 transition-colors">
               {isAnalyzing ? (
                 <div className="flex flex-col items-center gap-4 py-8 w-full max-w-xs">
-                  <Loader2 className="h-10 w-10 animate-spin text-primary opacity-30" />
-                  <Progress value={progress} className="h-2 w-full" />
-                  <p className="text-sm text-muted-foreground animate-pulse">
-                    Cruzando com base do SIGESS...
-                  </p>
+                  <div className="relative flex items-center justify-center">
+                    <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-sm font-bold">{progress}%</span>
+                    </div>
+                  </div>
+
+                  <div className="w-full max-w-xs space-y-2">
+                    <Progress value={progress} className="h-2 bg-muted" />
+                    <p className="text-center text-sm text-muted-foreground animate-pulse">
+                      Cruzando dados com o banco do SIGESS...
+                    </p>
+                  </div>
                 </div>
               ) : (
                 <>
@@ -372,66 +455,12 @@ export function ConsultarPendenciasDialog({
           {step === "results" && (
             <div className="flex flex-col h-full gap-4">
               <ScrollArea className="flex-1 border rounded-lg bg-card">
-                <Table>
-                  <TableHeader className="bg-muted/50 sticky top-0">
-                    <TableRow>
-                      <TableHead className="w-10 text-center">
-                        <Checkbox
-                          checked={results.every((r) => r.selected) && results.length > 0}
-                          onCheckedChange={handleToggleAll}
-                        />
-                      </TableHead>
-                      <TableHead>PDF (Lista Gov.)</TableHead>
-                      <TableHead>Sócio (SIGESS)</TableHead>
-                      <TableHead>Confiança</TableHead>
-                      <TableHead>Anos Pendentes</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {results.map((res, index) => (
-                      <TableRow key={res.id} className="hover:bg-muted/30">
-                        <TableCell className="text-center">
-                          <Checkbox
-                            checked={res.selected}
-                            onCheckedChange={(checked) => handleToggleItem(index, !!checked)}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="font-medium text-sm">{res.pdfNome}</span>
-                            <span className="text-xs text-muted-foreground">{res.pdfCpf}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="font-medium text-sm">{res.nomeMatch}</span>
-                            <span className="text-xs text-muted-foreground">{res.cpfMatch}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {res.matchType === "FULL" ? (
-                            <Badge className="bg-emerald-600 hover:bg-emerald-700">
-                              CPF + Nome
-                            </Badge>
-                          ) : (
-                            <Badge variant="secondary" className="bg-amber-600 text-white hover:bg-amber-700">
-                              Parcial
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {res.anosPendentes.map((ano) => (
-                              <Badge key={ano} variant="outline" className="text-[10px]">
-                                {ano}
-                              </Badge>
-                            ))}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <DataTable<ReconciliationResult>
+                  data={results}
+                  columns={columns}
+                  variant="minimal"
+                  rowClassName={() => "group"}
+                />
               </ScrollArea>
 
               {/* Resumo */}

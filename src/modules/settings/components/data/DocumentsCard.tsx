@@ -215,7 +215,7 @@ export function DocumentsCard() {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="w-[95vw] sm:w-full max-w-lg md:max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+        <DialogContent className="w-[95vw] sm:w-full max-w-lg md:max-w-3xl lg:max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>Templates de Documentos</DialogTitle>
             <DialogDescription>
@@ -227,7 +227,7 @@ export function DocumentsCard() {
           <div className="space-y-6 py-2">
             <div className="flex flex-col gap-3 w-full">
               <h3 className="text-sm font-medium">Templates cadastrados</h3>
-              <div className="max-h-72 w-full overflow-y-auto border border-border/40 rounded-md">
+              <div className="max-h-72 w-full overflow-auto border border-border/40 rounded-md">
                 <Table className="w-full">
                   <TableHeader>
                     <TableRow>

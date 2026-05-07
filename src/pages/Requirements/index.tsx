@@ -12,7 +12,7 @@ import { format, parseISO, isValid } from "date-fns";
 import { RequirementDetailsModal } from "../../modules/requirements/components/RequirementDetailsModal";
 import { ImportPortalDialog } from "../../modules/requirements/components/ImportPortalDialog";
 import { RequirementWithMember } from "../../modules/requirements/types/requirement.types";
-import { StatusBadge } from "@/shared/components/ui/StatusBadge";
+import { StatusBadge, StatusBadgeVariant } from "@/shared/components/ui/StatusBadge";
 import {
   Tooltip,
   TooltipContent,
@@ -105,18 +105,28 @@ export default function RequirementsPage() {
       header: "Status",
       skeletonVariant: "badge",
       cell: (req) => {
-        const isHabilitado = req.status_mte === "deferido";
+        const isDeferido = req.status_mte === "deferido";
         const isIndeferido = req.status_mte === "indeferido";
+        const isPago = req.beneficio_recebido;
         
-        let variant: "success" | "destructive" | "warning" | "outline" = "warning";
+        let variant: StatusBadgeVariant = "info";
         let label = "EM ANÁLISE";
 
-        if (isHabilitado) {
+        if (isPago) {
           variant = "success";
-          label = "HABILITADO";
+          label = "PAGO";
+        } else if (isDeferido) {
+          variant = "success";
+          label = "DEFERIDO";
         } else if (isIndeferido) {
           variant = "destructive";
           label = "INDEFERIDO";
+        } else if (req.status_mte === 'assinado') {
+          variant = "warning";
+          label = "ASSINADO";
+        } else if (req.status_mte === 'recurso_acerto') {
+          variant = "orange";
+          label = "RECURSO / ACERTO";
         } else if (req.status_mte === 'nao_assinado') {
           variant = "outline";
           label = "NÃO ASSINOU";
@@ -129,13 +139,20 @@ export default function RequirementsPage() {
       header: "Financeiro",
       skeletonVariant: "badge",
       cell: (req) => {
-        const recebido = req.beneficio_recebido;
-        return (
-          <StatusBadge 
-            variant={recebido ? "success" : "secondary"}
-            label={recebido ? "RECEBIDO" : "AGUARDANDO"}
-          />
-        );
+        const situacao = req.situacao_financeira;
+        
+        let variant: StatusBadgeVariant = "destructive";
+        let label = "EM ATRASO";
+
+        if (situacao === 'em_dia') {
+          variant = "success";
+          label = "EM DIA";
+        } else if (situacao === 'isento') {
+          variant = "info";
+          label = "ISENTO";
+        }
+
+        return <StatusBadge variant={variant} label={label} />;
       }
     },
     {

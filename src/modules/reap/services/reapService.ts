@@ -1,4 +1,6 @@
 import { supabase } from "@/shared/lib/supabase/client";
+import { fetchAll } from "@/shared/lib/supabase/utils";
+import { normalizeName } from "@/shared/utils/text";
 import { Json } from "@/shared/lib/supabase/database.types";
 import { Reap, ReapAnoAnual, ReapAnoSimplificado, ReapWithMember } from "../types/reap.types";
 
@@ -197,29 +199,16 @@ export const reapService = {
   async consolidateSimplificadoCompleteness(pendencyCpfs: string[]): Promise<number> {
     const pendencySet = new Set(pendencyCpfs);
 
-    // Busca todos os CPFs de sócios ativos com paginação (evita limite de 1000 do PostgREST)
-    let allMembers: { cpf: string | null }[] = [];
-    let fromOffset = 0;
-    const pageSize = 1000;
-
-    while (true) {
-      const { data, error: fetchError } = await supabase
+    const allMembers = await fetchAll<{ cpf: string }>(
+      supabase
         .from("socios")
         .select("cpf")
         .eq("situacao", "ATIVO")
-        .range(fromOffset, fromOffset + pageSize - 1);
-
-      if (fetchError) throw fetchError;
-      if (!data || data.length === 0) break;
-
-      allMembers = allMembers.concat(data);
-      if (data.length < pageSize) break;
-      fromOffset += pageSize;
-    }
+    );
 
     const membersToMark = (allMembers || [])
       .map(m => m.cpf)
-      .filter(cpf => !!cpf && !pendencySet.has(cpf));
+      .filter((cpf): cpf is string => !!cpf && !pendencySet.has(cpf));
 
     if (membersToMark.length === 0) return 0;
 
@@ -258,64 +247,55 @@ export const reapService = {
     const simplificadoRaw = entries.filter((e) => e.tipo === "simplificado");
     const anualRaw = entries.filter((e) => e.tipo === "anual");
 
-    const CHUNK_SIZE = 50;
-
     if (simplificadoRaw.length > 0) {
-      const batchData = simplificadoRaw.map((e) => ({
-        cpf: e.cpf,
-        simplificado: e.anos.reduce(
-          (acc, ano) => ({
-            ...acc,
-            [String(ano)]: { enviado: true, tem_problema: false },
-          }),
-          {}
-        ),
-      }));
-
-      const CONCURRENCY = 15;
-      for (let i = 0; i < batchData.length; i += CHUNK_SIZE * CONCURRENCY) {
-        const promises = [];
-        for (let j = 0; j < CONCURRENCY; j++) {
-          const start = i + j * CHUNK_SIZE;
-          if (start >= batchData.length) break;
-          promises.push(
-            supabase.rpc("reap_batch_upsert_simplificado_v2", {
-              p_entries: batchData.slice(start, start + CHUNK_SIZE),
-            })
-          );
-        }
-        const results = await Promise.all(promises);
-        for (const res of results) if (res.error) throw res.error;
-      }
+      await this.processBatchUpdate(
+        simplificadoRaw, 
+        "simplificado", 
+        "reap_batch_upsert_simplificado_v2"
+      );
     }
 
     if (anualRaw.length > 0) {
-      const batchData = anualRaw.map((e) => ({
-        cpf: e.cpf,
-        anual: e.anos.reduce(
-          (acc, ano) => ({
-            ...acc,
-            [String(ano)]: { enviado: true, tem_problema: false },
-          }),
-          {}
-        ),
-      }));
+      await this.processBatchUpdate(
+        anualRaw, 
+        "anual", 
+        "reap_batch_upsert_anual_v2"
+      );
+    }
+  },
 
-      const CONCURRENCY = 15;
-      for (let i = 0; i < batchData.length; i += CHUNK_SIZE * CONCURRENCY) {
-        const promises = [];
-        for (let j = 0; j < CONCURRENCY; j++) {
-          const start = i + j * CHUNK_SIZE;
-          if (start >= batchData.length) break;
-          promises.push(
-            supabase.rpc("reap_batch_upsert_anual_v2", {
-              p_entries: batchData.slice(start, start + CHUNK_SIZE),
-            })
-          );
-        }
-        const results = await Promise.all(promises);
-        for (const res of results) if (res.error) throw res.error;
+  async processBatchUpdate(
+    rawEntries: { cpf: string; anos: number[] }[],
+    field: "simplificado" | "anual",
+    rpcName: string
+  ): Promise<void> {
+    const CHUNK_SIZE = 50;
+    const CONCURRENCY = 15;
+    
+    const batchData = rawEntries.map((e) => ({
+      cpf: e.cpf,
+      [field]: e.anos.reduce(
+        (acc, ano) => ({
+          ...acc,
+          [String(ano)]: { enviado: true, tem_problema: false },
+        }),
+        {}
+      ),
+    }));
+
+    for (let i = 0; i < batchData.length; i += CHUNK_SIZE * CONCURRENCY) {
+      const promises = [];
+      for (let j = 0; j < CONCURRENCY; j++) {
+        const start = i + j * CHUNK_SIZE;
+        if (start >= batchData.length) break;
+        promises.push(
+          supabase.rpc(rpcName as any, {
+            p_entries: batchData.slice(start, start + CHUNK_SIZE),
+          })
+        );
       }
+      const results = await Promise.all(promises);
+      for (const res of results) if (res.error) throw res.error;
     }
   },
 
@@ -324,33 +304,8 @@ export const reapService = {
   ): Promise<{ found: number; notFound: string[] }> {
     // Pré-carrega CPFs conhecidos e registros REAP existentes em 2 queries totais
     // Elimina N+1 queries sequenciais (era 3 queries por arquivo × 414 = 1.242 requests)
-    // Paginação para superar o PostgREST max_rows
-    const fetchSocios = async () => {
-      let all: { cpf: string | null }[] = [];
-      let from = 0;
-      while (true) {
-        const { data } = await supabase.from("socios").select("cpf").range(from, from + 1000 - 1);
-        if (!data || data.length === 0) break;
-        all = all.concat(data);
-        if (data.length < 1000) break;
-        from += 1000;
-      }
-      return all;
-    };
-    
-    const fetchReaps = async () => {
-      let all: { cpf: string; anual: unknown }[] = [];
-      let from = 0;
-      while (true) {
-
-        const { data } = await supabase.from("reap").select("cpf, anual").range(from, from + 1000 - 1);
-        if (!data || data.length === 0) break;
-        all = all.concat(data as unknown as { cpf: string; anual: unknown }[]);
-        if (data.length < 1000) break;
-        from += 1000;
-      }
-      return all;
-    };
+    const fetchSocios = () => fetchAll<{ cpf: string }>(supabase.from("socios").select("cpf"));
+    const fetchReaps = () => fetchAll<{ cpf: string; anual: Record<string, any> }>(supabase.from("reap").select("cpf, anual"));
 
     const [socios, reapRecords] = await Promise.all([
       fetchSocios(),
@@ -382,31 +337,14 @@ export const reapService = {
       paraProcessar.push(entry);
     }
 
-    // Agrupa por CPF para usar a RPC de lote
-    interface BatchAnualEntry {
-      cpf: string;
-      anual: Record<string, Partial<ReapAnoAnual>>;
-    }
-    const batchDataMap = new Map<string, BatchAnualEntry>();
-    for (const entry of paraProcessar) {
-      if (!batchDataMap.has(entry.cpf)) {
-        batchDataMap.set(entry.cpf, { cpf: entry.cpf, anual: {} });
-      }
-      const batchEntry = batchDataMap.get(entry.cpf)!;
-      batchEntry.anual[String(entry.ano)] = {
-        enviado: true,
-        data_envio: entry.dataEnvio,
-        tem_problema: false,
-      };
-    }
-
+    const batchDataMap = this.groupAnualEntriesByCpf(paraProcessar);
     const batchEntries = Array.from(batchDataMap.values());
     const CHUNK_SIZE = 50;
     const CONCURRENCY = 15;
 
     for (let i = 0; i < batchEntries.length; i += CHUNK_SIZE * CONCURRENCY) {
       const promises = [];
-      const currentChunks: BatchAnualEntry[][] = [];
+      const currentChunks: { cpf: string; anual: Record<string, Partial<ReapAnoAnual>> }[][] = [];
 
       for (let j = 0; j < CONCURRENCY; j++) {
         const start = i + j * CHUNK_SIZE;
@@ -415,7 +353,7 @@ export const reapService = {
         currentChunks.push(chunk);
         promises.push(
           supabase.rpc("reap_batch_upsert_anual_v2", {
-            p_entries: chunk as unknown as Json,
+            p_entries: chunk,
           })
         );
       }
@@ -423,7 +361,6 @@ export const reapService = {
       const results = await Promise.all(promises);
       for (const res of results) if (res.error) throw res.error;
 
-      // Conta quantos registros foram processados nestes chunks
       for (const chunk of currentChunks) {
         for (const item of chunk) {
           found += Object.keys(item.anual).length;
@@ -432,6 +369,22 @@ export const reapService = {
     }
 
     return { found, notFound };
+  },
+
+  groupAnualEntriesByCpf(entries: { cpf: string; ano: number; dataEnvio: string }[]) {
+    const map = new Map<string, { cpf: string; anual: Record<string, Partial<ReapAnoAnual>> }>();
+    for (const entry of entries) {
+      if (!map.has(entry.cpf)) {
+        map.set(entry.cpf, { cpf: entry.cpf, anual: {} });
+      }
+      const batchEntry = map.get(entry.cpf)!;
+      batchEntry.anual[String(entry.ano)] = {
+        enviado: true,
+        data_envio: entry.dataEnvio,
+        tem_problema: false,
+      };
+    }
+    return map;
   },
 
   async importPendencias(
@@ -484,30 +437,34 @@ export const reapService = {
       .select("uf")
       .maybeSingle();
 
-    let allMembers: { cpf: string | null; nome: string | null; reap: unknown }[] = [];
-    let fromIndex = 0;
-    const pageSize = 1000;
+    interface MemberWithReap {
+      cpf: string;
+      nome: string | null;
+      reap: Array<{
+        simplificado: Record<string, any>;
+        anual: Record<string, any>;
+        updated_at: string;
+        observacoes: string | null;
+      }> | {
+        simplificado: Record<string, any>;
+        anual: Record<string, any>;
+        updated_at: string;
+        observacoes: string | null;
+      } | null;
+    }
 
-    while (true) {
-      const { data, error } = await supabase
+    const allMembers = await fetchAll<MemberWithReap>(
+      supabase
         .from("socios")
         .select(`cpf, nome, reap ( simplificado, anual, updated_at, observacoes )`)
-        .range(fromIndex, fromIndex + pageSize - 1);
-
-      if (error) break;
-      if (!data || data.length === 0) break;
-
-      allMembers = allMembers.concat(data);
-      if (data.length < pageSize) break;
-      fromIndex += pageSize;
-    }
+    );
     
-    const members = allMembers.filter((m): m is typeof m & { cpf: string } => !!m.cpf);
+    const members = (allMembers || []).filter((m): m is MemberWithReap => !!m.cpf);
     
     return {
       entityUf: entity?.uf ?? "PA",
       members: members.map((m) => {
-        const r = (Array.isArray(m.reap) ? m.reap[0] : m.reap) as Reap | undefined;
+        const r = Array.isArray(m.reap) ? m.reap[0] : m.reap;
         return {
           cpf: m.cpf,
           nome: m.nome,
@@ -519,8 +476,8 @@ export const reapService = {
                 updated_at: r.updated_at,
                 observacoes: r.observacoes ?? null,
                 tem_problema: 
-                  Object.values(r.simplificado ?? {}).some(v => v.tem_problema) || 
-                  Object.values(r.anual ?? {}).some(v => v.tem_problema),
+                  Object.values(r.simplificado ?? {}).some((v: any) => (v as { tem_problema?: boolean }).tem_problema) || 
+                  Object.values(r.anual ?? {}).some((v: any) => (v as { tem_problema?: boolean }).tem_problema),
               }
             : null,
         };
@@ -529,10 +486,6 @@ export const reapService = {
   },
 
   normalizeName(name: string): string {
-    return name
-      .normalize("NFD")
-      .replaceAll(/[\u0300-\u036f]/g, "")
-      .toUpperCase()
-      .trim();
+    return normalizeName(name);
   },
 };

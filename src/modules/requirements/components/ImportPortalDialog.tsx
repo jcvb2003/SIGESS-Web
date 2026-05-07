@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,7 +8,6 @@ import {
   DialogDescription,
 } from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Badge } from "@/shared/components/ui/badge";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
@@ -20,6 +19,7 @@ import { Loader2, FileUp, AlertTriangle, CheckCircle2, UserX, Info } from "lucid
 import { Progress } from "@/shared/components/ui/progress";
 import { toast } from "sonner";
 import { cn } from "@/shared/lib/utils";
+import { DataTable, ColumnDef } from "@/shared/components/layout/DataTable";
 
 interface ImportPortalDialogProps {
   open: boolean;
@@ -27,10 +27,10 @@ interface ImportPortalDialogProps {
   anoAtual: number;
 }
 
-import { 
-  ReconciliationResult, 
-  buildMemberIndexes, 
-  reconcileRow 
+import {
+  ReconciliationResult,
+  buildMemberIndexes,
+  reconcileRow
 } from "../services/reconciliationService";
 
 export function ImportPortalDialog({
@@ -62,27 +62,45 @@ export function ImportPortalDialog({
     try {
       const context = await requirementService.getReconciliationContext();
       const indexes = buildMemberIndexes(context.members);
-      
+
+      // Pequena pausa para garantir que o navegador renderize o estado de "Analisando"
+      await new Promise(resolve => setTimeout(resolve, 300));
+
       const buffer = await file.arrayBuffer();
+
+      // Nova pausa após ler o buffer para evitar travamento na análise do workbook
+      await new Promise(resolve => setTimeout(resolve, 100));
       const workbook = read(buffer);
       const jsonData = utils.sheet_to_json<Record<string, string>>(workbook.Sheets[workbook.SheetNames[0]]);
 
       const reconciled: ReconciliationResult[] = [];
+      const chunkSize = 500;
 
-      for (let i = 0; i < jsonData.length; i++) {
-        const result = reconcileRow(jsonData[i], context, indexes, anoAtual);
-        if (result) {
-          reconciled.push(result);
+      const processChunk = async (startIndex: number) => {
+        const endIndex = Math.min(startIndex + chunkSize, jsonData.length);
+
+        for (let i = startIndex; i < endIndex; i++) {
+          const result = reconcileRow(jsonData[i], context, indexes, anoAtual);
+          if (result) {
+            reconciled.push(result);
+          }
         }
-        
-        if (i % 1000 === 0 || i === jsonData.length - 1) {
-          setProgress(Math.round(((i + 1) / jsonData.length) * 100));
+
+        const currentProgress = Math.round((endIndex / jsonData.length) * 100);
+        setProgress(currentProgress);
+
+        if (endIndex < jsonData.length) {
+          // Pausa a cada chunk para o navegador respirar e renderizar o spin/progresso
+          await new Promise(resolve => setTimeout(resolve, 0));
+          await processChunk(endIndex);
         }
-      }
+      };
+
+      await processChunk(0);
 
       setResults(reconciled);
       setStep('results');
-      toast.success(`Analise concluida: ${reconciled.length} correspondencias encontradas.`);
+      toast.success(`Análise concluída: ${reconciled.length} correspondências encontradas.`);
     } catch (error) {
       console.error(error);
       toast.error("Erro ao processar arquivo massivo.");
@@ -117,6 +135,130 @@ export function ImportPortalDialog({
     }
   };
 
+  const sortedResults = useMemo(() => {
+    return [...results].sort((a, b) => {
+      // 1. Status (Z-A): 'AGUARDANDO BAIXA' (true) primeiro
+      if (a.hasReqCurrentYear !== b.hasReqCurrentYear) {
+        return a.hasReqCurrentYear ? -1 : 1;
+      }
+
+      // 2. Confiança (Z-A): IDENTIFICADO > APENAS NIT > APENAS NOME
+      const weight: Record<string, number> = { FULL: 3, NIT_ONLY: 2, NAME_ONLY: 1, NONE: 0 };
+      if (weight[a.matchType] !== weight[b.matchType]) {
+        return weight[b.matchType] - weight[a.matchType];
+      }
+
+      // 3. Financeiro: EM DIA / ISENTO primeiro, depois ATRASO, por fim N/A
+      const getFinanceWeight = (f?: string) => {
+        if (!f) return 2; // N/A por último
+        const normalized = f.toUpperCase().replace('_', ' ');
+        if (normalized === 'EM DIA' || normalized === 'ISENTO') return 0;
+        return 1; // ATRASO
+      };
+
+      const wA = getFinanceWeight(a.finance);
+      const wB = getFinanceWeight(b.finance);
+      
+      if (wA !== wB) {
+        return wA - wB;
+      }
+
+      // 4. Sócio (A-Z): Nome em ordem alfabética
+      const nameA = a.member?.nome || a.portalName || "";
+      const nameB = b.member?.nome || b.portalName || "";
+      return nameA.localeCompare(nameB);
+    });
+  }, [results]);
+
+  const columns = useMemo<ColumnDef<ReconciliationResult>[]>(() => [
+    {
+      header: (
+        <div className="flex justify-center w-full">
+          <Checkbox 
+            checked={results.length > 0 && results.every(r => r.selected)}
+            onCheckedChange={handleToggleSelectAll}
+          />
+        </div>
+      ),
+      className: "w-12 text-center px-0",
+      cell: (res) => (
+        <div className="flex justify-center w-full">
+          <Checkbox 
+            checked={res.selected}
+            disabled={!res.hasReqCurrentYear}
+            onCheckedChange={(checked) => {
+              const index = results.indexOf(res);
+              if (index !== -1) handleToggleSelectItem(index, !!checked);
+            }}
+          />
+        </div>
+      )
+    },
+    {
+      header: "Portal (CSV)",
+      className: "min-w-[180px]",
+      cell: (res) => (
+        <div className="flex flex-col">
+          <span className="font-medium text-sm text-foreground/90">{res.portalName}</span>
+          <span className="text-[10px] text-muted-foreground opacity-70 uppercase">NIT: {res.portalNit}</span>
+        </div>
+      )
+    },
+    {
+      header: "Sócio (SIGESS)",
+      className: "min-w-[180px]",
+      cell: (res) => res.member ? (
+        <div className="flex flex-col">
+          <span className="font-medium text-sm text-foreground/90 uppercase">{res.member.nome}</span>
+          <span className="text-[10px] text-muted-foreground opacity-70">CPF: {res.member.cpf}</span>
+        </div>
+      ) : (
+        <Badge variant="outline" className="text-[10px] gap-1 border-dashed">
+          <UserX className="h-3 w-3" /> NÃO ENCONTRADO
+        </Badge>
+      )
+    },
+    {
+      header: "Confiança",
+      className: "text-center",
+      headerClassName: "text-center",
+      cell: (res) => {
+        if (res.matchType === 'FULL') return <Badge variant="secondary" className="bg-emerald-600/10 text-emerald-600 hover:bg-emerald-600/20 border-emerald-600/20 text-[10px]">IDENTIFICADO</Badge>;
+        if (res.matchType === 'NIT_ONLY') return <Badge variant="secondary" className="bg-blue-600 text-white hover:bg-blue-700 text-[10px]">APENAS NIT</Badge>;
+        return <Badge variant="secondary" className="bg-amber-600 text-white hover:bg-amber-700 text-[10px]">APENAS NOME</Badge>;
+      }
+    },
+    {
+      header: "Financeiro",
+      className: "text-center",
+      headerClassName: "text-center",
+      cell: (res) => {
+        const isDia = res.finance === 'EM DIA' || res.finance === 'EM_DIA' || res.finance === 'ISENTO';
+        return (
+          <Badge 
+            variant={isDia ? "outline" : "destructive"} 
+            className={cn(
+              "text-[10px]",
+              isDia ? "border-green-500/50 text-green-600 dark:text-green-400 bg-green-50/50 dark:bg-green-950/20" : "bg-red-600"
+            )}
+          >
+            {res.finance?.replace('_', ' ') || 'NÃO INFORMADO'}
+          </Badge>
+        );
+      }
+    },
+    {
+      header: "Status",
+      className: "text-right",
+      headerClassName: "text-right",
+      cell: (res) => res.hasReqCurrentYear ? (
+        <Badge variant="outline" className="border-primary/50 text-primary text-[10px] whitespace-nowrap">AGUARDANDO BAIXA</Badge>
+      ) : (
+        <Badge variant="outline" className="border-muted-foreground/30 text-muted-foreground text-[10px] whitespace-nowrap">SEM REQUERIMENTO {anoAtual}</Badge>
+      )
+    }
+  ], [results, handleToggleSelectAll, handleToggleSelectItem, anoAtual]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn("max-w-4xl transition-all duration-300", step === 'results' ? "max-w-5xl h-[85vh] flex flex-col" : "max-w-xl")}>
@@ -126,14 +268,14 @@ export function ImportPortalDialog({
             {step === 'results' ? 'Resultado do Cruzamento' : 'Importar Seguro Defeso (Portal da Transparência)'}
           </DialogTitle>
           <DialogDescription>
-            {step === 'results' 
+            {step === 'results'
               ? `Encontramos ${results.length} socios correspondentes para o ano de ${anoAtual}.`
               : (
                 <>
                   Selecione o arquivo CSV baixado do{" "}
-                  <a 
-                    href="https://portaldatransparencia.gov.br/download-de-dados/seguro-defeso" 
-                    target="_blank" 
+                  <a
+                    href="https://portaldatransparencia.gov.br/download-de-dados/seguro-defeso"
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary hover:underline underline-offset-4"
                   >
@@ -156,9 +298,9 @@ export function ImportPortalDialog({
                       <span className="text-sm font-bold">{progress}%</span>
                     </div>
                   </div>
-                  
+
                   <div className="w-full max-w-xs space-y-2">
-                    <Progress value={progress} className="h-2" />
+                    <Progress value={progress} className="h-2 bg-muted" />
                     <p className="text-center text-sm text-muted-foreground animate-pulse">
                       Cruzando dados com o banco do SIGESS...
                     </p>
@@ -192,93 +334,35 @@ export function ImportPortalDialog({
           ) : (
             <div className="flex flex-col h-full gap-4">
               <ScrollArea className="flex-1 border rounded-lg bg-card">
-                <Table>
-                  <TableHeader className="bg-muted/50 sticky top-0">
-                    <TableRow>
-                      <TableHead className="w-10 text-center">
-                        <Checkbox 
-                          checked={results.every(r => r.selected) && results.length > 0}
-                          onCheckedChange={handleToggleSelectAll}
-                        />
-                      </TableHead>
-                      <TableHead>Portal (CSV)</TableHead>
-                      <TableHead>Socio (SIGESS)</TableHead>
-                      <TableHead>Tipo Match</TableHead>
-                      <TableHead>Financeiro</TableHead>
-                      <TableHead>Status Atual</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {results.map((res, index) => (
-                      <TableRow key={`${res.portalNit}-${index}`} className={cn(res.hasReqCurrentYear ? "bg-primary/5" : "opacity-60")}>
-                        <TableCell className="text-center">
-                          <Checkbox 
-                            checked={res.selected}
-                            disabled={!res.hasReqCurrentYear}
-                            onCheckedChange={(checked) => handleToggleSelectItem(index, !!checked)}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="font-medium text-sm">{res.portalName}</span>
-                            <span className="text-xs text-muted-foreground">NIT: {res.portalNit}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {res.member ? (
-                            <div className="flex flex-col">
-                              <span className="font-medium text-sm">{res.member.nome}</span>
-                              <span className="text-xs text-muted-foreground">CPF: {res.member.cpf}</span>
-                            </div>
-                          ) : (
-                            <Badge variant="outline" className="text-xs gap-1">
-                              <UserX className="h-3 w-3" /> Nao Encontrado
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {res.matchType === 'FULL' && <Badge className="bg-green-600 hover:bg-green-700">NIT + Nome</Badge>}
-                          {res.matchType === 'NIT_ONLY' && <Badge variant="secondary" className="bg-blue-600 text-white hover:bg-blue-700">NIT</Badge>}
-                          {res.matchType === 'NAME_ONLY' && <Badge variant="secondary" className="bg-amber-600 text-white hover:bg-amber-700">Nome</Badge>}
-                        </TableCell>
-                        <TableCell>
-                          {res.finance === 'REGULAR' ? (
-                            <Badge variant="outline" className="border-green-500/50 text-green-600 dark:text-green-400 bg-green-50/50 dark:bg-green-950/20">Regular</Badge>
-                          ) : (
-                            <Badge variant="destructive" className="bg-red-600">Atraso</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {res.hasReqCurrentYear ? (
-                            <Badge variant="outline" className="border-primary/50 text-primary">Aguardando Baixa</Badge>
-                          ) : (
-                            <Badge variant="outline" className="border-muted-foreground/30 text-muted-foreground">Sem Requerimento em {anoAtual}</Badge>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <DataTable<ReconciliationResult>
+                  data={sortedResults}
+                  columns={columns}
+                  variant="minimal"
+                  rowClassName={(res) => cn(
+                    "group",
+                    res.hasReqCurrentYear ? "bg-primary/[0.02]" : "opacity-50 grayscale-[0.5]"
+                  )}
+                />
               </ScrollArea>
-              
+
               <div className="grid grid-cols-3 gap-4">
                 <div className="bg-muted/30 p-3 rounded-lg flex items-center gap-3">
                   <div className="h-8 w-8 bg-green-600/10 rounded-full flex items-center justify-center text-green-600">
                     <CheckCircle2 className="h-5 w-5" />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-xl font-bold">{results.filter(r => r.matchType === 'FULL' || r.matchType === 'NIT_ONLY').length}</span>
-                    <span className="text-xs text-muted-foreground uppercase font-semibold">Alta Confianca</span>
+                    <span className="text-xl font-bold">{results.filter(r => r.matchType === 'FULL').length}</span>
+                    <span className="text-xs text-muted-foreground uppercase font-semibold">Alta Confiança</span>
                   </div>
                 </div>
-                
+
                 <div className="bg-muted/30 p-3 rounded-lg flex items-center gap-3">
                   <div className="h-8 w-8 bg-amber-600/10 rounded-full flex items-center justify-center text-amber-600">
                     <AlertTriangle className="h-5 w-5" />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-xl font-bold">{results.filter(r => r.matchType === 'NAME_ONLY').length}</span>
-                    <span className="text-xs text-muted-foreground uppercase font-semibold">Revisao Manual</span>
+                    <span className="text-xl font-bold">{results.filter(r => r.matchType === 'NAME_ONLY' || r.matchType === 'NIT_ONLY').length}</span>
+                    <span className="text-xs text-muted-foreground uppercase font-semibold">Revisão Manual</span>
                   </div>
                 </div>
 

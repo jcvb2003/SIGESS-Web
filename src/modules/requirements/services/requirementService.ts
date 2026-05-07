@@ -1,4 +1,6 @@
 import { supabase } from "@/shared/lib/supabase/client";
+import { fetchAll } from "@/shared/lib/supabase/utils";
+import { normalizeName as sharedNormalizeName } from "@/shared/utils/text";
 import type {
   Requirement,
   RequirementStatus,
@@ -18,10 +20,14 @@ export const requirementService = {
     page: number;
     pageSize: number;
   }): Promise<{ items: RequirementWithMember[]; total: number }> {
+    const beneficioStatus = filters.beneficio_recebido === 'all' 
+      ? 'all' 
+      : (filters.beneficio_recebido ? 'recebido' : 'pendente');
+
     const { data: rpcData, error: rpcError } = await requirementsRpc.rpc("list_requirements_extended", {
       p_ano: filters.ano || new Date().getFullYear(),
       p_status: filters.status || 'all',
-      p_beneficio: filters.beneficio_recebido === 'all' ? 'all' : (filters.beneficio_recebido ? 'recebido' : 'pendente'),
+      p_beneficio: beneficioStatus,
       p_search: filters.searchTerm || '',
       p_carencia: filters.carenciaFilter || 'all',
       p_page: filters.page,
@@ -264,16 +270,20 @@ export const requirementService = {
     if (error) throw error;
   },
 
-  async getReconciliationContext() {
+  async getReconciliationContext(): Promise<{
+    entityUf: string;
+    members: any[];
+    financeMap: Map<string, string>;
+  }> {
     // 1. Buscar UF da Entidade
     const { data: entity } = await supabase
       .from("entidade")
       .select("uf")
       .maybeSingle();
 
-    const { data: members } = await supabase
-      .from("socios")
-      .select(`
+    // 2. Buscar todos os sócios com helper compartilhado
+    const allMembers = await fetchAll<any>(
+      supabase.from("socios").select(`
         id,
         cpf,
         nome,
@@ -285,26 +295,28 @@ export const requirementService = {
           ano_referencia
         )
       `)
-      .limit(10000); // Correct silent 1000 limit
+      .order("id")
+    );
 
-    // 3. Buscar situação financeira em lote
-    const { data: finance } = await supabase
-      .from("v_situacao_financeira_socio")
-      .select("cpf, situacao_geral")
-      .limit(10000); // Correct silent 1000 limit
+    // 3. Buscar situação financeira com helper compartilhado e ordenação estável
+    const allFinance = await fetchAll<{ cpf: string; situacao_geral: string }>(
+      supabase
+        .from("v_situacao_financeira_socio")
+        .select("cpf, situacao_geral")
+        .order("cpf")
+    );
 
     return {
       entityUf: entity?.uf || 'PA',
-      members: members || [],
-      financeMap: new Map((finance || []).map(f => [f.cpf, f.situacao_geral]))
+      members: allMembers,
+      financeMap: new Map(allFinance.map(f => [
+        String(f.cpf || "").replaceAll(/\D/g, ""), 
+        f.situacao_geral
+      ]))
     };
   },
 
   normalizeName(name: string): string {
-    return name
-      .normalize("NFD")
-      .replaceAll(/[\u0300-\u036f]/g, "")
-      .toUpperCase()
-      .trim();
-  }
+    return sharedNormalizeName(name);
+  },
 };
