@@ -83,7 +83,12 @@ export default function FotoUploadPage() {
           const base64Photo = canvas.toDataURL("image/jpeg", 0.7).split(",")[1];
 
           // 4. Enviar via RPC
-          const supabase = initSupabaseClient(tenant!);
+          let supabase;
+          try {
+            supabase = await initSupabaseClient(tenant!);
+          } catch {
+            throw new Error("Entidade do QR Code não encontrada ou indisponível.");
+          }
           
           /* eslint-disable @typescript-eslint/no-explicit-any */
           const { data, error } = await (supabase as any).rpc("confirmar_upload_foto", {
