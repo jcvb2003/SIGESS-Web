@@ -1,8 +1,46 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { registerSW } from "virtual:pwa-register";
 import { AppProviders } from "./app/providers/AppProviders";
 import { AppRouter } from "./app/router";
 import "./app/styles/globals.css";
+
+const SW_RELOAD_KEY = "sigess_sw_reloading";
+const SW_BUILD_KEY = "sigess_sw_build";
+const BUILD_MARKER = import.meta.env.VITE_VERCEL_GIT_COMMIT_SHA ?? globalThis.location.pathname;
+
+if ("serviceWorker" in navigator) {
+  let hasRegisteredReload = false;
+
+  const forceReloadForFreshBuild = () => {
+    if (sessionStorage.getItem(SW_RELOAD_KEY) === BUILD_MARKER) return;
+    sessionStorage.setItem(SW_RELOAD_KEY, BUILD_MARKER);
+    globalThis.location.reload();
+  };
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    forceReloadForFreshBuild();
+  });
+
+  registerSW({
+    immediate: true,
+    onRegisteredSW(_swUrl, registration) {
+      if (!registration || hasRegisteredReload) return;
+      hasRegisteredReload = true;
+
+      const lastSeenBuild = localStorage.getItem(SW_BUILD_KEY);
+      if (lastSeenBuild !== BUILD_MARKER) {
+        localStorage.setItem(SW_BUILD_KEY, BUILD_MARKER);
+        registration.update().catch(() => {
+          // Ignora falha silenciosamente; o chunk recovery abaixo cobre a navegação atual.
+        });
+      }
+    },
+    onNeedRefresh() {
+      forceReloadForFreshBuild();
+    },
+  });
+}
 
 // --- DOM protection patch ---
 // Browser extensions (Google Translate, Grammarly, password managers, etc.)
@@ -31,6 +69,10 @@ if (typeof Node !== "undefined") {
     }
     return originalInsertBefore.call(this, newNode, referenceNode) as T;
   };
+}
+
+if (sessionStorage.getItem(SW_RELOAD_KEY) === BUILD_MARKER) {
+  sessionStorage.removeItem(SW_RELOAD_KEY);
 }
 
 // --- Module loading recovery ---

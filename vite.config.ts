@@ -9,8 +9,11 @@ export default defineConfig({
             registerType: 'autoUpdate',
             manifest: false,
             workbox: {
+                cleanupOutdatedCaches: true,
+                clientsClaim: true,
                 globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
                 maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+                skipWaiting: true,
                 runtimeCaching: [
                     {
                         urlPattern: /^https:\/\/.*supabase\.co\/rest\/v1\/.*/i,
