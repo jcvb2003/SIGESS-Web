@@ -9,9 +9,13 @@ export type GovBatchSessionItem = {
 
 export type GovBatchStatus =
   | "enfileirado"
-  | "abrindo_sessao"
-  | "aguardando_pagina"
-  | "processando"
+  | "abrindo_em_lote"
+  | "fazendo_login"
+  | "acessando_esocial"
+  | "consultando"
+  | "verificando_boleto"
+  | "gerando_pdf"
+  | "redirecionando"
   | "concluido"
   | "erro"
   | "expirado"
@@ -164,7 +168,7 @@ function requestExtension(
         return;
       }
 
-      console.log(`[SIGESS Web] Resposta recebida para ${type}:`, data.response);
+      console.log(`[SIGESS Web] Resposta recebida para ${type}:`, JSON.stringify(data.response, null, 2));
       cleanup();
       resolve(
         data.response ?? {

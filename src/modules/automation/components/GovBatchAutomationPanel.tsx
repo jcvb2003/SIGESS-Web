@@ -44,11 +44,15 @@ export function GovBatchAutomationPanel() {
     enabled: buscaDebounced.length >= 2,
   });
 
+  const trackedCpfsKey = useMemo(() => trackedCpfs.join(","), [trackedCpfs]);
+
   const { data: statusResponse } = useQuery({
-    queryKey: ["automation", "gov-batch-status", trackedCpfs],
+    queryKey: ["automation", "gov-batch-status", trackedCpfsKey],
     queryFn: () => getGovBatchStatuses(trackedCpfs),
     enabled: statusTrackingActive && trackedCpfs.length > 0,
-    refetchInterval: 4000,
+    refetchInterval: 1000,
+    staleTime: 0,
+    gcTime: 0,
   });
 
   const statusByCpf = useMemo(() => {
@@ -351,12 +355,20 @@ function statusLabel(status: GovBatchStatus): string {
   switch (status) {
     case "enfileirado":
       return "Enfileirado";
-    case "abrindo_sessao":
-      return "Abrindo sessao";
-    case "aguardando_pagina":
-      return "Aguardando pagina";
-    case "processando":
-      return "Processando";
+    case "abrindo_em_lote":
+      return "Abrindo em lote";
+    case "fazendo_login":
+      return "Fazendo Login";
+    case "acessando_esocial":
+      return "Acessando o E-social";
+    case "consultando":
+      return "Consultando";
+    case "verificando_boleto":
+      return "Verificando boleto";
+    case "gerando_pdf":
+      return "Gerando PDF";
+    case "redirecionando":
+      return "Redirecionando";
     case "concluido":
       return "Concluido";
     case "erro":
@@ -376,11 +388,15 @@ function statusTextClassName(status: GovBatchStatus): string {
       return "text-emerald-700";
     case "erro":
       return "text-red-700";
-    case "processando":
+    case "fazendo_login":
+    case "consultando":
       return "text-blue-700";
-    case "abrindo_sessao":
+    case "abrindo_em_lote":
+    case "acessando_esocial":
       return "text-amber-700";
-    case "aguardando_pagina":
+    case "verificando_boleto":
+    case "gerando_pdf":
+    case "redirecionando":
       return "text-orange-700";
     default:
       return "text-muted-foreground";
@@ -402,64 +418,32 @@ function getStatusStepIndex(
   }
 
   const status = statusItem.status;
-  const title = normalizeStepText(statusItem.statusTitle);
-  const description = normalizeStepText(statusItem.statusDescription);
-  const stepText = `${title} ${description}`.trim();
 
-  if (status === "concluido" || hasAnyTerm(stepText, ["pdf baixado", "baixado com sucesso"])) {
+  if (status === "concluido") {
     return 3;
   }
 
   if (
-    hasAnyTerm(stepText, [
-      "baixando pdf da guia",
-      "solicitando pdf da guia",
-      "retornando para a competencia",
-      "pdf baixado com sucesso",
-    ])
+    status === "verificando_boleto" ||
+    status === "gerando_pdf" ||
+    status === "redirecionando"
+  ) {
+    return 3;
+  }
+
+  if (
+    status === "acessando_esocial" ||
+    status === "consultando"
   ) {
     return 2;
   }
 
   if (
-    hasAnyTerm(stepText, [
-      "login gov.br concluido",
-      "iniciando geracao da guia",
-      "carregando dados de comercializacao",
-      "salvando rascunho da comercializacao",
-      "enviando eventos da comercializacao",
-      "verificando acesso ao fechamento",
-    ])
+    status === "enfileirado" ||
+    status === "abrindo_em_lote" ||
+    status === "fazendo_login" ||
+    status === "ignorado"
   ) {
-    return 2;
-  }
-
-  if (
-    hasAnyTerm(stepText, [
-      "pagina inicial do esocial carregada",
-      "redirecionado para o gov.br",
-      "tela de cpf carregada",
-      "cpf enviado ao gov.br",
-      "tela de senha carregada",
-      "aguardando pagina de login do esocial",
-      "aguardando tela valida do gov.br",
-      "carregando tela de fechamento",
-      "fechando a folha",
-    ])
-  ) {
-    return 1;
-  }
-
-  if (
-    status === "aguardando_pagina" ||
-    hasAnyTerm(stepText, [
-      "aguardando pagina",
-    ])
-  ) {
-    return 1;
-  }
-
-  if (status === "enfileirado" || status === "abrindo_sessao" || status === "ignorado") {
     return 1;
   }
 
