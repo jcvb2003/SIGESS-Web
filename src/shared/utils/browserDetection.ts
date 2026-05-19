@@ -14,12 +14,20 @@ export type GovBatchStatus =
   | "acessando_esocial"
   | "consultando"
   | "verificando_boleto"
+  | "boleto_salvo"
   | "gerando_pdf"
   | "redirecionando"
   | "concluido"
   | "erro"
   | "expirado"
   | "ignorado";
+
+export type BoletoInfo = {
+  detectado: boolean;
+  competencia?: string;
+  valorDeclarado?: number;
+  valorPago?: number;
+};
 
 export type GovBatchStatusItem = {
   tabId: number;
@@ -31,6 +39,8 @@ export type GovBatchStatusItem = {
   progressStep?: number;
   progressTotal?: number;
   loginConcluido: boolean;
+  boletoInfo?: BoletoInfo;
+  boletoGerado?: boolean;
   lastError?: string;
   lastUpdatedAt?: number;
 };

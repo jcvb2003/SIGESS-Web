@@ -292,10 +292,6 @@ function renderGovStatus(statusItem?: GovBatchStatusItem) {
     );
   }
 
-  if (statusItem.status === "aguardando_pagina" && !statusItem.lastError) {
-    return null;
-  }
-
   return (
     <div className="mt-1 space-y-1.5">
       <GovBatchTrack statusItem={statusItem} />
@@ -310,6 +306,7 @@ function renderGovStatus(statusItem?: GovBatchStatusItem) {
       <p className="text-xs text-muted-foreground">
         {statusItem.statusDescription || "A extensao atualizou o progresso desta sessao."}
       </p>
+      {renderBoletoInfo(statusItem)}
       {statusItem.status === "erro" && statusItem.lastError && (
         <p className="text-xs text-destructive">{statusItem.lastError}</p>
       )}
@@ -365,6 +362,8 @@ function statusLabel(status: GovBatchStatus): string {
       return "Consultando";
     case "verificando_boleto":
       return "Verificando boleto";
+    case "boleto_salvo":
+      return "Boleto salvo";
     case "gerando_pdf":
       return "Gerando PDF";
     case "redirecionando":
@@ -395,6 +394,7 @@ function statusTextClassName(status: GovBatchStatus): string {
     case "acessando_esocial":
       return "text-amber-700";
     case "verificando_boleto":
+    case "boleto_salvo":
     case "gerando_pdf":
     case "redirecionando":
       return "text-orange-700";
@@ -424,7 +424,7 @@ function getStatusStepIndex(
   }
 
   if (
-    status === "verificando_boleto" ||
+    status === "boleto_salvo" ||
     status === "gerando_pdf" ||
     status === "redirecionando"
   ) {
@@ -433,7 +433,8 @@ function getStatusStepIndex(
 
   if (
     status === "acessando_esocial" ||
-    status === "consultando"
+    status === "consultando" ||
+    status === "verificando_boleto"
   ) {
     return 2;
   }
@@ -463,13 +464,38 @@ function getStatusStepTotal(statusItem?: GovBatchStatusItem): number {
   return 3;
 }
 
-function normalizeStepText(value?: string): string {
-  return (value ?? "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-}
 
-function hasAnyTerm(text: string, terms: string[]): boolean {
-  return terms.some((term) => text.includes(term));
+function renderBoletoInfo(statusItem: GovBatchStatusItem) {
+  if (!statusItem.boletoInfo) return null;
+
+  const { detectado, competencia, valorDeclarado, valorPago } = statusItem.boletoInfo;
+
+  if (statusItem.status === "verificando_boleto") {
+    if (detectado) {
+      return (
+        <div className="mt-2 rounded-sm bg-blue-50 p-2 text-xs text-blue-900">
+          <p className="font-medium">Boleto detectado: {competencia}</p>
+          <p>Declarado: R$ {valorDeclarado?.toFixed(2)}, Pago: R$ {valorPago?.toFixed(2)}</p>
+        </div>
+      );
+    } else {
+      return (
+        <div className="mt-2 rounded-sm bg-amber-50 p-2 text-xs text-amber-900">
+          <p className="font-medium">Boleto não detectado. Gerando...</p>
+        </div>
+      );
+    }
+  }
+
+  if (statusItem.status === "boleto_salvo") {
+    const tipo = statusItem.boletoGerado ? "Gerado" : "Já existia";
+    return (
+      <div className="mt-2 rounded-sm bg-emerald-50 p-2 text-xs text-emerald-900">
+        <p className="font-medium">Boleto salvo com sucesso - {tipo}</p>
+        {competencia && <p>{competencia}</p>}
+      </div>
+    );
+  }
+
+  return null;
 }
