@@ -130,6 +130,7 @@ function requestExtension(
 ): Promise<ExtensionBridgeResponse> {
   return new Promise<ExtensionBridgeResponse>((resolve) => {
     const requestId = `gov-batch-${type}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    console.log(`[SIGESS Web] Enviando ${type} com requestId: ${requestId}`);
 
     const cleanup = () => {
       globalThis.removeEventListener("message", onMessage);
@@ -137,7 +138,10 @@ function requestExtension(
     };
 
     const onMessage = (event: MessageEvent) => {
-      if (event.origin !== globalThis.location.origin) return;
+      if (event.origin !== globalThis.location.origin) {
+        console.debug(`[SIGESS Web] Ignorando mensagem de origem diferente: ${event.origin}`);
+        return;
+      }
 
       const data = event.data as
         | {
@@ -147,10 +151,20 @@ function requestExtension(
           }
         | undefined;
 
+      console.log(`[SIGESS Web] Mensagem recebida:`, {
+        tipo: data?.type,
+        requestIdRecebido: data?.requestId,
+        requestIdEsperado: requestId,
+        tipoCorreto: data?.type === EXTENSION_RESPONSE_TYPE,
+        requestIdCorreto: data?.requestId === requestId,
+      });
+
       if (data?.type !== EXTENSION_RESPONSE_TYPE || data.requestId !== requestId) {
+        console.debug(`[SIGESS Web] requestId não corresponde ou tipo incorreto`);
         return;
       }
 
+      console.log(`[SIGESS Web] Resposta recebida para ${type}:`, data.response);
       cleanup();
       resolve(
         data.response ?? {
@@ -161,6 +175,7 @@ function requestExtension(
     };
 
     const timeoutId = globalThis.setTimeout(() => {
+      console.error(`[SIGESS Web] Timeout ao aguardar resposta para ${type} (${timeoutMs}ms)`);
       cleanup();
       resolve({
         success: false,
@@ -171,6 +186,7 @@ function requestExtension(
     globalThis.addEventListener("message", onMessage);
 
     try {
+      console.log(`[SIGESS Web] Enviando postMessage para ${type}`);
       globalThis.postMessage(
         {
           type,
