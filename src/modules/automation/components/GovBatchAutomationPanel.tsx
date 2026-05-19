@@ -140,7 +140,7 @@ export function GovBatchAutomationPanel() {
     if (!statusTrackingActive || !statusResponse?.items?.length) return;
 
     const allFinished = statusResponse.items.every((item) =>
-      ["concluido", "erro", "expirado", "ignorado"].includes(item.status),
+      ["concluido", "boleto_salvo", "erro", "expirado", "ignorado"].includes(item.status),
     );
 
     if (allFinished) {
@@ -492,7 +492,13 @@ function renderBoletoInfo(statusItem: GovBatchStatusItem) {
     return (
       <div className="mt-2 rounded-sm bg-emerald-50 p-2 text-xs text-emerald-900">
         <p className="font-medium">Boleto salvo com sucesso - {tipo}</p>
-        {competencia && <p>{competencia}</p>}
+        {competencia && (
+          <p>
+            {competencia}
+            {valorDeclarado != null && ` | Declarado: R$ ${valorDeclarado.toFixed(2)}`}
+            {valorPago != null && ` | Pago: R$ ${valorPago.toFixed(2)}`}
+          </p>
+        )}
       </div>
     );
   }
