@@ -130,3 +130,18 @@ export interface PaymentByPeriod {
   forma_pagamento: string;
   valor: number;
 }
+
+export interface DAEByPeriod {
+  data_pagamento_boleto: string | null;
+  data_recebimento: string | null;
+  created_at?: string | null;
+  nome: string;
+  cpf: string;
+  tipo_boleto: string | null;
+  competencia_ano: number | null;
+  competencia_mes: number | null;
+  forma_pagamento: string | null;
+  boleto_pago: boolean | null;
+  valor: number;
+  status: string | null;
+ }

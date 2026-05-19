@@ -22,6 +22,9 @@ const FinancePage = lazy(() => import("@/pages/Finance"));
 const PaymentsByPeriodPage = lazy(
   () => import("@/pages/Finance/PaymentsByPeriodPage"),
 );
+const DAEsByPeriodPage = lazy(
+  () => import("@/pages/Finance/DAEsByPeriodPage"),
+);
 const ReportsPage = lazy(() => import("@/pages/Reports"));
 const SettingsPage = lazy(() => import("@/pages/Settings"));
 const NotFoundPage = lazy(() => import("@/pages/NotFound"));
@@ -29,6 +32,7 @@ const PasswordPage = lazy(() => import("@/pages/Password"));
 const FotoUploadPage = lazy(() => import("@/pages/FotoUpload"));
 const RequirementsPage = lazy(() => import("@/pages/Requirements"));
 const ReapPage = lazy(() => import("@/pages/Reap"));
+const AutomationPage = lazy(() => import("@/pages/Automation"));
 const MemberFichaPage = lazy(() => import("@/pages/Members/MemberFichaPage"));
 const MemberCardPage = lazy(() => import("@/pages/Members/MemberCardPage"));
 
@@ -112,6 +116,10 @@ const router = createBrowserRouter([
         element: <PaymentsByPeriodPage />,
       },
       {
+        path: "/finance/daes-report",
+        element: <DAEsByPeriodPage />,
+      },
+      {
         path: "/reports",
         element: <ReportsPage />,
       },
@@ -122,6 +130,10 @@ const router = createBrowserRouter([
       {
         path: "/reap",
         element: <ReapPage />,
+      },
+      {
+        path: "/automation",
+        element: <AutomationPage />,
       },
       {
         path: "/settings",

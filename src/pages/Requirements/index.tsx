@@ -6,7 +6,7 @@ import { DataTablePagination } from "@/shared/components/layout/DataTablePaginat
 import { RequirementsFilterPanel } from "../../modules/requirements/components/RequirementsFilterPanel";
 import { DataTableSearch } from "@/shared/components/layout/DataTableSearch";
 import { Button } from "@/shared/components/ui/button";
-import { FileUp, Plus, Eye } from "lucide-react";
+import { FileUp, Eye } from "lucide-react";
 import { useMemo, useState } from "react";
 import { format, parseISO, isValid } from "date-fns";
 import { RequirementDetailsModal } from "../../modules/requirements/components/RequirementDetailsModal";
@@ -197,16 +197,11 @@ export default function RequirementsPage() {
   const headerActions = (
     <div className="flex items-center gap-3">
       <Button 
-        variant="outline" 
         className="gap-2"
         onClick={() => setIsImportOpen(true)}
       >
         <FileUp className="h-4 w-4" />
-        Importar Portal
-      </Button>
-      <Button className="gap-2" onClick={() => {}}>
-        <Plus className="h-4 w-4" />
-        Novo Requerimento
+        Rastrear pagamentos
       </Button>
     </div>
   );

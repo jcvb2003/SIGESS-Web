@@ -265,7 +265,7 @@ export function ImportPortalDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileUp className="h-5 w-5 text-primary" />
-            {step === 'results' ? 'Resultado do Cruzamento' : 'Importar Seguro Defeso (Portal da Transparência)'}
+            {step === 'results' ? 'Resultado do Cruzamento' : 'Rastrear Pagamentos no Portal da Transparência'}
           </DialogTitle>
           <DialogDescription>
             {step === 'results'
@@ -281,7 +281,7 @@ export function ImportPortalDialog({
                   >
                     Portal da Transparencia
                   </a>{" "}
-                  para verificar os pagamentos recebidos.
+                  para identificar quem já recebeu o pagamento em conta.
                 </>
               )}
           </DialogDescription>

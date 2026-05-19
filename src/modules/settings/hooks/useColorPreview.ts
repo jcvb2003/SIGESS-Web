@@ -1,6 +1,7 @@
 import { useWatch } from "react-hook-form";
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTheme } from "next-themes";
 import type { EntityFormData } from "./useEntityValidation";
 import type { EntitySettings } from "@/modules/settings/types/settings.types";
 import { generateAccessibleForeground } from "@/shared/utils/colorConversion";
@@ -23,6 +24,8 @@ export function useColorPreview() {
 
   const originalRef = useRef<Record<string, string>>({});
   const queryClient = useQueryClient();
+  const { theme, resolvedTheme } = useTheme();
+  const currentTheme = theme === "system" ? resolvedTheme : theme;
 
   // Salva os valores originais ao montar (como fallback, se não tiver cache)
   useEffect(() => {
@@ -67,7 +70,10 @@ export function useColorPreview() {
         root.style.removeProperty("--secondary-foreground");
       }
 
-      if (corSidebarCache) {
+      if (currentTheme === "dark") {
+        root.style.removeProperty("--sidebar-background");
+        root.style.removeProperty("--sidebar-foreground");
+      } else if (corSidebarCache) {
         root.style.setProperty("--sidebar-background", corSidebarCache);
         root.style.setProperty("--sidebar-foreground", generateAccessibleForeground(corSidebarCache));
       } else {
@@ -75,7 +81,7 @@ export function useColorPreview() {
         root.style.removeProperty("--sidebar-foreground");
       }
     };
-  }, [queryClient]);
+  }, [currentTheme, queryClient]);
 
   // Aplica preview em tempo real
   useEffect(() => {
@@ -97,9 +103,15 @@ export function useColorPreview() {
 
   useEffect(() => {
     const root = document.documentElement;
+    if (currentTheme === "dark") {
+      root.style.removeProperty("--sidebar-background");
+      root.style.removeProperty("--sidebar-foreground");
+      return;
+    }
+
     if (corSidebar) {
       root.style.setProperty("--sidebar-background", corSidebar);
       root.style.setProperty("--sidebar-foreground", generateAccessibleForeground(corSidebar));
     }
-  }, [corSidebar]);
+  }, [corSidebar, currentTheme]);
 }

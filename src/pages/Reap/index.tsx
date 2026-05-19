@@ -1,13 +1,12 @@
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { Button } from "@/shared/components/ui/button";
-import { Send, FileUp, Search, AlertTriangle, Settings2 } from "lucide-react";
+import { FileUp, Search, AlertTriangle, Settings2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useReapListController } from "../../modules/reap/hooks/data/useReapData";
 import { DataTable } from "@/shared/components/layout/DataTable";
 import { DataTablePagination } from "@/shared/components/layout/DataTablePagination";
 import { ReapFilterPanel } from "../../modules/reap/components/ReapFilterPanel";
-import { BulkSendDialog } from "../../modules/reap/components/BulkSendDialog";
 import { ImportComprovantesDialog } from "../../modules/reap/components/ImportComprovantesDialog";
 import { ConsultarPendenciasDialog } from "../../modules/reap/components/ConsultarPendenciasDialog";
 import { DataTableSearch } from "@/shared/components/layout/DataTableSearch";
@@ -50,7 +49,6 @@ function getAnosObrigatoriosAnual(emissaoRgp: string | null): number[] {
 export default function ReapPage() {
   const { search, table, pagination, filterPanel } = useReapListController();
 
-  const [isBulkSendOpen, setIsBulkSendOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isConsultarOpen, setIsConsultarOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<ReapWithMember | null>(null);
@@ -72,10 +70,6 @@ export default function ReapPage() {
       >
         <FileUp className="h-4 w-4" />
         Importar Comprovantes 2025
-      </Button>
-      <Button className="gap-2" onClick={() => setIsBulkSendOpen(true)}>
-        <Send className="h-4 w-4" />
-        Envio em Lote
       </Button>
     </div>
   ), []);
@@ -227,7 +221,6 @@ export default function ReapPage() {
 
       <ReapFilterPanel {...filterPanel} />
 
-      <BulkSendDialog open={isBulkSendOpen} onOpenChange={setIsBulkSendOpen} />
       <ImportComprovantesDialog open={isImportOpen} onOpenChange={setIsImportOpen} />
       <ConsultarPendenciasDialog open={isConsultarOpen} onOpenChange={setIsConsultarOpen} />
 

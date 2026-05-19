@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { Card } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
-import { Settings as SettingsIcon, SlidersHorizontal, Receipt, History } from "lucide-react";
+import { Settings as SettingsIcon, SlidersHorizontal, Receipt, History, FileSpreadsheet } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { cn } from "@/shared/lib/utils";
@@ -217,6 +217,15 @@ export default function FinancePage() {
             >
               <Receipt className="h-4 w-4" />
               <span className="inline text-xs font-bold uppercase">Pagamentos</span>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="gap-2"
+              onClick={() => navigate("/finance/daes-report")}
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+              <span className="inline text-xs font-bold uppercase">DAEs</span>
             </Button>
             {isAdmin && (
               <Button

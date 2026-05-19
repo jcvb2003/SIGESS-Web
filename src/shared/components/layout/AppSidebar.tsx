@@ -1,20 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import {
-  LayoutDashboard,
-  Users,
-  UserPlus,
-  Files,
-  ChartNoAxesCombined,
-  Settings,
-  LogOut,
-  Menu,
-  Fish,
-  Sun,
-  Moon,
-  Wallet,
-  ClipboardList,
-  FileText,
-} from "lucide-react";
+import { LogOut, Menu, Fish, Sun, Moon } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/components/ui/button";
 import { useAuth } from "@/modules/auth/context/authContextStore";
@@ -35,17 +20,8 @@ import {
 } from "@/shared/components/ui/tooltip";
 import { useMobile } from "@/shared/hooks/useMobile";
 import { useEntityData } from "@/shared/hooks/useEntityData";
-const NAV_ITEMS = [
-  { title: "Início", href: "/dashboard", icon: LayoutDashboard },
-  { title: "Sócios", href: "/members", icon: Users },
-  { title: "Cadastro", href: "/registration", icon: UserPlus },
-  { title: "Documentos", href: "/documents", icon: Files },
-  { title: "Financeiro", href: "/finance", icon: Wallet },
-  { title: "Relatórios", href: "/reports", icon: ChartNoAxesCombined },
-  { title: "Requerimentos", href: "/requirements", icon: FileText },
-  { title: "REAP", href: "/reap", icon: ClipboardList },
-  { title: "Configurações", href: "/settings", icon: Settings },
-];
+import { NAV_ITEMS } from "@/shared/components/layout/navigationItems";
+
 type SidebarContentProps = {
   isCollapsed: boolean;
   pathname: string;
@@ -54,6 +30,7 @@ type SidebarContentProps = {
   onNavigate: () => void;
   onSignOut: () => void;
 };
+
 function SidebarContent({
   isCollapsed,
   pathname,
@@ -63,6 +40,7 @@ function SidebarContent({
   onSignOut,
 }: Readonly<SidebarContentProps>) {
   const { entity, isLoading: isEntityLoading } = useEntityData();
+
   return (
     <div className="flex h-full flex-col text-sidebar-foreground overflow-hidden">
       <div
@@ -77,9 +55,9 @@ function SidebarContent({
         >
           <div className="flex h-10 w-10 min-w-[2.5rem] items-center justify-center rounded-xl bg-primary-foreground/20 dark:bg-white/10 text-sidebar-foreground transition-all group-hover:bg-primary-foreground group-hover:text-primary dark:group-hover:bg-primary dark:group-hover:text-white shadow-sm overflow-hidden">
             {entity?.logoUrl ? (
-              <img 
-                src={entity.logoUrl} 
-                alt={entity.shortName || "Logo"} 
+              <img
+                src={entity.logoUrl}
+                alt={entity.shortName || "Logo"}
                 className="h-full w-full object-contain p-1.5 logo-multiply"
               />
             ) : isEntityLoading ? (
@@ -105,20 +83,20 @@ function SidebarContent({
         <nav className="space-y-1">
           {NAV_ITEMS.map((item) => {
             const isActive =
-              (
-                pathname === item.href ||
-                (item.href !== "/dashboard" &&
-                  pathname.startsWith(`${item.href}/`))
-              );
+              pathname === item.href ||
+              (item.href !== "/dashboard" &&
+                pathname.startsWith(`${item.href}/`));
 
             const handleItemClick = () => {
               onNavigate();
             };
 
-            let linkStatusClasses = "text-sidebar-foreground/80 hover:bg-primary-foreground/20 hover:text-sidebar-foreground dark:hover:bg-white/10 dark:hover:text-white";
+            let linkStatusClasses =
+              "text-sidebar-foreground/80 hover:bg-primary-foreground/20 hover:text-sidebar-foreground dark:hover:bg-white/10 dark:hover:text-white";
 
             if (isActive) {
-              linkStatusClasses = "bg-background text-primary shadow-md dark:bg-primary/15 dark:text-primary dark:shadow-primary/10";
+              linkStatusClasses =
+                "bg-background text-primary shadow-md dark:bg-primary/15 dark:text-primary dark:shadow-primary/10";
             }
 
             const LinkContent = (
@@ -127,7 +105,9 @@ function SidebarContent({
                 onClick={handleItemClick}
                 className={cn(
                   "flex items-center rounded-xl py-3 text-sm font-semibold transition-all whitespace-nowrap relative overflow-hidden group my-1",
-                  isCollapsed ? "justify-center px-0 gap-0 w-10 mx-auto" : "justify-start px-3 gap-3 mx-1",
+                  isCollapsed
+                    ? "justify-center px-0 gap-0 w-10 mx-auto"
+                    : "justify-start px-3 gap-3 mx-1",
                   linkStatusClasses,
                 )}
               >
@@ -151,10 +131,11 @@ function SidebarContent({
                   {item.title}
                 </span>
                 {isActive && !isCollapsed && (
-                  <div className="absolute right-3 w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                  <div className="absolute right-3 h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
                 )}
               </Link>
             );
+
             if (isCollapsed) {
               return (
                 <TooltipProvider key={item.href} delayDuration={0}>
@@ -162,7 +143,7 @@ function SidebarContent({
                     <TooltipTrigger asChild>{LinkContent}</TooltipTrigger>
                     <TooltipContent
                       side="right"
-                      className="font-medium ml-4 bg-foreground text-background border-none shadow-xl"
+                      className="ml-4 border-none bg-foreground font-medium text-background shadow-xl"
                     >
                       {item.title}
                     </TooltipContent>
@@ -170,6 +151,7 @@ function SidebarContent({
                 </TooltipProvider>
               );
             }
+
             return <div key={item.href}>{LinkContent}</div>;
           })}
         </nav>
@@ -199,7 +181,7 @@ function SidebarContent({
           <span
             className={cn(
               "transition-all duration-300 font-semibold",
-              isCollapsed ? "opacity-0 w-0 hidden" : "opacity-100 w-auto",
+              isCollapsed ? "hidden w-0 opacity-0" : "w-auto opacity-100",
             )}
           >
             Tema {theme === "dark" ? "Claro" : "Escuro"}
@@ -219,7 +201,7 @@ function SidebarContent({
           <span
             className={cn(
               "transition-all duration-300 font-semibold",
-              isCollapsed ? "opacity-0 w-0 hidden" : "opacity-100 w-auto",
+              isCollapsed ? "hidden w-0 opacity-0" : "w-auto opacity-100",
             )}
           >
             Sair
@@ -229,11 +211,13 @@ function SidebarContent({
     </div>
   );
 }
+
 interface AppSidebarProps {
   isHovered?: boolean;
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
 }
+
 export function AppSidebar({
   isHovered = false,
   onMouseEnter,
@@ -245,24 +229,25 @@ export function AppSidebar({
   const isMobile = useMobile();
   const [open, setOpen] = useState(false);
   const isCollapsed = !isMobile && !isHovered;
+
   if (isMobile) {
     return (
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
           <Button
             variant="ghost"
-            className="fixed top-3 left-3 z-40 lg:hidden shrink-0 text-foreground bg-background/50 backdrop-blur-md rounded-full border border-border/50 shadow-sm h-9 px-3 flex items-center gap-2 hover:bg-background/80"
+            className="fixed top-3 left-3 z-40 flex h-9 shrink-0 items-center gap-2 rounded-full border border-border/50 bg-background/50 px-3 text-foreground shadow-sm backdrop-blur-md hover:bg-background/80 lg:hidden"
           >
             <Menu className="h-5 w-5" />
-            <span className="font-bold tracking-tight text-sm">
-              {NAV_ITEMS.find((item) => pathname.startsWith(item.href))
-                ?.title || "SIGESS"}
+            <span className="text-sm font-bold tracking-tight">
+              {NAV_ITEMS.find((item) => pathname.startsWith(item.href))?.title ||
+                "SIGESS"}
             </span>
           </Button>
         </SheetTrigger>
         <SheetContent
           side="left"
-          className="p-0 w-72 border-r-0 bg-sidebar text-sidebar-foreground h-full"
+          className="h-full w-72 border-r-0 bg-sidebar p-0 text-sidebar-foreground"
         >
           <SheetHeader className="sr-only">
             <SheetTitle>Menu de Navegação</SheetTitle>
@@ -279,6 +264,7 @@ export function AppSidebar({
       </Sheet>
     );
   }
+
   return (
     <aside
       className={cn(

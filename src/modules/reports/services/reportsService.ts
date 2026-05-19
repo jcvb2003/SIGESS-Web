@@ -280,4 +280,58 @@ export const reportsService = {
       `relatorio_pagamentos_${new Date().toISOString().slice(0, 10)}.pdf`,
     );
   },
+
+  async exportDAEsToExcel(data: any[]): Promise<void> {
+    const excelData = data.map((item) => ({
+      "Data Rec.": formatDate(item.data_recebimento),
+      "Data Boleto": formatDate(item.data_pagamento_boleto),
+      Nome: item.nome,
+      CPF: item.cpf,
+      Tipo: item.tipo_boleto,
+      "Competência": item.competencia_mes ? `${String(item.competencia_mes).padStart(2, "0")}/${item.competencia_ano}` : item.competencia_ano,
+      Forma: item.forma_pagamento,
+      "Boleto Pago": item.boleto_pago ? "Sim" : "Não",
+      Valor: item.valor,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "DAEs");
+
+    XLSX.writeFile(
+      workbook,
+      `relatorio_daes_${new Date().toISOString().slice(0, 10)}.xlsx`,
+    );
+  },
+
+  async exportDAEsToPdf(data: any[]): Promise<void> {
+    const doc = new jsPDF();
+    doc.text("Relatório de DAEs por Período", 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Gerado em: ${new Date().toLocaleDateString()}`, 14, 22);
+
+    const tableData = data.map((item) => [
+      formatDate(item.data_recebimento),
+      formatDate(item.data_pagamento_boleto),
+      item.nome,
+      item.cpf,
+      item.tipo_boleto ?? "—",
+      item.competencia_mes ? `${String(item.competencia_mes).padStart(2, "0")}/${item.competencia_ano}` : item.competencia_ano,
+      item.forma_pagamento ?? "—",
+      item.boleto_pago ? "Sim" : "Não",
+      item.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
+    ]);
+
+    autoTable(doc, {
+      head: [["Data Rec.", "Data Boleto", "Nome", "CPF", "Tipo", "Competência", "Forma", "Boleto Pago", "Valor"]],
+      body: tableData,
+      startY: 30,
+      theme: "grid",
+      headStyles: { fillColor: [16, 185, 129] },
+    });
+
+    doc.save(
+      `relatorio_daes_${new Date().toISOString().slice(0, 10)}.pdf`,
+    );
+  },
 };
