@@ -54,6 +54,13 @@ type ExtensionBridgeResponse = {
   opened?: number;
   failed?: number;
   items?: GovBatchStatusItem[];
+  data?: unknown;
+};
+
+export type ESocialAutomationSettingsSnapshot = {
+  competencia: string;
+  valorComercializado: string;
+  gerarGps: boolean;
 };
 
 const EXTENSION_RESPONSE_TYPE = "SIGESS_EXTENSION_RESPONSE";
@@ -135,6 +142,24 @@ export async function getGovBatchStatuses(
     8000,
     "A extensao nao respondeu Ã  consulta de status do lote GOV.",
   );
+}
+
+export async function getESocialAutomationSettings(): Promise<
+  ExtensionBridgeResponse & { data?: ESocialAutomationSettingsSnapshot }
+> {
+  if (!isFirefox()) {
+    return {
+      success: false,
+      error: "A leitura das configuracoes da extensao esta disponivel apenas no Firefox.",
+    };
+  }
+
+  return requestExtension(
+    "getESocialAutomationSettings",
+    {},
+    8000,
+    "A extensao nao respondeu a consulta das configuracoes do eSocial.",
+  ) as Promise<ExtensionBridgeResponse & { data?: ESocialAutomationSettingsSnapshot }>;
 }
 
 function requestExtension(

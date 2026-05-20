@@ -4,6 +4,7 @@ import { Loader2, Send, Users, X } from "lucide-react";
 import { toast } from "sonner";
 import {
   enqueueGovBatchSessions,
+  getESocialAutomationSettings,
   getGovBatchStatuses,
   type GovBatchStatus,
   type GovBatchStatusItem,
@@ -46,6 +47,13 @@ export function GovBatchAutomationPanel() {
 
   const trackedCpfsKey = useMemo(() => trackedCpfs.join(","), [trackedCpfs]);
 
+  const { data: esocialSettingsResponse } = useQuery({
+    queryKey: ["automation", "esocial-extension-settings"],
+    queryFn: getESocialAutomationSettings,
+    refetchInterval: 5000,
+    staleTime: 0,
+  });
+
   const { data: statusResponse } = useQuery({
     queryKey: ["automation", "gov-batch-status", trackedCpfsKey],
     queryFn: () => getGovBatchStatuses(trackedCpfs),
@@ -62,6 +70,17 @@ export function GovBatchAutomationPanel() {
     }
     return map;
   }, [statusResponse]);
+
+  const esocialSettingsLabel = useMemo(() => {
+    const settings = esocialSettingsResponse?.data;
+    if (!esocialSettingsResponse?.success || !settings) {
+      return "Configuração da extensão indisponível";
+    }
+
+    const competencia = settings.competencia || "sem competência";
+    const valor = formatConfiguredCurrency(settings.valorComercializado);
+    return `Competência: ${competencia} · Valor definido: ${valor || "não informado"}`;
+  }, [esocialSettingsResponse]);
 
   const handleAddSocio = useCallback(
     (socio: GovBatchSearchResult) => {
@@ -161,6 +180,18 @@ export function GovBatchAutomationPanel() {
       </CardHeader>
 
       <CardContent className="space-y-5">
+        <div className="space-y-1.5">
+          <Label htmlFor="automation-esocial-extension-settings">
+            Configuração GPS da extensão
+          </Label>
+          <Input
+            id="automation-esocial-extension-settings"
+            value={esocialSettingsLabel}
+            readOnly
+            className="bg-muted/40 text-muted-foreground"
+          />
+        </div>
+
         <div className="relative">
           <Input
             placeholder="Buscar socio por nome ou CPF..."
@@ -464,6 +495,12 @@ function getStatusStepTotal(statusItem?: GovBatchStatusItem): number {
   return 3;
 }
 
+function formatConfiguredCurrency(value?: string): string {
+  const trimmed = (value || "").trim();
+  if (!trimmed) return "";
+  if (/^R\$\s*/i.test(trimmed)) return trimmed;
+  return `R$ ${trimmed}`;
+}
 
 function renderBoletoInfo(statusItem: GovBatchStatusItem) {
   if (!statusItem.boletoInfo) return null;
