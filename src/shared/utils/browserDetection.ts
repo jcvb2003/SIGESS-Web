@@ -25,6 +25,7 @@ export type GovBatchStatus =
 export type BoletoInfo = {
   detectado: boolean;
   competencia?: string;
+  valorComercializado?: number;
   valorDeclarado?: number;
   valorPago?: number;
 };

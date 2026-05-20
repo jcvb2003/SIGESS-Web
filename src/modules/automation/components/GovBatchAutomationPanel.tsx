@@ -468,14 +468,29 @@ function getStatusStepTotal(statusItem?: GovBatchStatusItem): number {
 function renderBoletoInfo(statusItem: GovBatchStatusItem) {
   if (!statusItem.boletoInfo) return null;
 
-  const { detectado, competencia, valorDeclarado, valorPago } = statusItem.boletoInfo;
+  const { detectado, competencia, valorComercializado, valorDeclarado, valorPago } = statusItem.boletoInfo;
+  const formatCurrency = (value?: number) =>
+    value == null
+      ? null
+      : value.toLocaleString("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+        });
+  const valorComercializadoLabel = formatCurrency(valorComercializado);
+  const valorDeclaradoLabel = formatCurrency(valorDeclarado);
+  const valorPagoLabel = formatCurrency(valorPago);
+  const valueParts = [
+    valorComercializadoLabel && `Comercializado: ${valorComercializadoLabel}`,
+    valorDeclaradoLabel && `Declarado: ${valorDeclaradoLabel}`,
+    valorPagoLabel && `Pago: ${valorPagoLabel}`,
+  ].filter(Boolean);
 
   if (statusItem.status === "verificando_boleto") {
     if (detectado) {
       return (
         <div className="mt-2 rounded-sm bg-blue-50 p-2 text-xs text-blue-900">
           <p className="font-medium">Boleto detectado: {competencia}</p>
-          <p>Declarado: R$ {valorDeclarado?.toFixed(2)}, Pago: R$ {valorPago?.toFixed(2)}</p>
+          {valueParts.length > 0 && <p>{valueParts.join(" | ")}</p>}
         </div>
       );
     } else {
@@ -495,8 +510,7 @@ function renderBoletoInfo(statusItem: GovBatchStatusItem) {
         {competencia && (
           <p>
             {competencia}
-            {valorDeclarado != null && ` | Declarado: R$ ${valorDeclarado.toFixed(2)}`}
-            {valorPago != null && ` | Pago: R$ ${valorPago.toFixed(2)}`}
+            {valueParts.length > 0 && ` | ${valueParts.join(" | ")}`}
           </p>
         )}
       </div>
