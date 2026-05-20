@@ -50,7 +50,8 @@ export function GovBatchAutomationPanel() {
   const { data: esocialSettingsResponse } = useQuery({
     queryKey: ["automation", "esocial-extension-settings"],
     queryFn: getESocialAutomationSettings,
-    refetchInterval: 5000,
+    retry: false,
+    refetchOnWindowFocus: false,
     staleTime: 0,
   });
 
@@ -180,7 +181,7 @@ export function GovBatchAutomationPanel() {
       </CardHeader>
 
       <CardContent className="space-y-5">
-        <div className="space-y-1.5">
+        <div className="space-y-1 rounded-md border bg-muted/20 p-2">
           <Label htmlFor="automation-esocial-extension-settings">
             Configuração GPS da extensão
           </Label>
@@ -188,7 +189,7 @@ export function GovBatchAutomationPanel() {
             id="automation-esocial-extension-settings"
             value={esocialSettingsLabel}
             readOnly
-            className="bg-muted/40 text-muted-foreground"
+            className="h-8 bg-background text-xs text-muted-foreground"
           />
         </div>
 
