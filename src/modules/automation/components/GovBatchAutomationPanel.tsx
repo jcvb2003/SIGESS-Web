@@ -76,16 +76,29 @@ export function GovBatchAutomationPanel() {
     const settings = esocialSettingsResponse?.data;
     if (!esocialSettingsResponse?.success || !settings) {
       return {
+        enabled: false,
         competencia: "Indisponivel",
         valor: "Indisponivel",
+        message: "Nao foi possivel ler a configuracao da extensao.",
+      };
+    }
+
+    if (!settings.gerarGps) {
+      return {
+        enabled: false,
+        competencia: "",
+        valor: "",
+        message: "Funcao desativada na extensao.",
       };
     }
 
     const competencia = settings.competencia || "Sem competencia";
     const valor = formatConfiguredCurrency(settings.valorComercializado);
     return {
+      enabled: true,
       competencia,
       valor: valor || "Nao informado",
+      message: "",
     };
   }, [esocialSettingsResponse]);
 
@@ -192,12 +205,20 @@ export function GovBatchAutomationPanel() {
             <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
               Configuracao GPS
             </div>
-            <div className="text-right text-xs text-foreground">
-              Competencia: {esocialSettings.competencia}
-            </div>
-            <div className="text-right text-xs text-muted-foreground">
-              Valor definido: {esocialSettings.valor}
-            </div>
+            {esocialSettings.enabled ? (
+              <>
+                <div className="text-right text-xs text-foreground">
+                  Competencia: {esocialSettings.competencia}
+                </div>
+                <div className="text-right text-xs text-muted-foreground">
+                  Valor definido: {esocialSettings.valor}
+                </div>
+              </>
+            ) : (
+              <div className="text-right text-xs text-muted-foreground">
+                {esocialSettings.message}
+              </div>
+            )}
           </div>
         </div>
       </CardHeader>
