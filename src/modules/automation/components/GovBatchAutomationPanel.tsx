@@ -1,17 +1,20 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, Send, Users, X } from "lucide-react";
+import { Loader2, Send, Users } from "lucide-react";
 import { toast } from "sonner";
 import {
   enqueueGovBatchSessions,
   getESocialAutomationSettings,
   getGovBatchStatuses,
-  type GovBatchStatus,
-  type GovBatchStatusItem,
   type GovBatchSessionItem,
 } from "@/shared/utils/browserDetection";
-import { cn } from "@/shared/lib/utils";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Label } from "@/shared/components/ui/label";
 import { Input } from "@/shared/components/ui/input";
@@ -20,17 +23,14 @@ import {
   govBatchAutomationService,
   type GovBatchSearchResult,
 } from "@/modules/automation/services/reapBulkAutomationService";
+import { GpsConfigurationCard } from "./GpsConfigurationCard";
+import { SocioSearchResults } from "./SocioSearchResults";
+import { SocioListItem } from "./SocioListItem";
+import type { SocioSelecionado } from "./govBatch.types";
+import { formatConfiguredCurrency } from "../utils/govBatchFormatters";
 
 const GOV_LOGIN_URL = "https://servicos.acesso.gov.br/";
 const MAX_SOCIOS = 5;
-
-type SocioSelecionado = {
-  cpf: string;
-  nome: string;
-  senhagov: string;
-  anosSimplificadoPendentes: number[];
-  anosAnualPendentes: number[];
-};
 
 export function GovBatchAutomationPanel() {
   const [busca, setBusca] = useState("");
@@ -65,7 +65,7 @@ export function GovBatchAutomationPanel() {
   });
 
   const statusByCpf = useMemo(() => {
-    const map = new Map<string, GovBatchStatusItem>();
+    const map = new Map();
     for (const item of statusResponse?.items ?? []) {
       map.set(item.cpf.replace(/\D/g, ""), item);
     }
@@ -155,7 +155,9 @@ export function GovBatchAutomationPanel() {
       }));
 
     if (fila.length === 0) {
-      toast.error("Nenhum sócio selecionado possui senha GOV para entrar na fila.");
+      toast.error(
+        "Nenhum sócio selecionado possui senha GOV para entrar na fila.",
+      );
       return;
     }
 
@@ -179,7 +181,9 @@ export function GovBatchAutomationPanel() {
     if (!statusTrackingActive || !statusResponse?.items?.length) return;
 
     const allFinished = statusResponse.items.every((item) =>
-      ["concluido", "boleto_salvo", "erro", "expirado", "ignorado"].includes(item.status),
+      ["concluido", "boleto_salvo", "erro", "expirado", "ignorado"].includes(
+        item.status,
+      ),
     );
 
     if (allFinished) {
@@ -201,30 +205,11 @@ export function GovBatchAutomationPanel() {
             </CardDescription>
           </div>
 
-          <div className="flex min-w-[240px] max-w-[320px] flex-col gap-1 rounded-md border bg-muted/20 px-3 py-2 lg:items-end">
-            <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
-              Configuração GPS
-            </div>
-            {esocialSettings.enabled ? (
-              <>
-                <div className="text-right text-xs text-foreground">
-                  Competência: {esocialSettings.competencia}
-                </div>
-                <div className="text-right text-xs text-muted-foreground">
-                  Valor definido: {esocialSettings.valor}
-                </div>
-              </>
-            ) : (
-              <div className="text-right text-xs text-muted-foreground">
-                {esocialSettings.message}
-              </div>
-            )}
-          </div>
+          <GpsConfigurationCard {...esocialSettings} />
         </div>
       </CardHeader>
 
       <CardContent className="space-y-5">
-
         <div className="relative">
           <Input
             placeholder="Buscar sócio por nome ou CPF..."
@@ -239,31 +224,12 @@ export function GovBatchAutomationPanel() {
         </div>
 
         {resultados && resultados.length > 0 && buscaDebounced.length >= 2 && (
-          <div className="max-h-48 divide-y overflow-y-auto rounded-md border bg-popover shadow-md">
-            {resultados.map((resultado) => {
-              const jaSelecionado = selecionados.some(
-                (item) => item.cpf === resultado.cpf,
-              );
-              const limiteAtingido = selecionados.length >= MAX_SOCIOS;
-
-              return (
-                <button
-                  key={resultado.cpf}
-                  type="button"
-                  onClick={() => handleAddSocio(resultado)}
-                  disabled={jaSelecionado || limiteAtingido}
-                  className={cn(
-                    "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted",
-                    (jaSelecionado || limiteAtingido) &&
-                      "cursor-not-allowed opacity-40",
-                  )}
-                >
-                  <p className="font-medium">{resultado.nome}</p>
-                  <p className="text-xs text-muted-foreground">{resultado.cpf}</p>
-                </button>
-              );
-            })}
-          </div>
+          <SocioSearchResults
+            resultados={resultados}
+            selectedCpfs={selecionados.map((item) => item.cpf)}
+            maxSocios={MAX_SOCIOS}
+            onAddSocio={handleAddSocio}
+          />
         )}
 
         <div className="space-y-2">
@@ -284,39 +250,12 @@ export function GovBatchAutomationPanel() {
           ) : (
             <div className="divide-y rounded-md border">
               {selecionados.map((socio) => (
-                <div key={socio.cpf} className="flex items-start justify-between gap-2 px-3 py-2">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">{socio.nome}</p>
-                    {renderGovStatus(statusByCpf.get(socio.cpf.replace(/\D/g, "")))}
-                      <div className="mt-1 flex flex-wrap gap-1">
-                        {socio.anosSimplificadoPendentes.map((ano) => (
-                          <span
-                            key={`s-${socio.cpf}-${ano}`}
-                            className="rounded-full border px-2 py-0.5 text-[10px] text-muted-foreground"
-                          >
-                            Simpl. {ano}
-                          </span>
-                        ))}
-                        {socio.anosAnualPendentes.map((ano) => (
-                          <span
-                            key={`a-${socio.cpf}-${ano}`}
-                            className="rounded-full border border-primary/40 px-2 py-0.5 text-[10px] text-primary"
-                          >
-                            REAP {ano}
-                          </span>
-                        ))}
-                      </div>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 shrink-0"
-                    onClick={() => handleRemoveSocio(socio.cpf)}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
+                <SocioListItem
+                  key={socio.cpf}
+                  socio={socio}
+                  statusItem={statusByCpf.get(socio.cpf.replace(/\D/g, ""))}
+                  onRemove={handleRemoveSocio}
+                />
               ))}
             </div>
           )}
@@ -343,250 +282,3 @@ export function GovBatchAutomationPanel() {
     </Card>
   );
 }
-
-function renderGovStatus(statusItem?: GovBatchStatusItem) {
-  if (!statusItem) {
-    return (
-      <div className="mt-1 space-y-1.5">
-        <GovBatchTrack />
-        <p className="text-xs text-muted-foreground">
-          Aguardando envio para a extensão
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="mt-1 space-y-1.5">
-      <GovBatchTrack statusItem={statusItem} />
-      <div className="flex flex-wrap items-center gap-2">
-        <span className={cn(
-          "text-[11px] font-semibold uppercase tracking-[0.14em]",
-          statusTextClassName(statusItem.status),
-        )}>
-          {resolveStatusHeading(statusItem)}
-        </span>
-      </div>
-      <p className="text-xs text-muted-foreground">
-        {statusItem.statusDescription || "A extensão atualizou o progresso desta sessão."}
-      </p>
-      {renderBoletoInfo(statusItem)}
-      {statusItem.status === "erro" && statusItem.lastError && (
-        <p className="text-xs text-destructive">{statusItem.lastError}</p>
-      )}
-    </div>
-  );
-}
-
-function GovBatchTrack({ statusItem }: { statusItem?: GovBatchStatusItem }) {
-  const totalSteps = getStatusStepTotal(statusItem);
-  const currentStep = getStatusStepIndex(statusItem, totalSteps);
-  const status = statusItem?.status;
-
-  return (
-    <div className="flex items-center gap-1.5" aria-hidden="true">
-      {Array.from({ length: totalSteps }).map((_, index) => {
-        const filled = index < currentStep;
-        const errored = status === "erro" && index === currentStep - 1;
-
-        return (
-          <span
-            key={`gov-track-${index}`}
-            className={cn(
-              "h-1.5 flex-1 rounded-full transition-colors",
-              filled ? "bg-primary" : "bg-muted",
-              errored && "bg-destructive",
-            )}
-          />
-        );
-      })}
-    </div>
-  );
-}
-
-function resolveStatusHeading(statusItem: GovBatchStatusItem): string {
-  return (
-    statusItem.statusTitle ||
-    statusItem.statusDescription ||
-    statusLabel(statusItem.status)
-  );
-}
-
-function statusLabel(status: GovBatchStatus): string {
-  switch (status) {
-    case "enfileirado":
-      return "Enfileirado";
-    case "abrindo_em_lote":
-      return "Abrindo em lote";
-    case "fazendo_login":
-      return "Fazendo Login";
-    case "acessando_esocial":
-      return "Acessando o E-social";
-    case "consultando":
-      return "Consultando";
-    case "verificando_boleto":
-      return "Verificando boleto";
-    case "boleto_salvo":
-      return "Boleto salvo";
-    case "gerando_pdf":
-      return "Gerando PDF";
-    case "redirecionando":
-      return "Redirecionando";
-    case "concluido":
-      return "Concluido";
-    case "erro":
-      return "Erro";
-    case "expirado":
-      return "Expirado";
-    case "ignorado":
-      return "Ignorado";
-    default:
-      return status;
-  }
-}
-
-function statusTextClassName(status: GovBatchStatus): string {
-  switch (status) {
-    case "concluido":
-      return "text-emerald-700";
-    case "erro":
-      return "text-red-700";
-    case "fazendo_login":
-    case "consultando":
-      return "text-blue-700";
-    case "abrindo_em_lote":
-    case "acessando_esocial":
-      return "text-amber-700";
-    case "verificando_boleto":
-    case "boleto_salvo":
-    case "gerando_pdf":
-    case "redirecionando":
-      return "text-orange-700";
-    default:
-      return "text-muted-foreground";
-  }
-}
-
-function getStatusStepIndex(
-  statusItem?: GovBatchStatusItem,
-  fallbackTotal = 3,
-): number {
-  if (!statusItem) {
-    return 0;
-  }
-
-  const explicitStep = Number(statusItem.progressStep);
-  const explicitTotal = getStatusStepTotal(statusItem) || fallbackTotal;
-  if (Number.isFinite(explicitStep) && explicitStep > 0) {
-    return Math.max(0, Math.min(explicitTotal, explicitStep));
-  }
-
-  const status = statusItem.status;
-
-  if (status === "concluido") {
-    return 3;
-  }
-
-  if (
-    status === "boleto_salvo" ||
-    status === "gerando_pdf" ||
-    status === "redirecionando"
-  ) {
-    return 3;
-  }
-
-  if (
-    status === "acessando_esocial" ||
-    status === "consultando" ||
-    status === "verificando_boleto"
-  ) {
-    return 2;
-  }
-
-  if (
-    status === "enfileirado" ||
-    status === "abrindo_em_lote" ||
-    status === "fazendo_login" ||
-    status === "ignorado"
-  ) {
-    return 1;
-  }
-
-  if (status === "erro" || status === "expirado") {
-    return 1;
-  }
-
-  return 0;
-}
-
-function getStatusStepTotal(statusItem?: GovBatchStatusItem): number {
-  const explicitTotal = Number(statusItem?.progressTotal);
-  if (Number.isFinite(explicitTotal) && explicitTotal > 0) {
-    return explicitTotal;
-  }
-
-  return 3;
-}
-
-function formatConfiguredCurrency(value?: string): string {
-  const trimmed = (value || "").trim();
-  if (!trimmed) return "";
-  if (/^R\$\s*/i.test(trimmed)) return trimmed;
-  return `R$ ${trimmed}`;
-}
-
-function renderBoletoInfo(statusItem: GovBatchStatusItem) {
-  if (!statusItem.boletoInfo) return null;
-
-  const { detectado, competencia, valorComercializado, valorDeclarado, valorPago } = statusItem.boletoInfo;
-  const formatCurrency = (value?: number) =>
-    value == null
-      ? null
-      : value.toLocaleString("pt-BR", {
-          style: "currency",
-          currency: "BRL",
-        });
-  const valorComercializadoLabel = formatCurrency(valorComercializado);
-  const valorDeclaradoLabel = formatCurrency(valorDeclarado);
-  const valorPagoLabel = formatCurrency(valorPago);
-  const valueParts = [
-    valorComercializadoLabel && `Comercializado: ${valorComercializadoLabel}`,
-    valorDeclaradoLabel && `Declarado: ${valorDeclaradoLabel}`,
-    valorPagoLabel && `Pago: ${valorPagoLabel}`,
-  ].filter(Boolean);
-
-  if (statusItem.status === "verificando_boleto") {
-    if (detectado) {
-      return (
-        <div className="mt-2 rounded-sm bg-blue-50 p-2 text-xs text-blue-900">
-          <p className="font-medium">Boleto detectado: {competencia}</p>
-          {valueParts.length > 0 && <p>{valueParts.join(" | ")}</p>}
-        </div>
-      );
-    } else {
-      return (
-        <div className="mt-2 rounded-sm bg-amber-50 p-2 text-xs text-amber-900">
-          <p className="font-medium">Boleto não detectado. Gerando...</p>
-        </div>
-      );
-    }
-  }
-
-  if (statusItem.status === "boleto_salvo") {
-    const tipo = statusItem.boletoGerado ? "Gerado" : "Já existia";
-    return (
-      <div className="mt-2 rounded-sm bg-emerald-50 p-2 text-xs text-emerald-900">
-        <p className="font-medium">Boleto salvo com sucesso - {tipo}</p>
-        {competencia && (
-          <p>
-            {competencia}
-            {valueParts.length > 0 && ` | ${valueParts.join(" | ")}`}
-          </p>
-        )}
-      </div>
-    );
-  }
-
-  return null;
-}
-
