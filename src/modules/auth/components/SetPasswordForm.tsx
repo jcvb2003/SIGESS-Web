@@ -102,7 +102,7 @@ export function SetPasswordForm() {
 
     const tenant = await resolveAndCacheTenant(tenantCode).catch(() => null);
     if (!tenant) {
-      toast.error("Entidade não encontrada. Verifique o link.");
+      toast.error("Código, email ou senha incorretos.");
       return;
     }
 

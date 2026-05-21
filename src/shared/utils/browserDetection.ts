@@ -63,6 +63,12 @@ export type ESocialAutomationSettingsSnapshot = {
   gerarGps: boolean;
 };
 
+export type AutoRegistrationSnapshot = {
+  enabled: boolean;
+  hasData: boolean;
+  data?: Record<string, unknown> | null;
+};
+
 const EXTENSION_RESPONSE_TYPE = "SIGESS_EXTENSION_RESPONSE";
 
 export function isFirefox(): boolean {
@@ -160,6 +166,24 @@ export async function getESocialAutomationSettings(): Promise<
     8000,
     "A extensao nao respondeu a consulta das configuracoes do eSocial.",
   ) as Promise<ExtensionBridgeResponse & { data?: ESocialAutomationSettingsSnapshot }>;
+}
+
+export async function getAutoRegistrationSnapshot(): Promise<
+  ExtensionBridgeResponse & { data?: AutoRegistrationSnapshot }
+> {
+  if (!isFirefox()) {
+    return {
+      success: false,
+      error: "A captura automatica da extensao esta disponivel apenas no Firefox.",
+    };
+  }
+
+  return requestExtension(
+    "getAutoRegistrationSnapshot",
+    {},
+    8000,
+    "A extensao nao respondeu a consulta da captura automatica.",
+  ) as Promise<ExtensionBridgeResponse & { data?: AutoRegistrationSnapshot }>;
 }
 
 function requestExtension(

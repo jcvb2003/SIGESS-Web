@@ -6,7 +6,7 @@ export default function AutomationPage() {
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
       <PageHeader
         title="Automação"
-        description="Organize rotinas, fluxos e futuras integrações automáticas do sistema em um módulo próprio."
+        description="Digitação automática, Geração de Boletos e Preenchimento do REAP em lote."
       />
 
       <GovBatchAutomationPanel />

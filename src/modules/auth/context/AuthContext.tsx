@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { AuthContext } from "./authContextStore";
 
 const TENANT_KEY = "sigess_tenant";
+const GENERIC_AUTH_ERROR_MESSAGE = "Código, email ou senha incorretos";
 
 export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [user, setUser] = useState<User | null>(null);
@@ -18,8 +19,6 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [loading, setLoading] = useState(true);
   const signOutInProgressRef = useRef(false);
   const subscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
-
-
 
   const attachListener = () => {
     if (subscriptionRef.current) return;
@@ -45,10 +44,6 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        /**
-         * CASO 1: Modo multi-tenant com tenant salvo no localStorage.
-         * Restaura o cliente do tenant anterior e tenta recuperar a sessão.
-         */
         const saved =
           typeof globalThis === "undefined"
             ? null
@@ -76,11 +71,6 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
           return;
         }
 
-        /**
-         * CASO 2: Modo multi-tenant sem tenant salvo.
-         * Nenhum cliente é inicializado. A aplicação permanece na tela de login.
-         * Não há erro aqui — é o estado inicial esperado.
-         */
         setLoading(false);
       } catch (error) {
         console.warn("Auth init error:", error);
@@ -105,31 +95,27 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
 
       const { data, error } = await authService.signIn(credentials);
       if (error) {
-        let message = error.message || "Erro ao realizar login";
-        if (message === "Invalid login credentials") {
-          message = "Código, email ou senha incorretos";
-        }
+        const message =
+          error.message === "Invalid login credentials"
+            ? GENERIC_AUTH_ERROR_MESSAGE
+            : error.message || "Erro ao realizar login";
         toast.error(message);
-        clearSupabaseClient(); // Remove a tentativa falha
+        clearSupabaseClient();
         return false;
       }
-      
+
       if (data?.session) {
         setSession(data.session);
         setUser(data.user);
       }
-      
+
       localStorage.setItem("last_activity_timestamp", Date.now().toString());
       toast.success("Login realizado com sucesso!");
       return true;
     } catch (error: unknown) {
-      const message =
-        error instanceof Error && error.message
-          ? error.message
-          : "Erro ao realizar login";
       console.error("Login error:", error);
-      toast.error(message);
-      clearSupabaseClient(); // Sempre remove a tentativa falha
+      toast.error(GENERIC_AUTH_ERROR_MESSAGE);
+      clearSupabaseClient();
       return false;
     }
   };
@@ -140,16 +126,14 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     }
     signOutInProgressRef.current = true;
     try {
-      // Tenta deslogar no Supabase, mas não bloqueia se falhar (ex: cliente não inicializado)
       await authService.signOut().catch((err) => {
         console.warn("Supabase signOut error (expected if not initialized):", err);
       });
 
-      // SEMPRE limpa o estado local e redireciona
       clearSupabaseClient();
       setSession(null);
       setUser(null);
-      
+
       toast.success("Logout realizado com sucesso!");
 
       if (typeof globalThis !== "undefined") {
@@ -159,7 +143,6 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       return true;
     } catch (error: unknown) {
       console.error("Logout unexpected error:", error);
-      // Mesmo em erro inesperado, limpamos o cliente
       clearSupabaseClient();
       if (typeof globalThis !== "undefined") {
         globalThis.location.href = "/";
