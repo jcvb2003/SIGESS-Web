@@ -1,7 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { Card } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
-import { Settings as SettingsIcon, SlidersHorizontal, Receipt, History, FileSpreadsheet } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { cn } from "@/shared/lib/utils";
@@ -35,6 +34,7 @@ import { FinanceFilterPanel } from "@/modules/finance/components/filters/Finance
 import { AuditLogDialog } from "@/modules/finance/components/dialogs/AuditLogDialog";
 import { usePermissions } from "@/shared/hooks/usePermissions";
 import type { FinanceDashboardParams } from "@/modules/finance/types/finance.types";
+import { FinanceHeaderActions } from "@/modules/finance/components/shared/FinanceHeaderActions";
 
 type ModalType = "statement" | "payment" | "dae";
 
@@ -196,60 +196,15 @@ export default function FinancePage() {
         title="Financeiro"
         description="Gestão de anuidades, taxas e saúde financeira. Controle pagamentos e inadimplência de forma centralizada."
         actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              className="gap-2"
-              onClick={() => setFiltersOpen(true)}
-            >
-              <SlidersHorizontal className="h-4 w-4" />
-              <span className="inline text-xs font-bold uppercase">Filtros</span>
-              {hasActiveAdvancedFilters && (
-                <span className="ml-1 h-2 w-2 rounded-full bg-primary animate-pulse" />
-              )}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="gap-2"
-              onClick={() => navigate("/finance/payments-report")}
-            >
-              <Receipt className="h-4 w-4" />
-              <span className="inline text-xs font-bold uppercase">Pagamentos</span>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="gap-2"
-              onClick={() => navigate("/finance/daes-report")}
-            >
-              <FileSpreadsheet className="h-4 w-4" />
-              <span className="inline text-xs font-bold uppercase">DAEs</span>
-            </Button>
-            {isAdmin && (
-              <Button
-                type="button"
-                variant="outline"
-                className="gap-2"
-                onClick={() => setAuditOpen(true)}
-              >
-                <History className="h-4 w-4" />
-                <span className="inline text-xs font-bold uppercase">Auditoria</span>
-              </Button>
-            )}
-            {isAdmin && (
-              <Button
-                type="button"
-                variant="outline"
-                className="gap-2"
-                onClick={() => setSettingsOpen(true)}
-              >
-                <SettingsIcon className="h-4 w-4" />
-                <span className="inline text-xs font-bold uppercase">Configurar</span>
-              </Button>
-            )}
-          </div>
+          <FinanceHeaderActions
+            isAdmin={isAdmin}
+            hasActiveAdvancedFilters={Boolean(hasActiveAdvancedFilters)}
+            onOpenFilters={() => setFiltersOpen(true)}
+            onOpenPaymentsReport={() => navigate("/finance/payments-report")}
+            onOpenDaesReport={() => navigate("/finance/daes-report")}
+            onOpenAudit={() => setAuditOpen(true)}
+            onOpenSettings={() => setSettingsOpen(true)}
+          />
         }
       />
 

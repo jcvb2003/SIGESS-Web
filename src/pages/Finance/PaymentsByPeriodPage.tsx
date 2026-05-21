@@ -7,12 +7,7 @@ import { usePaymentsByPeriod } from "@/modules/finance/hooks/data/usePaymentsByP
 import { DataTable, ColumnDef } from "@/shared/components/layout/DataTable";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { formatDate } from "@/shared/utils/date";
-import { 
-  ArrowLeft, 
-  Calendar, 
-  History
-} from "lucide-react";
-import { ReportExportButtons } from "@/modules/reports/components/ReportExportButtons";
+import { Calendar, History } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { DataTablePagination } from "@/shared/components/layout/DataTablePagination";
 import type { PaymentByPeriod } from "@/modules/finance/types/finance.types";
@@ -34,6 +29,7 @@ import {
 
 
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
+import { ReportPageHeaderActions } from "@/modules/reports/components/ReportPageHeaderActions";
 
 interface FilterForm {
   startDate: string;
@@ -284,24 +280,12 @@ export default function PaymentsByPeriodPage() {
           title="Pagamentos por Período"
           description="Relatório detalhado de entradas financeiras identificadas no sistema."
           actions={
-            <div className="flex items-center gap-3 print:hidden">
-              {totalCount > 0 && (
-                <ReportExportButtons 
-                  onExportExcel={handleExportExcel}
-                  onExportPdf={handleExportPdf}
-                />
-              )}
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate(-1)}
-                className="rounded-xl h-10 px-4"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Voltar
-              </Button>
-            </div>
+            <ReportPageHeaderActions
+              showExport={totalCount > 0}
+              onExportExcel={handleExportExcel}
+              onExportPdf={handleExportPdf}
+              onBack={() => navigate(-1)}
+            />
           }
         />
 
