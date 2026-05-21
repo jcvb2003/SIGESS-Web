@@ -68,8 +68,15 @@ function normalizeText(value: string) {
 }
 
 function extractCpf(text: string): string | null {
-  const labeled = /CPF[:\s]*([\d.-]{11,14})/i.exec(text)?.[1];
-  if (labeled) return labeled;
+  const cpfIdx = text.search(/\bCPF\b/i);
+  if (cpfIdx !== -1) {
+    const nearby = text.slice(cpfIdx + 3, cpfIdx + 80);
+    const digits = nearby.replaceAll(/\D/g, "");
+    if (digits.length >= 11) {
+      const d = digits.slice(0, 11);
+      return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
+    }
+  }
 
   return /(\d{3}\.\d{3}\.\d{3}-\d{2})/.exec(text)?.[1] ?? null;
 }
@@ -195,7 +202,7 @@ export function ImportDAEsDialog({
               const { cpf, nome, competenciaMes, competenciaAno, valor } = await extractFromPdf(file);
               const normalizedCpf = cpf ? cleanCpf(cpf) : "";
               const existingKey = normalizedCpf && competenciaAno && competenciaMes
-                ? `${cpf}-${competenciaAno}-${competenciaMes}`
+                ? `${normalizedCpf}-${competenciaAno}-${competenciaMes}`
                 : null;
 
               if (!cpf || !competenciaMes || !competenciaAno || valor === null) {

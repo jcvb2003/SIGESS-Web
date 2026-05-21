@@ -1,4 +1,5 @@
 import { supabase } from "@/shared/lib/supabase/client";
+import { fetchAll } from "@/shared/lib/supabase/utils";
 import type { DAEByPeriod, FinanceDAE, FinanceDAEInsert } from "../types/finance.types";
 
 interface DAEByPeriodRow {
@@ -22,6 +23,10 @@ interface DAEByPeriodRow {
 interface ImportContextMemberRow {
   cpf: string | null;
   nome: string | null;
+}
+
+function cleanCpf(value: string) {
+  return value.replaceAll(/\D/g, "");
 }
 
 export const daeService = {
@@ -121,25 +126,27 @@ export const daeService = {
     members: { cpf: string; nome: string | null }[];
     existingKeys: Set<string>;
   }> {
-    const [membersResult, daesResult] = await Promise.all([
-      supabase.from("socios").select("cpf, nome"),
-      supabase
-        .from("financeiro_dae")
-        .select("socio_cpf, competencia_ano, competencia_mes")
-        .neq("status", "cancelado"),
+    const [membersData, daesData] = await Promise.all([
+      fetchAll<ImportContextMemberRow>(
+        supabase.from("socios").select("cpf, nome").order("cpf"),
+      ),
+      fetchAll<{ socio_cpf: string | null; competencia_ano: number | null; competencia_mes: number | null }>(
+        supabase
+          .from("financeiro_dae")
+          .select("socio_cpf, competencia_ano, competencia_mes")
+          .neq("status", "cancelado")
+          .order("socio_cpf"),
+      ),
     ]);
 
-    if (membersResult.error) throw membersResult.error;
-    if (daesResult.error) throw daesResult.error;
-
-    const members = ((membersResult.data ?? []) as ImportContextMemberRow[])
+    const members = (membersData ?? [])
       .filter((item): item is { cpf: string; nome: string | null } => Boolean(item.cpf))
       .map((item) => ({ cpf: item.cpf, nome: item.nome }));
 
     const existingKeys = new Set(
-      (daesResult.data ?? [])
+      (daesData ?? [])
         .filter((item) => item.socio_cpf && item.competencia_ano && item.competencia_mes)
-        .map((item) => `${item.socio_cpf}-${item.competencia_ano}-${item.competencia_mes}`),
+        .map((item) => `${cleanCpf(item.socio_cpf!)}-${item.competencia_ano}-${item.competencia_mes}`),
     );
 
     return { members, existingKeys };
