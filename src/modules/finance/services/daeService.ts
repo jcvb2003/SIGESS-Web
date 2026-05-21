@@ -337,6 +337,18 @@ export const daeService = {
     if (error) throw error;
   },
 
+  async updateGroupDAEFields(
+    grupoId: string,
+    data: Partial<FinanceDAE>,
+  ): Promise<void> {
+    const { error } = await supabase
+      .from("financeiro_dae")
+      .update(data)
+      .eq("grupo_id", grupoId);
+
+    if (error) throw error;
+  },
+
   /**
    * ATENÇÃO: Uso restrito. Para edições auditáveis, use o fluxo Cancelar + Criar.
    * @deprecated Use o fluxo de substituição do useUpdateFinanceActions

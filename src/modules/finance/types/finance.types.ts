@@ -110,13 +110,9 @@ export interface SelectedAnnuity {
 }
 
 export interface EditDAEData {
-  isGroup?: boolean;
-  grupoId?: string;
-  year: number;
-  items?: { mes: number; valor: number }[];
-  valor?: number;
-  competencia_mes?: number;
-  competencia_ano?: number;
+  forma_pagamento: PaymentMethod;
+  boleto_pago: boolean;
+  data_pagamento_boleto?: string | null;
 }
 
 export interface PaymentByPeriod {

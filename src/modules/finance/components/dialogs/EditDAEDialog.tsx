@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useForm, Controller, useWatch } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
@@ -11,18 +11,18 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
-import { MoneyField } from "../shared/MoneyField";
-import { cn } from "@/shared/lib/utils";
-import { FileText, X, AlertTriangle, Calendar } from "lucide-react";
-import type { FinanceDAE, EditDAEData } from "../../types/finance.types";
-import { useParametersData } from "@/modules/settings/hooks/useParametersData";
-import { isMonthInDefeso } from "../../utils/defesoUtils";
+import { Checkbox } from "@/shared/components/ui/checkbox";
+import { PaymentMethodSelect } from "../shared/PaymentMethodSelect";
+import { FileText, X, Calendar, CheckCircle2 } from "lucide-react";
+import type { FinanceDAE, EditDAEData, PaymentMethod } from "../../types/finance.types";
+import { isNotFutureDate } from "@/shared/utils/validators/dateValidators";
+import { getTodayISO } from "@/shared/utils/date";
+import { toast } from "sonner";
 
 const editDAESchema = z.object({
-  valor: z.number().min(0.01, "O valor deve ser maior que zero"),
-  competencia_mes: z.number().min(1).max(12),
-  competencia_ano: z.number().min(2000).max(2100),
+  forma_pagamento: z.enum(["dinheiro", "pix", "transferencia", "boleto", "cartao"]),
+  boleto_pago: z.boolean(),
+  data_pagamento_boleto: z.string().nullable().optional(),
 });
 
 type EditDAEForm = z.infer<typeof editDAESchema>;
@@ -35,21 +35,6 @@ interface EditDAEDialogProps {
   readonly isPending: boolean;
 }
 
-const MONTHS = [
-  { value: 1, label: "Janeiro" },
-  { value: 2, label: "Fevereiro" },
-  { value: 3, label: "Março" },
-  { value: 4, label: "Abril" },
-  { value: 5, label: "Maio" },
-  { value: 6, label: "Junho" },
-  { value: 7, label: "Julho" },
-  { value: 8, label: "Agosto" },
-  { value: 9, label: "Setembro" },
-  { value: 10, label: "Outubro" },
-  { value: 11, label: "Novembro" },
-  { value: 12, label: "Dezembro" },
-];
-
 export function EditDAEDialog({
   open,
   onOpenChange,
@@ -57,47 +42,53 @@ export function EditDAEDialog({
   onConfirm,
   isPending,
 }: EditDAEDialogProps) {
-  const { parameters } = useParametersData();
-
   const {
     control,
     handleSubmit,
     reset,
-    formState: { errors },
+    setValue,
+    watch,
   } = useForm<EditDAEForm>({
     resolver: zodResolver(editDAESchema),
     defaultValues: {
-      valor: 0,
-      competencia_mes: 1,
-      competencia_ano: new Date().getFullYear(),
+      forma_pagamento: "boleto",
+      boleto_pago: false,
+      data_pagamento_boleto: null,
     },
   });
 
-  const selectedYear = useWatch({
-    control,
-    name: "competencia_ano",
-  });
+  const boletoPago = watch("boleto_pago");
+  const competenciaLabel =
+    dae?.competencia_mes && dae?.competencia_ano
+      ? `${String(dae.competencia_mes).padStart(2, "0")}/${dae.competencia_ano}`
+      : "Competência indisponível";
 
   useEffect(() => {
-    if (dae && open) {
-      reset({
-        valor: dae.valor ?? 0,
-        competencia_mes: dae.competencia_mes ?? 1,
-        competencia_ano: dae.competencia_ano ?? new Date().getFullYear(),
-      });
-    }
+    if (!dae || !open) return;
+
+    reset({
+      forma_pagamento: (dae.forma_pagamento as PaymentMethod | null) ?? "boleto",
+      boleto_pago: Boolean(dae.boleto_pago),
+      data_pagamento_boleto: dae.data_pagamento_boleto ?? null,
+    });
   }, [dae, open, reset]);
 
   const onSubmit = (data: EditDAEForm) => {
+    const paymentDate = data.boleto_pago
+      ? data.data_pagamento_boleto || getTodayISO()
+      : null;
+
+    if (data.boleto_pago && (!paymentDate || !isNotFutureDate(paymentDate))) {
+      toast.error("A data de pagamento do boleto não pode ser futura.");
+      return;
+    }
+
     onConfirm({
-      valor: data.valor,
-      competencia_mes: data.competencia_mes,
-      competencia_ano: data.competencia_ano,
-      year: data.competencia_ano
+      forma_pagamento: data.forma_pagamento,
+      boleto_pago: data.boleto_pago,
+      data_pagamento_boleto: paymentDate,
     });
   };
-
-  const buttonLabel = "Salvar Repasse";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -122,7 +113,6 @@ export function EditDAEDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5">
-          {/* Ano de Competência - Somente Leitura */}
           <div className="bg-muted p-4 rounded-xl border border-border/50 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-lg bg-card border border-border flex items-center justify-center shadow-sm">
@@ -130,75 +120,80 @@ export function EditDAEDialog({
               </div>
               <div>
                 <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block leading-none">
-                  Ano de Competência
+                  Competência
                 </Label>
-                <p className="text-[10px] text-muted-foreground mt-1">Competência original (Não editável)</p>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  {competenciaLabel}
+                </p>
               </div>
             </div>
-            <Controller
-              control={control}
-              name="competencia_ano"
-              render={({ field }) => (
-                <Input 
-                  type="number" 
-                  readOnly
-                  className="h-10 w-24 text-center text-sm font-bold bg-muted/50 border-border shadow-none cursor-not-allowed opacity-70" 
-                  {...field} 
-                  onChange={(e) => field.onChange(Number(e.target.value))}
-                />
-              )}
-            />
           </div>
 
-          <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-            <div className="space-y-1.5 text-left">
-              <Label className="text-xs font-bold text-muted-foreground px-0.5">Mês de Competência</Label>
+          <Controller
+            control={control}
+            name="forma_pagamento"
+            render={({ field }) => (
+              <PaymentMethodSelect
+                value={field.value}
+                onChange={field.onChange}
+                label="Forma de Pagamento"
+              />
+            )}
+          />
+
+          <div className="bg-muted/50 p-4 rounded-xl border border-dashed border-border space-y-4">
+            <div className="flex items-center space-x-2">
               <Controller
                 control={control}
-                name="competencia_mes"
+                name="boleto_pago"
                 render={({ field }) => (
-                  <Select
-                    value={String(field.value)}
-                    onValueChange={(v) => field.onChange(Number(v))}
-                  >
-                    <SelectTrigger className="h-10 text-sm border-border">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {MONTHS.map((m) => {
-                        const isDefeso = isMonthInDefeso(m.value, selectedYear, parameters);
-                        return (
-                          <SelectItem 
-                            key={m.value} 
-                            value={String(m.value)} 
-                            className={cn("text-sm", isDefeso && "text-amber-600 bg-amber-50")}
-                            disabled={isDefeso}
-                          >
-                            <div className="flex items-center justify-between w-full gap-2">
-                              {m.label}
-                              {isDefeso && <AlertTriangle className="h-3 w-3" />}
-                            </div>
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
+                  <Checkbox
+                    id="edit-boleto-pago"
+                    checked={field.value}
+                    onCheckedChange={(checked) => {
+                      const isChecked = Boolean(checked);
+                      field.onChange(isChecked);
+                      if (isChecked && !watch("data_pagamento_boleto")) {
+                        setValue("data_pagamento_boleto", getTodayISO());
+                      }
+                      if (!isChecked) {
+                        setValue("data_pagamento_boleto", null);
+                      }
+                    }}
+                    className="border-border data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+                  />
                 )}
               />
+              <Label
+                htmlFor="edit-boleto-pago"
+                className="text-xs font-semibold text-muted-foreground cursor-pointer"
+              >
+                Marcar boleto DAE como pago
+              </Label>
             </div>
 
-            <Controller
-              control={control}
-              name="valor"
-              render={({ field }) => (
-                <MoneyField
-                  label="Valor do Repasse"
-                  value={field.value ?? 0}
-                  onChange={field.onChange}
-                />
-              )}
-            />
-            {errors.valor && <p className="text-[10px] text-red-500 font-medium px-1 mt-1">{errors.valor.message}</p>}
+            {boletoPago && (
+              <Controller
+                control={control}
+                name="data_pagamento_boleto"
+                render={({ field }) => (
+                  <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1">
+                    <Label className="text-[10px] font-bold text-muted-foreground uppercase">
+                      Pagamento no Banco
+                    </Label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                      <Input
+                        type="date"
+                        value={field.value ?? ""}
+                        onChange={(event) => field.onChange(event.target.value || null)}
+                        className="h-9 pl-9 text-xs font-bold border-border bg-card shadow-sm rounded-md"
+                      />
+                    </div>
+                  </div>
+                )}
+              />
+            )}
           </div>
 
           <div className="pt-4 flex items-center gap-3 border-t border-border/50 mt-2">
@@ -221,7 +216,12 @@ export function EditDAEDialog({
                   <Calendar className="mr-2 h-4 w-4 animate-spin" />
                   Atualizando...
                 </>
-              ) : buttonLabel}
+              ) : (
+                <>
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  Salvar Alterações
+                </>
+              )}
             </Button>
           </div>
         </form>

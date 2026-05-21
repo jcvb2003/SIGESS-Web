@@ -121,8 +121,7 @@ export function DAESection({
   const { cancelDAE } = useCancelFinanceActions();
   const { 
     toggleBoletoStatus, 
-    updateDAE, 
-    updateGroupDAE 
+    updateDAE
   } = useUpdateFinanceActions();
   const { isAdmin } = usePermissions();
 
@@ -184,21 +183,14 @@ export function DAESection({
   };
 
   const handleEditConfirm = (data: EditDAEData) => {
-    if (data.isGroup && data.grupoId && data.items) {
-      updateGroupDAE.mutate({
-        grupoId: data.grupoId,
-        year: data.year,
-        items: data.items
-      }, {
-        onSuccess: () => setIsEditDialogOpen(false)
-      });
-    } else if (selectedItem && data.valor && data.competencia_mes && data.competencia_ano) {
+    if (selectedItem) {
       updateDAE.mutate({
         id: selectedItem.id,
+        grupoId: selectedItem.grupo_id ?? undefined,
         data: {
-          valor: data.valor,
-          competencia_mes: data.competencia_mes,
-          competencia_ano: data.competencia_ano
+          forma_pagamento: data.forma_pagamento,
+          boleto_pago: data.boleto_pago,
+          data_pagamento_boleto: data.boleto_pago ? data.data_pagamento_boleto ?? null : null,
         }
       }, {
         onSuccess: () => setIsEditDialogOpen(false)
@@ -353,7 +345,7 @@ export function DAESection({
         onOpenChange={setIsEditDialogOpen}
         dae={selectedItem}
         onConfirm={handleEditConfirm}
-        isPending={updateDAE.isPending || updateGroupDAE.isPending}
+        isPending={updateDAE.isPending}
       />
     </div>
   );

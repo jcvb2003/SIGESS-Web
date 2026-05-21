@@ -1,25 +1,32 @@
 import { useForm, useWatch, FormProvider } from "react-hook-form";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Card } from "@/shared/components/ui/card";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { DateField } from "@/shared/components/form-fields/fields/DateField";
 import { useDAEsByPeriod } from "@/modules/finance/hooks/data/useDAEsByPeriod";
-import { DataTable, ColumnDef } from "@/shared/components/layout/DataTable";
+import { DataTable, type ColumnDef } from "@/shared/components/layout/DataTable";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { formatDate } from "@/shared/utils/date";
 import {
   ArrowLeft,
   Calendar,
   History,
+  FileUp,
+  Pencil,
 } from "lucide-react";
 import { ReportExportButtons } from "@/modules/reports/components/ReportExportButtons";
 import { Button } from "@/shared/components/ui/button";
 import { DataTablePagination } from "@/shared/components/layout/DataTablePagination";
-import type { DAEByPeriod } from "@/modules/finance/types/finance.types";
-import { useState, useMemo, useEffect, useCallback } from "react";
+import type {
+  DAEByPeriod,
+  EditDAEData,
+  FinanceDAE,
+} from "@/modules/finance/types/finance.types";
 import { DataTableSearch } from "@/shared/components/layout/DataTableSearch";
 import { daeService } from "@/modules/finance/services/daeService";
 import { reportsService } from "@/modules/reports/services/reportsService";
+import { useUpdateFinanceActions } from "@/modules/finance/hooks/edit/useUpdateFinanceActions";
 import { toast } from "sonner";
 import {
   Sheet,
@@ -31,13 +38,15 @@ import {
 } from "@/shared/components/ui/sheet";
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 import { ImportDAEsDialog } from "@/modules/finance/components/dialogs/ImportDAEsDialog";
-import { FileUp } from "lucide-react";
+import { EditDAEDialog } from "@/modules/finance/components/dialogs/EditDAEDialog";
 
 interface FilterForm {
   startDate: string;
   endDate: string;
   searchTerm: string;
 }
+
+type DAEByPeriodRow = DAEByPeriod & { id: string };
 
 const DAE_ORDER_FIELDS = ["data_pagamento_boleto", "created_at"] as const;
 type DAEOrderField = (typeof DAE_ORDER_FIELDS)[number];
@@ -58,6 +67,10 @@ export default function DAEsByPeriodPage() {
     parseDAEOrderField(searchParams.get("orderBy")),
   );
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [selectedDae, setSelectedDae] = useState<FinanceDAE | null>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isOpeningEdit, setIsOpeningEdit] = useState<string | null>(null);
+  const { updateDAE } = useUpdateFinanceActions();
 
   const methods = useForm<FilterForm>({
     defaultValues: {
@@ -87,10 +100,16 @@ export default function DAEsByPeriodPage() {
     }
   }, [startDate, endDate, searchTerm, page, pageSize, orderBy, searchParams, setSearchParams]);
 
-  const { data, isLoading, isFetching } = useDAEsByPeriod(startDate, endDate, page, pageSize, orderBy);
+  const { data, isLoading, isFetching } = useDAEsByPeriod(
+    startDate,
+    endDate,
+    page,
+    pageSize,
+    orderBy,
+  );
 
   const daes = useMemo(() => {
-    const list = data?.data ?? [];
+    const list = (data?.data ?? []) as DAEByPeriodRow[];
     if (!searchTerm) return list;
 
     const term = searchTerm.toLowerCase();
@@ -104,14 +123,52 @@ export default function DAEsByPeriodPage() {
   const totalCount = data?.total ?? 0;
 
   const renderCompetencia = useCallback((dae: DAEByPeriod) => {
-    if (!dae.competencia_ano) return "—";
+    if (!dae.competencia_ano) return "-";
     if (dae.competencia_mes) {
       return `${String(dae.competencia_mes).padStart(2, "0")}/${dae.competencia_ano}`;
     }
     return dae.competencia_ano;
   }, []);
 
-  const columns = useMemo<ColumnDef<DAEByPeriod>[]>(() => [
+  const handleOpenEdit = useCallback(async (daeId: string) => {
+    setIsOpeningEdit(daeId);
+    try {
+      const dae = await daeService.getDAE(daeId);
+      setSelectedDae(dae);
+      setIsEditOpen(true);
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao carregar DAE para edicao.");
+    } finally {
+      setIsOpeningEdit(null);
+    }
+  }, []);
+
+  const handleEditConfirm = useCallback((editData: EditDAEData) => {
+    if (!selectedDae) return;
+
+    updateDAE.mutate(
+      {
+        id: selectedDae.id,
+        grupoId: selectedDae.grupo_id ?? undefined,
+        data: {
+          forma_pagamento: editData.forma_pagamento,
+          boleto_pago: editData.boleto_pago,
+          data_pagamento_boleto: editData.boleto_pago
+            ? editData.data_pagamento_boleto ?? null
+            : null,
+        },
+      },
+      {
+        onSuccess: () => {
+          setIsEditOpen(false);
+          setSelectedDae(null);
+        },
+      },
+    );
+  }, [selectedDae, updateDAE]);
+
+  const columns = useMemo<ColumnDef<DAEByPeriodRow>[]>(() => [
     {
       header: "Data Rec.",
       cell: (dae) => (
@@ -122,7 +179,7 @@ export default function DAEsByPeriodPage() {
       className: "w-[120px]",
     },
     {
-      header: "Sócio",
+      header: "Socio",
       cell: (dae) => (
         <div className="flex flex-col gap-0.5 min-w-0">
           <span className="truncate font-medium text-xs md:text-sm text-foreground/90 uppercase leading-none">
@@ -139,13 +196,13 @@ export default function DAEsByPeriodPage() {
       cell: (dae) => (
         <StatusBadge
           variant="info"
-          label={(dae.tipo_boleto ?? "—").replaceAll("_", " ").toUpperCase()}
+          label={(dae.tipo_boleto ?? "-").replaceAll("_", " ").toUpperCase()}
         />
       ),
       className: "w-[140px]",
     },
     {
-      header: "Competência",
+      header: "Competencia",
       cell: (dae) => (
         <span className="text-xs md:text-sm font-medium text-foreground/70">
           {renderCompetencia(dae)}
@@ -157,7 +214,7 @@ export default function DAEsByPeriodPage() {
       header: "Forma",
       cell: (dae) => (
         <span className="text-xs md:text-sm text-muted-foreground capitalize">
-          {dae.forma_pagamento ?? "—"}
+          {dae.forma_pagamento ?? "-"}
         </span>
       ),
       className: "w-[120px]",
@@ -182,10 +239,30 @@ export default function DAEsByPeriodPage() {
         </span>
       ),
     },
-  ], [renderCompetencia]);
+    {
+      header: "Acoes",
+      className: "w-[110px] text-right pr-4",
+      headerClassName: "text-right pr-4",
+      cell: (dae) => (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 rounded-lg px-2.5 text-[11px]"
+            onClick={() => void handleOpenEdit(dae.id)}
+            disabled={isOpeningEdit === dae.id}
+          >
+            <Pencil className="mr-1.5 h-3.5 w-3.5" />
+            Editar
+          </Button>
+        </div>
+      ),
+    },
+  ], [handleOpenEdit, isOpeningEdit, renderCompetencia]);
 
   const handleExportExcel = async () => {
-    const toastId = toast.loading("Gerando exportação Excel...");
+    const toastId = toast.loading("Gerando exportacao Excel...");
     try {
       const allData = await daeService.fetchAllDAEs(startDate, endDate, orderBy);
       if (!allData.length) {
@@ -226,8 +303,8 @@ export default function DAEsByPeriodPage() {
     <FormProvider {...methods}>
       <div className="space-y-8 animate-in fade-in duration-500 pb-10 print:p-0">
         <PageHeader
-          title="DAEs por Período"
-          description="Relatório detalhado dos repasses DAE registrados no sistema."
+          title="Relatório E-Social"
+          description="Relatorio detalhado dos repasses DAE registrados no sistema."
           actions={
             <div className="flex items-center gap-3 print:hidden">
               {totalCount > 0 && (
@@ -304,7 +381,7 @@ export default function DAEsByPeriodPage() {
             variant="minimal"
             skeletonCount={10}
             emptyMessage="Nenhum DAE encontrado"
-            emptyDescription="Tente ajustar o período ou o termo de busca."
+            emptyDescription="Tente ajustar o periodo ou o termo de busca."
           />
 
           <DataTablePagination
@@ -324,16 +401,16 @@ export default function DAEsByPeriodPage() {
         <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
           <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
             <SheetHeader>
-              <SheetTitle>Filtros de relatórios</SheetTitle>
+              <SheetTitle>Filtros de relatorios</SheetTitle>
               <SheetDescription>
-                Refine a listagem de DAEs por período e outros critérios.
+                Refine a listagem de DAEs por periodo e outros criterios.
               </SheetDescription>
             </SheetHeader>
 
             <div className="mt-8 flex flex-col gap-6">
               <div className="space-y-3">
                 <span className="text-xs font-semibold text-muted-foreground uppercase">
-                  Período de Referência
+                  Periodo de Referencia
                 </span>
                 <div className="grid gap-4">
                   <DateField
@@ -380,6 +457,17 @@ export default function DAEsByPeriodPage() {
         </Sheet>
 
         <ImportDAEsDialog open={isImportOpen} onOpenChange={setIsImportOpen} />
+
+        <EditDAEDialog
+          open={isEditOpen}
+          onOpenChange={(open) => {
+            setIsEditOpen(open);
+            if (!open) setSelectedDae(null);
+          }}
+          dae={selectedDae}
+          onConfirm={handleEditConfirm}
+          isPending={updateDAE.isPending}
+        />
       </div>
     </FormProvider>
   );

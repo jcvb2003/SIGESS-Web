@@ -2,7 +2,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { financeService } from "../../services/financeService";
 import { daeService } from "../../services/daeService";
 import { financeQueryKeys } from "../../queryKeys";
-import type { FinanceLancamento, FinanceDAE, FinanceLancamentoInsert, FinanceDAEInsert } from "../../types/finance.types";
+import type {
+  FinanceLancamento,
+  FinanceDAE,
+  FinanceLancamentoInsert,
+} from "../../types/finance.types";
 import { toast } from "sonner";
 
 export function useUpdateFinanceActions() {
@@ -13,15 +17,15 @@ export function useUpdateFinanceActions() {
    */
   const updatePayment = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<FinanceLancamento> }) => {
-      // 1. Buscar o original para preservar campos não alterados
       const original = await financeService.getPayment(id);
-      
-      // 2. Cancelar o original com justificativa
-      await financeService.cancelPayment(id, "Correção: Registro original substituído por novo lançamento corrigido.");
-      
-      // 3. Criar o novo registro (filtrando ID e data de criação para não dar erro no INSERT)
+
+      await financeService.cancelPayment(
+        id,
+        "Correcao: Registro original substituido por novo lancamento corrigido.",
+      );
+
       const newData = Object.fromEntries(
-        Object.entries(original).filter(([key]) => key !== 'id' && key !== 'created_at')
+        Object.entries(original).filter(([key]) => key !== "id" && key !== "created_at"),
       ) as Partial<FinanceLancamento>;
 
       await financeService.createPayment({
@@ -30,7 +34,7 @@ export function useUpdateFinanceActions() {
       } as FinanceLancamentoInsert);
     },
     onSuccess: () => {
-      toast.success("Lançamento corrigido com sucesso (Histórico preservado).");
+      toast.success("Lançamento corrigido com sucesso (histórico preservado).");
       queryClient.invalidateQueries({ queryKey: financeQueryKeys.all });
     },
     onError: () => {
@@ -39,32 +43,35 @@ export function useUpdateFinanceActions() {
   });
 
   /**
-   * Atualizar DAE (Modelo A: Cancelar Antigo + Criar Novo)
+   * Atualizar metadados do DAE.
    */
   const updateDAE = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<FinanceDAE> }) => {
-      // 1. Buscar o original
-      const original = await daeService.getDAE(id);
-      
-      // 2. Cancelar o original
-      await daeService.cancelDAE(id, "Correção: Repasse original substituído por novo registro corrigido.");
-      
-      // 3. Criar o novo
-      const newData = Object.fromEntries(
-        Object.entries(original).filter(([key]) => key !== 'id' && key !== 'created_at')
-      ) as Partial<FinanceDAE>;
+    mutationFn: async ({
+      id,
+      grupoId,
+      data,
+    }: {
+      id?: string;
+      grupoId?: string;
+      data: Partial<FinanceDAE>;
+    }) => {
+      if (grupoId) {
+        await daeService.updateGroupDAEFields(grupoId, data);
+        return;
+      }
 
-      await daeService.createDAE({
-        ...newData,
-        ...data,
-      } as FinanceDAEInsert);
+      if (!id) {
+        throw new Error("DAE sem identificador para atualizacao.");
+      }
+
+      await daeService.updateDAE(id, data);
     },
     onSuccess: () => {
-      toast.success("DAE corrigido com sucesso (Histórico preservado).");
+      toast.success("DAE atualizado com sucesso.");
       queryClient.invalidateQueries({ queryKey: financeQueryKeys.all });
     },
     onError: () => {
-      toast.error("Erro ao corrigir DAE.");
+      toast.error("Erro ao atualizar DAE.");
     },
   });
 
@@ -72,14 +79,14 @@ export function useUpdateFinanceActions() {
    * Atualizar Grupo de DAE (Atomicamente via RPC)
    */
   const updateGroupDAE = useMutation({
-    mutationFn: async ({ 
-      grupoId, 
-      year, 
-      items 
-    }: { 
-      grupoId: string; 
-      year: number; 
-      items: { mes: number; valor: number }[] 
+    mutationFn: async ({
+      grupoId,
+      year,
+      items,
+    }: {
+      grupoId: string;
+      year: number;
+      items: { mes: number; valor: number }[];
     }) => {
       await daeService.updateGroupDAE(grupoId, year, items);
     },
@@ -97,7 +104,15 @@ export function useUpdateFinanceActions() {
    * Alternar Status do Boleto (Pago/Pendente)
    */
   const toggleBoletoStatus = useMutation({
-    mutationFn: async ({ id, pago, dataPagamento }: { id: string; pago: boolean; dataPagamento?: string }) => {
+    mutationFn: async ({
+      id,
+      pago,
+      dataPagamento,
+    }: {
+      id: string;
+      pago: boolean;
+      dataPagamento?: string;
+    }) => {
       await daeService.updateBoletoStatus(id, pago, dataPagamento);
     },
     onSuccess: (_, variables) => {
