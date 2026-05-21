@@ -77,9 +77,9 @@ export function GovBatchAutomationPanel() {
     if (!esocialSettingsResponse?.success || !settings) {
       return {
         enabled: false,
-        competencia: "Indisponivel",
-        valor: "Indisponivel",
-        message: "Nao foi possivel ler a configuracao da extensao.",
+        competencia: "Indisponível",
+        valor: "Indisponível",
+        message: "Não foi possível ler a configuração da extensão.",
       };
     }
 
@@ -88,16 +88,16 @@ export function GovBatchAutomationPanel() {
         enabled: false,
         competencia: "",
         valor: "",
-        message: "Funcao desativada na extensao.",
+        message: "Função desativada na extensão.",
       };
     }
 
-    const competencia = settings.competencia || "Sem competencia";
+    const competencia = settings.competencia || "Sem competência";
     const valor = formatConfiguredCurrency(settings.valorComercializado);
     return {
       enabled: true,
       competencia,
-      valor: valor || "Nao informado",
+      valor: valor || "Não informado",
       message: "",
     };
   }, [esocialSettingsResponse]);
@@ -141,7 +141,7 @@ export function GovBatchAutomationPanel() {
 
   const handleEnviarGov = async () => {
     if (selecionados.length === 0) {
-      toast.error("Nenhum socio selecionado para envio.");
+      toast.error("Nenhum sócio selecionado para envio.");
       return;
     }
 
@@ -155,13 +155,13 @@ export function GovBatchAutomationPanel() {
       }));
 
     if (fila.length === 0) {
-      toast.error("Nenhum socio selecionado possui senha GOV para entrar na fila.");
+      toast.error("Nenhum sócio selecionado possui senha GOV para entrar na fila.");
       return;
     }
 
     const result = await enqueueGovBatchSessions(fila);
     if (!result.success) {
-      toast.error(result.error ?? "Falha ao enviar a fila GOV para a extensao.");
+      toast.error(result.error ?? "Falha ao enviar a fila GOV para a extensão.");
       return;
     }
 
@@ -171,7 +171,7 @@ export function GovBatchAutomationPanel() {
     const opened = result.opened ?? 0;
     const queued = result.count ?? fila.length;
     toast.success(
-      `${queued} socio(s) enviado(s). ${opened} sessao(oes) aberta(s) automaticamente.`,
+      `${queued} sócio(s) enviado(s). ${opened} sessão(ões) aberta(s) automaticamente.`,
     );
   };
 
@@ -197,18 +197,18 @@ export function GovBatchAutomationPanel() {
               GOV em Lote
             </CardTitle>
             <CardDescription>
-              Selecione ate {MAX_SOCIOS} socios para enviar via extensao GOV.BR.
+              Selecione até {MAX_SOCIOS} sócios para enviar via extensão GOV.BR.
             </CardDescription>
           </div>
 
           <div className="flex min-w-[240px] max-w-[320px] flex-col gap-1 rounded-md border bg-muted/20 px-3 py-2 lg:items-end">
             <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
-              Configuracao GPS
+              Configuração GPS
             </div>
             {esocialSettings.enabled ? (
               <>
                 <div className="text-right text-xs text-foreground">
-                  Competencia: {esocialSettings.competencia}
+                  Competência: {esocialSettings.competencia}
                 </div>
                 <div className="text-right text-xs text-muted-foreground">
                   Valor definido: {esocialSettings.valor}
@@ -227,7 +227,7 @@ export function GovBatchAutomationPanel() {
 
         <div className="relative">
           <Input
-            placeholder="Buscar socio por nome ou CPF..."
+            placeholder="Buscar sócio por nome ou CPF..."
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             disabled={selecionados.length >= MAX_SOCIOS}
@@ -279,7 +279,7 @@ export function GovBatchAutomationPanel() {
 
           {selecionados.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
-              Nenhum socio selecionado.
+              Nenhum sócio selecionado.
             </p>
           ) : (
             <div className="divide-y rounded-md border">
@@ -350,7 +350,7 @@ function renderGovStatus(statusItem?: GovBatchStatusItem) {
       <div className="mt-1 space-y-1.5">
         <GovBatchTrack />
         <p className="text-xs text-muted-foreground">
-          Aguardando envio para a extensao
+          Aguardando envio para a extensão
         </p>
       </div>
     );
@@ -368,7 +368,7 @@ function renderGovStatus(statusItem?: GovBatchStatusItem) {
         </span>
       </div>
       <p className="text-xs text-muted-foreground">
-        {statusItem.statusDescription || "A extensao atualizou o progresso desta sessao."}
+        {statusItem.statusDescription || "A extensão atualizou o progresso desta sessão."}
       </p>
       {renderBoletoInfo(statusItem)}
       {statusItem.status === "erro" && statusItem.lastError && (
@@ -589,5 +589,4 @@ function renderBoletoInfo(statusItem: GovBatchStatusItem) {
 
   return null;
 }
-
 
