@@ -72,15 +72,21 @@ export function GovBatchAutomationPanel() {
     return map;
   }, [statusResponse]);
 
-  const esocialSettingsLabel = useMemo(() => {
+  const esocialSettings = useMemo(() => {
     const settings = esocialSettingsResponse?.data;
     if (!esocialSettingsResponse?.success || !settings) {
-      return "Configuração da extensão indisponível";
+      return {
+        competencia: "Indisponivel",
+        valor: "Indisponivel",
+      };
     }
 
-    const competencia = settings.competencia || "sem competência";
+    const competencia = settings.competencia || "Sem competencia";
     const valor = formatConfiguredCurrency(settings.valorComercializado);
-    return `Competência: ${competencia} · Valor definido: ${valor || "não informado"}`;
+    return {
+      competencia,
+      valor: valor || "Nao informado",
+    };
   }, [esocialSettingsResponse]);
 
   const handleAddSocio = useCallback(
@@ -171,27 +177,32 @@ export function GovBatchAutomationPanel() {
   return (
     <Card className="border-border/60 shadow-sm">
       <CardHeader className="space-y-2">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Send className="h-5 w-5 text-primary" />
-          GOV em Lote
-        </CardTitle>
-        <CardDescription>
-          Selecione ate {MAX_SOCIOS} socios para enviar via extensao GOV.BR.
-        </CardDescription>
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-2">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Send className="h-5 w-5 text-primary" />
+              GOV em Lote
+            </CardTitle>
+            <CardDescription>
+              Selecione ate {MAX_SOCIOS} socios para enviar via extensao GOV.BR.
+            </CardDescription>
+          </div>
+
+          <div className="flex min-w-[240px] max-w-[320px] flex-col gap-1 rounded-md border bg-muted/20 px-3 py-2 lg:items-end">
+            <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+              Configuracao GPS
+            </div>
+            <div className="text-right text-xs text-foreground">
+              Competencia: {esocialSettings.competencia}
+            </div>
+            <div className="text-right text-xs text-muted-foreground">
+              Valor definido: {esocialSettings.valor}
+            </div>
+          </div>
+        </div>
       </CardHeader>
 
       <CardContent className="space-y-5">
-        <div className="space-y-1 rounded-md border bg-muted/20 p-2">
-          <Label htmlFor="automation-esocial-extension-settings">
-            Configuração GPS da extensão
-          </Label>
-          <Input
-            id="automation-esocial-extension-settings"
-            value={esocialSettingsLabel}
-            readOnly
-            className="h-8 bg-background text-xs text-muted-foreground"
-          />
-        </div>
 
         <div className="relative">
           <Input
@@ -557,3 +568,5 @@ function renderBoletoInfo(statusItem: GovBatchStatusItem) {
 
   return null;
 }
+
+
