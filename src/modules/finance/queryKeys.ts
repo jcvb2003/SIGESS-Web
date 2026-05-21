@@ -12,6 +12,8 @@ export const financeQueryKeys = {
     [...financeQueryKeys.all, "generatedCharges", typeId] as const,
   memberConfig: (cpf: string) =>
     [...financeQueryKeys.all, "memberConfig", cpf] as const,
+  daeStatus: (cpf: string, year: number, month: number) =>
+    [...financeQueryKeys.all, "daeStatus", cpf, year, month] as const,
   financialStatus: (cpf: string, year: number) =>
     [...financeQueryKeys.all, "status", cpf, year] as const,
   stats: (year: number, month: number) =>

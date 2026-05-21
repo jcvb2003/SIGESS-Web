@@ -25,6 +25,15 @@ interface ImportContextMemberRow {
   nome: string | null;
 }
 
+export interface DAECompetenciaStatus {
+  id: string;
+  boletoPago: boolean;
+  dataPagamentoBoleto: string | null;
+  competenciaAno: number;
+  competenciaMes: number;
+  valor: number;
+}
+
 function cleanCpf(value: string) {
   return value.replaceAll(/\D/g, "");
 }
@@ -150,6 +159,38 @@ export const daeService = {
     );
 
     return { members, existingKeys };
+  },
+
+  async getDAEStatusByCompetencia(
+    cpf: string,
+    competenciaAno: number,
+    competenciaMes: number,
+  ): Promise<DAECompetenciaStatus | null> {
+    const { data, error } = await supabase
+      .from("financeiro_dae")
+      .select("id, boleto_pago, data_pagamento_boleto, competencia_ano, competencia_mes, valor")
+      .eq("socio_cpf", cpf)
+      .eq("competencia_ano", competenciaAno)
+      .eq("competencia_mes", competenciaMes)
+      .neq("status", "cancelado")
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (error) throw error;
+
+    const item = data?.[0];
+    if (!item?.id || !item.competencia_ano || !item.competencia_mes) {
+      return null;
+    }
+
+    return {
+      id: item.id,
+      boletoPago: Boolean(item.boleto_pago),
+      dataPagamentoBoleto: item.data_pagamento_boleto ?? null,
+      competenciaAno: item.competencia_ano,
+      competenciaMes: item.competencia_mes,
+      valor: Number(item.valor ?? 0),
+    };
   },
 
   async importDAEs(

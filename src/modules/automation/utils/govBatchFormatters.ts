@@ -13,3 +13,19 @@ export function formatBoletoCurrency(value?: number): string | null {
     currency: "BRL",
   });
 }
+
+export function parseGovCompetencia(
+  competencia?: string,
+): { year: number; month: number } | null {
+  const match = (competencia || "").trim().match(/^(\d{4})-(\d{2})$/);
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+
+  if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
+    return null;
+  }
+
+  return { year, month };
+}

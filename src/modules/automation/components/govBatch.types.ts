@@ -5,3 +5,5 @@ export type SocioSelecionado = {
   anosSimplificadoPendentes: number[];
   anosAnualPendentes: number[];
 };
+
+export type GovBatchDaeAction = "registrar" | "marcar_pago" | "registrado";

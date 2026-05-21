@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +27,8 @@ import { formatNumericInput } from "../shared/formatters";
 import { generateUUID } from "@/shared/utils/uuid";
 import { isNotFutureDate } from "@/shared/utils/validators/dateValidators";
 import { getTodayISO } from "@/shared/utils/date";
+import { financeQueryKeys } from "../../queryKeys";
+import { daeService } from "../../services/daeService";
 import { toast } from "sonner";
 
 import { MemberFinancePreview } from "../shared/MemberFinancePreview";
@@ -57,6 +60,10 @@ interface DAEDialogProps {
   readonly socioName?: string;
   readonly status?: FinancialStatusType;
   readonly regime?: string;
+  readonly initialValue?: number;
+  readonly initialMonth?: number;
+  readonly initialYear?: number;
+  readonly initialBoletoPago?: boolean;
 }
 
 export function DAEDialog({
@@ -66,8 +73,13 @@ export function DAEDialog({
   socioName,
   status,
   regime,
+  initialValue,
+  initialMonth,
+  initialYear,
+  initialBoletoPago,
 }: DAEDialogProps) {
   const currentYear = new Date().getFullYear();
+  const queryClient = useQueryClient();
   const paymentMutation = usePaymentSession();
   const { daes: historyDaes } = useMemberStatement(open ? socioCpf : null);
   const { parameters } = useParametersData();
@@ -84,6 +96,34 @@ export function DAEDialog({
   const [dataRecebimento, setDataRecebimento] = useState(
     getTodayISO(),
   );
+
+  useEffect(() => {
+    if (!open) return;
+
+    const today = getTodayISO();
+    const nextYear = initialYear ?? currentYear;
+    const nextValue = Number(initialValue ?? 0);
+    const nextMonth =
+      initialMonth && initialMonth >= 1 && initialMonth <= 12
+        ? [initialMonth]
+        : [];
+
+    setValorTotal(nextValue);
+    setDisplayValue(nextValue > 0 ? formatNumericInput(nextValue) : "");
+    setSelectedYear(nextYear);
+    setSelectedMonths(nextMonth);
+    setPaymentMethod("pix");
+    setBoletoPago(Boolean(initialBoletoPago));
+    setDataPagamentoBoleto(today);
+    setDataRecebimento(today);
+  }, [
+    currentYear,
+    initialBoletoPago,
+    initialMonth,
+    initialValue,
+    initialYear,
+    open,
+  ]);
 
   // Mapeia meses já pagos para o ano selecionado (ignora cancelados)
   const paidMonthsInYear = useMemo(() => {
@@ -160,6 +200,18 @@ export function DAEDialog({
       paymentMethod,
       paymentDate: dataRecebimento,
     });
+
+    if (boletoPago) {
+      const createdDaes = await daeService.getSessionDAEs(sessaoId);
+
+      await Promise.all(
+        createdDaes.map((dae) =>
+          daeService.updateBoletoStatus(dae.id, true, dataPagamentoBoleto),
+        ),
+      );
+
+      await queryClient.invalidateQueries({ queryKey: financeQueryKeys.all });
+    }
 
     onOpenChange(false);
     setSelectedMonths([]);
