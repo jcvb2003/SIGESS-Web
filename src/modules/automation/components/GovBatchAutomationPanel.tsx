@@ -238,8 +238,8 @@ export function GovBatchAutomationPanel() {
 
   return (
     <Card className="border-border/60 shadow-sm">
-      <CardHeader className="space-y-2">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+      <CardHeader className="space-y-3">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,360px)] lg:grid-rows-[auto_auto] lg:items-start">
           <div className="space-y-2">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Send className="h-5 w-5 text-primary" />
@@ -250,28 +250,30 @@ export function GovBatchAutomationPanel() {
             </CardDescription>
           </div>
 
-          <GpsConfigurationCard
-            {...esocialSettings}
-            valor={valorComercializado}
-            onValorChange={handleValorComercializadoChange}
-          />
+          <div className="w-full lg:row-span-2 lg:w-auto lg:justify-self-end">
+            <GpsConfigurationCard
+              {...esocialSettings}
+              valor={valorComercializado}
+              onValorChange={handleValorComercializadoChange}
+            />
+          </div>
+
+          <div className="relative">
+            <Input
+              placeholder="Buscar sócio por nome ou CPF..."
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              disabled={selecionados.length >= MAX_SOCIOS}
+              id="automation-gov-batch-search"
+            />
+            {buscando && (
+              <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+            )}
+          </div>
         </div>
       </CardHeader>
 
       <CardContent className="space-y-5">
-        <div className="relative">
-          <Input
-            placeholder="Buscar sócio por nome ou CPF..."
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            disabled={selecionados.length >= MAX_SOCIOS}
-            id="automation-gov-batch-search"
-          />
-          {buscando && (
-            <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
-          )}
-        </div>
-
         {resultados && resultados.length > 0 && buscaDebounced.length >= 2 && (
           <SocioSearchResults
             resultados={resultados}
