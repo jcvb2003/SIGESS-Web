@@ -5,6 +5,7 @@ export type GovBatchSessionItem = {
   senha: string;
   nome?: string;
   url: string;
+  valorComercializado?: string;
 };
 
 export type GovBatchStatus =
@@ -59,7 +60,6 @@ type ExtensionBridgeResponse = {
 
 export type ESocialAutomationSettingsSnapshot = {
   competencia: string;
-  valorComercializado: string;
   gerarGps: boolean;
 };
 
@@ -81,6 +81,7 @@ export function handleExternalLogin(
   senha?: string,
   nome?: string,
   auditoriaData?: Record<string, unknown>,
+  valorComercializado?: string,
 ): void {
   if (!cpf || !senha) {
     globalThis.open(url, "_blank");
@@ -101,6 +102,7 @@ export function handleExternalLogin(
         senha,
         nome,
         auditoriaData,
+        valorComercializado,
       },
       globalThis.location.origin,
     );

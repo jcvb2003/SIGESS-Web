@@ -20,6 +20,13 @@ import { Label } from "@/shared/components/ui/label";
 import { Input } from "@/shared/components/ui/input";
 import { useDebounce } from "@/shared/hooks/useDebounce";
 import {
+  formatGpsCurrencyInput,
+  getStoredGpsCurrencyValue,
+  hasGpsCurrencyValue,
+  normalizeGpsCurrencyValue,
+  setStoredGpsCurrencyValue,
+} from "@/shared/utils/gpsValue";
+import {
   govBatchAutomationService,
   type GovBatchSearchResult,
 } from "@/modules/automation/services/reapBulkAutomationService";
@@ -27,7 +34,6 @@ import { GpsConfigurationCard } from "./GpsConfigurationCard";
 import { SocioSearchResults } from "./SocioSearchResults";
 import { SocioListItem } from "./SocioListItem";
 import type { SocioSelecionado } from "./govBatch.types";
-import { formatConfiguredCurrency } from "../utils/govBatchFormatters";
 
 const GOV_LOGIN_URL = "https://servicos.acesso.gov.br/";
 const MAX_SOCIOS = 5;
@@ -37,6 +43,9 @@ export function GovBatchAutomationPanel() {
   const [selecionados, setSelecionados] = useState<SocioSelecionado[]>([]);
   const [statusTrackingActive, setStatusTrackingActive] = useState(false);
   const [trackedCpfs, setTrackedCpfs] = useState<string[]>([]);
+  const [valorComercializado, setValorComercializado] = useState(() =>
+    getStoredGpsCurrencyValue(),
+  );
   const buscaDebounced = useDebounce(busca, 200);
 
   const { data: resultados, isLoading: buscando } = useQuery({
@@ -52,6 +61,8 @@ export function GovBatchAutomationPanel() {
     queryFn: getESocialAutomationSettings,
     retry: false,
     refetchOnWindowFocus: false,
+    refetchInterval: 2000,
+    refetchIntervalInBackground: false,
     staleTime: 0,
   });
 
@@ -78,7 +89,7 @@ export function GovBatchAutomationPanel() {
       return {
         enabled: false,
         competencia: "Indisponível",
-        valor: "Indisponível",
+        valor: "",
         message: "Não foi possível ler a configuração da extensão.",
       };
     }
@@ -92,15 +103,19 @@ export function GovBatchAutomationPanel() {
       };
     }
 
-    const competencia = settings.competencia || "Sem competência";
-    const valor = formatConfiguredCurrency(settings.valorComercializado);
     return {
       enabled: true,
-      competencia,
-      valor: valor || "Não informado",
+      competencia: settings.competencia || "Sem competência",
+      valor: valorComercializado,
       message: "",
     };
-  }, [esocialSettingsResponse]);
+  }, [esocialSettingsResponse, valorComercializado]);
+
+  const handleValorComercializadoChange = useCallback((value: string) => {
+    const formatted = formatGpsCurrencyInput(value);
+    setValorComercializado(formatted);
+    setStoredGpsCurrencyValue(formatted);
+  }, []);
 
   const handleAddSocio = useCallback(
     (socio: GovBatchSearchResult) => {
@@ -145,6 +160,12 @@ export function GovBatchAutomationPanel() {
       return;
     }
 
+    if (esocialSettings.enabled && !hasGpsCurrencyValue(valorComercializado)) {
+      toast.error("Informe o valor comercializado antes de enviar para o eSocial.");
+      return;
+    }
+
+    const valorConfigurado = normalizeGpsCurrencyValue(valorComercializado);
     const fila: GovBatchSessionItem[] = selecionados
       .filter((socio) => socio.senhagov)
       .map((socio) => ({
@@ -152,12 +173,11 @@ export function GovBatchAutomationPanel() {
         senha: socio.senhagov,
         nome: socio.nome,
         url: GOV_LOGIN_URL,
+        valorComercializado: esocialSettings.enabled ? valorConfigurado : undefined,
       }));
 
     if (fila.length === 0) {
-      toast.error(
-        "Nenhum sócio selecionado possui senha GOV para entrar na fila.",
-      );
+      toast.error("Nenhum sócio selecionado possui senha GOV para entrar na fila.");
       return;
     }
 
@@ -205,7 +225,11 @@ export function GovBatchAutomationPanel() {
             </CardDescription>
           </div>
 
-          <GpsConfigurationCard {...esocialSettings} />
+          <GpsConfigurationCard
+            {...esocialSettings}
+            valor={valorComercializado}
+            onValorChange={handleValorComercializadoChange}
+          />
         </div>
       </CardHeader>
 
