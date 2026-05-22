@@ -70,6 +70,8 @@ export type AutoRegistrationSnapshot = {
 };
 
 const EXTENSION_RESPONSE_TYPE = "SIGESS_EXTENSION_RESPONSE";
+const EXTENSION_EVENT_TYPE = "SIGESS_EXTENSION_EVENT";
+const ESOCIAL_SETTINGS_EVENT_NAME = "esocialAutomationSettingsChanged";
 
 export function isFirefox(): boolean {
   return navigator.userAgent.toLowerCase().includes("firefox");
@@ -131,7 +133,12 @@ export async function enqueueGovBatchSessions(
     };
   }
 
-  return requestExtension("enqueueGovBatchSessions", { items }, 12000, "A extensao nao respondeu ao envio do lote GOV.");
+  return requestExtension(
+    "enqueueGovBatchSessions",
+    { items },
+    12000,
+    "A extensao nao respondeu ao envio do lote GOV.",
+  );
 }
 
 export async function getGovBatchStatuses(
@@ -148,7 +155,7 @@ export async function getGovBatchStatuses(
     "getGovBatchStatuses",
     { cpfs },
     8000,
-    "A extensao nao respondeu Ã  consulta de status do lote GOV.",
+    "A extensao nao respondeu a consulta de status do lote GOV.",
   );
 }
 
@@ -188,6 +195,37 @@ export async function getAutoRegistrationSnapshot(): Promise<
   ) as Promise<ExtensionBridgeResponse & { data?: AutoRegistrationSnapshot }>;
 }
 
+export function subscribeToESocialAutomationSettings(
+  onChange: (settings: ESocialAutomationSettingsSnapshot) => void,
+): () => void {
+  const listener = (event: MessageEvent) => {
+    if (event.origin !== globalThis.location.origin) {
+      return;
+    }
+
+    const data = event.data as
+      | {
+          type?: string;
+          eventName?: string;
+          data?: ESocialAutomationSettingsSnapshot;
+        }
+      | undefined;
+
+    if (
+      data?.type !== EXTENSION_EVENT_TYPE ||
+      data.eventName !== ESOCIAL_SETTINGS_EVENT_NAME ||
+      !data.data
+    ) {
+      return;
+    }
+
+    onChange(data.data);
+  };
+
+  globalThis.addEventListener("message", listener);
+  return () => globalThis.removeEventListener("message", listener);
+}
+
 function requestExtension(
   type: string,
   payload: Record<string, unknown>,
@@ -217,20 +255,29 @@ function requestExtension(
           }
         | undefined;
 
-      console.log(`[SIGESS Web] Mensagem recebida:`, {
-        tipo: data?.type,
-        requestIdRecebido: data?.requestId,
-        requestIdEsperado: requestId,
-        tipoCorreto: data?.type === EXTENSION_RESPONSE_TYPE,
-        requestIdCorreto: data?.requestId === requestId,
-      });
+      const isOwnRequestEcho = data?.type === type && data.requestId === requestId;
+
+      if (!isOwnRequestEcho) {
+        console.log(`[SIGESS Web] Mensagem recebida:`, {
+          tipo: data?.type,
+          requestIdRecebido: data?.requestId,
+          requestIdEsperado: requestId,
+          tipoCorreto: data?.type === EXTENSION_RESPONSE_TYPE,
+          requestIdCorreto: data?.requestId === requestId,
+        });
+      }
 
       if (data?.type !== EXTENSION_RESPONSE_TYPE || data.requestId !== requestId) {
-        console.debug(`[SIGESS Web] requestId não corresponde ou tipo incorreto`);
+        if (!isOwnRequestEcho) {
+          console.debug("[SIGESS Web] requestId nao corresponde ou tipo incorreto");
+        }
         return;
       }
 
-      console.log(`[SIGESS Web] Resposta recebida para ${type}:`, JSON.stringify(data.response, null, 2));
+      console.log(
+        `[SIGESS Web] Resposta recebida para ${type}:`,
+        JSON.stringify(data.response, null, 2),
+      );
       cleanup();
       resolve(
         data.response ?? {

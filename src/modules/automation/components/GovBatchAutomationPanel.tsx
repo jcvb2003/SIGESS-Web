@@ -6,6 +6,8 @@ import {
   enqueueGovBatchSessions,
   getESocialAutomationSettings,
   getGovBatchStatuses,
+  subscribeToESocialAutomationSettings,
+  type ESocialAutomationSettingsSnapshot,
   type GovBatchSessionItem,
 } from "@/shared/utils/browserDetection";
 import {
@@ -46,6 +48,8 @@ export function GovBatchAutomationPanel() {
   const [valorComercializado, setValorComercializado] = useState(() =>
     getStoredGpsCurrencyValue(),
   );
+  const [extensionSettings, setExtensionSettings] =
+    useState<ESocialAutomationSettingsSnapshot | null>(null);
   const buscaDebounced = useDebounce(busca, 200);
 
   const { data: resultados, isLoading: buscando } = useQuery({
@@ -60,10 +64,10 @@ export function GovBatchAutomationPanel() {
     queryKey: ["automation", "esocial-extension-settings"],
     queryFn: getESocialAutomationSettings,
     retry: false,
+    refetchOnMount: "always",
     refetchOnWindowFocus: false,
-    refetchInterval: 2000,
-    refetchIntervalInBackground: false,
     staleTime: 0,
+    gcTime: 0,
   });
 
   const { data: statusResponse } = useQuery({
@@ -83,14 +87,35 @@ export function GovBatchAutomationPanel() {
     return map;
   }, [statusResponse]);
 
+  useEffect(() => {
+    if (esocialSettingsResponse?.success && esocialSettingsResponse.data) {
+      setExtensionSettings(esocialSettingsResponse.data);
+    }
+  }, [esocialSettingsResponse]);
+
+  useEffect(() => {
+    return subscribeToESocialAutomationSettings((settings) => {
+      setExtensionSettings(settings);
+    });
+  }, []);
+
   const esocialSettings = useMemo(() => {
-    const settings = esocialSettingsResponse?.data;
-    if (!esocialSettingsResponse?.success || !settings) {
+    const settings = extensionSettings;
+    if ((!esocialSettingsResponse || !esocialSettingsResponse.success) && !settings) {
       return {
         enabled: false,
         competencia: "Indisponível",
         valor: "",
         message: "Não foi possível ler a configuração da extensão.",
+      };
+    }
+
+    if (!settings) {
+      return {
+        enabled: false,
+        competencia: "Indisponível",
+        valor: "",
+        message: "Carregando configuração da extensão...",
       };
     }
 
@@ -109,7 +134,7 @@ export function GovBatchAutomationPanel() {
       valor: valorComercializado,
       message: "",
     };
-  }, [esocialSettingsResponse, valorComercializado]);
+  }, [esocialSettingsResponse, extensionSettings, valorComercializado]);
 
   const handleValorComercializadoChange = useCallback((value: string) => {
     const formatted = formatGpsCurrencyInput(value);
