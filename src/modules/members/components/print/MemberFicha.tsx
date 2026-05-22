@@ -122,7 +122,17 @@ export function MemberFicha({ member }: MemberFichaProps) {
             <LabelValue label="RGP / Protocolo" value={`${member.rgp} (${member.tipoRgp})`} />
             <LabelValue label="Emissão RGP" value={member.emissaoRgp ? format(new Date(member.emissaoRgp), "dd/MM/yyyy") : null} />
             <LabelValue label="Data Admissão" value={member.dataDeAdmissao ? format(new Date(member.dataDeAdmissao), "dd/MM/yyyy") : null} />
-            <LabelValue label="Situação Cadastral" value={member.situacao} className="col-span-3 text-emerald-600" />
+            <LabelValue
+              label="Situação Cadastral"
+              value={member.situacao}
+              className={`col-span-3 ${
+                member.situacao === "ATIVO"
+                  ? "text-emerald-600"
+                  : member.situacao === "INATIVO"
+                    ? "text-slate-600"
+                    : "text-foreground"
+              }`}
+            />
           </InfoGroup>
 
           {/* Observações - Reduzida */}

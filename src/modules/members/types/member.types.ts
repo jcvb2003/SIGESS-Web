@@ -14,6 +14,7 @@ export type EstadoCivilValue =
 export type AlfabetizadoValue = "SIM" | "NÃO";
 export type SituacaoValue =
   | "ATIVO"
+  | "INATIVO"
   | "APOSENTADO"
   | "FALECIDO"
   | "TRANSFERIDO"

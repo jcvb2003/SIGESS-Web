@@ -89,7 +89,11 @@ export function MemberCard({ member, entity }: MemberCardProps) {
                 )}
               </div>
               <div className={`w-full py-0.5 rounded text-[5px] font-black text-center uppercase tracking-wider shadow-sm ${
-                member.situacao === "ATIVO" ? "bg-emerald-500 text-white" : "bg-red-500 text-white"
+                member.situacao === "ATIVO"
+                  ? "bg-emerald-500 text-white"
+                  : member.situacao === "INATIVO"
+                    ? "bg-slate-500 text-white"
+                    : "bg-red-500 text-white"
               }`}>
                 {member.situacao || "PENDENTE"}
               </div>

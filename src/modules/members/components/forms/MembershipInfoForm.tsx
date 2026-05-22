@@ -233,6 +233,7 @@ export function MembershipInfoForm({
 
   const situationOptions = [
     { label: "ATIVO", value: "ATIVO" },
+    { label: "INATIVO", value: "INATIVO" },
     { label: "APOSENTADO", value: "APOSENTADO" },
     { label: "FALECIDO", value: "FALECIDO" },
     { label: "TRANSFERIDO", value: "TRANSFERIDO" },

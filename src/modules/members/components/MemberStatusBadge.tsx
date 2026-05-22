@@ -7,6 +7,7 @@ import {
   Pause,
   XCircle,
   ShieldCheck,
+  CircleOff,
   LucideIcon,
 } from "lucide-react";
 
@@ -37,6 +38,13 @@ function getStatusConfig(status: string | null): StatusConfig {
       variant: "success",
       icon: CheckCircle,
       label: "Ativo",
+    };
+  }
+  if (normalized.includes("INATIVO")) {
+    return {
+      variant: "secondary",
+      icon: CircleOff,
+      label: "Inativo",
     };
   }
   if (normalized.includes("APOSENTADO")) {

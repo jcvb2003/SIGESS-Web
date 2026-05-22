@@ -81,7 +81,7 @@ export function MemberInfoBar() {
           <h3 className="font-semibold text-lg">{fullMemberData.nome}</h3>
           <Badge
             variant={
-              fullMemberData.situacao?.includes("ATIVO")
+              fullMemberData.situacao?.toUpperCase() === "ATIVO"
                 ? "default"
                 : "secondary"
             }

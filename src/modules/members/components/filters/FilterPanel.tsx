@@ -87,11 +87,12 @@ export function FilterPanel(props: Readonly<FilterPanelProps>) {
               <SelectTrigger className="h-10 w-full">
                 <SelectValue placeholder="Situação" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
-                <SelectItem value="ATIVO">Ativo</SelectItem>
-                <SelectItem value="APOSENTADO">Aposentado</SelectItem>
-                <SelectItem value="FALECIDO">Falecido</SelectItem>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="ATIVO">Ativo</SelectItem>
+                  <SelectItem value="INATIVO">Inativo</SelectItem>
+                  <SelectItem value="APOSENTADO">Aposentado</SelectItem>
+                  <SelectItem value="FALECIDO">Falecido</SelectItem>
                 <SelectItem value="TRANSFERIDO">Transferido</SelectItem>
                 <SelectItem value="CANCELADO">Cancelado</SelectItem>
                 <SelectItem value="SUSPENSO">Suspenso</SelectItem>

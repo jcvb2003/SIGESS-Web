@@ -96,6 +96,7 @@ export const memberRegistrationSchema = z
     situacao: z
       .enum([
         "ATIVO",
+        "INATIVO",
         "APOSENTADO",
         "FALECIDO",
         "TRANSFERIDO",
