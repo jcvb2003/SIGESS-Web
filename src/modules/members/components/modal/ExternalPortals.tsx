@@ -64,8 +64,8 @@ export function ExternalPortals({
     handleExternalLogin(url, cpf, senhaGov, nome, undefined, valor);
   };
 
-  const handleOpenPortal = (url: string) => {
-    if (!gpsAtivo) {
+  const handleOpenPortal = (url: string, requiresGpsValue: boolean = false) => {
+    if (!requiresGpsValue || !gpsAtivo) {
       openPortal(url);
       return;
     }
@@ -115,7 +115,9 @@ export function ExternalPortals({
                 variant="outline"
                 size="icon"
                 className="h-9 w-9 shrink-0 overflow-hidden border-border/50 p-0 transition-all hover:border-primary/30 hover:bg-accent"
-                onClick={() => handleOpenPortal("https://login.esocial.gov.br/login.aspx")}
+                onClick={() =>
+                  handleOpenPortal("https://login.esocial.gov.br/login.aspx", true)
+                }
               >
                 <img
                   src="/assets/images/esocial.jpeg"
