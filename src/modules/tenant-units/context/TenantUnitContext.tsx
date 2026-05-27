@@ -10,6 +10,7 @@ import {
 
 const ACTIVE_UNIT_STORAGE_KEY = "sigess_active_unit";
 const AVAILABLE_UNITS_STORAGE_KEY = "sigess_available_units";
+const DEV_UNITS_STORAGE_KEY = "sigess_dev_units";
 
 export interface TenantUnitSummary {
   id: string;
@@ -63,6 +64,22 @@ function persistUnits(activeUnit: TenantUnitSummary | null, availableUnits: Tena
   }
 }
 
+function readDevUnits(): TenantUnitSummary[] {
+  if (typeof globalThis === "undefined" || !import.meta.env.DEV) {
+    return [];
+  }
+
+  try {
+    const raw = globalThis.localStorage.getItem(DEV_UNITS_STORAGE_KEY);
+    if (!raw) return [];
+
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as TenantUnitSummary[]) : [];
+  } catch {
+    return [];
+  }
+}
+
 export function TenantUnitProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [activeUnit, setActiveUnitState] = useState<TenantUnitSummary | null>(null);
   const [availableUnits, setAvailableUnits] = useState<TenantUnitSummary[]>([]);
@@ -74,6 +91,26 @@ export function TenantUnitProvider({ children }: Readonly<{ children: ReactNode 
     setAvailableUnits(stored.availableUnits);
     setHydrated(true);
   }, []);
+
+  useEffect(() => {
+    if (!hydrated || availableUnits.length > 0) {
+      return;
+    }
+
+    const devUnits = readDevUnits();
+    if (devUnits.length === 0) {
+      return;
+    }
+
+    const nextActiveUnit =
+      devUnits.find((unit) => unit.id === activeUnit?.id) ??
+      devUnits[0] ??
+      null;
+
+    setAvailableUnits(devUnits);
+    setActiveUnitState(nextActiveUnit);
+    persistUnits(nextActiveUnit, devUnits);
+  }, [activeUnit?.id, availableUnits.length, hydrated]);
 
   const setActiveUnit = useCallback((unit: TenantUnitSummary | null) => {
     setActiveUnitState(unit);

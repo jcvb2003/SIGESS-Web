@@ -10,10 +10,12 @@ import { AccessExpiredModal } from "./AccessExpiredModal";
 import { Loader2 } from "lucide-react";
 import { useNetworkStatus } from "@/shared/hooks/useNetworkStatus";
 import { PWABanner } from "@/shared/components/feedback/PWABanner";
+import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 
 export function DashboardLayout() {
   const { session, loading: authLoading, signOut } = useAuth();
   const { metadata, loading: metadataLoading } = useUserMetadata();
+  const { activeUnit, hasMultipleUnits, hydrated } = useTenantUnits();
   const loading = authLoading || metadataLoading;
   const isMobile = useMobile();
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
@@ -34,6 +36,24 @@ export function DashboardLayout() {
   if (!session) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
+
+  if (
+    hydrated &&
+    hasMultipleUnits &&
+    !activeUnit &&
+    location.pathname !== "/select-unit"
+  ) {
+    return <Navigate to="/select-unit" replace />;
+  }
+
+  if (
+    hydrated &&
+    location.pathname === "/select-unit" &&
+    (!hasMultipleUnits || activeUnit)
+  ) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return (
     <div className="min-h-screen bg-background relative flex flex-col font-sans">
       <div className="flex flex-1 relative">

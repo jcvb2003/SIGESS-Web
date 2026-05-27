@@ -35,6 +35,7 @@ const ReapPage = lazy(() => import("@/pages/Reap"));
 const AutomationPage = lazy(() => import("@/pages/Automation"));
 const MemberFichaPage = lazy(() => import("@/pages/Members/MemberFichaPage"));
 const MemberCardPage = lazy(() => import("@/pages/Members/MemberCardPage"));
+const SelectUnitPage = lazy(() => import("@/pages/SelectUnit"));
 
 function PublicRoute() {
   const { session, loading } = useAuth();
@@ -90,6 +91,10 @@ const router = createBrowserRouter([
       {
         path: "/dashboard",
         element: <DashboardPage />,
+      },
+      {
+        path: "/select-unit",
+        element: <SelectUnitPage />,
       },
       {
         path: "/members",
