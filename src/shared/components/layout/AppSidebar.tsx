@@ -1,8 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
-import { LogOut, Menu, Fish, Sun, Moon } from "lucide-react";
+import { LogOut, Menu, Fish, Sun, Moon, ChevronsUpDown, Building2 } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/components/ui/button";
 import { useAuth } from "@/modules/auth/context/authContextStore";
+import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 import { useTheme } from "next-themes";
 import {
   Sheet,
@@ -21,6 +22,13 @@ import {
 import { useMobile } from "@/shared/hooks/useMobile";
 import { useEntityData } from "@/shared/hooks/useEntityData";
 import { NAV_ITEMS } from "@/shared/components/layout/navigationItems";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/shared/components/ui/dropdown-menu";
 
 type SidebarContentProps = {
   isCollapsed: boolean;
@@ -40,6 +48,7 @@ function SidebarContent({
   onSignOut,
 }: Readonly<SidebarContentProps>) {
   const { entity, isLoading: isEntityLoading } = useEntityData();
+  const { activeUnit, availableUnits, hasMultipleUnits, setActiveUnit } = useTenantUnits();
 
   return (
     <div className="flex h-full flex-col text-sidebar-foreground overflow-hidden">
@@ -78,6 +87,20 @@ function SidebarContent({
           </div>
         </Link>
       </div>
+
+      {!isCollapsed && activeUnit && hasMultipleUnits ? (
+        <div className="px-4 pb-2">
+          <div className="rounded-xl border border-white/10 bg-primary-foreground/10 p-3 dark:bg-white/5">
+            <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-sidebar-foreground/60">
+              Polo ativo
+            </div>
+            <div className="flex items-center gap-2 text-sm font-semibold text-sidebar-foreground">
+              <Building2 className="h-4 w-4 text-sidebar-foreground/70" />
+              <span className="truncate">{activeUnit.name}</span>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-3">
         <nav className="space-y-1">
@@ -187,26 +210,62 @@ function SidebarContent({
             Tema {theme === "dark" ? "Claro" : "Escuro"}
           </span>
         </Button>
-        <Button
-          variant="ghost"
-          className={cn(
-            "w-full gap-3 text-sidebar-foreground/80 hover:text-white hover:bg-destructive/90 transition-all whitespace-nowrap rounded-xl h-12",
-            isCollapsed
-              ? "justify-center px-0 w-10 mx-auto"
-              : "justify-start px-4",
-          )}
-          onClick={onSignOut}
-        >
-          <LogOut className="h-[18px] w-[18px] shrink-0" />
-          <span
+        {hasMultipleUnits && !isCollapsed ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-3 rounded-xl h-12 px-4 text-sidebar-foreground/80 hover:text-white hover:bg-primary-foreground/20 transition-all whitespace-nowrap"
+              >
+                <LogOut className="h-[18px] w-[18px] shrink-0" />
+                <span className="font-semibold">Conta e polos</span>
+                <ChevronsUpDown className="ml-auto h-4 w-4 opacity-70" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="right" align="end" className="w-64">
+              {availableUnits.map((unit) => (
+                <DropdownMenuItem
+                  key={unit.id}
+                  onClick={() => setActiveUnit(unit)}
+                  className={cn(
+                    "flex items-center justify-between",
+                    unit.id === activeUnit?.id && "bg-accent",
+                  )}
+                >
+                  <span>{unit.name}</span>
+                  {unit.id === activeUnit?.id ? (
+                    <span className="text-xs text-muted-foreground">Ativo</span>
+                  ) : null}
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={onSignOut} className="text-destructive focus:text-destructive">
+                Sair da conta
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <Button
+            variant="ghost"
             className={cn(
-              "transition-all duration-300 font-semibold",
-              isCollapsed ? "hidden w-0 opacity-0" : "w-auto opacity-100",
+              "w-full gap-3 text-sidebar-foreground/80 hover:text-white hover:bg-destructive/90 transition-all whitespace-nowrap rounded-xl h-12",
+              isCollapsed
+                ? "justify-center px-0 w-10 mx-auto"
+                : "justify-start px-4",
             )}
+            onClick={onSignOut}
           >
-            Sair
-          </span>
-        </Button>
+            <LogOut className="h-[18px] w-[18px] shrink-0" />
+            <span
+              className={cn(
+                "transition-all duration-300 font-semibold",
+                isCollapsed ? "hidden w-0 opacity-0" : "w-auto opacity-100",
+              )}
+            >
+              Sair
+            </span>
+          </Button>
+        )}
       </div>
     </div>
   );

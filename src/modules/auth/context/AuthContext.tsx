@@ -9,6 +9,7 @@ import { authService } from "../services/authService";
 import type { LoginCredentials } from "@/shared/types/auth.types";
 import { toast } from "sonner";
 import { AuthContext } from "./authContextStore";
+import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 
 const TENANT_KEY = "sigess_tenant";
 const GENERIC_AUTH_ERROR_MESSAGE = "Código, email ou senha incorretos";
@@ -19,6 +20,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [loading, setLoading] = useState(true);
   const signOutInProgressRef = useRef(false);
   const subscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
+  const { clearUnits } = useTenantUnits();
 
   const attachListener = () => {
     if (subscriptionRef.current) return;
@@ -130,6 +132,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
         console.warn("Supabase signOut error (expected if not initialized):", err);
       });
 
+      clearUnits();
       clearSupabaseClient();
       setSession(null);
       setUser(null);
@@ -143,6 +146,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       return true;
     } catch (error: unknown) {
       console.error("Logout unexpected error:", error);
+      clearUnits();
       clearSupabaseClient();
       if (typeof globalThis !== "undefined") {
         globalThis.location.href = "/";
