@@ -136,13 +136,12 @@ export function MembershipDialog({
             onClick={() =>
               void onSubmit({
                 userId,
-              unitId,
-              role,
-              isActive: true,
-              isDefault: false,
-            })
-          }
-        >
+                unitId,
+                role,
+                isActive: true,
+              })
+            }
+          >
             Criar acesso
           </Button>
         </DialogFooter>

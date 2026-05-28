@@ -31,7 +31,7 @@ export function usePermissions() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tenant_users" as never)
-        .select("tenant_id")
+        .select("tenant_id, tenant_role")
         .eq("user_id", user!.id)
         .eq("is_active", true)
         .limit(1)
@@ -39,22 +39,38 @@ export function usePermissions() {
 
       if (error) {
         if (isMissingTenantUsersSchemaError(error)) {
-          return false;
+          return {
+            hasTenantAccess: false,
+            tenantRole: null,
+          };
         }
 
         throw error;
       }
 
-      return Boolean((data as { tenant_id?: string } | null)?.tenant_id);
+      const tenantUser = data as
+        | { tenant_id?: string | null; tenant_role?: "owner" | "manager" | "member" | null }
+        | null;
+
+      return {
+        hasTenantAccess: Boolean(tenantUser?.tenant_id),
+        tenantRole: tenantUser?.tenant_role ?? null,
+      };
     },
   });
+  const tenantAdministrationData = tenantAdministrationQuery.data ?? null;
   const canAccessTenantAdministration =
-    isAdmin && (tenantAdministrationQuery.data ?? false);
+    isAdmin && (tenantAdministrationData?.hasTenantAccess ?? false);
+  const tenantEntityRole = tenantAdministrationData?.tenantRole ?? null;
+  const isEntityManager =
+    tenantEntityRole === "owner" || tenantEntityRole === "manager";
 
   return {
     role,
     isAdmin,
     canAccessTenantAdministration,
+    tenantEntityRole,
+    isEntityManager,
     isTenantAdministrationLoading: tenantAdministrationQuery.isLoading,
     // Permissões específicas mapeadas para o papel de administrador (Presidente)
     canCancelPayments: isAdmin,

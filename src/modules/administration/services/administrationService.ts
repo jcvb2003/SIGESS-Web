@@ -32,23 +32,22 @@ export interface TenantUserRecord {
 }
 
 export type TenantUserRoleInput = "manager" | "member";
+export type TenantMembershipRole = "unit_manager" | "unit_operator";
 
 export interface TenantMembershipRecord {
   id: string;
   tenantId: string;
   userId: string;
-  unitId: string | null;
-  role: "tenant_admin" | "unit_manager" | "unit_operator" | "unit_viewer";
+  unitId: string;
+  role: TenantMembershipRole;
   isActive: boolean;
-  isDefault: boolean;
 }
 
 export interface TenantMembershipInput {
   userId: string;
-  unitId?: string | null;
-  role: "tenant_admin" | "unit_manager" | "unit_operator" | "unit_viewer";
+  unitId: string;
+  role: TenantMembershipRole;
   isActive?: boolean;
-  isDefault?: boolean;
 }
 
 export interface TenantUserInput {
@@ -102,10 +101,9 @@ function mapTenantMembershipRow(row: Record<string, unknown>): TenantMembershipR
     id: String(row.id),
     tenantId: String(row.tenant_id),
     userId: String(row.user_id),
-    unitId: row.unit_id ? String(row.unit_id) : null,
+    unitId: String(row.unit_id),
     role: String(row.role) as TenantMembershipRecord["role"],
     isActive: Boolean(row.is_active),
-    isDefault: Boolean(row.is_default),
   };
 }
 
@@ -191,7 +189,13 @@ export const administrationService = {
     }
 
     return {
-      data: ((data ?? []) as Record<string, unknown>[]).map(mapTenantMembershipRow),
+      data: ((data ?? []) as Record<string, unknown>[])
+        .filter(
+          (row) =>
+            Boolean(row.unit_id) &&
+            (row.role === "unit_manager" || row.role === "unit_operator"),
+        )
+        .map(mapTenantMembershipRow),
       error: null,
     };
   },
@@ -369,10 +373,10 @@ export const administrationService = {
     const payload = {
       tenant_id: tenantIdResult.data,
       user_id: input.userId,
-      unit_id: input.unitId ?? null,
+      unit_id: input.unitId,
       role: input.role,
       is_active: input.isActive ?? true,
-      is_default: input.isDefault ?? false,
+      is_default: false,
     };
 
     const { data, error } = await supabase

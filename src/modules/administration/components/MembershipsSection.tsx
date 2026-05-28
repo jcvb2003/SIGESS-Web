@@ -20,14 +20,10 @@ import {
 
 function getMembershipRoleLabel(role: TenantMembershipRecord["role"]) {
   switch (role) {
-    case "tenant_admin":
-      return "Gestor";
     case "unit_manager":
       return "Gestor de apoio";
     case "unit_operator":
       return "Operador";
-    case "unit_viewer":
-      return "Leitor";
     default:
       return role;
   }
@@ -106,7 +102,7 @@ export function MembershipsSection({
                   </TableCell>
                   <TableCell>{unit?.name || "Sem polo"}</TableCell>
                   <TableCell>
-                    <Badge variant={membership.role === "tenant_admin" ? "default" : "secondary"}>
+                    <Badge variant={membership.role === "unit_manager" ? "default" : "secondary"}>
                       {getMembershipRoleLabel(membership.role)}
                     </Badge>
                   </TableCell>
