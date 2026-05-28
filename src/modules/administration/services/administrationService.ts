@@ -31,6 +31,8 @@ export interface TenantUserRecord {
   isActive: boolean;
 }
 
+export type TenantUserRoleInput = "manager" | "member";
+
 export interface TenantMembershipRecord {
   id: string;
   tenantId: string;
@@ -47,6 +49,15 @@ export interface TenantMembershipInput {
   role: "tenant_admin" | "unit_manager" | "unit_operator" | "unit_viewer";
   isActive?: boolean;
   isDefault?: boolean;
+}
+
+export interface TenantUserInput {
+  email: string;
+  name: string;
+  tenantRole: TenantUserRoleInput;
+  mode: "invite" | "create";
+  password?: string;
+  autoConfirm?: boolean;
 }
 
 function normalizeUnitCode(input: string) {
@@ -150,6 +161,18 @@ async function resolveCurrentTenantId(): Promise<ServiceResponse<string>> {
   return { data: tenantId, error: null };
 }
 
+function resolveCurrentTenantCode() {
+  if (typeof globalThis === "undefined") {
+    return null;
+  }
+
+  return globalThis.localStorage.getItem("sigess_tenant");
+}
+
+function mapTenantRoleToAuthRole(tenantRole: TenantUserRoleInput) {
+  return tenantRole === "manager" ? "admin" : "operador_administrativo";
+}
+
 export const administrationService = {
   async listTenantMemberships(): Promise<ServiceResponse<TenantMembershipRecord[]>> {
     const tenantIdResult = await resolveCurrentTenantId();
@@ -191,6 +214,77 @@ export const administrationService = {
 
     return {
       data: ((data ?? []) as Record<string, unknown>[]).map(mapTenantUserRow),
+      error: null,
+    };
+  },
+
+  async createTenantUser(input: TenantUserInput): Promise<ServiceResponse<TenantUserRecord>> {
+    const tenantIdResult = await resolveCurrentTenantId();
+    if (tenantIdResult.error || !tenantIdResult.data) {
+      return { data: null, error: tenantIdResult.error };
+    }
+
+    const tenantCode = resolveCurrentTenantCode();
+    const authRole = mapTenantRoleToAuthRole(input.tenantRole);
+    const action = input.mode === "invite" ? "invite" : "create";
+
+    const { data: functionData, error: functionError } = await supabase.functions.invoke(
+      "manage-user",
+      {
+        body: {
+          action,
+          payload: {
+            email: input.email.trim(),
+            nome: input.name.trim(),
+            role: authRole,
+            tenantCode,
+            ...(input.mode === "create"
+              ? {
+                  password: input.password,
+                  email_confirm: input.autoConfirm ?? true,
+                }
+              : {}),
+          },
+        },
+      },
+    );
+
+    if (functionError) {
+      return { data: null, error: functionError };
+    }
+
+    const createdUserId =
+      (functionData as { user?: { id?: string } } | null)?.user?.id ??
+      (functionData as { id?: string } | null)?.id ??
+      null;
+
+    if (!createdUserId) {
+      return {
+        data: null,
+        error: new Error("Nao foi possivel identificar o usuario criado."),
+      };
+    }
+
+    const { data, error } = await supabase
+      .from("tenant_users" as never)
+      .upsert(
+        {
+          tenant_id: tenantIdResult.data,
+          user_id: createdUserId,
+          tenant_role: input.tenantRole,
+          is_active: true,
+        } as never,
+        { onConflict: "tenant_id,user_id" },
+      )
+      .select("id, tenant_id, user_id, tenant_role, is_active, user_profiles(email, nome)")
+      .single();
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    return {
+      data: mapTenantUserRow(data as Record<string, unknown>),
       error: null,
     };
   },

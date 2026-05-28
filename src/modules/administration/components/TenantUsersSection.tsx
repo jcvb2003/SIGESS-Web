@@ -1,6 +1,7 @@
-import { Users } from "lucide-react";
+import { Plus, Users } from "lucide-react";
 import type { TenantUserRecord } from "@/modules/administration/services/administrationService";
 import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/button";
 import {
   Card,
   CardContent,
@@ -20,22 +21,30 @@ import {
 interface TenantUsersSectionProps {
   readonly tenantUsers: TenantUserRecord[];
   readonly isLoading: boolean;
+  readonly onCreate: () => void;
 }
 
 export function TenantUsersSection({
   tenantUsers,
   isLoading,
+  onCreate,
 }: TenantUsersSectionProps) {
   return (
     <Card className="border-border/50 shadow-sm">
-      <CardHeader>
-        <CardTitle className="text-base flex items-center gap-2">
-          <Users className="h-5 w-5 text-primary" />
-          Usuarios da entidade
-        </CardTitle>
-        <CardDescription>
-          Apenas usuarios desta entidade podem receber acessos aos polos.
-        </CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between gap-4">
+        <div>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Users className="h-5 w-5 text-primary" />
+            Usuarios da entidade
+          </CardTitle>
+          <CardDescription>
+            Apenas usuarios desta entidade podem receber acessos aos polos.
+          </CardDescription>
+        </div>
+        <Button onClick={onCreate} className="gap-2" variant="outline">
+          <Plus className="h-4 w-4" />
+          Novo usuario
+        </Button>
       </CardHeader>
       <CardContent className="border-t border-border/10 pt-4">
         <Table>

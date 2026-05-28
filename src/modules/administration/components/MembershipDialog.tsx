@@ -5,7 +5,6 @@ import type {
   TenantUserRecord,
 } from "@/modules/administration/services/administrationService";
 import { Button } from "@/shared/components/ui/button";
-import { Checkbox } from "@/shared/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +21,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
+
+const MEMBERSHIP_ROLE_OPTIONS = [
+  { value: "unit_manager" as const, label: "Gestor de apoio" },
+  { value: "unit_operator" as const, label: "Operador" },
+];
 
 interface MembershipDialogProps {
   readonly open: boolean;
@@ -43,7 +47,6 @@ export function MembershipDialog({
   const [userId, setUserId] = useState("");
   const [unitId, setUnitId] = useState("");
   const [role, setRole] = useState<TenantMembershipInput["role"]>("unit_manager");
-  const [isDefault, setIsDefault] = useState(false);
 
   return (
     <Dialog
@@ -53,7 +56,6 @@ export function MembershipDialog({
           setUserId("");
           setUnitId("");
           setRole("unit_manager");
-          setIsDefault(false);
         }
         onOpenChange(nextOpen);
       }}
@@ -109,23 +111,13 @@ export function MembershipDialog({
                 <SelectValue placeholder="Selecione o papel" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="tenant_admin">Gestor</SelectItem>
-                <SelectItem value="unit_manager">Gestor do polo</SelectItem>
-                <SelectItem value="unit_operator">Operador</SelectItem>
-                <SelectItem value="unit_viewer">Leitura</SelectItem>
+                {MEMBERSHIP_ROLE_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-          </div>
-
-          <div className="flex items-center gap-3 rounded-lg border border-border/40 p-3">
-            <Checkbox
-              id="membership-default"
-              checked={isDefault}
-              onCheckedChange={(checked) => setIsDefault(Boolean(checked))}
-            />
-            <Label htmlFor="membership-default" className="cursor-pointer">
-              Definir como polo padrao deste usuario
-            </Label>
           </div>
         </div>
 
@@ -144,13 +136,13 @@ export function MembershipDialog({
             onClick={() =>
               void onSubmit({
                 userId,
-                unitId,
-                role,
-                isActive: true,
-                isDefault,
-              })
-            }
-          >
+              unitId,
+              role,
+              isActive: true,
+              isDefault: false,
+            })
+          }
+        >
             Criar acesso
           </Button>
         </DialogFooter>

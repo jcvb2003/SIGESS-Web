@@ -7,6 +7,7 @@ import {
   AdministrationSummaryCards,
   MembershipDialog,
   MembershipsSection,
+  TenantUserDialog,
   TenantUsersSection,
   UnitDialog,
   UnitsSection,
@@ -17,6 +18,7 @@ import {
   type TenantMembershipInput,
   type TenantUnitInput,
   type TenantUnitRecord,
+  type TenantUserInput,
 } from "@/modules/administration/services/administrationService";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { Button } from "@/shared/components/ui/button";
@@ -28,6 +30,7 @@ export default function AdministrationPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUnit, setEditingUnit] = useState<TenantUnitRecord | null>(null);
   const [membershipDialogOpen, setMembershipDialogOpen] = useState(false);
+  const [tenantUserDialogOpen, setTenantUserDialogOpen] = useState(false);
 
   const unitsQuery = useQuery({
     queryKey: administrationQueryKeys.tenantUnits(),
@@ -141,6 +144,26 @@ export default function AdministrationPage() {
     },
   });
 
+  const tenantUserCreateMutation = useMutation({
+    mutationFn: async (values: TenantUserInput) => {
+      const { data, error } = await administrationService.createTenantUser(values);
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: administrationQueryKeys.tenantUsers(),
+      });
+      toast.success("Usuario vinculado a entidade com sucesso.");
+      setTenantUserDialogOpen(false);
+    },
+    onError: (error: unknown) => {
+      toast.error(
+        error instanceof Error ? error.message : "Nao foi possivel criar o usuario.",
+      );
+    },
+  });
+
   const units = unitsQuery.data ?? [];
   const tenantUsers = tenantUsersQuery.data ?? [];
   const memberships = membershipsQuery.data ?? [];
@@ -211,6 +234,7 @@ export default function AdministrationPage() {
       <TenantUsersSection
         tenantUsers={tenantUsers}
         isLoading={tenantUsersQuery.isLoading}
+        onCreate={() => setTenantUserDialogOpen(true)}
       />
 
       <MembershipsSection
@@ -256,6 +280,15 @@ export default function AdministrationPage() {
           await membershipCreateMutation.mutateAsync(values);
         }}
         isSaving={membershipCreateMutation.isPending}
+      />
+
+      <TenantUserDialog
+        open={tenantUserDialogOpen}
+        onOpenChange={setTenantUserDialogOpen}
+        onSubmit={async (values) => {
+          await tenantUserCreateMutation.mutateAsync(values);
+        }}
+        isSaving={tenantUserCreateMutation.isPending}
       />
     </div>
   );

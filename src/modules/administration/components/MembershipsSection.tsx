@@ -23,11 +23,11 @@ function getMembershipRoleLabel(role: TenantMembershipRecord["role"]) {
     case "tenant_admin":
       return "Gestor";
     case "unit_manager":
-      return "Gestor do polo";
+      return "Gestor de apoio";
     case "unit_operator":
       return "Operador";
     case "unit_viewer":
-      return "Leitura";
+      return "Leitor";
     default:
       return role;
   }
@@ -111,14 +111,9 @@ export function MembershipsSection({
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="flex flex-col gap-1">
-                      <Badge variant={membership.isActive ? "default" : "secondary"}>
-                        {membership.isActive ? "Ativo" : "Inativo"}
-                      </Badge>
-                      {membership.isDefault ? (
-                        <span className="text-xs text-muted-foreground">Padrao</span>
-                      ) : null}
-                    </div>
+                    <Badge variant={membership.isActive ? "default" : "secondary"}>
+                      {membership.isActive ? "Ativo" : "Inativo"}
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <Button
