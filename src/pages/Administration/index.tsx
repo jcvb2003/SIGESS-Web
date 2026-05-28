@@ -7,6 +7,7 @@ import {
   AdministrationSummaryCards,
   MembershipDialog,
   MembershipsSection,
+  PolosBreakdownSection,
   TenantUserDialog,
   TenantUsersSection,
   UnitDialog,
@@ -191,10 +192,6 @@ export default function AdministrationPage() {
     () => tenantUsers.filter((user) => user.isActive).length,
     [tenantUsers],
   );
-  const ownerUsersCount = useMemo(
-    () => tenantUsers.filter((user) => user.tenantRole === "owner").length,
-    [tenantUsers],
-  );
   const membershipsCount = useMemo(
     () => memberships.filter((membership) => membership.isActive).length,
     [memberships],
@@ -241,9 +238,14 @@ export default function AdministrationPage() {
       <AdministrationSummaryCards
         unitsCount={units.length}
         activeUnitsCount={activeUnitsCount}
-        activeUsersCount={activeUsersCount}
-        ownerUsersCount={ownerUsersCount}
-        membershipsCount={membershipsCount}
+        operatorsCount={activeUsersCount}
+        accessCount={membershipsCount}
+      />
+
+      <PolosBreakdownSection
+        units={units}
+        memberships={memberships}
+        isLoading={unitsQuery.isLoading || membershipsQuery.isLoading}
       />
 
       <UnitsSection
