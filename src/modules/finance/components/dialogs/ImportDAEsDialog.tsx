@@ -225,7 +225,7 @@ export function ImportDAEsDialog({
                   fileName: file.name,
                   status: "nao_encontrado",
                 };
-              } else if (existingKey && context.existingKeys.has(existingKey)) {
+              } else if (existingKey && context.activeKeys.has(existingKey)) {
                 results[idx] = {
                   cpf,
                   nome,
@@ -264,7 +264,23 @@ export function ImportDAEsDialog({
         );
       }
 
+      const seenKeys = new Set<string>(context.activeKeys);
+
       for (const result of results) {
+        if (
+          result.status === "ok" &&
+          result.cpf &&
+          result.competenciaAno &&
+          result.competenciaMes
+        ) {
+          const key = `${cleanCpf(result.cpf)}-${result.competenciaAno}-${result.competenciaMes}`;
+          if (seenKeys.has(key)) {
+            result.status = "ja_registrado";
+          } else {
+            seenKeys.add(key);
+          }
+        }
+
         if (result.status === "ja_registrado") skipped++;
         else extracted.push(result);
       }
@@ -287,18 +303,47 @@ export function ImportDAEsDialog({
 
   const handleConfirmar = async () => {
     const today = getTodayISO();
-    const toImport = entries
-      .filter((entry) => entry.status === "ok" && entry.cpf && entry.competenciaAno && entry.competenciaMes && entry.valor !== null)
-        .map((entry) => ({
-          cpf: entry.cpf!,
-          competenciaAno: entry.competenciaAno!,
-          competenciaMes: entry.competenciaMes!,
-          valor: entry.valor!,
-          dataRecebimento: today,
-          boletoPago: markAsPaid,
-          dataPagamentoBoleto: markAsPaid ? today : null,
-          tipoBoleto: "unitario" as const,
-        }));
+    const deduped = new Map<
+      string,
+      {
+        cpf: string;
+        competenciaAno: number;
+        competenciaMes: number;
+        valor: number;
+        dataRecebimento: string;
+        boletoPago: boolean;
+        dataPagamentoBoleto: string | null;
+        tipoBoleto: "unitario";
+      }
+    >();
+
+    for (const entry of entries) {
+      if (
+        entry.status !== "ok" ||
+        !entry.cpf ||
+        !entry.competenciaAno ||
+        !entry.competenciaMes ||
+        entry.valor === null
+      ) {
+        continue;
+      }
+
+      const key = `${cleanCpf(entry.cpf)}-${entry.competenciaAno}-${entry.competenciaMes}`;
+      if (deduped.has(key)) continue;
+
+      deduped.set(key, {
+        cpf: entry.cpf,
+        competenciaAno: entry.competenciaAno,
+        competenciaMes: entry.competenciaMes,
+        valor: entry.valor,
+        dataRecebimento: today,
+        boletoPago: markAsPaid,
+        dataPagamentoBoleto: markAsPaid ? today : null,
+        tipoBoleto: "unitario",
+      });
+    }
+
+    const toImport = Array.from(deduped.values());
 
     if (toImport.length === 0) {
       toast.error("Nenhuma guia válida para importar.");

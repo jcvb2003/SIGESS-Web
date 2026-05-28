@@ -133,17 +133,22 @@ export const daeService = {
 
   async getImportContext(): Promise<{
     members: { cpf: string; nome: string | null }[];
-    existingKeys: Set<string>;
+    activeKeys: Set<string>;
+    canceledKeys: Set<string>;
   }> {
     const [membersData, daesData] = await Promise.all([
       fetchAll<ImportContextMemberRow>(
         supabase.from("socios").select("cpf, nome").order("cpf"),
       ),
-      fetchAll<{ socio_cpf: string | null; competencia_ano: number | null; competencia_mes: number | null }>(
+      fetchAll<{
+        socio_cpf: string | null;
+        competencia_ano: number | null;
+        competencia_mes: number | null;
+        status: string | null;
+      }>(
         supabase
           .from("financeiro_dae")
-          .select("socio_cpf, competencia_ano, competencia_mes")
-          .neq("status", "cancelado")
+          .select("socio_cpf, competencia_ano, competencia_mes, status")
           .order("socio_cpf"),
       ),
     ]);
@@ -152,15 +157,129 @@ export const daeService = {
       .filter((item): item is { cpf: string; nome: string | null } => Boolean(item.cpf))
       .map((item) => ({ cpf: item.cpf, nome: item.nome }));
 
-    const existingKeys = new Set(
-      (daesData ?? [])
-        .filter((item) => item.socio_cpf && item.competencia_ano && item.competencia_mes)
-        .map((item) => `${cleanCpf(item.socio_cpf!)}-${item.competencia_ano}-${item.competencia_mes}`),
+    const rows = (daesData ?? []).filter(
+      (item): item is {
+        socio_cpf: string;
+        competencia_ano: number;
+        competencia_mes: number;
+        status: string | null;
+      } =>
+        Boolean(item.socio_cpf) &&
+        Boolean(item.competencia_ano) &&
+        Boolean(item.competencia_mes),
     );
 
-    return { members, existingKeys };
+    const activeKeys = new Set(
+      rows
+        .filter((item) => item.status !== "cancelado")
+        .map((item) => `${cleanCpf(item.socio_cpf)}-${item.competencia_ano}-${item.competencia_mes}`),
+    );
+
+    const canceledKeys = new Set(
+      rows
+        .filter((item) => item.status === "cancelado")
+        .map((item) => `${cleanCpf(item.socio_cpf)}-${item.competencia_ano}-${item.competencia_mes}`),
+    );
+
+    return { members, activeKeys, canceledKeys };
   },
 
+  async importDAEs(
+    items: {
+      cpf: string;
+      competenciaAno: number;
+      competenciaMes: number;
+      valor: number;
+      dataRecebimento: string;
+      boletoPago?: boolean;
+      dataPagamentoBoleto?: string | null;
+      tipoBoleto?: "unitario" | "agrupado" | "anual";
+    }[],
+  ): Promise<void> {
+    if (items.length === 0) return;
+
+    const payload: FinanceDAEInsert[] = items.map((item) => ({
+      socio_cpf: item.cpf,
+      competencia_ano: item.competenciaAno,
+      competencia_mes: item.competenciaMes,
+      valor: item.valor,
+      data_recebimento: item.dataRecebimento,
+      forma_pagamento: "boleto",
+      tipo_boleto: item.tipoBoleto ?? "unitario",
+      boleto_pago: item.boletoPago ?? false,
+      data_pagamento_boleto: item.boletoPago ? item.dataPagamentoBoleto ?? item.dataRecebimento : null,
+      status: "pago",
+    }));
+
+    const cpfs = Array.from(new Set(payload.map((item) => item.socio_cpf).filter(Boolean))) as string[];
+    const anos = Array.from(new Set(payload.map((item) => item.competencia_ano).filter((value): value is number => value != null)));
+    const meses = Array.from(new Set(payload.map((item) => item.competencia_mes).filter((value): value is number => value != null)));
+
+    const { data: existingRows, error: existingError } = await supabase
+      .from("financeiro_dae")
+      .select("id, socio_cpf, competencia_ano, competencia_mes, status")
+      .in("socio_cpf", cpfs)
+      .in("competencia_ano", anos)
+      .in("competencia_mes", meses);
+
+    if (existingError) throw existingError;
+
+    const existingByKey = new Map(
+      (existingRows ?? [])
+        .filter((item) => item.socio_cpf && item.competencia_ano && item.competencia_mes)
+        .map((item) => [
+          `${cleanCpf(item.socio_cpf!)}-${item.competencia_ano}-${item.competencia_mes}`,
+          item,
+        ]),
+    );
+
+    const toInsert: FinanceDAEInsert[] = [];
+    const updates = payload
+      .map((item) => {
+        const key = `${cleanCpf(item.socio_cpf!)}-${item.competencia_ano}-${item.competencia_mes}`;
+        const existing = existingByKey.get(key);
+
+        if (!existing) {
+          toInsert.push(item);
+          return null;
+        }
+
+        if (existing.status === "cancelado" && existing.id) {
+          return supabase
+            .from("financeiro_dae")
+            .update({
+              valor: item.valor,
+              data_recebimento: item.data_recebimento,
+              forma_pagamento: item.forma_pagamento,
+              tipo_boleto: item.tipo_boleto,
+              boleto_pago: item.boleto_pago,
+              data_pagamento_boleto: item.data_pagamento_boleto,
+              status: "pago",
+              cancelado_em: null,
+              cancelado_por: null,
+              cancelamento_obs: null,
+            })
+            .eq("id", existing.id);
+        }
+
+        return null;
+      })
+      .filter(Boolean);
+
+    if (updates.length > 0) {
+      const results = await Promise.all(updates);
+      const failed = results.find((result) => result?.error);
+      if (failed?.error) throw failed.error;
+    }
+
+    if (toInsert.length === 0) return;
+
+    const { error } = await supabase
+      .from("financeiro_dae")
+      .insert(toInsert);
+
+    if (error) throw error;
+  },
   async getDAEStatusByCompetencia(
     cpf: string,
     competenciaAno: number,
@@ -191,40 +310,6 @@ export const daeService = {
       competenciaMes: item.competencia_mes,
       valor: Number(item.valor ?? 0),
     };
-  },
-
-  async importDAEs(
-    items: {
-      cpf: string;
-      competenciaAno: number;
-      competenciaMes: number;
-      valor: number;
-      dataRecebimento: string;
-      boletoPago?: boolean;
-      dataPagamentoBoleto?: string | null;
-      tipoBoleto?: "unitario" | "agrupado" | "anual";
-    }[],
-  ): Promise<void> {
-    if (items.length === 0) return;
-
-    const payload: FinanceDAEInsert[] = items.map((item) => ({
-      socio_cpf: item.cpf,
-      competencia_ano: item.competenciaAno,
-      competencia_mes: item.competenciaMes,
-      valor: item.valor,
-      data_recebimento: item.dataRecebimento,
-      forma_pagamento: "boleto",
-      tipo_boleto: item.tipoBoleto ?? "unitario",
-      boleto_pago: item.boletoPago ?? false,
-      data_pagamento_boleto: item.boletoPago ? item.dataPagamentoBoleto ?? item.dataRecebimento : null,
-      status: "pago",
-    }));
-
-    const { error } = await supabase
-      .from("financeiro_dae")
-      .insert(payload);
-
-    if (error) throw error;
   },
 
   async getDAE(id: string): Promise<FinanceDAE> {
