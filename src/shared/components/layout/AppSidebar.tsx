@@ -4,6 +4,7 @@ import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/components/ui/button";
 import { useAuth } from "@/modules/auth/context/authContextStore";
 import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
+import { usePermissions } from "@/shared/hooks/usePermissions";
 import { useTheme } from "next-themes";
 import {
   Sheet,
@@ -53,6 +54,8 @@ function SidebarContent({
 }: Readonly<SidebarContentProps>) {
   const { entity, isLoading: isEntityLoading } = useEntityData();
   const { activeUnit, availableUnits, hasMultipleUnits, setActiveUnit } = useTenantUnits();
+  const { isAdmin } = usePermissions();
+  const navigationItems = NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin);
 
   return (
     <div className="flex h-full flex-col text-sidebar-foreground overflow-hidden">
@@ -108,7 +111,7 @@ function SidebarContent({
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-3">
         <nav className="space-y-1">
-          {NAV_ITEMS.map((item) => {
+          {navigationItems.map((item) => {
             const isActive =
               pathname === item.href ||
               (item.href !== "/dashboard" &&

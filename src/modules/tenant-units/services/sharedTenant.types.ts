@@ -10,6 +10,16 @@ export interface SharedTenantUnitRow {
   updated_at: string;
 }
 
+export interface SharedTenantUserRow {
+  id: string;
+  tenant_id: string;
+  user_id: string;
+  tenant_role: "owner" | "manager" | "member";
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface SharedUserUnitMembershipRow {
   id: string;
   user_id: string;

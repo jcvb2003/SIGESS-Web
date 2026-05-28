@@ -33,6 +33,7 @@ const FotoUploadPage = lazy(() => import("@/pages/FotoUpload"));
 const RequirementsPage = lazy(() => import("@/pages/Requirements"));
 const ReapPage = lazy(() => import("@/pages/Reap"));
 const AutomationPage = lazy(() => import("@/pages/Automation"));
+const AdministrationPage = lazy(() => import("@/pages/Administration"));
 const MemberFichaPage = lazy(() => import("@/pages/Members/MemberFichaPage"));
 const MemberCardPage = lazy(() => import("@/pages/Members/MemberCardPage"));
 const SelectUnitPage = lazy(() => import("@/pages/SelectUnit"));
@@ -139,6 +140,10 @@ const router = createBrowserRouter([
       {
         path: "/automation",
         element: <AutomationPage />,
+      },
+      {
+        path: "/administration",
+        element: <AdministrationPage />,
       },
       {
         path: "/settings",
