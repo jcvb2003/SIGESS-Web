@@ -11,11 +11,13 @@ import { Loader2 } from "lucide-react";
 import { useNetworkStatus } from "@/shared/hooks/useNetworkStatus";
 import { PWABanner } from "@/shared/components/feedback/PWABanner";
 import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
+import { usePortalContext } from "@/shared/hooks/usePortalContext";
 
 export function DashboardLayout() {
   const { session, loading: authLoading, signOut } = useAuth();
   const { metadata, loading: metadataLoading } = useUserMetadata();
   const { activeUnit, hasMultipleUnits, hydrated } = useTenantUnits();
+  const { isPortalContextLoading, isStatePortal } = usePortalContext();
   const loading = authLoading || metadataLoading;
   const isMobile = useMobile();
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
@@ -27,7 +29,7 @@ export function DashboardLayout() {
   useIdleTimeout({
     onTimeout: handleIdleTimeout,
   });
-  if (loading) {
+  if (loading || isPortalContextLoading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -36,6 +38,10 @@ export function DashboardLayout() {
   }
   if (!session) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+
+  if (isStatePortal && location.pathname !== "/administration") {
+    return <Navigate to="/administration" replace />;
   }
 
   if (

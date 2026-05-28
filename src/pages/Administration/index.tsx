@@ -93,7 +93,7 @@ function UnitDialog({
         <DialogHeader>
           <DialogTitle>{isEditing ? "Editar polo" : "Novo polo"}</DialogTitle>
           <DialogDescription>
-            Organize os polos do sindicato e prepare o acesso dos representantes.
+            Organize os polos do sindicato e prepare o acesso dos operadores.
           </DialogDescription>
         </DialogHeader>
 
@@ -184,7 +184,7 @@ function UnitDialog({
 function getMembershipRoleLabel(role: TenantMembershipRecord["role"]) {
   switch (role) {
     case "tenant_admin":
-      return "Admin do tenant";
+      return "Gestor";
     case "unit_manager":
       return "Gestor do polo";
     case "unit_operator":
@@ -233,7 +233,7 @@ function MembershipDialog({
         <DialogHeader>
           <DialogTitle>Novo acesso</DialogTitle>
           <DialogDescription>
-            Vincule um usuario do tenant a um polo do mesmo tenant.
+            Vincule um usuario do sindicato a um polo deste mesmo sindicato.
           </DialogDescription>
         </DialogHeader>
 
@@ -277,7 +277,7 @@ function MembershipDialog({
                 <SelectValue placeholder="Selecione o papel" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="tenant_admin">Admin do tenant</SelectItem>
+                <SelectItem value="tenant_admin">Gestor</SelectItem>
                 <SelectItem value="unit_manager">Gestor do polo</SelectItem>
                 <SelectItem value="unit_operator">Operador</SelectItem>
                 <SelectItem value="unit_viewer">Leitura</SelectItem>
@@ -497,8 +497,8 @@ export default function AdministrationPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
       <PageHeader
-        title="Administração"
-        description="Gerencie a estrutura do tenant e prepare os polos que os representantes vão operar."
+        title="Portal do Gestor"
+        description="Gerencie polos, acessos e a estrutura estadual antes da operacao dos polos."
         actions={
           <Button
             onClick={() => {
@@ -533,7 +533,7 @@ export default function AdministrationPage() {
               <ToggleRight className="h-5 w-5 text-emerald-600" />
               Polos ativos
             </CardTitle>
-            <CardDescription>Em operação no tenant</CardDescription>
+            <CardDescription>Em operacao no sindicato</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{activeUnitsCount}</div>
@@ -544,7 +544,7 @@ export default function AdministrationPage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Users className="h-5 w-5 text-primary" />
-              Usuarios do tenant
+              Usuarios do sindicato
             </CardTitle>
             <CardDescription>Universo interno permitido</CardDescription>
           </CardHeader>
@@ -559,7 +559,7 @@ export default function AdministrationPage() {
               <Shield className="h-5 w-5 text-primary" />
               Responsaveis
             </CardTitle>
-            <CardDescription>Owners do tenant</CardDescription>
+            <CardDescription>Gestores do sindicato</CardDescription>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
             <div className="text-3xl font-bold text-foreground">{ownerUsersCount}</div>
@@ -572,7 +572,7 @@ export default function AdministrationPage() {
               <Shield className="h-5 w-5 text-primary" />
               Acessos ativos
             </CardTitle>
-            <CardDescription>Vinculos usuario x polo</CardDescription>
+            <CardDescription>Vinculos entre usuarios e polos</CardDescription>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
             <div className="text-3xl font-bold text-foreground">{membershipsCount}</div>
@@ -584,10 +584,10 @@ export default function AdministrationPage() {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Users className="h-5 w-5 text-primary" />
-            Usuarios do tenant
+            Usuarios do sindicato
           </CardTitle>
           <CardDescription>
-            Apenas usuarios pertencentes a este tenant podem receber acessos aos polos.
+            Apenas usuarios deste sindicato podem receber acessos aos polos.
           </CardDescription>
         </CardHeader>
         <CardContent className="border-t border-border/10 pt-4">
@@ -595,7 +595,7 @@ export default function AdministrationPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Usuario</TableHead>
-                <TableHead>Papel no tenant</TableHead>
+                <TableHead>Papel no sindicato</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -603,13 +603,13 @@ export default function AdministrationPage() {
               {tenantUsersQuery.isLoading ? (
                 <TableRow>
                   <TableCell colSpan={3} className="py-8 text-center text-muted-foreground">
-                    Carregando usuarios do tenant...
+                    Carregando usuarios do sindicato...
                   </TableCell>
                 </TableRow>
               ) : tenantUsers.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={3} className="py-8 text-center text-muted-foreground">
-                    Nenhum usuario vinculado ao tenant ainda.
+                    Nenhum usuario vinculado ao sindicato ainda.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -626,10 +626,10 @@ export default function AdministrationPage() {
                     <TableCell>
                       <Badge variant={tenantUser.tenantRole === "owner" ? "default" : "secondary"}>
                         {tenantUser.tenantRole === "owner"
-                          ? "Owner"
+                          ? "Gestor"
                           : tenantUser.tenantRole === "manager"
-                            ? "Manager"
-                            : "Member"}
+                            ? "Gestor de apoio"
+                            : "Operador"}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -653,7 +653,7 @@ export default function AdministrationPage() {
               Acessos aos polos
             </CardTitle>
             <CardDescription>
-              Vincule usuarios do tenant aos polos deste mesmo tenant.
+              Vincule gestores e operadores aos polos deste sindicato.
             </CardDescription>
           </div>
           <Button

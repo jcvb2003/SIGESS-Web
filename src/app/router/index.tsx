@@ -9,6 +9,7 @@ import { useAuth } from "@/modules/auth/context/authContextStore";
 import { Loader2 } from "lucide-react";
 import { RouteError } from "@/shared/components/feedback/RouteError";
 import { DashboardLayout } from "@/shared/components/layout/DashboardLayout";
+import { TenantAdministrationLayout } from "@/shared/components/layout/TenantAdministrationLayout";
 import { ErrorBoundary } from "@/shared/components/feedback/ErrorBoundary";
 const LoginPage = lazy(() => import("@/pages/Login"));
 const DashboardPage = lazy(() => import("@/pages/Dashboard"));
@@ -86,6 +87,16 @@ const router = createBrowserRouter([
     ],
   },
   {
+    element: <TenantAdministrationLayout />,
+    errorElement: <RouteError />,
+    children: [
+      {
+        path: "/administration",
+        element: <AdministrationPage />,
+      },
+    ],
+  },
+  {
     element: <DashboardLayout />,
     errorElement: <RouteError />,
     children: [
@@ -140,10 +151,6 @@ const router = createBrowserRouter([
       {
         path: "/automation",
         element: <AutomationPage />,
-      },
-      {
-        path: "/administration",
-        element: <AdministrationPage />,
       },
       {
         path: "/settings",

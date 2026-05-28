@@ -55,9 +55,15 @@ function SidebarContent({
   const { entity, isLoading: isEntityLoading } = useEntityData();
   const { activeUnit, availableUnits, hasMultipleUnits, setActiveUnit } = useTenantUnits();
   const { canAccessTenantAdministration } = usePermissions();
-  const navigationItems = NAV_ITEMS.filter(
-    (item) => !item.adminOnly || canAccessTenantAdministration,
-  );
+  const isTenantAdministrationOnly =
+    canAccessTenantAdministration && availableUnits.length === 0;
+  const navigationItems = NAV_ITEMS.filter((item) => {
+    if (isTenantAdministrationOnly) {
+      return item.adminOnly === true;
+    }
+
+    return !item.adminOnly || canAccessTenantAdministration;
+  });
 
   return (
     <div className="flex h-full flex-col text-sidebar-foreground overflow-hidden">
