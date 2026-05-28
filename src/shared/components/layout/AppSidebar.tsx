@@ -54,8 +54,10 @@ function SidebarContent({
 }: Readonly<SidebarContentProps>) {
   const { entity, isLoading: isEntityLoading } = useEntityData();
   const { activeUnit, availableUnits, hasMultipleUnits, setActiveUnit } = useTenantUnits();
-  const { isAdmin } = usePermissions();
-  const navigationItems = NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin);
+  const { canAccessTenantAdministration } = usePermissions();
+  const navigationItems = NAV_ITEMS.filter(
+    (item) => !item.adminOnly || canAccessTenantAdministration,
+  );
 
   return (
     <div className="flex h-full flex-col text-sidebar-foreground overflow-hidden">

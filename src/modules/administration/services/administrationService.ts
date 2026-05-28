@@ -31,6 +31,24 @@ export interface TenantUserRecord {
   isActive: boolean;
 }
 
+export interface TenantMembershipRecord {
+  id: string;
+  tenantId: string;
+  userId: string;
+  unitId: string | null;
+  role: "tenant_admin" | "unit_manager" | "unit_operator" | "unit_viewer";
+  isActive: boolean;
+  isDefault: boolean;
+}
+
+export interface TenantMembershipInput {
+  userId: string;
+  unitId?: string | null;
+  role: "tenant_admin" | "unit_manager" | "unit_operator" | "unit_viewer";
+  isActive?: boolean;
+  isDefault?: boolean;
+}
+
 function normalizeUnitCode(input: string) {
   return input
     .trim()
@@ -65,6 +83,18 @@ function mapTenantUserRow(row: Record<string, unknown>): TenantUserRecord {
     name: profile.nome ? String(profile.nome) : null,
     tenantRole: String(row.tenant_role) as TenantUserRecord["tenantRole"],
     isActive: Boolean(row.is_active),
+  };
+}
+
+function mapTenantMembershipRow(row: Record<string, unknown>): TenantMembershipRecord {
+  return {
+    id: String(row.id),
+    tenantId: String(row.tenant_id),
+    userId: String(row.user_id),
+    unitId: row.unit_id ? String(row.unit_id) : null,
+    role: String(row.role) as TenantMembershipRecord["role"],
+    isActive: Boolean(row.is_active),
+    isDefault: Boolean(row.is_default),
   };
 }
 
@@ -121,6 +151,28 @@ async function resolveCurrentTenantId(): Promise<ServiceResponse<string>> {
 }
 
 export const administrationService = {
+  async listTenantMemberships(): Promise<ServiceResponse<TenantMembershipRecord[]>> {
+    const tenantIdResult = await resolveCurrentTenantId();
+    if (tenantIdResult.error || !tenantIdResult.data) {
+      return { data: null, error: tenantIdResult.error };
+    }
+
+    const { data, error } = await supabase
+      .from("user_unit_memberships" as never)
+      .select("*")
+      .eq("tenant_id", tenantIdResult.data)
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    return {
+      data: ((data ?? []) as Record<string, unknown>[]).map(mapTenantMembershipRow),
+      error: null,
+    };
+  },
+
   async listTenantUsers(): Promise<ServiceResponse<TenantUserRecord[]>> {
     const tenantIdResult = await resolveCurrentTenantId();
     if (tenantIdResult.error || !tenantIdResult.data) {
@@ -203,6 +255,52 @@ export const administrationService = {
     const { error } = await supabase
       .from("tenant_units" as never)
       .update({ is_active: isActive } as never)
+      .eq("id", id);
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    return { data: null, error: null };
+  },
+
+  async createTenantMembership(
+    input: TenantMembershipInput,
+  ): Promise<ServiceResponse<TenantMembershipRecord>> {
+    const tenantIdResult = await resolveCurrentTenantId();
+    if (tenantIdResult.error || !tenantIdResult.data) {
+      return { data: null, error: tenantIdResult.error };
+    }
+
+    const payload = {
+      tenant_id: tenantIdResult.data,
+      user_id: input.userId,
+      unit_id: input.unitId ?? null,
+      role: input.role,
+      is_active: input.isActive ?? true,
+      is_default: input.isDefault ?? false,
+    };
+
+    const { data, error } = await supabase
+      .from("user_unit_memberships" as never)
+      .insert(payload as never)
+      .select("*")
+      .single();
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    return {
+      data: mapTenantMembershipRow(data as Record<string, unknown>),
+      error: null,
+    };
+  },
+
+  async deleteTenantMembership(id: string): Promise<ServiceResponse<void>> {
+    const { error } = await supabase
+      .from("user_unit_memberships" as never)
+      .delete()
       .eq("id", id);
 
     if (error) {
