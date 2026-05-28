@@ -22,11 +22,6 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 
-const MEMBERSHIP_ROLE_OPTIONS = [
-  { value: "unit_manager" as const, label: "Gestor de apoio" },
-  { value: "unit_operator" as const, label: "Operador" },
-];
-
 interface MembershipDialogProps {
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
@@ -46,7 +41,6 @@ export function MembershipDialog({
 }: MembershipDialogProps) {
   const [userId, setUserId] = useState("");
   const [unitId, setUnitId] = useState("");
-  const [role, setRole] = useState<TenantMembershipInput["role"]>("unit_manager");
 
   return (
     <Dialog
@@ -55,7 +49,6 @@ export function MembershipDialog({
         if (!nextOpen) {
           setUserId("");
           setUnitId("");
-          setRole("unit_manager");
         }
         onOpenChange(nextOpen);
       }}
@@ -101,24 +94,6 @@ export function MembershipDialog({
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="membership-role">Papel</Label>
-            <Select
-              value={role}
-              onValueChange={(value) => setRole(value as TenantMembershipInput["role"])}
-            >
-              <SelectTrigger id="membership-role">
-                <SelectValue placeholder="Selecione o papel" />
-              </SelectTrigger>
-              <SelectContent>
-                {MEMBERSHIP_ROLE_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
         </div>
 
         <DialogFooter>
@@ -137,7 +112,7 @@ export function MembershipDialog({
               void onSubmit({
                 userId,
                 unitId,
-                role,
+                role: "unit_operator",
                 isActive: true,
               })
             }

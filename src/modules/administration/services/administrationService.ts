@@ -27,12 +27,12 @@ export interface TenantUserRecord {
   userId: string;
   email: string | null;
   name: string | null;
-  tenantRole: "owner" | "manager" | "member";
+  tenantRole: "owner" | "member";
   isActive: boolean;
 }
 
-export type TenantUserRoleInput = "manager" | "member";
-export type TenantMembershipRole = "unit_manager" | "unit_operator";
+export type TenantUserRoleInput = "member";
+export type TenantMembershipRole = "unit_operator";
 
 export interface TenantMembershipRecord {
   id: string;
@@ -168,7 +168,7 @@ function resolveCurrentTenantCode() {
 }
 
 function mapTenantRoleToAuthRole(tenantRole: TenantUserRoleInput) {
-  return tenantRole === "manager" ? "admin" : "operador_administrativo";
+  return "operador_administrativo";
 }
 
 export const administrationService = {
@@ -191,9 +191,7 @@ export const administrationService = {
     return {
       data: ((data ?? []) as Record<string, unknown>[])
         .filter(
-          (row) =>
-            Boolean(row.unit_id) &&
-            (row.role === "unit_manager" || row.role === "unit_operator"),
+          (row) => Boolean(row.unit_id) && row.role === "unit_operator",
         )
         .map(mapTenantMembershipRow),
       error: null,

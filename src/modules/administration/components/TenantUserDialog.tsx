@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Loader2, Mail, ShieldCheck, UserPlus } from "lucide-react";
-import type { TenantUserRoleInput } from "@/modules/administration/services/administrationService";
 import { Button } from "@/shared/components/ui/button";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import {
@@ -13,13 +12,6 @@ import {
 } from "@/shared/components/ui/dialog";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/components/ui/select";
 import { cn } from "@/shared/lib/utils";
 
 interface TenantUserDialogProps {
@@ -28,7 +20,7 @@ interface TenantUserDialogProps {
   readonly onSubmit: (values: {
     email: string;
     name: string;
-    tenantRole: TenantUserRoleInput;
+    tenantRole: "member";
     mode: "invite" | "create";
     password?: string;
     autoConfirm?: boolean;
@@ -45,7 +37,6 @@ export function TenantUserDialog({
   const [mode, setMode] = useState<"invite" | "create">("invite");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [tenantRole, setTenantRole] = useState<TenantUserRoleInput>("member");
   const [password, setPassword] = useState("");
   const [autoConfirm, setAutoConfirm] = useState(true);
 
@@ -54,7 +45,6 @@ export function TenantUserDialog({
       setMode("invite");
       setName("");
       setEmail("");
-      setTenantRole("member");
       setPassword("");
       setAutoConfirm(true);
     }
@@ -73,7 +63,7 @@ export function TenantUserDialog({
             <DialogTitle className="text-xl">Novo usuario da entidade</DialogTitle>
           </div>
           <DialogDescription className="text-sm">
-            Crie ou convide um gestor de apoio ou operador para esta entidade.
+            Crie ou convide um operador para esta entidade.
           </DialogDescription>
         </DialogHeader>
 
@@ -113,7 +103,7 @@ export function TenantUserDialog({
               void onSubmit({
                 email,
                 name,
-                tenantRole,
+                tenantRole: "member",
                 mode,
                 password: isCreateMode ? password : undefined,
                 autoConfirm: isCreateMode ? autoConfirm : undefined,
@@ -149,24 +139,6 @@ export function TenantUserDialog({
                   onChange={(event) => setEmail(event.target.value)}
                 />
               </div>
-            </div>
-
-            <div className="grid gap-1.5">
-              <Label htmlFor="tenant-user-role" className="text-xs font-bold text-muted-foreground uppercase">
-                Papel na entidade
-              </Label>
-              <Select
-                value={tenantRole}
-                onValueChange={(value) => setTenantRole(value as TenantUserRoleInput)}
-              >
-                <SelectTrigger id="tenant-user-role" className="bg-muted/10 border-border/50 focus:bg-background">
-                  <SelectValue placeholder="Selecione o papel" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="manager">Gestor de apoio</SelectItem>
-                  <SelectItem value="member">Operador</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             <div

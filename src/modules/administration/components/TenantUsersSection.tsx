@@ -81,11 +81,7 @@ export function TenantUsersSection({
                   </TableCell>
                   <TableCell>
                     <Badge variant={tenantUser.tenantRole === "owner" ? "default" : "secondary"}>
-                      {tenantUser.tenantRole === "owner"
-                        ? "Gestor"
-                        : tenantUser.tenantRole === "manager"
-                          ? "Gestor de apoio"
-                          : "Operador"}
+                      {tenantUser.tenantRole === "owner" ? "Gestor" : "Operador"}
                     </Badge>
                   </TableCell>
                   <TableCell>

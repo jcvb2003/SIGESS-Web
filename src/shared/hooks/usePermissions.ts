@@ -49,7 +49,7 @@ export function usePermissions() {
       }
 
       const tenantUser = data as
-        | { tenant_id?: string | null; tenant_role?: "owner" | "manager" | "member" | null }
+        | { tenant_id?: string | null; tenant_role?: "owner" | "member" | null }
         | null;
 
       return {
@@ -62,8 +62,7 @@ export function usePermissions() {
   const canAccessTenantAdministration =
     isAdmin && (tenantAdministrationData?.hasTenantAccess ?? false);
   const tenantEntityRole = tenantAdministrationData?.tenantRole ?? null;
-  const isEntityManager =
-    tenantEntityRole === "owner" || tenantEntityRole === "manager";
+  const isEntityManager = tenantEntityRole === "owner";
 
   return {
     role,

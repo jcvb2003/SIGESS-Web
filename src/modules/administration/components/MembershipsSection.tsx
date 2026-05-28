@@ -19,14 +19,7 @@ import {
 } from "@/shared/components/ui/table";
 
 function getMembershipRoleLabel(role: TenantMembershipRecord["role"]) {
-  switch (role) {
-    case "unit_manager":
-      return "Gestor de apoio";
-    case "unit_operator":
-      return "Operador";
-    default:
-      return role;
-  }
+  return role === "unit_operator" ? "Operador" : role;
 }
 
 interface MembershipsSectionProps {
@@ -102,7 +95,7 @@ export function MembershipsSection({
                   </TableCell>
                   <TableCell>{unit?.name || "Sem polo"}</TableCell>
                   <TableCell>
-                    <Badge variant={membership.role === "unit_manager" ? "default" : "secondary"}>
+                    <Badge variant="secondary">
                       {getMembershipRoleLabel(membership.role)}
                     </Badge>
                   </TableCell>
