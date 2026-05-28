@@ -3,29 +3,33 @@ import {
   useRecentMembers,
   useBirthdayMembers,
 } from "@/modules/dashboard/hooks/useDashboardData";
-import { StatCard } from "@/shared/components/ui/StatCard";
 import { RecentMembersList } from "@/modules/dashboard/components/RecentMembersList";
 import { BirthdayList } from "@/modules/dashboard/components/BirthdayList";
-import { Users, User, FileStack } from "lucide-react";
+import { ActiveUnitBadge } from "@/modules/tenant-units/components/ActiveUnitBadge";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
+import { StatCard } from "@/shared/components/ui/StatCard";
+import { FileStack, User, Users } from "lucide-react";
 
 export default function Dashboard() {
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
   const { data: recentMembers, isLoading: recentLoading } = useRecentMembers();
   const { data: birthdayMembers, isLoading: birthdayLoading } =
     useBirthdayMembers();
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
       <PageHeader
         title="Painel de Controle"
-        description="Bem-vindo ao SIGESS. Visualize os principais indicadores e estatísticas da sua entidade em tempo real."
+        description="Bem-vindo ao SIGESS. Visualize os principais indicadores e estatisticas da sua entidade em tempo real."
+        actions={<ActiveUnitBadge />}
       />
+
       <div className="grid gap-6 grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total de Membros"
           value={stats?.totalMembers ?? 0}
           icon={Users}
-          description="Sócios cadastrados"
+          description="Socios cadastrados"
           loading={statsLoading}
           variant="primary"
         />
@@ -33,7 +37,7 @@ export default function Dashboard() {
           title="Homens"
           value={stats?.maleMembers ?? 0}
           icon={User}
-          description="Sócios do sexo masculino"
+          description="Socios do sexo masculino"
           loading={statsLoading}
           variant="info"
         />
@@ -41,7 +45,7 @@ export default function Dashboard() {
           title="Mulheres"
           value={stats?.femaleMembers ?? 0}
           icon={User}
-          description="Sócios do sexo feminino"
+          description="Socios do sexo feminino"
           loading={statsLoading}
           variant="accent"
         />
