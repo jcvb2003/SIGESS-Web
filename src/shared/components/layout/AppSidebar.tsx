@@ -37,6 +37,8 @@ type SidebarContentProps = {
   setTheme: (theme: string) => void;
   onNavigate: () => void;
   onSignOut: () => void;
+  accountMenuOpen: boolean;
+  onAccountMenuOpenChange: (open: boolean) => void;
 };
 
 function SidebarContent({
@@ -46,6 +48,8 @@ function SidebarContent({
   setTheme,
   onNavigate,
   onSignOut,
+  accountMenuOpen,
+  onAccountMenuOpenChange,
 }: Readonly<SidebarContentProps>) {
   const { entity, isLoading: isEntityLoading } = useEntityData();
   const { activeUnit, availableUnits, hasMultipleUnits, setActiveUnit } = useTenantUnits();
@@ -211,7 +215,7 @@ function SidebarContent({
           </span>
         </Button>
         {hasMultipleUnits && !isCollapsed ? (
-          <DropdownMenu>
+          <DropdownMenu open={accountMenuOpen} onOpenChange={onAccountMenuOpenChange}>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
@@ -287,7 +291,9 @@ export function AppSidebar({
   const { theme, setTheme } = useTheme();
   const isMobile = useMobile();
   const [open, setOpen] = useState(false);
-  const isCollapsed = !isMobile && !isHovered;
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const isExpanded = isMobile || isHovered || accountMenuOpen;
+  const isCollapsed = !isExpanded;
 
   if (isMobile) {
     return (
@@ -318,6 +324,8 @@ export function AppSidebar({
             setTheme={setTheme}
             onNavigate={() => setOpen(false)}
             onSignOut={signOut}
+            accountMenuOpen={accountMenuOpen}
+            onAccountMenuOpenChange={setAccountMenuOpen}
           />
         </SheetContent>
       </Sheet>
@@ -328,7 +336,7 @@ export function AppSidebar({
     <aside
       className={cn(
         "hidden lg:flex flex-col h-screen sticky top-0 z-50 transition-[width] duration-300 ease-in-out p-4",
-        isHovered ? "w-72" : "w-[6.5rem]",
+        isExpanded ? "w-72" : "w-[6.5rem]",
       )}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -345,6 +353,8 @@ export function AppSidebar({
           setTheme={setTheme}
           onNavigate={() => undefined}
           onSignOut={signOut}
+          accountMenuOpen={accountMenuOpen}
+          onAccountMenuOpenChange={setAccountMenuOpen}
         />
       </div>
     </aside>

@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -80,10 +81,46 @@ function readDevUnits(): TenantUnitSummary[] {
   }
 }
 
+function resolveNextActiveUnit(
+  units: TenantUnitSummary[],
+  preferredActiveUnitId?: string | null,
+  currentActiveUnitId?: string | null,
+) {
+  const normalizedUnits = Array.isArray(units) ? units : [];
+
+  const currentUnit =
+    normalizedUnits.find((unit) => unit.id === currentActiveUnitId) ?? null;
+  if (currentUnit) {
+    return currentUnit;
+  }
+
+  if (normalizedUnits.length === 1) {
+    return normalizedUnits[0] ?? null;
+  }
+
+  const preferredUnit =
+    normalizedUnits.find((unit) => unit.id === preferredActiveUnitId) ?? null;
+  if (preferredUnit && currentActiveUnitId) {
+    return preferredUnit;
+  }
+
+  return null;
+}
+
 export function TenantUnitProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [activeUnit, setActiveUnitState] = useState<TenantUnitSummary | null>(null);
   const [availableUnits, setAvailableUnits] = useState<TenantUnitSummary[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const activeUnitRef = useRef<TenantUnitSummary | null>(null);
+  const availableUnitsRef = useRef<TenantUnitSummary[]>([]);
+
+  useEffect(() => {
+    activeUnitRef.current = activeUnit;
+  }, [activeUnit]);
+
+  useEffect(() => {
+    availableUnitsRef.current = availableUnits;
+  }, [availableUnits]);
 
   useEffect(() => {
     const stored = readStoredUnits();
@@ -102,10 +139,11 @@ export function TenantUnitProvider({ children }: Readonly<{ children: ReactNode 
       return;
     }
 
-    const nextActiveUnit =
-      devUnits.find((unit) => unit.id === activeUnit?.id) ??
-      devUnits[0] ??
-      null;
+    const nextActiveUnit = resolveNextActiveUnit(
+      devUnits,
+      null,
+      activeUnit?.id ?? null,
+    );
 
     setAvailableUnits(devUnits);
     setActiveUnitState(nextActiveUnit);
@@ -114,23 +152,28 @@ export function TenantUnitProvider({ children }: Readonly<{ children: ReactNode 
 
   const setActiveUnit = useCallback((unit: TenantUnitSummary | null) => {
     setActiveUnitState(unit);
-    persistUnits(unit, availableUnits);
-  }, [availableUnits]);
+    activeUnitRef.current = unit;
+    persistUnits(unit, availableUnitsRef.current);
+  }, []);
 
   const replaceUnits = useCallback((units: TenantUnitSummary[], activeUnitId?: string | null) => {
     const normalizedUnits = Array.isArray(units) ? units : [];
-    const nextActiveUnit =
-      normalizedUnits.find((unit) => unit.id === activeUnitId) ??
-      normalizedUnits.find((unit) => unit.id === activeUnit?.id) ??
-      normalizedUnits[0] ??
-      null;
+    const nextActiveUnit = resolveNextActiveUnit(
+      normalizedUnits,
+      activeUnitId,
+      activeUnitRef.current?.id ?? null,
+    );
 
+    availableUnitsRef.current = normalizedUnits;
+    activeUnitRef.current = nextActiveUnit;
     setAvailableUnits(normalizedUnits);
     setActiveUnitState(nextActiveUnit);
     persistUnits(nextActiveUnit, normalizedUnits);
-  }, [activeUnit?.id]);
+  }, []);
 
   const clearUnits = useCallback(() => {
+    availableUnitsRef.current = [];
+    activeUnitRef.current = null;
     setAvailableUnits([]);
     setActiveUnitState(null);
     persistUnits(null, []);

@@ -2,7 +2,7 @@ import { Outlet, Navigate, useLocation } from "react-router-dom";
 import { AppSidebar } from "./AppSidebar";
 import { useMobile } from "@/shared/hooks/useMobile";
 import { cn } from "@/shared/lib/utils";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useAuth } from "@/modules/auth/context/authContextStore";
 import { useIdleTimeout } from "@/modules/auth/hooks/useIdleTimeout";
 import { useUserMetadata } from "@/modules/auth/hooks/useUserMetadata";
@@ -20,11 +20,12 @@ export function DashboardLayout() {
   const isMobile = useMobile();
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
   const location = useLocation();
+  const handleIdleTimeout = useCallback(() => {
+    void signOut();
+  }, [signOut]);
   useNetworkStatus();
   useIdleTimeout({
-    onTimeout: () => {
-      signOut();
-    },
+    onTimeout: handleIdleTimeout,
   });
   if (loading) {
     return (

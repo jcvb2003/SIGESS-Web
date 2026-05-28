@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import {
   supabase,
@@ -90,7 +90,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     };
   }, []);
 
-  const signIn = async (credentials: LoginCredentials): Promise<boolean> => {
+  const signIn = useCallback(async (credentials: LoginCredentials): Promise<boolean> => {
     try {
       await initSupabaseClient(credentials.tenantCode);
       attachListener();
@@ -120,9 +120,9 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       clearSupabaseClient();
       return false;
     }
-  };
+  }, []);
 
-  const signOut = async (): Promise<boolean> => {
+  const signOut = useCallback(async (): Promise<boolean> => {
     if (signOutInProgressRef.current) {
       return false;
     }
@@ -155,10 +155,10 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     } finally {
       signOutInProgressRef.current = false;
     }
-  };
+  }, [clearUnits]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const value = useMemo(() => ({ user, session, loading, signIn, signOut }), [user, session, loading]);
+  const value = useMemo(() => ({ user, session, loading, signIn, signOut }), [user, session, loading, signIn, signOut]);
 
   return (
     <AuthContext.Provider value={value}>
