@@ -163,7 +163,7 @@ function resolveCurrentTenantCode() {
   return globalThis.localStorage.getItem("sigess_tenant");
 }
 
-function mapTenantRoleToAuthRole(tenantRole: TenantUserRoleInput) {
+function mapTenantRoleToAuthRole(_tenantRole: TenantUserRoleInput) {
   return "operador_administrativo";
 }
 

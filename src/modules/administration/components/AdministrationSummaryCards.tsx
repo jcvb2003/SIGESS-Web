@@ -1,4 +1,4 @@
-import { AlertCircle, Building2, FileText, Shield, ToggleRight, Users } from "lucide-react";
+import { AlertCircle, Building2, FileText, Shield, Users } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 
 interface AdministrationSummaryCardsProps {

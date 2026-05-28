@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/modules/auth/context/authContextStore";
 import { supabase } from "@/shared/lib/supabase/client";
 import { UserRole } from "@/shared/types/auth.types";
+import { isGestorRole } from "@/shared/utils/roleHelpers";
 
 function isMissingTenantUsersSchemaError(error: unknown) {
   if (!error || typeof error !== "object") {
@@ -62,7 +63,7 @@ export function usePermissions() {
   const canAccessTenantAdministration =
     isAdmin && (tenantAdministrationData?.hasTenantAccess ?? false);
   const tenantEntityRole = tenantAdministrationData?.tenantRole ?? null;
-  const isEntityManager = tenantEntityRole === "owner";
+  const isEntityManager = isGestorRole(tenantEntityRole);
 
   return {
     role,
