@@ -66,7 +66,7 @@ export function UnitsSection({
             ) : units.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                  Nenhum polo cadastrado ainda.
+                  Comece criando o primeiro polo da entidade.
                 </TableCell>
               </TableRow>
             ) : (

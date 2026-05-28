@@ -25,6 +25,7 @@ interface TenantUserDialogProps {
     password?: string;
     autoConfirm?: boolean;
   }) => Promise<void>;
+  readonly existingEmails: string[];
   readonly isSaving: boolean;
 }
 
@@ -32,6 +33,7 @@ export function TenantUserDialog({
   open,
   onOpenChange,
   onSubmit,
+  existingEmails,
   isSaving,
 }: TenantUserDialogProps) {
   const [mode, setMode] = useState<"invite" | "create">("invite");
@@ -51,6 +53,9 @@ export function TenantUserDialog({
   }, [open]);
 
   const isCreateMode = mode === "create";
+  const isEmailDuplicate =
+    email.trim().length > 0 &&
+    existingEmails.some((e) => e.toLowerCase() === email.trim().toLowerCase());
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -138,6 +143,11 @@ export function TenantUserDialog({
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                 />
+                {isEmailDuplicate && (
+                  <p className="text-xs text-destructive mt-1">
+                    Este e-mail ja esta vinculado a esta entidade.
+                  </p>
+                )}
               </div>
             </div>
 
@@ -180,7 +190,7 @@ export function TenantUserDialog({
             </div>
 
             <DialogFooter className="pt-2">
-              <Button type="submit" disabled={isSaving} className="w-full gap-2">
+              <Button type="submit" disabled={isSaving || isEmailDuplicate} className="w-full gap-2">
                 {isSaving ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />

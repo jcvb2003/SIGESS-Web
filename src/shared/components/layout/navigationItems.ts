@@ -1,7 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Bot,
-  Building2,
   ChartNoAxesCombined,
   ClipboardList,
   FileText,
@@ -30,11 +29,5 @@ export const NAV_ITEMS: NavigationItem[] = [
   { title: "Relatorios", href: "/reports", icon: ChartNoAxesCombined },
   { title: "Financeiro", href: "/finance", icon: Wallet },
   { title: "Automacao", href: "/automation", icon: Bot },
-  {
-    title: "Portal do Gestor",
-    href: "/administration",
-    icon: Building2,
-    adminOnly: true,
-  },
   { title: "Configuracoes", href: "/settings", icon: Settings },
 ];

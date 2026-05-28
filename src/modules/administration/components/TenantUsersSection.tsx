@@ -65,7 +65,7 @@ export function TenantUsersSection({
             ) : tenantUsers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={3} className="py-8 text-center text-muted-foreground">
-                  Nenhum usuario vinculado a entidade ainda.
+                  Adicione operadores antes de vincular acessos aos polos.
                 </TableCell>
               </TableRow>
             ) : (

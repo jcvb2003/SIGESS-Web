@@ -24,6 +24,23 @@ import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { Button } from "@/shared/components/ui/button";
 import { usePermissions } from "@/shared/hooks/usePermissions";
 
+function humanizeError(error: unknown): string {
+  const msg = error instanceof Error ? error.message : String(error ?? "");
+  if (msg.includes("23505") || msg.toLowerCase().includes("duplicate") || msg.toLowerCase().includes("already exists")) {
+    return "Este registro ja existe.";
+  }
+  if (msg.toLowerCase().includes("foreign key") || msg.includes("23503")) {
+    return "Nao e possivel concluir: ha registros vinculados.";
+  }
+  if (msg.toLowerCase().includes("network") || msg.toLowerCase().includes("fetch")) {
+    return "Erro de conexao. Verifique sua internet e tente novamente.";
+  }
+  if (msg.toLowerCase().includes("jwt") || msg.toLowerCase().includes("auth")) {
+    return "Sessao expirada. Faca login novamente.";
+  }
+  return msg || "Ocorreu um erro inesperado.";
+}
+
 export default function AdministrationPage() {
   const { canAccessTenantAdministration, isTenantAdministrationLoading } = usePermissions();
   const queryClient = useQueryClient();
@@ -77,9 +94,7 @@ export default function AdministrationPage() {
       setEditingUnit(null);
     },
     onError: (error: unknown) => {
-      toast.error(
-        error instanceof Error ? error.message : "Nao foi possivel salvar o polo.",
-      );
+      toast.error(humanizeError(error));
     },
   });
 
@@ -286,6 +301,7 @@ export default function AdministrationPage() {
       <TenantUserDialog
         open={tenantUserDialogOpen}
         onOpenChange={setTenantUserDialogOpen}
+        existingEmails={tenantUsers.map((u) => u.email ?? "").filter(Boolean)}
         onSubmit={async (values) => {
           await tenantUserCreateMutation.mutateAsync(values);
         }}

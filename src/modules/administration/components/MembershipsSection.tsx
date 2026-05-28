@@ -1,5 +1,16 @@
+import { useState } from "react";
 import { Plus, Shield, Trash2 } from "lucide-react";
 import type { TenantMembershipRecord, TenantUserRecord, TenantUnitRecord } from "@/modules/administration/services/administrationService";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/components/ui/alert-dialog";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -41,86 +52,126 @@ export function MembershipsSection({
   onCreate,
   onDelete,
 }: MembershipsSectionProps) {
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
+  const pendingRow = pendingDeleteId
+    ? membershipRows.find((r) => r.membership.id === pendingDeleteId)
+    : null;
+
   return (
-    <Card className="border-border/50 shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between gap-4">
-        <div>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Shield className="h-5 w-5 text-primary" />
-            Acessos aos polos
-          </CardTitle>
-          <CardDescription>
-            Vincule gestores e operadores aos polos desta entidade.
-          </CardDescription>
-        </div>
-        <Button onClick={onCreate} className="gap-2" variant="outline">
-          <Plus className="h-4 w-4" />
-          Novo acesso
-        </Button>
-      </CardHeader>
-      <CardContent className="border-t border-border/10 pt-4">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Usuario</TableHead>
-              <TableHead>Polo</TableHead>
-              <TableHead>Papel</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Acoes</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
+    <>
+      <Card className="border-border/50 shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between gap-4">
+          <div>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Shield className="h-5 w-5 text-primary" />
+              Acessos aos polos
+            </CardTitle>
+            <CardDescription>
+              Vincule operadores aos polos desta entidade.
+            </CardDescription>
+          </div>
+          <Button onClick={onCreate} className="gap-2" variant="outline">
+            <Plus className="h-4 w-4" />
+            Novo acesso
+          </Button>
+        </CardHeader>
+        <CardContent className="border-t border-border/10 pt-4">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                  Carregando acessos...
-                </TableCell>
+                <TableHead>Usuario</TableHead>
+                <TableHead>Polo</TableHead>
+                <TableHead>Papel</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Acoes</TableHead>
               </TableRow>
-            ) : membershipRows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                  Nenhum acesso configurado ainda.
-                </TableCell>
-              </TableRow>
-            ) : (
-              membershipRows.map(({ membership, user, unit }) => (
-                <TableRow key={membership.id}>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{user?.name || "Sem nome"}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {user?.email || membership.userId}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>{unit?.name || "Sem polo"}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">
-                      {getMembershipRoleLabel(membership.role)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={membership.isActive ? "default" : "secondary"}>
-                      {membership.isActive ? "Ativo" : "Inativo"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      disabled={isDeleting}
-                      onClick={() => onDelete(membership.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                    Carregando acessos...
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+              ) : membershipRows.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                    Crie polos e operadores primeiro, depois vincule os acessos.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                membershipRows.map(({ membership, user, unit }) => (
+                  <TableRow key={membership.id}>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{user?.name || "Sem nome"}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {user?.email || membership.userId}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>{unit?.name || "Sem polo"}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">
+                        {getMembershipRoleLabel(membership.role)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={membership.isActive ? "default" : "secondary"}>
+                        {membership.isActive ? "Ativo" : "Inativo"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        disabled={isDeleting}
+                        onClick={() => setPendingDeleteId(membership.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <AlertDialog
+        open={Boolean(pendingDeleteId)}
+        onOpenChange={(open) => {
+          if (!open) setPendingDeleteId(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover acesso</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingRow
+                ? `Remover acesso de ${pendingRow.user?.name || "este operador"} ao polo ${pendingRow.unit?.name || "selecionado"}? Esta acao nao pode ser desfeita.`
+                : "Confirma a remocao deste acesso?"}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (pendingDeleteId) {
+                  onDelete(pendingDeleteId);
+                  setPendingDeleteId(null);
+                }
+              }}
+            >
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
