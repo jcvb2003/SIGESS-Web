@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/modules/auth/context/AuthContext";
 import { TenantUnitProvider } from "@/modules/tenant-units/context/TenantUnitContext";
+import { TenantUnitBootstrapper } from "@/modules/tenant-units/components/TenantUnitBootstrapper";
 import { EntityThemeProvider } from "@/shared/components/EntityThemeProvider";
 import { ThemeProvider } from "next-themes";
 export function AppProviders({ children }: Readonly<{ children: ReactNode }>) {
@@ -22,6 +23,7 @@ export function AppProviders({ children }: Readonly<{ children: ReactNode }>) {
       <QueryClientProvider client={queryClient}>
         <TenantUnitProvider>
           <AuthProvider>
+            <TenantUnitBootstrapper />
             <EntityThemeProvider>
               {children}
               <Toaster />
