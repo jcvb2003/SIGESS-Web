@@ -26,25 +26,15 @@ export function TenantUnitBootstrapper() {
     let cancelled = false;
 
     const resolveUnits = async () => {
-      const unitsFromUser = tenantUnitService.getUserAssignedUnitsFromUser(user);
-      const preferredActiveUnitId =
-        tenantUnitService.getPreferredActiveUnitIdFromUser(user);
-
-      if (!cancelled && unitsFromUser.length > 0) {
-        replaceUnits(unitsFromUser, preferredActiveUnitId);
-        lastResolvedUserIdRef.current = user.id;
-        return;
-      }
-
-      const { data } = await tenantUnitService.getUserAssignedUnits();
+      const { data } = await tenantUnitService.resolveTenantUnits(user);
       lastResolvedUserIdRef.current = user.id;
       if (cancelled) {
         return;
       }
 
       replaceUnits(
-        data ?? [],
-        preferredActiveUnitId,
+        data?.availableUnits ?? [],
+        data?.preferredActiveUnitId ?? null,
       );
     };
 
