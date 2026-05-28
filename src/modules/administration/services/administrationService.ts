@@ -107,6 +107,8 @@ function mapTenantMembershipRow(row: Record<string, unknown>): TenantMembershipR
   };
 }
 
+const tenantIdCache = new Map<string, string>();
+
 async function resolveCurrentTenantId(): Promise<ServiceResponse<string>> {
   const { data: userData, error: userError } = await authService.getUser();
   if (userError) {
@@ -116,6 +118,11 @@ async function resolveCurrentTenantId(): Promise<ServiceResponse<string>> {
   const userId = userData?.user?.id;
   if (!userId) {
     return { data: null, error: new Error("Usuário autenticado não encontrado.") };
+  }
+
+  const cached = tenantIdCache.get(userId);
+  if (cached) {
+    return { data: cached, error: null };
   }
 
   const { data: tenantUser, error: tenantUserError } = await supabase
@@ -130,25 +137,9 @@ async function resolveCurrentTenantId(): Promise<ServiceResponse<string>> {
     return { data: null, error: tenantUserError };
   }
 
-  const tenantIdFromTenantUser =
+  const tenantId =
     (tenantUser as { tenant_id?: string } | null)?.tenant_id ?? null;
-  if (tenantIdFromTenantUser) {
-    return { data: tenantIdFromTenantUser, error: null };
-  }
 
-  const { data, error } = await supabase
-    .from("user_unit_memberships" as never)
-    .select("tenant_id")
-    .eq("user_id", userId)
-    .eq("is_active", true)
-    .limit(1)
-    .maybeSingle();
-
-  if (error) {
-    return { data: null, error };
-  }
-
-  const tenantId = (data as { tenant_id?: string } | null)?.tenant_id ?? null;
   if (!tenantId) {
     return {
       data: null,
@@ -156,7 +147,12 @@ async function resolveCurrentTenantId(): Promise<ServiceResponse<string>> {
     };
   }
 
+  tenantIdCache.set(userId, tenantId);
   return { data: tenantId, error: null };
+}
+
+export function clearTenantIdCache() {
+  tenantIdCache.clear();
 }
 
 function resolveCurrentTenantCode() {

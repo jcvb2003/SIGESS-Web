@@ -208,7 +208,7 @@ export default function AdministrationPage() {
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
       <PageHeader
         title="Portal do Gestor"
-        description="Gerencie polos, acessos e a estrutura da entidade antes da operacao dos polos."
+        description="1. Crie os polos. 2. Adicione operadores a entidade. 3. Vincule operadores aos polos."
         actions={
           <Button
             onClick={() => {
@@ -231,6 +231,17 @@ export default function AdministrationPage() {
         membershipsCount={membershipsCount}
       />
 
+      <UnitsSection
+        units={units}
+        isLoading={unitsQuery.isLoading}
+        isToggling={toggleMutation.isPending}
+        onToggle={(unit) => toggleMutation.mutate(unit)}
+        onEdit={(unit) => {
+          setEditingUnit(unit);
+          setDialogOpen(true);
+        }}
+      />
+
       <TenantUsersSection
         tenantUsers={tenantUsers}
         isLoading={tenantUsersQuery.isLoading}
@@ -243,17 +254,6 @@ export default function AdministrationPage() {
         isDeleting={membershipDeleteMutation.isPending}
         onCreate={() => setMembershipDialogOpen(true)}
         onDelete={(membershipId) => membershipDeleteMutation.mutate(membershipId)}
-      />
-
-      <UnitsSection
-        units={units}
-        isLoading={unitsQuery.isLoading}
-        isToggling={toggleMutation.isPending}
-        onToggle={(unit) => toggleMutation.mutate(unit)}
-        onEdit={(unit) => {
-          setEditingUnit(unit);
-          setDialogOpen(true);
-        }}
       />
 
       <UnitDialog
@@ -276,6 +276,7 @@ export default function AdministrationPage() {
         onOpenChange={setMembershipDialogOpen}
         users={tenantUsers.filter((user) => user.isActive)}
         units={units.filter((unit) => unit.isActive)}
+        existingMemberships={memberships}
         onSubmit={async (values) => {
           await membershipCreateMutation.mutateAsync(values);
         }}

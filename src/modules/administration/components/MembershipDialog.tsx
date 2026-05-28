@@ -27,6 +27,7 @@ interface MembershipDialogProps {
   readonly onOpenChange: (open: boolean) => void;
   readonly users: TenantUserRecord[];
   readonly units: TenantUnitRecord[];
+  readonly existingMemberships: Array<{ userId: string; unitId: string }>;
   readonly onSubmit: (values: TenantMembershipInput) => Promise<void>;
   readonly isSaving: boolean;
 }
@@ -36,11 +37,17 @@ export function MembershipDialog({
   onOpenChange,
   users,
   units,
+  existingMemberships,
   onSubmit,
   isSaving,
 }: MembershipDialogProps) {
   const [userId, setUserId] = useState("");
   const [unitId, setUnitId] = useState("");
+
+  const isDuplicate =
+    Boolean(userId) &&
+    Boolean(unitId) &&
+    existingMemberships.some((m) => m.userId === userId && m.unitId === unitId);
 
   return (
     <Dialog
@@ -96,6 +103,12 @@ export function MembershipDialog({
 
         </div>
 
+        {isDuplicate && (
+          <p className="text-sm text-destructive">
+            Este operador ja tem acesso a esse polo.
+          </p>
+        )}
+
         <DialogFooter>
           <Button
             type="button"
@@ -107,7 +120,7 @@ export function MembershipDialog({
           </Button>
           <Button
             type="button"
-            disabled={isSaving || !userId || !unitId}
+            disabled={isSaving || !userId || !unitId || isDuplicate}
             onClick={() =>
               void onSubmit({
                 userId,

@@ -6,6 +6,7 @@ import {
   clearSupabaseClient,
 } from "@/shared/lib/supabase/client";
 import { authService } from "../services/authService";
+import { clearTenantIdCache } from "@/modules/administration/services/administrationService";
 import type { LoginCredentials } from "@/shared/types/auth.types";
 import { toast } from "sonner";
 import { AuthContext } from "./authContextStore";
@@ -134,6 +135,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
 
       clearUnits();
       clearSupabaseClient();
+      clearTenantIdCache();
       setSession(null);
       setUser(null);
 
@@ -148,6 +150,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       console.error("Logout unexpected error:", error);
       clearUnits();
       clearSupabaseClient();
+      clearTenantIdCache();
       if (typeof globalThis !== "undefined") {
         globalThis.location.href = "/";
       }
