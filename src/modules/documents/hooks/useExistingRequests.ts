@@ -7,11 +7,14 @@ import { documentQueryKeys } from "../queryKeys";
 import type {
   DocumentSearchParams,
 } from "../types/document.types";
+import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 export function useExistingRequests(params: DocumentSearchParams) {
+  const { activeUnit } = useTenantUnits();
+  const unitId = activeUnit?.id ?? null;
   const query = useQuery({
-    queryKey: documentQueryKeys.list(params),
+    queryKey: [...documentQueryKeys.list(params), unitId],
     queryFn: async () => {
-      const { data, error } = await documentService.listRequests(params);
+      const { data, error } = await documentService.listRequests(params, unitId);
       if (error) throw error;
       return data;
     },

@@ -66,6 +66,7 @@ export const reportsService = {
     page: number = 1,
     pageSize: number = 10,
     searchTerm: string = "",
+    unitId?: string | null,
   ): Promise<RequestReportResponse> {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
@@ -73,6 +74,10 @@ export const reportsService = {
       .from("requerimentos")
       .select("id, cod_req, data_assinatura, cpf, socios!inner(id, nome, num_rgp, emissao_rgp, nit)", { count: "exact" })
       .order("cod_req", { ascending: false });
+
+    if (unitId) {
+      query = query.eq("socios.unit_id" as never, unitId);
+    }
 
     if (searchTerm) {
       const like = `%${searchTerm}%`;
@@ -99,6 +104,7 @@ export const reportsService = {
     pageSize: number = 10,
     searchTerm: string = "",
     carenciaFilter: string = "all",
+    unitId?: string | null,
   ): Promise<RequestReportResponse> {
     const { data, error } = await requirementsRpc.rpc(
       "list_requirements_extended",
@@ -110,6 +116,7 @@ export const reportsService = {
         p_carencia: carenciaFilter,
         p_page: page,
         p_page_size: pageSize,
+        ...(unitId ? { p_unit_id: unitId } : {}),
       },
       { count: "exact" }
     );
@@ -128,7 +135,8 @@ export const reportsService = {
   async fetchAllRequestsReport(
     searchTerm: string = "",
     reportType: string = "requerimentos",
-    carenciaFilter: string = "all"
+    carenciaFilter: string = "all",
+    unitId?: string | null,
   ): Promise<RequestReportItem[]> {
     if (reportType === "nao_assinados") {
       const { data, error } = await requirementsRpc.rpc(
@@ -141,6 +149,7 @@ export const reportsService = {
           p_carencia: carenciaFilter,
           p_page: 1,
           p_page_size: 5000,
+          ...(unitId ? { p_unit_id: unitId } : {}),
         }
       );
       if (error) throw error;
@@ -159,6 +168,10 @@ export const reportsService = {
         .select("id, cod_req, data_assinatura, cpf, socios!inner(id, nome, num_rgp, emissao_rgp, nit)", { count: "exact" })
         .order("cod_req", { ascending: false })
         .range(from, to);
+
+      if (unitId) {
+        query = query.eq("socios.unit_id" as never, unitId);
+      }
 
       if (searchTerm) {
         const like = `%${searchTerm}%`;

@@ -30,6 +30,7 @@ export const reapService = {
     page: number;
     pageSize: number;
     statusFilter?: string;
+    unitId?: string | null;
   }): Promise<{ items: ReapWithMember[]; total: number }> {
     const from = (filters.page - 1) * filters.pageSize;
     const to = from + filters.pageSize - 1;
@@ -37,6 +38,10 @@ export const reapService = {
     const query = supabase
       .from("reap_list_view" as unknown as "socios") // Hack para manter compatibilidade com PostgrestQueryBuilder sem 'any'
       .select("*", { count: "exact" });
+
+    if (filters.unitId) {
+      query.eq("unit_id", filters.unitId);
+    }
 
     if (filters.searchTerm) {
       const term = `%${filters.searchTerm}%`;
@@ -196,15 +201,19 @@ export const reapService = {
     if (error) throw error;
   },
 
-  async consolidateSimplificadoCompleteness(pendencyCpfs: string[]): Promise<number> {
+  async consolidateSimplificadoCompleteness(pendencyCpfs: string[], unitId?: string | null): Promise<number> {
     const pendencySet = new Set(pendencyCpfs);
 
-    const allMembers = await fetchAll<{ cpf: string }>(
-      supabase
-        .from("socios")
-        .select("cpf")
-        .eq("situacao", "ATIVO")
-    );
+    const baseQuery = supabase
+      .from("socios")
+      .select("cpf")
+      .eq("situacao", "ATIVO");
+
+    if (unitId) {
+      baseQuery.eq("unit_id", unitId);
+    }
+
+    const allMembers = await fetchAll<{ cpf: string }>(baseQuery);
 
     const membersToMark = (allMembers || [])
       .map(m => m.cpf)
@@ -428,7 +437,7 @@ export const reapService = {
     }
   },
 
-  async getReconciliationContext(): Promise<{
+  async getReconciliationContext(unitId?: string | null): Promise<{
     entityUf: string;
     members: { cpf: string; nome: string | null; reap: Reap | null }[];
   }> {
@@ -453,11 +462,15 @@ export const reapService = {
       } | null;
     }
 
-    const allMembers = await fetchAll<MemberWithReap>(
-      supabase
-        .from("socios")
-        .select(`cpf, nome, reap ( simplificado, anual, updated_at, observacoes )`)
-    );
+    const baseQuery = supabase
+      .from("socios")
+      .select(`cpf, nome, reap ( simplificado, anual, updated_at, observacoes )`);
+
+    if (unitId) {
+      baseQuery.eq("unit_id", unitId);
+    }
+
+    const allMembers = await fetchAll<MemberWithReap>(baseQuery);
     
     const members = (allMembers || []).filter((m): m is MemberWithReap => !!m.cpf);
     

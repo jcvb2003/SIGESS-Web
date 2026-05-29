@@ -5,6 +5,7 @@ export const reapQueryKeys = {
     page: number;
     pageSize: number;
     statusFilter?: string;
+    unitId?: string | null;
   }) => [...reapQueryKeys.all, "list", filters] as const,
   detail: (cpf: string) => [...reapQueryKeys.all, "detail", cpf] as const,
 };

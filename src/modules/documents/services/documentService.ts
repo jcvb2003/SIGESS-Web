@@ -101,6 +101,7 @@ export const documentService = {
   },
   async listRequests(
     params: DocumentSearchParams,
+    unitId?: string | null,
   ): Promise<ServiceResponse<DocumentsResult>> {
     const { page, pageSize, searchTerm } = params;
     const from = (page - 1) * pageSize;
@@ -110,6 +111,10 @@ export const documentService = {
       .select("id, cod_req, data_assinatura, cpf, socios!inner(nome, codigo_do_socio)", {
         count: "exact",
       });
+
+    if (unitId) {
+      query = query.eq("socios.unit_id" as never, unitId);
+    }
 
     const term = searchTerm.trim();
     if (term) {

@@ -2,12 +2,15 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { reportsService } from "../services/reportsService";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 export function useRequestsReport(
-  searchTerm: string, 
-  reportType: string = "requerimentos", 
+  searchTerm: string,
+  reportType: string = "requerimentos",
   carenciaFilter: string = "all",
   enabled = true
 ) {
+  const { activeUnit } = useTenantUnits();
+  const unitId = activeUnit?.id ?? null;
   const queryClient = useQueryClient();
   const [pageBySearch, setPageBySearch] = useState<Record<string, number>>({});
   const [pageSize, setPageSize] = useState(10);
@@ -16,12 +19,12 @@ export function useRequestsReport(
     setPageBySearch((current) => ({ ...current, [searchTerm]: value }));
   };
   const { data, isLoading, error, refetch, isFetching } = useQuery({
-    queryKey: ["requests-report", page, pageSize, searchTerm, reportType, carenciaFilter],
+    queryKey: ["requests-report", page, pageSize, searchTerm, reportType, carenciaFilter, unitId],
     queryFn: () => {
       if (reportType === "nao_assinados") {
-        return reportsService.fetchNaoAssinadosReport(page, pageSize, searchTerm, carenciaFilter);
+        return reportsService.fetchNaoAssinadosReport(page, pageSize, searchTerm, carenciaFilter, unitId);
       }
-      return reportsService.fetchRequestsReport(page, pageSize, searchTerm);
+      return reportsService.fetchRequestsReport(page, pageSize, searchTerm, unitId);
     },
     enabled,
     placeholderData: (previousData) => previousData,

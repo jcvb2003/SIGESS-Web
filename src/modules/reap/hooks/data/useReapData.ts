@@ -4,12 +4,14 @@ import { reapService } from "../../services/reapService";
 import { reapQueryKeys } from "../../queryKeys";
 import { useReapFilters, ReapStatusFilter } from "../filters/useReapFilters";
 import { useDataTableState } from "@/shared/hooks/useDataTableState";
+import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 
 export function useReapData(filters: {
   searchTerm?: string;
   page: number;
   pageSize: number;
   statusFilter?: string;
+  unitId?: string | null;
 }) {
   const query = useQuery({
     queryKey: reapQueryKeys.list(filters),
@@ -43,11 +45,12 @@ export function useReapDetail(cpf: string | null) {
 }
 
 export function useReapListController() {
-  const { 
-    page, setPage, 
-    pageSize, setPageSize, 
-    searchTerm, debouncedTerm, 
-    setSearchTerm 
+  const { activeUnit } = useTenantUnits();
+  const {
+    page, setPage,
+    pageSize, setPageSize,
+    searchTerm, debouncedTerm,
+    setSearchTerm
   } = useDataTableState({ initialPageSize: 10 });
 
   const { statusFilter, setStatusFilter, isFiltersOpen, setIsFiltersOpen, clearFilters } =
@@ -59,8 +62,9 @@ export function useReapListController() {
       pageSize,
       searchTerm: debouncedTerm,
       statusFilter,
+      unitId: activeUnit?.id ?? null,
     }),
-    [page, pageSize, debouncedTerm, statusFilter]
+    [page, pageSize, debouncedTerm, statusFilter, activeUnit?.id]
   );
 
   const { members, total, isLoading, isFetching, error, refetch } = useReapData(queryParams);
