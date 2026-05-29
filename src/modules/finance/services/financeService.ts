@@ -30,19 +30,18 @@ interface PaymentByPeriodRow {
   total_amount: number;
 }
 
-const createDashboardQuery = (withCount = false) =>
-  withCount
+const createDashboardQuery = (withCount = false, unitId?: string | null) => {
+  const base = withCount
     ? supabase.from("v_situacao_financeira_socio").select("*", { count: "exact" })
     : supabase.from("v_situacao_financeira_socio").select("*");
+  return unitId ? base.eq("unit_id", unitId) : base;
+};
 type DashboardQuery = ReturnType<typeof createDashboardQuery>;
 
 export const financeService = {
-  /**
-   * Busca dados do dashboard financeiro com filtros combinados.
-   * Tab filtering é feito server-side para paginação correta.
-   */
   async getDashboard(
     params: FinanceDashboardParams,
+    unitId?: string | null,
   ): Promise<FinanceDashboardResult> {
     const {
       page,
@@ -56,16 +55,14 @@ export const financeService = {
 
     const anoBase = params.anoBase ?? 2024;
 
-    // Anos que precisam estar pagos para o sócio estar em dia
     const requiredYears: number[] = [];
     for (let y = anoBase; y <= year; y++) requiredYears.push(y);
 
-    // Inadimplentes sem anos exigidos = ninguém deve nada
     if (tab === "inadimplentes" && requiredYears.length === 0) {
       return { items: [], total: 0 };
     }
 
-    let query = createDashboardQuery(true);
+    let query = createDashboardQuery(true, unitId);
 
     if (searchTerm) {
       query = query.or(`nome.ilike.%${searchTerm}%,cpf.ilike.%${searchTerm}%`);

@@ -19,8 +19,10 @@ export function useRecentMembers() {
   });
 }
 export function useBirthdayMembers() {
+  const { activeUnit } = useTenantUnits();
+  const unitId = activeUnit?.id ?? null;
   return useQuery({
-    queryKey: ["dashboard-birthday-members"],
-    queryFn: dashboardService.getBirthdayMembers,
+    queryKey: ["dashboard-birthday-members", unitId],
+    queryFn: () => dashboardService.getBirthdayMembers(unitId),
   });
 }

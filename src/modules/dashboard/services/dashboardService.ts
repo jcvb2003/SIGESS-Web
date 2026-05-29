@@ -97,14 +97,15 @@ export const dashboardService = {
       return [];
     }
   },
-  async getBirthdayMembers(): Promise<Member[]> {
+  async getBirthdayMembers(unitId?: string | null): Promise<Member[]> {
     try {
       const today = new Date();
 
       const { data, error } = await supabase
         .rpc('get_birthday_members', {
           p_day: today.getDate(),
-          p_month: today.getMonth() + 1
+          p_month: today.getMonth() + 1,
+          ...(unitId ? { p_unit_id: unitId } : {}),
         });
 
       if (error) {

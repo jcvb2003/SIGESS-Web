@@ -1,12 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { financeQueryKeys } from "../../queryKeys";
 import { financeService } from "../../services/financeService";
+import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 import type { FinanceDashboardParams } from "../../types/finance.types";
 
 export function useFinanceDashboard(params: FinanceDashboardParams) {
+  const { activeUnit } = useTenantUnits();
+  const unitId = activeUnit?.id ?? null;
   const query = useQuery({
-    queryKey: financeQueryKeys.dashboard(params),
-    queryFn: () => financeService.getDashboard(params),
+    queryKey: financeQueryKeys.dashboard({ ...params, _unitId: unitId }),
+    queryFn: () => financeService.getDashboard(params, unitId),
     staleTime: 0,
   });
 

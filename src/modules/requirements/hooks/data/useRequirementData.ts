@@ -5,6 +5,7 @@ import { requirementQueryKeys } from "../../queryKeys";
 import { useRequirementFilters, BeneficioFilterType } from "../filters/useRequirementFilters";
 import { RequirementStatus } from "../../types/requirement.types";
 import { useDataTableState } from "@/shared/hooks/useDataTableState";
+import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 
 export function useRequirementData(filters: {
   ano?: number;
@@ -14,6 +15,7 @@ export function useRequirementData(filters: {
   carenciaFilter?: string;
   page: number;
   pageSize: number;
+  unitId?: string | null;
 }) {
   const query = useQuery({
     queryKey: requirementQueryKeys.list(filters),
@@ -52,6 +54,9 @@ export function useRequirementsListController() {
     clearFilters,
   } = useRequirementFilters();
 
+  const { activeUnit } = useTenantUnits();
+  const unitId = activeUnit?.id ?? null;
+
   const queryParams: Parameters<typeof useRequirementData>[0] = useMemo(
     () => ({
       page,
@@ -61,8 +66,9 @@ export function useRequirementsListController() {
       beneficio_recebido: beneficioFilter === 'all' ? 'all' : beneficioFilter === 'recebido',
       ano: yearFilter,
       carenciaFilter: carenciaFilter,
+      unitId,
     }),
-    [page, pageSize, debouncedTerm, statusFilter, beneficioFilter, yearFilter, carenciaFilter]
+    [page, pageSize, debouncedTerm, statusFilter, beneficioFilter, yearFilter, carenciaFilter, unitId]
   );
 
   const { requirements, total, isLoading, isFetching, error, refetch } =

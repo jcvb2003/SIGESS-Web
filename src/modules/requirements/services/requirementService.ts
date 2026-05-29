@@ -19,9 +19,10 @@ export const requirementService = {
     carenciaFilter?: string;
     page: number;
     pageSize: number;
+    unitId?: string | null;
   }): Promise<{ items: RequirementWithMember[]; total: number }> {
-    const beneficioStatus = filters.beneficio_recebido === 'all' 
-      ? 'all' 
+    const beneficioStatus = filters.beneficio_recebido === 'all'
+      ? 'all'
       : (filters.beneficio_recebido ? 'recebido' : 'pendente');
 
     const { data: rpcData, error: rpcError } = await requirementsRpc.rpc("list_requirements_extended", {
@@ -31,7 +32,8 @@ export const requirementService = {
       p_search: filters.searchTerm || '',
       p_carencia: filters.carenciaFilter || 'all',
       p_page: filters.page,
-      p_page_size: filters.pageSize
+      p_page_size: filters.pageSize,
+      ...(filters.unitId ? { p_unit_id: filters.unitId } : {}),
     });
 
     if (rpcError) throw rpcError;
