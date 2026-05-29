@@ -401,4 +401,32 @@ export const administrationService = {
 
     return { data: null, error: null };
   },
+
+  async countPendingRequirements(): Promise<ServiceResponse<number>> {
+    const year = new Date().getFullYear();
+    const { count, error } = await supabase
+      .from("requerimentos" as never)
+      .select("*", { count: "exact", head: true })
+      .eq("ano_referencia", year)
+      .not("status_mte", "in", '("deferido","indeferido")');
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    return { data: count ?? 0, error: null };
+  },
+
+  async countDefaulters(): Promise<ServiceResponse<number>> {
+    const { count, error } = await supabase
+      .from("v_situacao_financeira_socio" as never)
+      .select("*", { count: "exact", head: true })
+      .not("situacao_geral", "in", '("EM_DIA","ISENTO")');
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    return { data: count ?? 0, error: null };
+  },
 };

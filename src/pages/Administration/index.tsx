@@ -88,6 +88,26 @@ export default function AdministrationPage() {
     enabled: canAccessTenantAdministration,
   });
 
+  const pendingRequirementsQuery = useQuery({
+    queryKey: administrationQueryKeys.pendingRequirements(),
+    queryFn: async () => {
+      const { data, error } = await administrationService.countPendingRequirements();
+      if (error) throw error;
+      return data ?? 0;
+    },
+    enabled: canAccessTenantAdministration,
+  });
+
+  const defaultersQuery = useQuery({
+    queryKey: administrationQueryKeys.defaulters(),
+    queryFn: async () => {
+      const { data, error } = await administrationService.countDefaulters();
+      if (error) throw error;
+      return data ?? 0;
+    },
+    enabled: canAccessTenantAdministration,
+  });
+
   const saveMutation = useMutation({
     mutationFn: async (values: TenantUnitInput) => {
       const { data, error } = await administrationService.saveTenantUnit(values);
@@ -249,6 +269,8 @@ export default function AdministrationPage() {
         operatorsCount={activeUsersCount}
         accessCount={membershipsCount}
         totalMembers={totalMembersQuery.data?.count}
+        pendingRequirements={pendingRequirementsQuery.data}
+        defaulters={defaultersQuery.data}
       />
 
       <PolosBreakdownSection
