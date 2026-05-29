@@ -9,5 +9,5 @@ export const memberQueryKeys = {
   list: (params: MemberListQueryParams) =>
     [...memberQueryKeys.all, "list", params] as const,
   detail: (id: string) => ["member", id] as const,
-  count: () => [...memberQueryKeys.all, "count"] as const,
+  count: (unitId?: string | null) => [...memberQueryKeys.all, "count", unitId ?? null] as const,
 };

@@ -56,9 +56,10 @@ export function RegistrationForm({
   const navigate = useNavigate();
   const isEditMode = !!memberUuid;
 
+  const unitContext = { tenantId: activeUnit?.tenantId ?? null, unitId: activeUnit?.id ?? null };
   const { data: countData } = useQuery({
-    queryKey: memberQueryKeys.count(),
-    queryFn: () => memberService.countMembers(),
+    queryKey: memberQueryKeys.count(activeUnit?.id ?? null),
+    queryFn: () => memberService.countMembers(unitContext),
     enabled: !isEditMode,
   });
   const memberCount = countData?.count ?? null;
