@@ -156,31 +156,28 @@ export const financeService = {
   async getMonthlyStats(
     year: number,
     month: number,
+    unitId?: string | null,
   ): Promise<{ arrecadado: number; arrecadadoAno: number; qtdPagamentos: number; daePendente: number }> {
     const firstDayMonth = `${year}-${String(month).padStart(2, "0")}-01`;
     const lastDayMonth = new Date(year, month, 0).toLocaleDateString("sv");
     const firstDayYear = `${year}-01-01`;
     const lastDayYear = `${year}-12-31`;
 
-    const [lancamentosMes, lancamentosAno, daeResult] = await Promise.all([
-      supabase
-        .from("financeiro_lancamentos")
-        .select("valor")
-        .eq("status", "pago")
-        .gte("data_pagamento", firstDayMonth)
-        .lte("data_pagamento", lastDayMonth),
-      supabase
-        .from("financeiro_lancamentos")
-        .select("valor")
-        .eq("status", "pago")
-        .gte("data_pagamento", firstDayYear)
-        .lte("data_pagamento", lastDayYear),
-      supabase
-        .from("financeiro_dae")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "pago")
-        .eq("boleto_pago", false),
-    ]);
+    const lancSelectMes = unitId ? "valor, socios!inner(unit_id)" : "valor";
+    const lancSelectAno = unitId ? "valor, socios!inner(unit_id)" : "valor";
+    const daeSelect = unitId ? "id, socios!inner(unit_id)" : "id";
+
+    let qMes = supabase.from("financeiro_lancamentos").select(lancSelectMes).eq("status", "pago").gte("data_pagamento", firstDayMonth).lte("data_pagamento", lastDayMonth);
+    let qAno = supabase.from("financeiro_lancamentos").select(lancSelectAno).eq("status", "pago").gte("data_pagamento", firstDayYear).lte("data_pagamento", lastDayYear);
+    let qDae = supabase.from("financeiro_dae").select(daeSelect, { count: "exact", head: true }).eq("status", "pago").eq("boleto_pago", false);
+
+    if (unitId) {
+      qMes = qMes.eq("socios.unit_id", unitId);
+      qAno = qAno.eq("socios.unit_id", unitId);
+      qDae = qDae.eq("socios.unit_id", unitId);
+    }
+
+    const [lancamentosMes, lancamentosAno, daeResult] = await Promise.all([qMes, qAno, qDae]);
 
     if (lancamentosMes.error) throw lancamentosMes.error;
     if (lancamentosAno.error) throw lancamentosAno.error;

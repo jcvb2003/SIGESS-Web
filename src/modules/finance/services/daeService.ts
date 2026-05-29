@@ -57,20 +57,27 @@ export const daeService = {
     page: number = 1,
     pageSize: number = 20,
     orderBy: "data_pagamento_boleto" | "created_at" = "data_pagamento_boleto",
+    unitId?: string | null,
   ): Promise<{ data: (DAEByPeriod & { id: string })[]; total: number; totalAmount: number }> {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
-    const { data, error, count } = await supabase
+    const selectFields = unitId
+      ? "id, data_pagamento_boleto, data_recebimento, created_at, socio_cpf, tipo_boleto, competencia_ano, competencia_mes, forma_pagamento, boleto_pago, valor, status, socios!inner(nome, unit_id)"
+      : "id, data_pagamento_boleto, data_recebimento, created_at, socio_cpf, tipo_boleto, competencia_ano, competencia_mes, forma_pagamento, boleto_pago, valor, status, socios(nome)";
+
+    let query = supabase
       .from("financeiro_dae")
-      .select("id, data_pagamento_boleto, data_recebimento, created_at, socio_cpf, tipo_boleto, competencia_ano, competencia_mes, forma_pagamento, boleto_pago, valor, status, socios(nome)", {
-        count: "exact",
-      })
+      .select(selectFields, { count: "exact" })
       .eq("status", "pago")
       .gte("data_recebimento", startDate)
       .lte("data_recebimento", endDate)
       .order(orderBy, { ascending: false, nullsFirst: false })
       .range(from, to);
+
+    if (unitId) query = query.eq("socios.unit_id", unitId);
+
+    const { data, error, count } = await query;
 
     if (error) throw error;
 

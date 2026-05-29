@@ -51,7 +51,7 @@ export function useUpdateFinanceSettings() {
       financeSettingsService.updateSettings(id, updates),
     onSuccess: () => {
       toast.success("Parâmetros financeiros atualizados.");
-      queryClient.invalidateQueries({ queryKey: financeQueryKeys.settings() });
+      queryClient.invalidateQueries({ queryKey: [...financeQueryKeys.all, "settings"] });
     },
     onError: () => {
       toast.error("Erro ao atualizar parâmetros.");

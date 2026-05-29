@@ -2,12 +2,10 @@ import { supabase } from "@/shared/lib/supabase/client";
 import type { FinanceSettings } from "../types/finance.types";
 
 export const financeSettingsService = {
-  async getSettings(): Promise<FinanceSettings> {
-    const { data, error } = await supabase
-      .from("parametros_financeiros")
-      .select("*")
-      .limit(1)
-      .single();
+  async getSettings(unitId?: string | null): Promise<FinanceSettings> {
+    const query = supabase.from("parametros_financeiros").select("*").limit(1);
+    if (unitId) query.eq("unit_id", unitId);
+    const { data, error } = await query.single();
 
     if (error) throw error;
     return data;

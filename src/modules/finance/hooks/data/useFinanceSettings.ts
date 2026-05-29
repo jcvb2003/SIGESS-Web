@@ -1,12 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { financeQueryKeys } from "../../queryKeys";
 import { financeSettingsService } from "../../services/financeSettingsService";
+import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 
 export function useFinanceSettings() {
+  const { activeUnit } = useTenantUnits();
+  const unitId = activeUnit?.id ?? null;
+
   const query = useQuery({
-    queryKey: financeQueryKeys.settings(),
-    queryFn: () => financeSettingsService.getSettings(),
-    staleTime: 30 * 60 * 1000, // 30 minutos
+    queryKey: financeQueryKeys.settings(unitId),
+    queryFn: () => financeSettingsService.getSettings(unitId),
+    staleTime: 30 * 60 * 1000,
   });
 
   return {
