@@ -7,10 +7,10 @@ export function usePortalContext() {
     isEntityManager,
     isTenantAdministrationLoading,
   } = usePermissions();
-  const { availableUnits, hydrated } = useTenantUnits();
+  const { availableUnits, activeUnit, hydrated } = useTenantUnits();
 
   const isStatePortal =
-    canAccessTenantAdministration && isEntityManager && hydrated;
+    canAccessTenantAdministration && isEntityManager && hydrated && !activeUnit;
   const isOperationalPortal = hydrated && !isStatePortal && availableUnits.length > 0;
 
   return {

@@ -1,4 +1,4 @@
-import { Building2, Edit, ToggleLeft, ToggleRight } from "lucide-react";
+import { Building2, Edit, LogIn, ToggleLeft, ToggleRight } from "lucide-react";
 import type { TenantUnitRecord } from "@/modules/administration/services/administrationService";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
@@ -25,6 +25,7 @@ interface UnitsSectionProps {
   readonly isToggling: boolean;
   readonly onToggle: (unit: TenantUnitRecord) => void;
   readonly onEdit: (unit: TenantUnitRecord) => void;
+  readonly onEnter?: (unit: TenantUnitRecord) => void;
 }
 
 export function UnitsSection({
@@ -33,6 +34,7 @@ export function UnitsSection({
   isToggling,
   onToggle,
   onEdit,
+  onEnter,
 }: UnitsSectionProps) {
   return (
     <Card className="border-border/50 shadow-sm">
@@ -105,6 +107,19 @@ export function UnitsSection({
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
+
+                      {onEnter && unit.isActive && (
+                        <Button
+                          type="button"
+                          variant="default"
+                          size="sm"
+                          className="gap-1.5"
+                          onClick={() => onEnter(unit)}
+                        >
+                          <LogIn className="h-3.5 w-3.5" />
+                          Entrar
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>

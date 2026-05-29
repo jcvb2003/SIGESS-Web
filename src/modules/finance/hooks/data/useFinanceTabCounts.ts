@@ -21,7 +21,7 @@ export function useFinanceTabCounts(
 
   const query = useQuery({
     queryKey: financeQueryKeys.tabCounts(searchTerm, year, anoBase, unitId),
-    queryFn: () => financeService.getTabCounts(searchTerm, year, anoBase),
+    queryFn: () => financeService.getTabCounts(searchTerm, year, anoBase, unitId),
     staleTime: 0,
   });
 

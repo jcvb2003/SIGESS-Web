@@ -139,11 +139,14 @@ export const financeService = {
     searchTerm: string,
     year: number,
     anoBase: number,
+    unitId?: string | null,
   ): Promise<Record<string, number>> {
-    const { data, error } = await supabase.rpc("get_finance_tab_counts", {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase.rpc as any)("get_finance_tab_counts", {
       p_search_term: searchTerm,
       p_year: year,
       p_ano_base: anoBase,
+      ...(unitId ? { p_unit_id: unitId } : {}),
     });
     if (error) throw error;
     return data as Record<string, number>;
@@ -267,17 +270,20 @@ export const financeService = {
     endDate: string,
     page: number = 1,
     pageSize: number = 20,
-    orderBy: "data_pagamento" | "created_at" = "data_pagamento"
+    orderBy: "data_pagamento" | "created_at" = "data_pagamento",
+    unitId?: string | null,
   ): Promise<{ data: (PaymentByPeriod & { id: string })[]; total: number; totalAmount: number }> {
     const from = (page - 1) * pageSize;
 
-    const { data, error } = await supabase.rpc("get_payments_by_period_paginated", {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase.rpc as any)("get_payments_by_period_paginated", {
       p_start_date: startDate,
       p_end_date: endDate,
       p_limit: pageSize,
       p_offset: from,
       p_order_by: orderBy,
-      p_order_dir: "DESC"
+      p_order_dir: "DESC",
+      ...(unitId ? { p_unit_id: unitId } : {}),
     });
 
     if (error) {
@@ -342,15 +348,18 @@ export const financeService = {
   async fetchAllPayments(
     startDate: string,
     endDate: string,
-    orderBy: "data_pagamento" | "created_at" = "data_pagamento"
+    orderBy: "data_pagamento" | "created_at" = "data_pagamento",
+    unitId?: string | null,
   ): Promise<any[]> {
-    const { data, error } = await supabase.rpc("get_payments_by_period_paginated", {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase.rpc as any)("get_payments_by_period_paginated", {
       p_start_date: startDate,
       p_end_date: endDate,
       p_limit: 10000,
       p_offset: 0,
       p_order_by: orderBy,
-      p_order_dir: "DESC"
+      p_order_dir: "DESC",
+      ...(unitId ? { p_unit_id: unitId } : {}),
     });
     if (error) throw error;
     return (data as any[] || []).map((item) => ({

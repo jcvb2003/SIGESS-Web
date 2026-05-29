@@ -30,6 +30,7 @@ import {
 
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 import { ReportPageHeaderActions } from "@/modules/reports/components/ReportPageHeaderActions";
+import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 
 interface FilterForm {
   startDate: string;
@@ -49,6 +50,8 @@ function parsePaymentOrderField(value: string | null): PaymentOrderField {
 export default function PaymentsByPeriodPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { activeUnit } = useTenantUnits();
+  const unitId = activeUnit?.id ?? null;
   
   // Estados de controle local
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -246,7 +249,7 @@ export default function PaymentsByPeriodPage() {
   const handleExportExcel = async () => {
     const toastId = toast.loading("Gerando exportação Excel...");
     try {
-      const allData = await financeService.fetchAllPayments(startDate, endDate, orderBy);
+      const allData = await financeService.fetchAllPayments(startDate, endDate, orderBy, unitId);
       if (!allData.length) { toast.dismiss(toastId); toast.error("Sem dados para exportar."); return; }
       await reportsService.exportPaymentsToExcel(allData);
       toast.dismiss(toastId);
@@ -261,7 +264,7 @@ export default function PaymentsByPeriodPage() {
   const handleExportPdf = async () => {
     const toastId = toast.loading("Gerando PDF...");
     try {
-      const allData = await financeService.fetchAllPayments(startDate, endDate, orderBy);
+      const allData = await financeService.fetchAllPayments(startDate, endDate, orderBy, unitId);
       if (!allData.length) { toast.dismiss(toastId); toast.error("Sem dados para exportar."); return; }
       await reportsService.exportPaymentsToPdf(allData);
       toast.dismiss(toastId);

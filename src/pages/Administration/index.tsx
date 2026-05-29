@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   AdministrationSummaryCards,
@@ -26,6 +26,7 @@ import { memberQueryKeys } from "@/modules/members/queryKeys";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { Button } from "@/shared/components/ui/button";
 import { usePermissions } from "@/shared/hooks/usePermissions";
+import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 
 function humanizeError(error: unknown): string {
   const msg = error instanceof Error ? error.message : String(error ?? "");
@@ -46,6 +47,8 @@ function humanizeError(error: unknown): string {
 
 export default function AdministrationPage() {
   const { canAccessTenantAdministration, isTenantAdministrationLoading } = usePermissions();
+  const { setActiveUnit } = useTenantUnits();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUnit, setEditingUnit] = useState<TenantUnitRecord | null>(null);
@@ -299,6 +302,10 @@ export default function AdministrationPage() {
           setEditingUnit(unit);
           setDialogOpen(true);
         }}
+        onEnter={(unit) => {
+          setActiveUnit({ id: unit.id, name: unit.name, code: unit.code ?? null, tenantId: unit.tenantId ?? null });
+          navigate("/dashboard");
+        }}
       />
 
       <TenantUsersSection
@@ -333,7 +340,7 @@ export default function AdministrationPage() {
       <MembershipDialog
         open={membershipDialogOpen}
         onOpenChange={setMembershipDialogOpen}
-        users={tenantUsers.filter((user) => user.isActive)}
+        users={tenantUsers.filter((user) => user.isActive && user.tenantRole !== "owner")}
         units={units.filter((unit) => unit.isActive)}
         existingMemberships={memberships}
         onSubmit={async (values) => {

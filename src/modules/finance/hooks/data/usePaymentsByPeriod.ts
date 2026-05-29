@@ -14,7 +14,7 @@ export function usePaymentsByPeriod(
 
   return useQuery({
     queryKey: ["payments-by-period", startDate, endDate, page, pageSize, orderBy, unitId],
-    queryFn: () => financeService.getPaymentsByPeriod(startDate, endDate, page, pageSize, orderBy),
+    queryFn: () => financeService.getPaymentsByPeriod(startDate, endDate, page, pageSize, orderBy, unitId),
     enabled: !!startDate && !!endDate,
     staleTime: 0,
   });

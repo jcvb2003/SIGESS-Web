@@ -1,5 +1,5 @@
-import { Link, useLocation } from "react-router-dom";
-import { LogOut, Menu, Fish, Sun, Moon, ChevronsUpDown, Building2 } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { LogOut, Menu, Fish, Sun, Moon, ChevronsUpDown, Building2, LayoutDashboard } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/components/ui/button";
 import { useAuth } from "@/modules/auth/context/authContextStore";
@@ -52,6 +52,7 @@ function SidebarContent({
   accountMenuOpen,
   onAccountMenuOpenChange,
 }: Readonly<SidebarContentProps>) {
+  const navigate = useNavigate();
   const { entity, isLoading: isEntityLoading } = useEntityData();
   const { activeUnit, availableUnits, hasMultipleUnits, setActiveUnit } = useTenantUnits();
   const { canAccessTenantAdministration } = usePermissions();
@@ -253,6 +254,21 @@ function SidebarContent({
                   ) : null}
                 </DropdownMenuItem>
               ))}
+              {canAccessTenantAdministration && activeUnit && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setActiveUnit(null);
+                      navigate("/administration");
+                    }}
+                    className="gap-2"
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                    Portal do Gestor
+                  </DropdownMenuItem>
+                </>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onSignOut} className="text-destructive focus:text-destructive">
                 Sair da conta
