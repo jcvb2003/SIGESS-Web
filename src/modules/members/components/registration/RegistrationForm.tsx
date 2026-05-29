@@ -50,8 +50,8 @@ export function RegistrationForm({
   onCancel,
 }: Readonly<RegistrationFormProps>) {
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const { metadata } = useUserMetadata();
   const { activeUnit } = useTenantUnits();
+  const { metadata } = useUserMetadata(activeUnit?.id);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const isEditMode = !!memberUuid;

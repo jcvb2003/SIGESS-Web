@@ -8,7 +8,7 @@ interface UserMetadata {
   isExpired: boolean;
 }
 
-export function useUserMetadata() {
+export function useUserMetadata(unitId?: string | null) {
   const { user } = useAuth();
   const [metadata, setMetadata] = useState<UserMetadata | null>(null);
   const [loading, setLoading] = useState(true);
@@ -22,11 +22,12 @@ export function useUserMetadata() {
 
     const fetchMetadata = async () => {
       try {
-        const { data: configData, error: configError } = await supabase
+        const query = supabase
           .from("configuracao_entidade")
           .select("max_socios, acesso_expira_em")
-          .limit(1)
-          .maybeSingle();
+          .limit(1);
+        if (unitId) query.eq("unit_id", unitId);
+        const { data: configData, error: configError } = await query.maybeSingle();
 
         if (configError) {
           console.error("Error fetching config metadata:", configError);
@@ -50,7 +51,7 @@ export function useUserMetadata() {
     };
 
     fetchMetadata();
-  }, [user]);
+  }, [user, unitId]);
 
   return { metadata, loading };
 }

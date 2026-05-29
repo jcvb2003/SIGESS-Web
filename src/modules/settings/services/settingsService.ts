@@ -51,11 +51,9 @@ export const settingsService = {
     }
 
     // 2. Buscar dados de configuração/aparência
-    const { data: configData, error: configError } = await supabase
-      .from(CONFIG_TABLE)
-      .select("*")
-      .limit(1)
-      .maybeSingle();
+    const configQuery = supabase.from(CONFIG_TABLE).select("*").limit(1);
+    if (unitId) configQuery.eq("unit_id", unitId);
+    const { data: configData, error: configError } = await configQuery.maybeSingle();
 
     if (configError) {
       console.error("Erro ao buscar configurações da entidade:", configError);
@@ -153,12 +151,16 @@ export const settingsService = {
     // Nota: Como é multi-tenant e só tem uma linha, buscamos o ID da config se necessário 
     // ou usamos o fato de que o upsert lidará com isso se tivermos o ID da config.
     // Para simplificar, buscamos o primeiro registro da config.
-    const { data: currentConfig } = await supabase.from(CONFIG_TABLE).select("id").limit(1).maybeSingle();
+    const currentConfigQuery = supabase.from(CONFIG_TABLE).select("id").limit(1);
+    if (settings.unitId) currentConfigQuery.eq("unit_id", settings.unitId);
+    const { data: currentConfig } = await currentConfigQuery.maybeSingle();
 
     const { error: configError } = await supabase
       .from(CONFIG_TABLE)
       .upsert({
-        id: currentConfig?.id, // Garante que atualizamos o registro existente
+        id: currentConfig?.id,
+        ...(settings.unitId ? { unit_id: settings.unitId } : {}),
+        ...(sharedTenantId ? { tenant_id: sharedTenantId } : {}),
         cor_primaria: toOptional(settings.corPrimaria),
         cor_secundaria: toOptional(settings.corSecundaria),
         cor_sidebar: toOptional(settings.corSidebar),

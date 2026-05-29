@@ -38,22 +38,21 @@ export const extensionService = {
   /**
    * Busca a chave de licença salva localmente no tenant
    */
-  async getLicenseKey(): Promise<string | null> {
-    type FromType = {
-      select: (c: string) => {
-        eq: (col: string, val: number) => {
-          maybeSingle: () => Promise<{ data: unknown; error: unknown }>;
+  async getLicenseKey(unitId?: string | null): Promise<string | null> {
+    type DbClient = {
+      from: (t: string) => {
+        select: (c: string) => {
+          eq: (col: string, val: string) => { limit: (n: number) => { maybeSingle: () => Promise<{ data: unknown; error: unknown }> } };
+          limit: (n: number) => { maybeSingle: () => Promise<{ data: unknown; error: unknown }> };
         };
       };
     };
 
-    const { data, error } = await (
-      supabase as unknown as { from: (t: string) => FromType }
-    )
-      .from("configuracao_entidade")
-      .select("extensao_license_key")
-      .eq("id", 1)
-      .maybeSingle();
+    const client = supabase as unknown as DbClient;
+    const baseQuery = client.from("configuracao_entidade").select("extensao_license_key");
+    const { data, error } = unitId
+      ? await baseQuery.eq("unit_id", unitId).limit(1).maybeSingle()
+      : await baseQuery.limit(1).maybeSingle();
 
     if (error) {
       console.error("Erro ao buscar chave da extensão:", error);
@@ -67,7 +66,7 @@ export const extensionService = {
   /**
    * Salva a chave de licença localmente no tenant via RPC segura
    */
-  async saveLicenseKey(key: string): Promise<ServiceResponse<void>> {
+  async saveLicenseKey(key: string, unitId?: string | null): Promise<ServiceResponse<void>> {
     const rpcClient = supabase as unknown as {
       rpc: (
         n: string,
@@ -77,6 +76,7 @@ export const extensionService = {
 
     const { error } = await rpcClient.rpc("update_extension_license", {
       p_key: key.trim() || null,
+      ...(unitId ? { p_unit_id: unitId } : {}),
     });
 
     if (error) {
