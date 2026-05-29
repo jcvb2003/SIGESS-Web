@@ -20,7 +20,7 @@ import { ExtensionSettings } from "@/modules/settings/components/extension/Exten
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 export default function Settings() {
-  const { isAdmin } = usePermissions();
+  const { isAdmin, canManageEntitySettings } = usePermissions();
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
@@ -41,7 +41,9 @@ export default function Settings() {
                 <fieldset disabled={!isAdmin} className={!isAdmin ? "opacity-50 grayscale pointer-events-none" : ""}>
                   <ImportExportCard />
                 </fieldset>
-                <DocumentsCard />
+                <fieldset disabled={!canManageEntitySettings} className={!canManageEntitySettings ? "opacity-50 grayscale pointer-events-none" : ""}>
+                  <DocumentsCard />
+                </fieldset>
                 <LocalitiesCard />
                 <fieldset disabled={!isAdmin} className={!isAdmin ? "opacity-50 grayscale pointer-events-none" : ""}>
                   <PhotoImportCard />

@@ -84,6 +84,10 @@ export function usePermissions() {
   const tenantEntityRole = tenantAdministrationData?.tenantRole ?? null;
   const isEntityManager = isGestorRole(tenantEntityRole);
 
+  // Em shared: apenas o gestor (owner) pode alterar configurações globais da entidade.
+  // Em isolated: qualquer admin pode (não há distinção de papel dentro da entidade).
+  const canManageEntitySettings = isSharedTenant ? (isAdmin && isEntityManager) : isAdmin;
+
   return {
     role,
     isAdmin,
@@ -91,6 +95,7 @@ export function usePermissions() {
     tenantEntityRole,
     isEntityManager,
     isTenantAdministrationLoading: tenantAdministrationQuery.isLoading,
+    canManageEntitySettings,
     // Permissões específicas mapeadas para o papel de administrador (Presidente)
     canCancelPayments: isAdmin,
     canConfigureFinance: isAdmin,

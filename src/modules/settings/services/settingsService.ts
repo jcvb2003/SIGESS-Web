@@ -1,5 +1,6 @@
 import { supabase } from "@/shared/lib/supabase/client";
 import { ServiceResponse } from "@/shared/services/base/serviceResponse";
+import { resolveCurrentSharedTenantId } from "@/shared/utils/tenant";
 import {
   EntitySettings,
   defaultEntitySettings,
@@ -234,8 +235,10 @@ export const settingsService = {
       }
       parameterId = latest?.id ? String(latest.id) : undefined;
     }
+    const sharedTenantId = await resolveCurrentSharedTenantId();
     const payload = {
       ...(parameterId ? { id: parameterId } : {}),
+      ...(sharedTenantId ? { tenant_id: sharedTenantId } : {}),
       inicio_pesca1: toNullable(input.defeso1Start),
       final_pesca1: toNullable(input.defeso1End),
       inicio_pesca2: toNullable(input.defeso2Start),
@@ -456,6 +459,7 @@ export const settingsService = {
     }
     const { data: publicUrlData } = storage.getPublicUrl(uploadData.path);
     const fileUrl = publicUrlData.publicUrl;
+    const sharedTenantId = await resolveCurrentSharedTenantId();
     const { data, error } = await supabase
       .from(DOCUMENT_TEMPLATES_TABLE)
       .insert({
@@ -466,6 +470,7 @@ export const settingsService = {
         file_size: file.size,
         content_type: file.type || "application/pdf",
         font_configurations: fontConfigurationsJSON,
+        ...(sharedTenantId ? { tenant_id: sharedTenantId } : {}),
       })
       .select(
         "id, name, document_type, file_path, file_url, file_size, content_type, created_at, font_configurations",

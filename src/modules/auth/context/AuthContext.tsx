@@ -7,6 +7,7 @@ import {
 } from "@/shared/lib/supabase/client";
 import { authService } from "../services/authService";
 import { clearTenantIdCache } from "@/modules/administration/services/administrationService";
+import { clearSharedTenantIdCache } from "@/shared/utils/tenant";
 import type { LoginCredentials } from "@/shared/types/auth.types";
 import { toast } from "sonner";
 import { AuthContext } from "./authContextStore";
@@ -136,6 +137,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       clearUnits();
       clearSupabaseClient();
       clearTenantIdCache();
+      clearSharedTenantIdCache();
       setSession(null);
       setUser(null);
 
@@ -151,6 +153,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       clearUnits();
       clearSupabaseClient();
       clearTenantIdCache();
+      clearSharedTenantIdCache();
       if (typeof globalThis !== "undefined") {
         globalThis.location.href = "/";
       }
