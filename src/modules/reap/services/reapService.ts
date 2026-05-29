@@ -441,10 +441,9 @@ export const reapService = {
     entityUf: string;
     members: { cpf: string; nome: string | null; reap: Reap | null }[];
   }> {
-    const { data: entity } = await supabase
-      .from("entidade")
-      .select("uf")
-      .maybeSingle();
+    const entidadeQuery = supabase.from("entidade").select("uf").limit(1);
+    if (unitId) entidadeQuery.eq("unit_id", unitId);
+    const { data: entity } = await entidadeQuery.maybeSingle();
 
     interface MemberWithReap {
       cpf: string;

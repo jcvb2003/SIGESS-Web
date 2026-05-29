@@ -74,6 +74,7 @@ export function EntityForm({ readOnly = false }: EntityFormProps = {}) {
   const onSubmit = async (data: EntityFormData) => {
     const values: EntitySettings = {
       id: entity?.id,
+      unitId: entity?.unitId,
       name: data.name,
       shortName: data.shortName ?? "",
       cnpj: data.cnpj ?? "",

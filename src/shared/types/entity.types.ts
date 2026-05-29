@@ -1,5 +1,6 @@
 export interface EntitySettings {
   id?: string;
+  unitId?: string | null;
   name: string;
   shortName: string;
   cnpj: string;

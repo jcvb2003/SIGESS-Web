@@ -36,13 +36,14 @@ const toOptional = (value: string | undefined | null): string | undefined => {
   return trimmed || undefined;
 };
 export const settingsService = {
-  async getEntity(): Promise<ServiceResponse<EntitySettings>> {
+  async getEntity(unitId?: string | null): Promise<ServiceResponse<EntitySettings>> {
     // 1. Buscar dados institucionais
-    const { data: entityData, error: entityError } = await supabase
+    const entityQuery = supabase
       .from(ENTITY_TABLE)
       .select("*")
-      .limit(1)
-      .maybeSingle();
+      .limit(1);
+    if (unitId) entityQuery.eq("unit_id", unitId);
+    const { data: entityData, error: entityError } = await entityQuery.maybeSingle();
 
     if (entityError) {
       console.error("Erro ao buscar entidade:", entityError);
@@ -80,6 +81,7 @@ export const settingsService = {
     return {
       data: {
         id: entityData.id ? String(entityData.id) : undefined,
+        unitId: (entityData as Record<string, unknown>).unit_id as string | null ?? null,
         name: toStringValue(entityData.nome_entidade),
         shortName: toStringValue(entityData.nome_abreviado),
         cnpj: toStringValue(entityData.cnpj),
@@ -114,10 +116,13 @@ export const settingsService = {
     settings: EntitySettings,
   ): Promise<ServiceResponse<EntitySettings>> {
     // 1. Atualizar dados institucionais
+    const sharedTenantId = await resolveCurrentSharedTenantId();
     const { error: entityError } = await supabase
       .from(ENTITY_TABLE)
       .upsert({
         id: settings.id,
+        ...(settings.unitId ? { unit_id: settings.unitId } : {}),
+        ...(sharedTenantId ? { tenant_id: sharedTenantId } : {}),
         nome_entidade: toNullable(settings.name),
         nome_abreviado: toNullable(settings.shortName),
         cnpj: toNullable(settings.cnpj),
@@ -165,7 +170,7 @@ export const settingsService = {
       return { data: null, error: configError };
     }
 
-    return this.getEntity();
+    return this.getEntity(settings.unitId);
   },
   async getParameters(): Promise<ServiceResponse<SystemParameters>> {
     const { data, error } = await supabase

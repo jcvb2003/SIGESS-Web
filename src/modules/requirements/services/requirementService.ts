@@ -272,16 +272,15 @@ export const requirementService = {
     if (error) throw error;
   },
 
-  async getReconciliationContext(): Promise<{
+  async getReconciliationContext(unitId?: string | null): Promise<{
     entityUf: string;
     members: any[];
     financeMap: Map<string, string>;
   }> {
     // 1. Buscar UF da Entidade
-    const { data: entity } = await supabase
-      .from("entidade")
-      .select("uf")
-      .maybeSingle();
+    const entidadeQuery = supabase.from("entidade").select("uf").limit(1);
+    if (unitId) entidadeQuery.eq("unit_id", unitId);
+    const { data: entity } = await entidadeQuery.maybeSingle();
 
     // 2. Buscar todos os sócios com helper compartilhado
     const allMembers = await fetchAll<any>(

@@ -14,6 +14,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { FileUp, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { reapService } from "../services/reapService";
+import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 import { reapQueryKeys } from "../queryKeys";
 import { toast } from "sonner";
 import { cn } from "@/shared/lib/utils";
@@ -97,6 +98,7 @@ export function ImportComprovantesDialog({
   onOpenChange,
 }: Readonly<ImportComprovantesDialogProps>) {
   const queryClient = useQueryClient();
+  const { activeUnit } = useTenantUnits();
   const [step, setStep] = useState<"upload" | "results">("upload");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -114,7 +116,7 @@ export function ImportComprovantesDialog({
 
       try {
         const cleanCpf = (c: string) => c.replaceAll(/\D/g, "");
-        const context = await reapService.getReconciliationContext();
+        const context = await reapService.getReconciliationContext(activeUnit?.id);
         const cpfSet = new Set(context.members.map((m) => cleanCpf(m.cpf)));
         const memberMap = new Map(context.members.map((m) => [cleanCpf(m.cpf), m]));
 

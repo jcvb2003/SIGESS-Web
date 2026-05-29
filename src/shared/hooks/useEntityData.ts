@@ -2,12 +2,17 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { settingsService } from "@/modules/settings/services/settingsService";
 import type { EntitySettings } from "@/modules/settings/types/settings.types";
+import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
+
 export function useEntityData() {
   const queryClient = useQueryClient();
+  const { activeUnit } = useTenantUnits();
+  const unitId = activeUnit?.id ?? null;
+
   const entityQuery = useQuery({
-    queryKey: ["settings", "entity"],
+    queryKey: ["settings", "entity", unitId],
     queryFn: async () => {
-      const { data, error } = await settingsService.getEntity();
+      const { data, error } = await settingsService.getEntity(unitId);
       if (error) throw error;
       return data;
     },
@@ -20,7 +25,7 @@ export function useEntityData() {
       return data;
     },
     onSuccess: (data) => {
-      queryClient.setQueryData(["settings", "entity"], data);
+      queryClient.setQueryData(["settings", "entity", unitId], data);
       toast.success("Dados da entidade salvos com sucesso.");
     },
     onError: (error: unknown) => {

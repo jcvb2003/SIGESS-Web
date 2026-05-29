@@ -15,6 +15,7 @@ import { Progress } from "@/shared/components/ui/progress";
 import { FileUp, Loader2, CheckCircle2, AlertTriangle, Info } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { reapService } from "../services/reapService";
+import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 import { reapQueryKeys } from "../queryKeys";
 import { toast } from "sonner";
 import { cn } from "@/shared/lib/utils";
@@ -204,6 +205,7 @@ export function ConsultarPendenciasDialog({
   onOpenChange,
 }: Readonly<ConsultarPendenciasDialogProps>) {
   const queryClient = useQueryClient();
+  const { activeUnit } = useTenantUnits();
   const [step, setStep] = useState<"upload" | "results">("upload");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -219,7 +221,7 @@ export function ConsultarPendenciasDialog({
     setProgress(0);
 
     try {
-      const context = await reapService.getReconciliationContext();
+      const context = await reapService.getReconciliationContext(activeUnit?.id);
       setProgress(5);
 
       const rows = await parsePdfRows(file, (p) => setProgress(5 + p));
