@@ -164,7 +164,7 @@ function resolveCurrentTenantCode() {
 }
 
 function mapTenantRoleToAuthRole(_tenantRole: TenantUserRoleInput) {
-  return "operador_administrativo";
+  return "admin";
 }
 
 export const administrationService = {

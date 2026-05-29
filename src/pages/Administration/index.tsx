@@ -21,6 +21,8 @@ import {
   type TenantUnitRecord,
   type TenantUserInput,
 } from "@/modules/administration/services/administrationService";
+import { memberService } from "@/modules/members/services/memberService";
+import { memberQueryKeys } from "@/modules/members/queryKeys";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { Button } from "@/shared/components/ui/button";
 import { usePermissions } from "@/shared/hooks/usePermissions";
@@ -77,6 +79,12 @@ export default function AdministrationPage() {
       if (error) throw error;
       return data ?? [];
     },
+    enabled: canAccessTenantAdministration,
+  });
+
+  const totalMembersQuery = useQuery({
+    queryKey: memberQueryKeys.count(null),
+    queryFn: () => memberService.countMembers(),
     enabled: canAccessTenantAdministration,
   });
 
@@ -240,6 +248,7 @@ export default function AdministrationPage() {
         activeUnitsCount={activeUnitsCount}
         operatorsCount={activeUsersCount}
         accessCount={membershipsCount}
+        totalMembers={totalMembersQuery.data?.count}
       />
 
       <PolosBreakdownSection
