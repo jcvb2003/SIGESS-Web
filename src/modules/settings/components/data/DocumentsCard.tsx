@@ -45,7 +45,7 @@ import {
 } from "lucide-react";
 import { settingsService } from "../../services/settingsService";
 import type { DocumentTemplate } from "../../types/settings.types";
-export function DocumentsCard() {
+export function DocumentsCard({ canWrite = true }: { canWrite?: boolean }) {
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -301,7 +301,7 @@ export function DocumentsCard() {
                                 size="sm"
                                 className="text-destructive border-destructive/40 gap-2 h-8 w-8 p-0 md:h-9 md:w-auto md:px-3"
                                 onClick={() => handleDelete(template)}
-                                disabled={deleteMutation.isPending}
+                                disabled={deleteMutation.isPending || !canWrite}
                               >
                                 <Trash className="w-4 h-4" />
                                 <span className="hidden md:inline">
@@ -318,6 +318,7 @@ export function DocumentsCard() {
               </div>
             </div>
 
+            <fieldset disabled={!canWrite} className={!canWrite ? "opacity-50 grayscale pointer-events-none" : ""}>
             <div className="flex flex-col gap-3 w-full border-t border-border/10 pt-6">
               <h3 className="text-sm font-medium">Enviar novo template</h3>
               <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
@@ -406,6 +407,7 @@ export function DocumentsCard() {
                 </p>
               </div>
             </div>
+            </fieldset>
           </div>
 
           <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 mt-4">

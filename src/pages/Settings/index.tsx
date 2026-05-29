@@ -41,9 +41,7 @@ export default function Settings() {
                 <fieldset disabled={!isAdmin} className={!isAdmin ? "opacity-50 grayscale pointer-events-none" : ""}>
                   <ImportExportCard />
                 </fieldset>
-                <fieldset disabled={!canManageEntitySettings} className={!canManageEntitySettings ? "opacity-50 grayscale pointer-events-none" : ""}>
-                  <DocumentsCard />
-                </fieldset>
+                <DocumentsCard canWrite={canManageEntitySettings} />
                 <LocalitiesCard />
                 <fieldset disabled={!isAdmin} className={!isAdmin ? "opacity-50 grayscale pointer-events-none" : ""}>
                   <PhotoImportCard />
