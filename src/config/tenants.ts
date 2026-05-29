@@ -2,6 +2,7 @@ export interface TenantConfig {
   label: string;
   supabaseUrl: string;
   supabaseAnonKey: string;
+  deploymentMode: "isolated" | "shared";
 }
 
 type EnvSource = {
@@ -40,12 +41,18 @@ function readConfigCacheEntry(code?: string): CachedTenantConfig | null {
 export function getCachedTenantConfig(code?: string): TenantConfig | null {
   const cached = readConfigCacheEntry(code);
   if (!cached) return null;
+  if (cached.deploymentMode !== "isolated" && cached.deploymentMode !== "shared") return null;
 
   return {
     label: cached.label,
     supabaseUrl: cached.supabaseUrl,
     supabaseAnonKey: cached.supabaseAnonKey,
+    deploymentMode: cached.deploymentMode,
   };
+}
+
+export function getCurrentTenantConfig(): TenantConfig | null {
+  return getCachedTenantConfig();
 }
 
 export function clearTenantConfigCache(): void {
@@ -79,11 +86,16 @@ export async function resolveAndCacheTenant(code: string): Promise<TenantConfig>
   const normalized = normalizeTenantCode(code);
 
   const cached = readConfigCacheEntry(normalized);
-  if (cached && Date.now() - cached.cachedAt < CACHE_TTL_MS) {
+  if (
+    cached &&
+    (cached.deploymentMode === "isolated" || cached.deploymentMode === "shared") &&
+    Date.now() - cached.cachedAt < CACHE_TTL_MS
+  ) {
     return {
       label: cached.label,
       supabaseUrl: cached.supabaseUrl,
       supabaseAnonKey: cached.supabaseAnonKey,
+      deploymentMode: cached.deploymentMode,
     };
   }
 
@@ -91,11 +103,12 @@ export async function resolveAndCacheTenant(code: string): Promise<TenantConfig>
   const configUrl = env?.VITE_ADMIN_TENANT_CONFIG_URL;
 
   if (!configUrl) {
-    if (cached) {
+    if (cached && (cached.deploymentMode === "isolated" || cached.deploymentMode === "shared")) {
       return {
         label: cached.label,
         supabaseUrl: cached.supabaseUrl,
         supabaseAnonKey: cached.supabaseAnonKey,
+        deploymentMode: cached.deploymentMode,
       };
     }
 
@@ -107,25 +120,33 @@ export async function resolveAndCacheTenant(code: string): Promise<TenantConfig>
     if (res.status === 404) throw new Error(`Entidade "${normalized}" não encontrada`);
     if (!res.ok) throw new Error("Configuração da entidade indisponível");
 
-    const data = (await res.json()) as { label: string; supabaseUrl: string; anonKey: string };
+    const data = (await res.json()) as {
+      label: string;
+      supabaseUrl: string;
+      anonKey: string;
+      deploymentMode?: "isolated" | "shared";
+    };
     const config: TenantConfig = {
       label: data.label,
       supabaseUrl: data.supabaseUrl,
       supabaseAnonKey: data.anonKey,
+      deploymentMode: data.deploymentMode === "shared" ? "shared" : "isolated",
     };
     writeConfigCache(normalized, config, "remote");
     return config;
   } catch (err) {
-    if (cached) {
+    if (cached && (cached.deploymentMode === "isolated" || cached.deploymentMode === "shared")) {
       writeConfigCache(normalized, {
         label: cached.label,
         supabaseUrl: cached.supabaseUrl,
         supabaseAnonKey: cached.supabaseAnonKey,
+        deploymentMode: cached.deploymentMode,
       }, "stale");
       return {
         label: cached.label,
         supabaseUrl: cached.supabaseUrl,
         supabaseAnonKey: cached.supabaseAnonKey,
+        deploymentMode: cached.deploymentMode,
       };
     }
     throw err;

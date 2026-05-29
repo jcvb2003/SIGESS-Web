@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { getCurrentTenantConfig } from "@/config/tenants";
 import { useAuth } from "@/modules/auth/context/authContextStore";
 import { supabase } from "@/shared/lib/supabase/client";
 import { UserRole } from "@/shared/types/auth.types";
@@ -9,9 +10,15 @@ function isMissingTenantUsersSchemaError(error: unknown) {
     return false;
   }
 
-  const code = "code" in error ? String(error.code ?? "") : "";
-  const message = "message" in error ? String(error.message ?? "") : "";
-  return code === "42P01" || message.includes("tenant_users");
+  const candidate = error as { code?: string; message?: string; status?: number };
+  const code = String(candidate.code ?? "");
+  const message = String(candidate.message ?? "");
+  return (
+    candidate.status === 404 ||
+    code === "42P01" ||
+    code === "PGRST205" ||
+    message.includes("tenant_users")
+  );
 }
 
 /**
@@ -20,14 +27,17 @@ function isMissingTenantUsersSchemaError(error: unknown) {
  */
 export function usePermissions() {
   const { user } = useAuth();
+  const tenantConfig = getCurrentTenantConfig();
 
   // O papel (role) é lido do app_metadata injetado no JWT (definido na migration)
   // Caso não exista, assume-se o papel padrão 'user' (Auxiliar)
-  const role = (user?.app_metadata?.role as UserRole) ?? 'user';
-  const isAdmin = role === 'admin';
+  const role = (user?.app_metadata?.role as UserRole) ?? "user";
+  const isAdmin = role === "admin";
+  const isSharedTenant = tenantConfig?.deploymentMode === "shared";
+
   const tenantAdministrationQuery = useQuery({
-    queryKey: ["permissions", "tenant-administration", user?.id ?? null],
-    enabled: isAdmin && Boolean(user?.id),
+    queryKey: ["permissions", "tenant-administration", user?.id ?? null, tenantConfig?.deploymentMode ?? null],
+    enabled: isAdmin && isSharedTenant && Boolean(user?.id),
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -59,7 +69,16 @@ export function usePermissions() {
       };
     },
   });
-  const tenantAdministrationData = tenantAdministrationQuery.data ?? null;
+
+  const tenantAdministrationData =
+    tenantAdministrationQuery.data ??
+    (isSharedTenant
+      ? null
+      : {
+          hasTenantAccess: false,
+          tenantRole: null,
+        });
+
   const canAccessTenantAdministration =
     isAdmin && (tenantAdministrationData?.hasTenantAccess ?? false);
   const tenantEntityRole = tenantAdministrationData?.tenantRole ?? null;
@@ -79,6 +98,6 @@ export function usePermissions() {
     canManageUsers: isAdmin,
     canAccessSettings: isAdmin,
     // Auxiliares podem ver quase tudo, mas não alteram configurações críticas
-    isAuxiliar: role === 'user',
+    isAuxiliar: role === "user",
   };
 }

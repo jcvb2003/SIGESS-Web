@@ -1,4 +1,5 @@
 import { authService } from "@/modules/auth/services/authService";
+import { getCurrentTenantConfig } from "@/config/tenants";
 import type { ServiceResponse } from "@/shared/services/base/serviceResponse";
 import type { User } from "@supabase/supabase-js";
 import { getSupabaseClient } from "@/shared/lib/supabase/client";
@@ -62,9 +63,11 @@ function isMissingSharedSchemaError(error: unknown) {
     return false;
   }
 
-  const candidate = error as { code?: string; message?: string };
+  const candidate = error as { code?: string; message?: string; status?: number };
   return (
+    candidate.status === 404 ||
     candidate.code === "42P01" ||
+    candidate.code === "PGRST205" ||
     candidate.message?.toLowerCase().includes("user_unit_memberships") === true ||
     candidate.message?.toLowerCase().includes("tenant_units") === true
   );
@@ -93,6 +96,17 @@ export const tenantUnitService = {
   async getUserAssignedUnitsFromSharedProject(
     user: User | null | undefined,
   ): Promise<ServiceResponse<ResolvedTenantUnits>> {
+    const tenantConfig = getCurrentTenantConfig();
+    if (tenantConfig?.deploymentMode !== "shared") {
+      return {
+        data: {
+          availableUnits: [],
+          preferredActiveUnitId: null,
+        },
+        error: null,
+      };
+    }
+
     if (!user) {
       return {
         data: {
@@ -115,6 +129,16 @@ export const tenantUnitService = {
         .eq("is_active", true);
 
       if (membershipsError) {
+        if (isMissingSharedSchemaError(membershipsError)) {
+          return {
+            data: {
+              availableUnits: [],
+              preferredActiveUnitId: null,
+            },
+            error: null,
+          };
+        }
+
         return { data: null, error: membershipsError };
       }
 
@@ -164,6 +188,16 @@ export const tenantUnitService = {
       });
 
       if (unitsError) {
+        if (isMissingSharedSchemaError(unitsError)) {
+          return {
+            data: {
+              availableUnits: [],
+              preferredActiveUnitId: null,
+            },
+            error: null,
+          };
+        }
+
         return { data: null, error: unitsError };
       }
 
