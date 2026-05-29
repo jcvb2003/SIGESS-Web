@@ -5,6 +5,7 @@ import { Card } from "@/shared/components/ui/card";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { DateField } from "@/shared/components/form-fields/fields/DateField";
 import { useDAEsByPeriod } from "@/modules/finance/hooks/data/useDAEsByPeriod";
+import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 import { DataTable, type ColumnDef } from "@/shared/components/layout/DataTable";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { formatDate } from "@/shared/utils/date";
@@ -57,6 +58,7 @@ function parseDAEOrderField(value: string | null): DAEOrderField {
 }
 
 export default function DAEsByPeriodPage() {
+  const { activeUnit } = useTenantUnits();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -263,7 +265,7 @@ export default function DAEsByPeriodPage() {
   const handleExportExcel = async () => {
     const toastId = toast.loading("Gerando exportacao Excel...");
     try {
-      const allData = await daeService.fetchAllDAEs(startDate, endDate, orderBy);
+      const allData = await daeService.fetchAllDAEs(startDate, endDate, orderBy, activeUnit?.id);
       if (!allData.length) {
         toast.dismiss(toastId);
         toast.error("Sem dados para exportar.");
@@ -282,7 +284,7 @@ export default function DAEsByPeriodPage() {
   const handleExportPdf = async () => {
     const toastId = toast.loading("Gerando PDF...");
     try {
-      const allData = await daeService.fetchAllDAEs(startDate, endDate, orderBy);
+      const allData = await daeService.fetchAllDAEs(startDate, endDate, orderBy, activeUnit?.id);
       if (!allData.length) {
         toast.dismiss(toastId);
         toast.error("Sem dados para exportar.");
