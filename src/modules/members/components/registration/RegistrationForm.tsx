@@ -32,6 +32,7 @@ import { useCpfValidation } from "../../hooks/registration/useCpfValidation";
 import { photoService } from "../../services/photoService";
 import { useUserMetadata } from "@/modules/auth/hooks/useUserMetadata";
 import { useEntityData } from "@/modules/settings/hooks/useEntityData";
+import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
 
@@ -50,6 +51,7 @@ export function RegistrationForm({
 }: Readonly<RegistrationFormProps>) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { metadata } = useUserMetadata();
+  const { activeUnit } = useTenantUnits();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const isEditMode = !!memberUuid;
@@ -138,7 +140,10 @@ export function RegistrationForm({
         await handlePhotoActions(data);
         toast.success("Sócio atualizado com sucesso.");
       } else {
-        await memberService.create(payload);
+        await memberService.create(payload, {
+          tenantId: activeUnit?.tenantId ?? null,
+          unitId: activeUnit?.id ?? null,
+        });
         if (data.photoFile instanceof File) {
           await photoService.uploadPhoto(data.photoFile, data.cpf);
         }

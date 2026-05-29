@@ -2,10 +2,11 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useDataTableState } from "@/shared/hooks/useDataTableState";
-import { memberService } from "../../services/memberService";
+import { memberService, type MemberUnitContext } from "../../services/memberService";
 import { memberQueryKeys } from "../../queryKeys";
 import { useMemberFilters } from "../filters/useMemberFilters";
 import { useMemberActions } from "../edit/useMemberActions";
+import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 import type {
   MemberListItem,
   MemberSearchParams,
@@ -13,10 +14,10 @@ import type {
   RgpStatusFilter,
 } from "../../types/member.types";
 
-export function useMemberData(params: MemberSearchParams) {
+export function useMemberData(params: MemberSearchParams, context?: MemberUnitContext) {
   const query = useQuery({
-    queryKey: memberQueryKeys.list(params),
-    queryFn: () => memberService.searchMembers(params),
+    queryKey: memberQueryKeys.list({ ...params, _unitId: context?.unitId ?? null }),
+    queryFn: () => memberService.searchMembers(params, context),
   });
   return {
     members: query.data?.items ?? [],
@@ -97,8 +98,14 @@ export function useMembersListController() {
     ],
   );
 
+  const { activeUnit } = useTenantUnits();
+  const unitContext: MemberUnitContext = {
+    tenantId: activeUnit?.tenantId ?? null,
+    unitId: activeUnit?.id ?? null,
+  };
+
   const { members, total, isLoading, isFetching, error, refetch } =
-    useMemberData(queryParams);
+    useMemberData(queryParams, unitContext);
 
   const handleSort = (field: string) => {
     setSortConfig((prev) => ({

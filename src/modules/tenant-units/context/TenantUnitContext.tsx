@@ -17,6 +17,7 @@ export interface TenantUnitSummary {
   id: string;
   name: string;
   code?: string | null;
+  tenantId?: string | null;
 }
 
 interface TenantUnitContextValue {

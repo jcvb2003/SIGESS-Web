@@ -36,10 +36,19 @@ export class LimitExceededError extends Error {
     this.name = "LimitExceededError";
   }
 }
+export interface MemberUnitContext {
+  tenantId?: string | null;
+  unitId?: string | null;
+}
+
 export const memberService = {
-  async create(input: MemberRegistrationForm): Promise<void> {
-    const payload = toMemberInsertPayload(input);
-    const { error } = await supabase.from("socios").insert(payload);
+  async create(input: MemberRegistrationForm, context?: MemberUnitContext): Promise<void> {
+    const payload = {
+      ...toMemberInsertPayload(input),
+      ...(context?.tenantId ? { tenant_id: context.tenantId } : {}),
+      ...(context?.unitId ? { unit_id: context.unitId } : {}),
+    };
+    const { error } = await supabase.from("socios").insert(payload as never);
     if (error) {
       const message = String(error.message || "");
       const code =
@@ -67,7 +76,7 @@ export const memberService = {
       throw error;
     }
   },
-  async searchMembers(params: MemberSearchParams): Promise<MembersResult> {
+  async searchMembers(params: MemberSearchParams, context?: MemberUnitContext): Promise<MembersResult> {
     const {
       page,
       pageSize,
@@ -88,6 +97,9 @@ export const memberService = {
           count: "exact",
         },
       );
+    if (context?.unitId) {
+      query = query.eq("unit_id", context.unitId);
+    }
     const term = searchTerm.trim();
     if (term) {
       const like = `%${term}%`;

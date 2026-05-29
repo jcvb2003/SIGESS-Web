@@ -48,6 +48,7 @@ function mapSharedUnitToSummary(unit: SharedTenantUnitRow): TenantUnitSummary {
     id: unit.id,
     name: unit.name,
     code: unit.code ?? null,
+    tenantId: unit.tenant_id ?? null,
   };
 }
 
