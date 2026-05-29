@@ -88,6 +88,16 @@ export default function AdministrationPage() {
     enabled: canAccessTenantAdministration,
   });
 
+  const unitStatsQuery = useQuery({
+    queryKey: administrationQueryKeys.unitStats(),
+    queryFn: async () => {
+      const { data, error } = await administrationService.listUnitStats();
+      if (error) throw error;
+      return data ?? {};
+    },
+    enabled: canAccessTenantAdministration,
+  });
+
   const pendingRequirementsQuery = useQuery({
     queryKey: administrationQueryKeys.pendingRequirements(),
     queryFn: async () => {
@@ -276,7 +286,8 @@ export default function AdministrationPage() {
       <PolosBreakdownSection
         units={units}
         memberships={memberships}
-        isLoading={unitsQuery.isLoading || membershipsQuery.isLoading}
+        unitStats={unitStatsQuery.data}
+        isLoading={unitsQuery.isLoading || membershipsQuery.isLoading || unitStatsQuery.isLoading}
       />
 
       <UnitsSection

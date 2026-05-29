@@ -402,6 +402,20 @@ export const administrationService = {
     return { data: null, error: null };
   },
 
+  async listUnitStats(): Promise<ServiceResponse<Record<string, { sociosCount: number; pendingReqCount: number }>>> {
+    const { data, error } = await supabase.rpc("get_unit_stats" as never);
+    if (error) return { data: null, error };
+
+    const result: Record<string, { sociosCount: number; pendingReqCount: number }> = {};
+    for (const row of (data ?? []) as { unit_id: string; socios_count: number; pending_req_count: number }[]) {
+      result[row.unit_id] = {
+        sociosCount: Number(row.socios_count ?? 0),
+        pendingReqCount: Number(row.pending_req_count ?? 0),
+      };
+    }
+    return { data: result, error: null };
+  },
+
   async countPendingRequirements(): Promise<ServiceResponse<number>> {
     const year = new Date().getFullYear();
     const { count, error } = await supabase

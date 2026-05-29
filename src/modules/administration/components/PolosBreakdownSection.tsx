@@ -18,15 +18,22 @@ import {
   TableRow,
 } from "@/shared/components/ui/table";
 
+interface UnitStat {
+  sociosCount: number;
+  pendingReqCount: number;
+}
+
 interface PolosBreakdownSectionProps {
   readonly units: TenantUnitRecord[];
   readonly memberships: TenantMembershipRecord[];
+  readonly unitStats?: Record<string, UnitStat>;
   readonly isLoading: boolean;
 }
 
 export function PolosBreakdownSection({
   units,
   memberships,
+  unitStats,
   isLoading,
 }: PolosBreakdownSectionProps) {
   const operatorsByUnit = useMemo(() => {
@@ -85,8 +92,8 @@ export function PolosBreakdownSection({
                       : "—"}
                   </TableCell>
                   <TableCell>{operatorsByUnit.get(unit.id) ?? 0}</TableCell>
-                  <TableCell className="text-muted-foreground">—</TableCell>
-                  <TableCell className="text-muted-foreground">—</TableCell>
+                  <TableCell>{unitStats?.[unit.id]?.sociosCount ?? "—"}</TableCell>
+                  <TableCell>{unitStats?.[unit.id]?.pendingReqCount ?? "—"}</TableCell>
                   <TableCell>
                     <Badge variant={unit.isActive ? "default" : "secondary"}>
                       {unit.isActive ? "Ativo" : "Inativo"}
