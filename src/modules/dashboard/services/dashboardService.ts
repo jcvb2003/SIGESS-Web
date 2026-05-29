@@ -44,18 +44,25 @@ const normalizeMembers = (value: unknown): Member[] => {
   }, []);
 };
 export const dashboardService = {
-  async getStats() {
+  async getStats(unitId?: string | null) {
+    const applyUnit = <T extends { eq: (col: string, val: string) => T }>(q: T) =>
+      unitId ? q.eq("unit_id", unitId) : q;
+
     const [totalResponse, maleResponse, femaleResponse, documentsResponse] =
       await Promise.all([
-        supabase.from("socios").select("*", { count: "exact", head: true }),
-        supabase
-          .from("socios")
-          .select("*", { count: "exact", head: true })
-          .eq("sexo", "MASCULINO"),
-        supabase
-          .from("socios")
-          .select("*", { count: "exact", head: true })
-          .eq("sexo", "FEMININO"),
+        applyUnit(supabase.from("socios").select("*", { count: "exact", head: true })),
+        applyUnit(
+          supabase
+            .from("socios")
+            .select("*", { count: "exact", head: true })
+            .eq("sexo", "MASCULINO"),
+        ),
+        applyUnit(
+          supabase
+            .from("socios")
+            .select("*", { count: "exact", head: true })
+            .eq("sexo", "FEMININO"),
+        ),
         supabase.from("requerimentos").select("*", { count: "exact", head: true }),
       ]);
 
@@ -71,13 +78,15 @@ export const dashboardService = {
       totalDocuments: documentsResponse.count ?? 0,
     };
   },
-  async getRecentMembers(): Promise<Member[]> {
+  async getRecentMembers(unitId?: string | null): Promise<Member[]> {
     try {
-      const { data, error } = await supabase
+      let q = supabase
         .from("socios")
         .select("id, nome, data_de_admissao, cpf")
         .order("data_de_admissao", { ascending: false })
         .limit(5);
+      if (unitId) q = q.eq("unit_id", unitId);
+      const { data, error } = await q;
       if (error) {
         console.error("Error fetching recent members:", error);
         return [];
