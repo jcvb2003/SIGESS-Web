@@ -242,11 +242,11 @@ function SidebarContent({
                     onClick={() => setActiveUnit(unit)}
                     className="flex items-center gap-2.5 cursor-pointer"
                   >
-                    <Building2 className={cn("h-4 w-4 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
-                    <span className={cn("flex-1 truncate", isActive && "font-medium text-primary")}>
+                    <Building2 className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <span className={cn("flex-1 truncate", isActive && "font-semibold")}>
                       {unit.name}
                     </span>
-                    {isActive && <Check className="h-3.5 w-3.5 text-primary shrink-0" />}
+                    {isActive && <Check className="h-3.5 w-3.5 shrink-0 opacity-70" />}
                   </DropdownMenuItem>
                 );
               })}
