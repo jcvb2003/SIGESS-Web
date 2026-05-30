@@ -11,7 +11,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/shared/components/ui/alert-dialog";
-import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import {
   Card,
@@ -28,10 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/components/ui/table";
-
-function getMembershipRoleLabel(role: TenantMembershipRecord["role"]) {
-  return role === "unit_operator" ? "Operador" : role;
-}
+import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 
 interface MembershipsSectionProps {
   readonly membershipRows: Array<{
@@ -71,39 +67,41 @@ export function MembershipsSection({
               Vincule operadores aos polos desta entidade.
             </CardDescription>
           </div>
-          <Button onClick={onCreate} className="gap-2" variant="outline">
+          <Button onClick={onCreate} variant="outline" className="gap-2 shrink-0">
             <Plus className="h-4 w-4" />
             Novo acesso
           </Button>
         </CardHeader>
-        <CardContent className="border-t border-border/10 pt-4">
+        <CardContent className="border-t border-border/10 pt-0 px-0">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Usuario</TableHead>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="pl-6">Operador</TableHead>
                 <TableHead>Polo</TableHead>
-                <TableHead>Papel</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Acoes</TableHead>
+                <TableHead className="pr-6 text-right">Acoes</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
                     Carregando acessos...
                   </TableCell>
                 </TableRow>
               ) : membershipRows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
                     Crie polos e operadores primeiro, depois vincule os acessos.
                   </TableCell>
                 </TableRow>
               ) : (
                 membershipRows.map(({ membership, user, unit }) => (
-                  <TableRow key={membership.id}>
-                    <TableCell>
+                  <TableRow
+                    key={membership.id}
+                    className={!membership.isActive ? "opacity-50" : undefined}
+                  >
+                    <TableCell className="pl-6">
                       <div className="flex flex-col">
                         <span className="font-medium">{user?.name || "Sem nome"}</span>
                         <span className="text-xs text-muted-foreground">
@@ -111,24 +109,23 @@ export function MembershipsSection({
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell>{unit?.name || "Sem polo"}</TableCell>
+                    <TableCell>{unit?.name || "—"}</TableCell>
                     <TableCell>
-                      <Badge variant="secondary">
-                        {getMembershipRoleLabel(membership.role)}
-                      </Badge>
+                      {membership.isActive ? (
+                        <StatusBadge variant="success" label="Ativo" />
+                      ) : (
+                        <StatusBadge variant="secondary" label="Inativo" />
+                      )}
                     </TableCell>
-                    <TableCell>
-                      <Badge variant={membership.isActive ? "default" : "secondary"}>
-                        {membership.isActive ? "Ativo" : "Inativo"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="pr-6 text-right">
                       <Button
                         type="button"
-                        variant="outline"
+                        variant="ghost"
                         size="icon"
                         disabled={isDeleting}
                         onClick={() => setPendingDeleteId(membership.id)}
+                        aria-label="Remover acesso"
+                        className="text-muted-foreground hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -143,9 +140,7 @@ export function MembershipsSection({
 
       <AlertDialog
         open={Boolean(pendingDeleteId)}
-        onOpenChange={(open) => {
-          if (!open) setPendingDeleteId(null);
-        }}
+        onOpenChange={(open) => { if (!open) setPendingDeleteId(null); }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>

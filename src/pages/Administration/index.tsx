@@ -60,7 +60,9 @@ export default function AdministrationPage() {
       <TenantUsersSection
         tenantUsers={page.tenantUsers}
         isLoading={page.isLoading.tenantUsers}
+        isToggling={page.mutations.toggleTenantUser.isPending}
         onCreate={() => page.setTenantUserDialogOpen(true)}
+        onToggle={(user) => page.mutations.toggleTenantUser.mutate(user)}
       />
 
       <MembershipsSection

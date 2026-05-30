@@ -1,6 +1,5 @@
 import { Plus, Users } from "lucide-react";
 import type { TenantUserRecord } from "@/modules/administration/services/administrationService";
-import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import {
   Card,
@@ -9,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/components/ui/card";
+import { Switch } from "@/shared/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -17,17 +17,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/components/ui/table";
+import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 
 interface TenantUsersSectionProps {
   readonly tenantUsers: TenantUserRecord[];
   readonly isLoading: boolean;
+  readonly isToggling: boolean;
   readonly onCreate: () => void;
+  readonly onToggle: (user: TenantUserRecord) => void;
 }
 
 export function TenantUsersSection({
   tenantUsers,
   isLoading,
+  isToggling,
   onCreate,
+  onToggle,
 }: TenantUsersSectionProps) {
   return (
     <Card className="border-border/50 shadow-sm">
@@ -41,53 +46,64 @@ export function TenantUsersSection({
             Apenas usuarios desta entidade podem receber acessos aos polos.
           </CardDescription>
         </div>
-        <Button onClick={onCreate} className="gap-2" variant="outline">
+        <Button onClick={onCreate} variant="outline" className="gap-2 shrink-0">
           <Plus className="h-4 w-4" />
           Novo usuario
         </Button>
       </CardHeader>
-      <CardContent className="border-t border-border/10 pt-4">
+      <CardContent className="border-t border-border/10 pt-0 px-0">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Usuario</TableHead>
-              <TableHead>Papel na entidade</TableHead>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="pl-6">Usuario</TableHead>
+              <TableHead>Papel</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead className="pr-6 text-right">Ativo</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={3} className="py-8 text-center text-muted-foreground">
-                  Carregando usuarios da entidade...
+                <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
+                  Carregando usuarios...
                 </TableCell>
               </TableRow>
             ) : tenantUsers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
                   Adicione operadores antes de vincular acessos aos polos.
                 </TableCell>
               </TableRow>
             ) : (
-              tenantUsers.map((tenantUser) => (
-                <TableRow key={tenantUser.id}>
-                  <TableCell>
+              tenantUsers.map((user) => (
+                <TableRow key={user.id} className={!user.isActive ? "opacity-50" : undefined}>
+                  <TableCell className="pl-6">
                     <div className="flex flex-col">
-                      <span className="font-medium">{tenantUser.name || "Sem nome"}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {tenantUser.email || "Sem e-mail"}
-                      </span>
+                      <span className="font-medium">{user.name || "Sem nome"}</span>
+                      <span className="text-xs text-muted-foreground">{user.email || "Sem e-mail"}</span>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={tenantUser.tenantRole === "owner" ? "default" : "secondary"}>
-                      {tenantUser.tenantRole === "owner" ? "Gestor" : "Operador"}
-                    </Badge>
+                    {user.tenantRole === "owner" ? (
+                      <StatusBadge variant="info" label="Gestor" />
+                    ) : (
+                      <StatusBadge variant="secondary" label="Operador" />
+                    )}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={tenantUser.isActive ? "default" : "secondary"}>
-                      {tenantUser.isActive ? "Ativo" : "Inativo"}
-                    </Badge>
+                    {user.isActive ? (
+                      <StatusBadge variant="success" label="Ativo" />
+                    ) : (
+                      <StatusBadge variant="secondary" label="Inativo" />
+                    )}
+                  </TableCell>
+                  <TableCell className="pr-6 text-right">
+                    <Switch
+                      checked={user.isActive}
+                      onCheckedChange={() => onToggle(user)}
+                      disabled={isToggling || user.tenantRole === "owner"}
+                      aria-label={user.isActive ? "Desativar usuario" : "Ativar usuario"}
+                    />
                   </TableCell>
                 </TableRow>
               ))

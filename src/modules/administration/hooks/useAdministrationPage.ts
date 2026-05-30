@@ -163,6 +163,18 @@ export function useAdministrationPage(enabled: boolean) {
     onError: (error: unknown) => toast.error(humanizeError(error)),
   });
 
+  const toggleTenantUserMutation = useMutation({
+    mutationFn: async (user: { id: string; isActive: boolean }) => {
+      const { error } = await administrationService.setTenantUserActive(user.id, !user.isActive);
+      if (error) throw error;
+    },
+    onSuccess: async (_, user) => {
+      await queryClient.invalidateQueries({ queryKey: administrationQueryKeys.tenantUsers() });
+      toast.success(user.isActive ? "Operador desativado." : "Operador ativado.");
+    },
+    onError: (error: unknown) => toast.error(humanizeError(error)),
+  });
+
   const tenantUserCreateMutation = useMutation({
     mutationFn: async (values: TenantUserInput) => {
       const { data, error } = await administrationService.createTenantUser(values);
@@ -248,6 +260,7 @@ export function useAdministrationPage(enabled: boolean) {
       createMembership: { mutateAsync: membershipCreateMutation.mutateAsync, isPending: membershipCreateMutation.isPending },
       deleteMembership: { mutate: membershipDeleteMutation.mutate, isPending: membershipDeleteMutation.isPending },
       createTenantUser: { mutateAsync: tenantUserCreateMutation.mutateAsync, isPending: tenantUserCreateMutation.isPending },
+      toggleTenantUser: { mutate: toggleTenantUserMutation.mutate, isPending: toggleTenantUserMutation.isPending },
     },
   };
 }

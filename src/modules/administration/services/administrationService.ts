@@ -416,6 +416,16 @@ export const administrationService = {
     return { data: result, error: null };
   },
 
+  async setTenantUserActive(id: string, isActive: boolean): Promise<ServiceResponse<void>> {
+    const { error } = await supabase
+      .from("tenant_users" as never)
+      .update({ is_active: isActive } as never)
+      .eq("id", id);
+
+    if (error) return { data: null, error };
+    return { data: null, error: null };
+  },
+
   async countPendingRequirements(): Promise<ServiceResponse<number>> {
     const year = new Date().getFullYear();
     const { count, error } = await supabase
