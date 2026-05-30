@@ -69,7 +69,8 @@ function isMissingSharedSchemaError(error: unknown) {
     candidate.code === "42P01" ||
     candidate.code === "PGRST205" ||
     candidate.message?.toLowerCase().includes("user_unit_memberships") === true ||
-    candidate.message?.toLowerCase().includes("tenant_units") === true
+    candidate.message?.toLowerCase().includes("tenant_units") === true ||
+    candidate.message?.toLowerCase().includes("tenant_users") === true
   );
 }
 
@@ -119,85 +120,74 @@ export const tenantUnitService = {
 
     try {
       const client = getSupabaseClient() as ReturnType<typeof getSupabaseClient>;
-      const {
-        data: memberships,
-        error: membershipsError,
-      } = await client
-        .from("user_unit_memberships" as never)
-        .select("*")
+
+      // Detecta gestor via tenant_users (fonte de verdade do papel)
+      const { data: tenantUserData, error: tenantUserError } = await client
+        .from("tenant_users" as never)
+        .select("tenant_id")
         .eq("user_id", user.id)
-        .eq("is_active", true);
+        .eq("tenant_role", "owner")
+        .eq("is_active", true)
+        .maybeSingle();
 
-      if (membershipsError) {
-        if (isMissingSharedSchemaError(membershipsError)) {
-          return {
-            data: {
-              availableUnits: [],
-              preferredActiveUnitId: null,
-            },
-            error: null,
-          };
+      if (tenantUserError) {
+        if (isMissingSharedSchemaError(tenantUserError)) {
+          return { data: { availableUnits: [], preferredActiveUnitId: null }, error: null };
         }
-
-        return { data: null, error: membershipsError };
+        return { data: null, error: tenantUserError };
       }
 
-      const membershipRows = (memberships ?? []) as unknown as SharedUserUnitMembershipRow[];
-      if (membershipRows.length === 0) {
-        return {
-          data: {
-            availableUnits: [],
-            preferredActiveUnitId: null,
-          },
-          error: null,
-        };
-      }
-
-      const defaultMembership =
-        membershipRows.find((membership) => membership.is_default) ?? null;
-      const tenantAdminMembership =
-        membershipRows.find((membership) => membership.unit_id === null) ?? null;
+      const gestorTenantId =
+        (tenantUserData as unknown as { tenant_id: string } | null)?.tenant_id ?? null;
 
       let unitsQuery = client
         .from("tenant_units" as never)
         .select("*")
         .eq("is_active", true);
 
-      if (tenantAdminMembership?.tenant_id) {
-        unitsQuery = unitsQuery.eq("tenant_id", tenantAdminMembership.tenant_id);
+      let preferredActiveUnitId: string | null = null;
+
+      if (gestorTenantId) {
+        // Gestor: lista todos os polos do tenant
+        unitsQuery = unitsQuery.eq("tenant_id", gestorTenantId);
       } else {
+        // Operador: lista apenas os polos vinculados
+        const { data: memberships, error: membershipsError } = await client
+          .from("user_unit_memberships" as never)
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("is_active", true);
+
+        if (membershipsError) {
+          if (isMissingSharedSchemaError(membershipsError)) {
+            return { data: { availableUnits: [], preferredActiveUnitId: null }, error: null };
+          }
+          return { data: null, error: membershipsError };
+        }
+
+        const membershipRows = (memberships ?? []) as unknown as SharedUserUnitMembershipRow[];
+        const defaultMembership = membershipRows.find((m) => m.is_default) ?? null;
         const unitIds = membershipRows
-          .map((membership) => membership.unit_id)
+          .map((m) => m.unit_id)
           .filter((unitId): unitId is string => Boolean(unitId));
 
         if (unitIds.length === 0) {
           return {
-            data: {
-              availableUnits: [],
-              preferredActiveUnitId: defaultMembership?.unit_id ?? null,
-            },
+            data: { availableUnits: [], preferredActiveUnitId: defaultMembership?.unit_id ?? null },
             error: null,
           };
         }
 
         unitsQuery = unitsQuery.in("id", unitIds);
+        preferredActiveUnitId = defaultMembership?.unit_id ?? null;
       }
 
-      const { data: units, error: unitsError } = await unitsQuery.order("name", {
-        ascending: true,
-      });
+      const { data: units, error: unitsError } = await unitsQuery.order("name", { ascending: true });
 
       if (unitsError) {
         if (isMissingSharedSchemaError(unitsError)) {
-          return {
-            data: {
-              availableUnits: [],
-              preferredActiveUnitId: null,
-            },
-            error: null,
-          };
+          return { data: { availableUnits: [], preferredActiveUnitId: null }, error: null };
         }
-
         return { data: null, error: unitsError };
       }
 
@@ -206,10 +196,7 @@ export const tenantUnitService = {
       return {
         data: {
           availableUnits: unitRows.map(mapSharedUnitToSummary),
-          preferredActiveUnitId:
-            defaultMembership?.unit_id ??
-            tenantAdminMembership?.unit_id ??
-            null,
+          preferredActiveUnitId,
         },
         error: null,
       };
