@@ -2,34 +2,58 @@ import { AlertCircle, Building2, FileText, Shield, Users } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 
+type StatVariant = "default" | "warning" | "destructive";
+
 interface StatItemProps {
   icon: React.ReactNode;
   label: string;
   value: number | undefined;
-  variant?: "default" | "warning" | "destructive";
+  variant?: StatVariant;
   loading?: boolean;
 }
 
+const variantStyles: Record<StatVariant, { icon: string; iconBg: string; value: string }> = {
+  default: {
+    icon: "text-muted-foreground",
+    iconBg: "bg-muted",
+    value: "text-foreground",
+  },
+  warning: {
+    icon: "text-amber-600 dark:text-amber-400",
+    iconBg: "bg-amber-100 dark:bg-amber-900/30",
+    value: "text-amber-600 dark:text-amber-400",
+  },
+  destructive: {
+    icon: "text-destructive",
+    iconBg: "bg-destructive/10",
+    value: "text-destructive",
+  },
+};
+
 function StatItem({ icon, label, value, variant = "default", loading }: StatItemProps) {
-  const valueColor =
-    variant === "warning"
-      ? "text-amber-600 dark:text-amber-400"
-      : variant === "destructive"
-        ? "text-destructive"
-        : "text-foreground";
+  const styles = variantStyles[variant];
 
   return (
-    <div className="flex items-center gap-3 py-3 px-4">
-      <div className="text-muted-foreground shrink-0">{icon}</div>
+    <div className="group flex items-center gap-3 px-5 py-4 transition-colors hover:bg-muted/40 cursor-default">
+      <div className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors", styles.iconBg, styles.icon)}>
+        {icon}
+      </div>
       <div className="min-w-0">
         {loading || value === undefined ? (
-          <Skeleton className="h-4 w-10 mb-1" />
+          <>
+            <Skeleton className="h-5 w-10 mb-1" />
+            <Skeleton className="h-3 w-16" />
+          </>
         ) : (
-          <p className={cn("text-lg font-semibold leading-tight tabular-nums", valueColor)}>
-            {value}
-          </p>
+          <>
+            <p className={cn("text-xl font-bold leading-tight tabular-nums", styles.value)}>
+              {value}
+            </p>
+            <p className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5">
+              {label}
+            </p>
+          </>
         )}
-        <p className="text-xs text-muted-foreground truncate">{label}</p>
       </div>
     </div>
   );
@@ -57,16 +81,10 @@ export function AdministrationSummaryCards({
   isLoading,
 }: AdministrationSummaryCardsProps) {
   return (
-    <div className="rounded-xl border border-border/50 bg-card shadow-sm divide-y divide-border/50 sm:divide-y-0 sm:divide-x sm:grid sm:grid-cols-3 lg:grid-cols-6">
-      <StatItem
-        icon={<Users className="h-4 w-4" />}
-        label="Socios"
-        value={totalMembers}
-        loading={isLoading || totalMembers === undefined}
-      />
+    <div className="rounded-xl border border-border/50 bg-card shadow-sm overflow-hidden divide-y divide-border/30 sm:divide-y-0 sm:divide-x sm:grid sm:grid-cols-3 lg:grid-cols-6">
       <StatItem
         icon={<Building2 className="h-4 w-4" />}
-        label={`Polos (${unitsCount} total)`}
+        label={`Polos — ${unitsCount} total`}
         value={activeUnitsCount}
         loading={isLoading}
       />
@@ -81,6 +99,12 @@ export function AdministrationSummaryCards({
         label="Vinculos ativos"
         value={accessCount}
         loading={isLoading}
+      />
+      <StatItem
+        icon={<Users className="h-4 w-4" />}
+        label="Socios"
+        value={totalMembers}
+        loading={isLoading || totalMembers === undefined}
       />
       <StatItem
         icon={<FileText className="h-4 w-4" />}
