@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LogOut, Menu, Fish, Sun, Moon, ChevronsUpDown, Building2, LayoutDashboard } from "lucide-react";
+import { LogOut, Menu, Fish, Sun, Moon, ChevronsUpDown, Building2, LayoutDashboard, Check } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/components/ui/button";
 import { useAuth } from "@/modules/auth/context/authContextStore";
@@ -27,6 +27,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
@@ -104,19 +105,7 @@ function SidebarContent({
         </Link>
       </div>
 
-      {!isCollapsed && activeUnit && hasMultipleUnits ? (
-        <div className="px-4 pb-2">
-          <div className="rounded-xl border border-white/10 bg-primary-foreground/10 p-3 dark:bg-white/5">
-            <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-sidebar-foreground/60">
-              Polo ativo
-            </div>
-            <div className="flex items-center gap-2 text-sm font-semibold text-sidebar-foreground">
-              <Building2 className="h-4 w-4 text-sidebar-foreground/70" />
-              <span className="truncate">{activeUnit.name}</span>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      {/* polo ativo movido para o trigger do dropdown abaixo */}
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-3">
         <nav className="space-y-1">
@@ -233,45 +222,53 @@ function SidebarContent({
                 variant="ghost"
                 className="w-full justify-start gap-3 rounded-xl h-12 px-4 text-sidebar-foreground/80 hover:text-white hover:bg-primary-foreground/20 transition-all whitespace-nowrap"
               >
-                <LogOut className="h-[18px] w-[18px] shrink-0" />
-                <span className="font-semibold">Conta e polos</span>
-                <ChevronsUpDown className="ml-auto h-4 w-4 opacity-70" />
+                <Building2 className="h-[18px] w-[18px] shrink-0 text-sidebar-foreground/70" />
+                <span className="font-semibold truncate flex-1 text-left">
+                  {activeUnit?.name ?? "Selecionar polo"}
+                </span>
+                <ChevronsUpDown className="h-3.5 w-3.5 opacity-50 shrink-0" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent side="right" align="end" className="w-64">
-              {availableUnits.map((unit) => (
-                <DropdownMenuItem
-                  key={unit.id}
-                  onClick={() => setActiveUnit(unit)}
-                  className={cn(
-                    "flex items-center justify-between",
-                    unit.id === activeUnit?.id && "bg-accent",
-                  )}
-                >
-                  <span>{unit.name}</span>
-                  {unit.id === activeUnit?.id ? (
-                    <span className="text-xs text-muted-foreground">Ativo</span>
-                  ) : null}
-                </DropdownMenuItem>
-              ))}
+            <DropdownMenuContent side="right" align="end" className="w-64" sideOffset={8}>
+              <DropdownMenuLabel className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Polos disponíveis
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {availableUnits.map((unit) => {
+                const isActive = unit.id === activeUnit?.id;
+                return (
+                  <DropdownMenuItem
+                    key={unit.id}
+                    onClick={() => setActiveUnit(unit)}
+                    className="flex items-center gap-2.5 cursor-pointer"
+                  >
+                    <Building2 className={cn("h-4 w-4 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
+                    <span className={cn("flex-1 truncate", isActive && "font-medium text-primary")}>
+                      {unit.name}
+                    </span>
+                    {isActive && <Check className="h-3.5 w-3.5 text-primary shrink-0" />}
+                  </DropdownMenuItem>
+                );
+              })}
               {canAccessTenantAdministration && activeUnit && (
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={() => {
-                      setActiveUnit(null);
-                      navigate("/administration");
-                    }}
-                    className="gap-2"
+                    onClick={() => { setActiveUnit(null); navigate("/administration"); }}
+                    className="gap-2.5 cursor-pointer"
                   >
-                    <LayoutDashboard className="h-4 w-4" />
-                    Portal do Gestor
+                    <LayoutDashboard className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <span>Portal do Gestor</span>
                   </DropdownMenuItem>
                 </>
               )}
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onSignOut} className="text-destructive focus:text-destructive">
-                Sair da conta
+              <DropdownMenuItem
+                onClick={onSignOut}
+                className="gap-2.5 cursor-pointer text-destructive focus:text-destructive"
+              >
+                <LogOut className="h-4 w-4 shrink-0" />
+                <span>Sair da conta</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
