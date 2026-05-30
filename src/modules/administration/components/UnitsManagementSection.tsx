@@ -146,7 +146,7 @@ export function UnitsManagementSection({
                           size="icon"
                           onClick={() => onEdit(unit)}
                           aria-label="Editar polo"
-                          className="text-muted-foreground hover:text-foreground"
+                          className="text-muted-foreground"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
