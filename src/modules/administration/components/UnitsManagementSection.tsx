@@ -142,11 +142,10 @@ export function UnitsManagementSection({
                       <div className="flex items-center justify-end gap-1">
                         <Button
                           type="button"
-                          variant="ghost"
+                          variant="outline"
                           size="icon"
                           onClick={() => onEdit(unit)}
                           aria-label="Editar polo"
-                          className="text-muted-foreground"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
