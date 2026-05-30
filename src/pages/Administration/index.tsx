@@ -4,11 +4,10 @@ import {
   AdministrationSummaryCards,
   MembershipDialog,
   MembershipsSection,
-  PolosBreakdownSection,
   TenantUserDialog,
   TenantUsersSection,
   UnitDialog,
-  UnitsSection,
+  UnitsManagementSection,
 } from "@/modules/administration/components";
 import { useAdministrationPage } from "@/modules/administration/hooks/useAdministrationPage";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
@@ -46,16 +45,11 @@ export default function AdministrationPage() {
         defaulters={page.defaulters}
       />
 
-      <PolosBreakdownSection
+      <UnitsManagementSection
         units={page.units}
         memberships={page.memberships}
         unitStats={page.unitStats}
         isLoading={page.isLoading.units || page.isLoading.memberships || page.isLoading.unitStats}
-      />
-
-      <UnitsSection
-        units={page.units}
-        isLoading={page.isLoading.units}
         isToggling={page.mutations.toggleUnit.isPending}
         onToggle={(unit) => page.mutations.toggleUnit.mutate(unit)}
         onEdit={page.openEditUnit}
