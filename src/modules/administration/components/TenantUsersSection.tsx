@@ -55,8 +55,7 @@ export function TenantUsersSection({
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="pl-6">Usuario</TableHead>
-              <TableHead>Papel</TableHead>
+              <TableHead className="pl-6">Operador</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="pr-6 text-right">Ativo</TableHead>
             </TableRow>
@@ -64,31 +63,24 @@ export function TenantUsersSection({
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={3} className="py-10 text-center text-muted-foreground">
                   Carregando usuarios...
                 </TableCell>
               </TableRow>
             ) : tenantUsers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={3} className="py-10 text-center text-muted-foreground">
                   Adicione operadores antes de vincular acessos aos polos.
                 </TableCell>
               </TableRow>
             ) : (
-              tenantUsers.map((user) => (
+              tenantUsers.filter((u) => u.tenantRole !== "owner").map((user) => (
                 <TableRow key={user.id} className={!user.isActive ? "opacity-50" : undefined}>
                   <TableCell className="pl-6">
                     <div className="flex flex-col">
                       <span className="font-medium">{user.name || "Sem nome"}</span>
                       <span className="text-xs text-muted-foreground">{user.email || "Sem e-mail"}</span>
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    {user.tenantRole === "owner" ? (
-                      <StatusBadge variant="info" label="Gestor" />
-                    ) : (
-                      <StatusBadge variant="secondary" label="Operador" />
-                    )}
                   </TableCell>
                   <TableCell>
                     {user.isActive ? (
@@ -101,7 +93,7 @@ export function TenantUsersSection({
                     <Switch
                       checked={user.isActive}
                       onCheckedChange={() => onToggle(user)}
-                      disabled={isToggling || user.tenantRole === "owner"}
+                      disabled={isToggling}
                       aria-label={user.isActive ? "Desativar usuario" : "Ativar usuario"}
                     />
                   </TableCell>
