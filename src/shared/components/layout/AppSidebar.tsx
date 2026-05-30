@@ -257,7 +257,7 @@ function SidebarContent({
                     onClick={() => { setActiveUnit(null); navigate("/administration"); }}
                     className="gap-2.5 cursor-pointer"
                   >
-                    <LayoutDashboard className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <LayoutDashboard className="h-4 w-4 shrink-0" />
                     <span>Portal do Gestor</span>
                   </DropdownMenuItem>
                 </>
@@ -265,7 +265,7 @@ function SidebarContent({
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={onSignOut}
-                className="gap-2.5 cursor-pointer text-destructive focus:text-destructive"
+                className="gap-2.5 cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive"
               >
                 <LogOut className="h-4 w-4 shrink-0" />
                 <span>Sair da conta</span>
