@@ -1,5 +1,39 @@
 import { AlertCircle, Building2, FileText, Shield, Users } from "lucide-react";
-import { StatCard } from "@/shared/components/ui/StatCard";
+import { cn } from "@/shared/lib/utils";
+import { Skeleton } from "@/shared/components/ui/skeleton";
+
+interface StatItemProps {
+  icon: React.ReactNode;
+  label: string;
+  value: number | undefined;
+  variant?: "default" | "warning" | "destructive";
+  loading?: boolean;
+}
+
+function StatItem({ icon, label, value, variant = "default", loading }: StatItemProps) {
+  const valueColor =
+    variant === "warning"
+      ? "text-amber-600 dark:text-amber-400"
+      : variant === "destructive"
+        ? "text-destructive"
+        : "text-foreground";
+
+  return (
+    <div className="flex items-center gap-3 py-3 px-4">
+      <div className="text-muted-foreground shrink-0">{icon}</div>
+      <div className="min-w-0">
+        {loading || value === undefined ? (
+          <Skeleton className="h-4 w-10 mb-1" />
+        ) : (
+          <p className={cn("text-lg font-semibold leading-tight tabular-nums", valueColor)}>
+            {value}
+          </p>
+        )}
+        <p className="text-xs text-muted-foreground truncate">{label}</p>
+      </div>
+    </div>
+  );
+}
 
 interface AdministrationSummaryCardsProps {
   readonly activeUnitsCount: number;
@@ -23,54 +57,44 @@ export function AdministrationSummaryCards({
   isLoading,
 }: AdministrationSummaryCardsProps) {
   return (
-    <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
-      <StatCard
-        title="Socios"
-        value={totalMembers ?? "—"}
-        icon={Users}
-        description="Total consolidado da entidade"
+    <div className="rounded-xl border border-border/50 bg-card shadow-sm divide-y divide-border/50 sm:divide-y-0 sm:divide-x sm:grid sm:grid-cols-3 lg:grid-cols-6">
+      <StatItem
+        icon={<Users className="h-4 w-4" />}
+        label="Socios"
+        value={totalMembers}
         loading={isLoading || totalMembers === undefined}
-        variant="primary"
       />
-      <StatCard
-        title="Requerimentos em aberto"
-        value={pendingRequirements ?? "—"}
-        icon={FileText}
-        description="Pendentes de analise"
-        loading={isLoading || pendingRequirements === undefined}
-        variant={pendingRequirements ? "warning" : "default"}
-      />
-      <StatCard
-        title="Em atraso"
-        value={defaulters ?? "—"}
-        icon={AlertCircle}
-        description="Socios com contribuicao vencida"
-        loading={isLoading || defaulters === undefined}
-        variant={defaulters ? "destructive" : "default"}
-      />
-      <StatCard
-        title="Polos ativos"
+      <StatItem
+        icon={<Building2 className="h-4 w-4" />}
+        label={`Polos (${unitsCount} total)`}
         value={activeUnitsCount}
-        icon={Building2}
-        description={`${unitsCount} cadastrado${unitsCount !== 1 ? "s" : ""} no total`}
         loading={isLoading}
-        variant="info"
       />
-      <StatCard
-        title="Operadores"
+      <StatItem
+        icon={<Users className="h-4 w-4" />}
+        label="Operadores"
         value={operatorsCount}
-        icon={Users}
-        description="Cadastrados na entidade"
         loading={isLoading}
-        variant="info"
       />
-      <StatCard
-        title="Vinculos ativos"
+      <StatItem
+        icon={<Shield className="h-4 w-4" />}
+        label="Vinculos ativos"
         value={accessCount}
-        icon={Shield}
-        description="Operador por polo"
         loading={isLoading}
-        variant="secondary"
+      />
+      <StatItem
+        icon={<FileText className="h-4 w-4" />}
+        label="Req. em aberto"
+        value={pendingRequirements}
+        variant={pendingRequirements ? "warning" : "default"}
+        loading={isLoading || pendingRequirements === undefined}
+      />
+      <StatItem
+        icon={<AlertCircle className="h-4 w-4" />}
+        label="Em atraso"
+        value={defaulters}
+        variant={defaulters ? "destructive" : "default"}
+        loading={isLoading || defaulters === undefined}
       />
     </div>
   );
