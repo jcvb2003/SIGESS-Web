@@ -60,17 +60,16 @@ export function UnitDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="unit-name">Nome do polo</Label>
-            <Input
-              id="unit-name"
-              placeholder="Polo Oeiras"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-
           <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="unit-name">Nome do polo</Label>
+              <Input
+                id="unit-name"
+                placeholder="Polo Oeiras"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="unit-code">Codigo</Label>
               <Input
@@ -80,7 +79,18 @@ export function UnitDialog({
                 onChange={(e) => setCode(e.target.value)}
               />
             </div>
+          </div>
 
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="unit-city">Cidade</Label>
+              <Input
+                id="unit-city"
+                placeholder="Oeiras"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="unit-state">UF</Label>
               <Input
@@ -91,16 +101,6 @@ export function UnitDialog({
                 onChange={(e) => setState(e.target.value.toUpperCase())}
               />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="unit-city">Cidade</Label>
-            <Input
-              id="unit-city"
-              placeholder="Oeiras"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-            />
           </div>
 
           {isEditing && (
