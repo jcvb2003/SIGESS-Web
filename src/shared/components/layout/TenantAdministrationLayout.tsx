@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { Loader2, LogOut, Settings2 } from "lucide-react";
+import { Loader2, LogOut } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { useAuth } from "@/modules/auth/context/authContextStore";
 import { useEntityData } from "@/shared/hooks/useEntityData";
@@ -53,8 +53,7 @@ export function TenantAdministrationLayout() {
           </div>
 
           {/* Portal label — centrado */}
-          <div className="hidden sm:flex items-center gap-1.5 px-4 py-3 border-x border-border/40 text-muted-foreground">
-            <Settings2 className="h-3.5 w-3.5 shrink-0" />
+          <div className="hidden sm:flex items-center px-4 py-3 border-x border-border/40 text-muted-foreground">
             <span className="text-xs font-medium tracking-wide uppercase whitespace-nowrap">
               Portal do Gestor
             </span>
@@ -63,10 +62,10 @@ export function TenantAdministrationLayout() {
           {/* Sair */}
           <div className="flex items-center justify-end flex-1">
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={() => void signOut()}
-              className="gap-2 text-muted-foreground hover:text-foreground h-8 text-xs"
+              className="gap-2 h-8 text-xs"
             >
               <LogOut className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Sair</span>
