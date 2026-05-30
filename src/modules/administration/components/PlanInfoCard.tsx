@@ -1,4 +1,4 @@
-import { CalendarClock, Users, ShieldCheck, ShieldAlert } from "lucide-react";
+import { CalendarClock, Users, ShieldCheck, ShieldAlert, CheckCircle2, XCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
@@ -47,9 +47,9 @@ export function PlanInfoCard() {
             {loading ? (
               <Skeleton className="h-5 w-16" />
             ) : isExpired ? (
-              <StatusBadge variant="destructive" label="Expirado" />
+              <StatusBadge variant="destructive" icon={XCircle} label="Expirado" />
             ) : (
-              <StatusBadge variant="success" label="Ativo" />
+              <StatusBadge variant="success" icon={CheckCircle2} label="Ativo" />
             )}
           </div>
 
