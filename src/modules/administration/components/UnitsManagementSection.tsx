@@ -143,9 +143,10 @@ export function UnitsManagementSection({
                         <Button
                           type="button"
                           variant="outline"
-                          size="icon"
+                          size="sm"
                           onClick={() => onEdit(unit)}
                           aria-label="Editar polo"
+                          className="h-8 w-8 p-0"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
