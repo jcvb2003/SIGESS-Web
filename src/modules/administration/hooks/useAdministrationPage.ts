@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { administrationQueryKeys } from "@/modules/administration/queryKeys";
 import {
@@ -33,7 +32,6 @@ function humanizeError(error: unknown): string {
 
 export function useAdministrationPage(enabled: boolean) {
   const { setActiveUnit } = useTenantUnits();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   // Dialog state
@@ -203,7 +201,8 @@ export function useAdministrationPage(enabled: boolean) {
 
   const enterUnit = (unit: TenantUnitRecord) => {
     setActiveUnit({ id: unit.id, name: unit.name, code: unit.code ?? null, tenantId: unit.tenantId ?? null });
-    navigate("/dashboard");
+    // Não navega explicitamente — TenantAdministrationLayout detecta !isStatePortal
+    // e faz <Navigate replace /> sozinho, evitando dupla navegação que causava logout esporádico.
   };
 
   return {
