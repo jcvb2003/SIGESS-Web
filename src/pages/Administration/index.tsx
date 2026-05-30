@@ -28,7 +28,6 @@ export default function AdministrationPage() {
       />
 
       <AdministrationSummaryCards
-        unitsCount={page.counts.totalUnits}
         activeUnitsCount={page.counts.activeUnits}
         operatorsCount={page.counts.activeUsers}
         accessCount={page.counts.memberships}

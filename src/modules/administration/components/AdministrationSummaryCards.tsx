@@ -61,7 +61,6 @@ function StatItem({ icon, label, value, variant = "default", loading }: StatItem
 
 interface AdministrationSummaryCardsProps {
   readonly activeUnitsCount: number;
-  readonly unitsCount: number;
   readonly operatorsCount: number;
   readonly accessCount: number;
   readonly totalMembers?: number;
@@ -84,7 +83,7 @@ export function AdministrationSummaryCards({
     <div className="rounded-xl border border-border/50 bg-card shadow-sm overflow-hidden divide-y divide-border/30 sm:divide-y-0 sm:divide-x sm:grid sm:grid-cols-3 lg:grid-cols-6">
       <StatItem
         icon={<Building2 className="h-4 w-4" />}
-        label={`Polos — ${unitsCount} total`}
+        label="Polos ativos"
         value={activeUnitsCount}
         loading={isLoading}
       />
