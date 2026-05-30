@@ -73,7 +73,18 @@ export const financeService = {
 
     query = query.order("nome", { ascending: true }).range(from, to);
 
-    const { data, error, count } = await query;
+    let { data, error, count } = await query;
+
+    // Fallback: se unit_id não existe na view (projeto sem Wave 5), refaz sem filtro de unidade.
+    if (error && (error as { code?: string }).code === "42703" && unitId) {
+      const fallback = this.applyDashboardFilters(
+        createDashboardQuery(true, null),
+        params,
+        requiredYears,
+      ).order("nome", { ascending: true }).range(from, to);
+      ({ data, error, count } = await fallback);
+    }
+
     if (error) throw error;
 
     const items = (data ?? []).map((row) =>
@@ -166,17 +177,26 @@ export const financeService = {
     const firstDayYear = `${year}-01-01`;
     const lastDayYear = `${year}-12-31`;
 
-    let qMes = supabase.from("financeiro_lancamentos").select("valor").eq("status", "pago").gte("data_pagamento", firstDayMonth).lte("data_pagamento", lastDayMonth);
-    let qAno = supabase.from("financeiro_lancamentos").select("valor").eq("status", "pago").gte("data_pagamento", firstDayYear).lte("data_pagamento", lastDayYear);
-    let qDae = supabase.from("financeiro_dae").select("id", { count: "exact", head: true }).eq("status", "pago").eq("boleto_pago", false);
+    const buildQueries = (withUnit: boolean) => {
+      let qMes = supabase.from("financeiro_lancamentos").select("valor").eq("status", "pago").gte("data_pagamento", firstDayMonth).lte("data_pagamento", lastDayMonth);
+      let qAno = supabase.from("financeiro_lancamentos").select("valor").eq("status", "pago").gte("data_pagamento", firstDayYear).lte("data_pagamento", lastDayYear);
+      let qDae = supabase.from("financeiro_dae").select("id", { count: "exact", head: true }).eq("status", "pago").eq("boleto_pago", false);
+      if (withUnit && unitId) {
+        qMes = qMes.eq("unit_id", unitId);
+        qAno = qAno.eq("unit_id", unitId);
+        qDae = qDae.eq("unit_id", unitId);
+      }
+      return [qMes, qAno, qDae] as const;
+    };
 
-    if (unitId) {
-      qMes = qMes.eq("unit_id", unitId);
-      qAno = qAno.eq("unit_id", unitId);
-      qDae = qDae.eq("unit_id", unitId);
+    let [lancamentosMes, lancamentosAno, daeResult] = await Promise.all(buildQueries(true));
+
+    // Coluna unit_id pode não existir em projetos que ainda não passaram pela Wave 3b (ex: Z2, BREVES).
+    // Nesse caso, refaz as queries sem o filtro de unidade.
+    const missingColumn = (e: unknown) => (e as { code?: string } | null)?.code === "42703";
+    if (missingColumn(lancamentosMes.error) || missingColumn(lancamentosAno.error)) {
+      [lancamentosMes, lancamentosAno, daeResult] = await Promise.all(buildQueries(false));
     }
-
-    const [lancamentosMes, lancamentosAno, daeResult] = await Promise.all([qMes, qAno, qDae]);
 
     if (lancamentosMes.error) throw lancamentosMes.error;
     if (lancamentosAno.error) throw lancamentosAno.error;
