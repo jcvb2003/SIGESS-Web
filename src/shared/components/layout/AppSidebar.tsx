@@ -240,13 +240,15 @@ function SidebarContent({
                   <DropdownMenuItem
                     key={unit.id}
                     onClick={() => setActiveUnit(unit)}
-                    className="flex items-center gap-2.5 cursor-pointer"
+                    className="group flex items-center gap-2.5 cursor-pointer"
                   >
                     <Building2 className="h-4 w-4 shrink-0" />
                     <span className={cn("flex-1 truncate", isActive && "font-semibold")}>
                       {unit.name}
                     </span>
-                    {isActive && <Check className="h-3.5 w-3.5 shrink-0 text-emerald-500" />}
+                    {isActive && (
+                      <Check className="h-3.5 w-3.5 shrink-0 text-emerald-500 group-data-[highlighted]:text-inherit" />
+                    )}
                   </DropdownMenuItem>
                 );
               })}
