@@ -1,5 +1,4 @@
 import { Navigate } from "react-router-dom";
-import { Plus } from "lucide-react";
 import {
   AdministrationSummaryCards,
   MembershipDialog,
@@ -11,7 +10,6 @@ import {
 } from "@/modules/administration/components";
 import { useAdministrationPage } from "@/modules/administration/hooks/useAdministrationPage";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
-import { Button } from "@/shared/components/ui/button";
 import { usePermissions } from "@/shared/hooks/usePermissions";
 
 export default function AdministrationPage() {
@@ -27,12 +25,6 @@ export default function AdministrationPage() {
       <PageHeader
         title="Portal do Gestor"
         description="Gerencie os polos, operadores e acessos da entidade."
-        actions={
-          <Button onClick={page.openCreateUnit} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Novo polo
-          </Button>
-        }
       />
 
       <AdministrationSummaryCards
@@ -55,6 +47,7 @@ export default function AdministrationPage() {
         onToggle={(unit) => page.mutations.toggleUnit.mutate(unit)}
         onEdit={page.openEditUnit}
         onEnter={page.enterUnit}
+        onCreate={page.openCreateUnit}
       />
 
       <TenantUsersSection

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Building2, Edit, LogIn } from "lucide-react";
+import { Building2, Edit, LogIn, Plus } from "lucide-react";
 import type {
   TenantMembershipRecord,
   TenantUnitRecord,
@@ -37,6 +37,7 @@ interface UnitsManagementSectionProps {
   readonly onToggle: (unit: TenantUnitRecord) => void;
   readonly onEdit: (unit: TenantUnitRecord) => void;
   readonly onEnter: (unit: TenantUnitRecord) => void;
+  readonly onCreate: () => void;
 }
 
 export function UnitsManagementSection({
@@ -48,6 +49,7 @@ export function UnitsManagementSection({
   onToggle,
   onEdit,
   onEnter,
+  onCreate,
 }: UnitsManagementSectionProps) {
   const operatorsByUnit = useMemo(() => {
     const map = new Map<string, number>();
@@ -59,14 +61,20 @@ export function UnitsManagementSection({
 
   return (
     <Card className="border-border/50 shadow-sm">
-      <CardHeader>
-        <CardTitle className="text-base flex items-center gap-2">
-          <Building2 className="h-5 w-5 text-primary" />
-          Polos
-        </CardTitle>
-        <CardDescription>
-          Visao operacional e configuracao de cada polo da entidade.
-        </CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between gap-4">
+        <div>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Building2 className="h-5 w-5 text-primary" />
+            Polos
+          </CardTitle>
+          <CardDescription>
+            Visao operacional e configuracao de cada polo da entidade.
+          </CardDescription>
+        </div>
+        <Button onClick={onCreate} variant="outline" className="gap-2 shrink-0">
+          <Plus className="h-4 w-4" />
+          Novo polo
+        </Button>
       </CardHeader>
       <CardContent className="border-t border-border/10 pt-0 px-0">
         <Table>
