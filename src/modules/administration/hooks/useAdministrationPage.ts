@@ -125,18 +125,6 @@ export function useAdministrationPage(enabled: boolean) {
     onError: (error: unknown) => toast.error(humanizeError(error)),
   });
 
-  const toggleMutation = useMutation({
-    mutationFn: async (unit: TenantUnitRecord) => {
-      const { error } = await administrationService.setTenantUnitActive(unit.id, !unit.isActive);
-      if (error) throw error;
-    },
-    onSuccess: async (_, unit) => {
-      await queryClient.invalidateQueries({ queryKey: administrationQueryKeys.tenantUnits() });
-      toast.success(unit.isActive ? "Polo desativado com sucesso." : "Polo ativado com sucesso.");
-    },
-    onError: (error: unknown) => toast.error(humanizeError(error)),
-  });
-
   const membershipCreateMutation = useMutation({
     mutationFn: async (values: TenantMembershipInput) => {
       const { data, error } = await administrationService.createTenantMembership(values);
@@ -256,7 +244,6 @@ export function useAdministrationPage(enabled: boolean) {
     // Mutations
     mutations: {
       saveUnit: { mutateAsync: saveMutation.mutateAsync, isPending: saveMutation.isPending },
-      toggleUnit: { mutate: toggleMutation.mutate, isPending: toggleMutation.isPending },
       createMembership: { mutateAsync: membershipCreateMutation.mutateAsync, isPending: membershipCreateMutation.isPending },
       deleteMembership: { mutate: membershipDeleteMutation.mutate, isPending: membershipDeleteMutation.isPending },
       createTenantUser: { mutateAsync: tenantUserCreateMutation.mutateAsync, isPending: tenantUserCreateMutation.isPending },

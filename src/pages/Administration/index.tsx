@@ -43,8 +43,6 @@ export default function AdministrationPage() {
         memberships={page.memberships}
         unitStats={page.unitStats}
         isLoading={page.isLoading.units || page.isLoading.memberships || page.isLoading.unitStats}
-        isToggling={page.mutations.toggleUnit.isPending}
-        onToggle={(unit) => page.mutations.toggleUnit.mutate(unit)}
         onEdit={page.openEditUnit}
         onEnter={page.enterUnit}
         onCreate={page.openCreateUnit}

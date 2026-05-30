@@ -13,7 +13,6 @@ import {
   CardTitle,
 } from "@/shared/components/ui/card";
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
-import { Switch } from "@/shared/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -33,8 +32,6 @@ interface UnitsManagementSectionProps {
   readonly memberships: TenantMembershipRecord[];
   readonly unitStats?: Record<string, UnitStat>;
   readonly isLoading: boolean;
-  readonly isToggling: boolean;
-  readonly onToggle: (unit: TenantUnitRecord) => void;
   readonly onEdit: (unit: TenantUnitRecord) => void;
   readonly onEnter: (unit: TenantUnitRecord) => void;
   readonly onCreate: () => void;
@@ -45,8 +42,6 @@ export function UnitsManagementSection({
   memberships,
   unitStats,
   isLoading,
-  isToggling,
-  onToggle,
   onEdit,
   onEnter,
   onCreate,
@@ -137,19 +132,11 @@ export function UnitsManagementSection({
                       )}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={unit.isActive}
-                          onCheckedChange={() => onToggle(unit)}
-                          disabled={isToggling}
-                          aria-label={unit.isActive ? "Desativar polo" : "Ativar polo"}
-                        />
-                        {unit.isActive ? (
-                          <StatusBadge variant="success" label="Ativo" />
-                        ) : (
-                          <StatusBadge variant="secondary" label="Inativo" />
-                        )}
-                      </div>
+                      {unit.isActive ? (
+                        <StatusBadge variant="success" label="Ativo" />
+                      ) : (
+                        <StatusBadge variant="secondary" label="Inativo" />
+                      )}
                     </TableCell>
                     <TableCell className="pr-6">
                       <div className="flex items-center justify-end gap-1">

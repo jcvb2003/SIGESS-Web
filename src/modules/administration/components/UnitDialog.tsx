@@ -10,6 +10,8 @@ import {
   DialogTitle,
 } from "@/shared/components/ui/dialog";
 import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
+import { Switch } from "@/shared/components/ui/switch";
 
 interface UnitDialogProps {
   readonly open: boolean;
@@ -30,6 +32,7 @@ export function UnitDialog({
   const [code, setCode] = useState(editingUnit?.code ?? "");
   const [city, setCity] = useState(editingUnit?.city ?? "");
   const [state, setState] = useState(editingUnit?.state ?? "");
+  const [isActive, setIsActive] = useState(editingUnit?.isActive ?? true);
 
   const isEditing = Boolean(editingUnit?.id);
 
@@ -42,11 +45,13 @@ export function UnitDialog({
           setCode("");
           setCity("");
           setState("");
+          setIsActive(true);
         } else {
           setName(editingUnit?.name ?? "");
           setCode(editingUnit?.code ?? "");
           setCity(editingUnit?.city ?? "");
           setState(editingUnit?.state ?? "");
+          setIsActive(editingUnit?.isActive ?? true);
         }
         onOpenChange(nextOpen);
       }}
@@ -61,55 +66,63 @@ export function UnitDialog({
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="unit-name" className="text-sm font-medium">
-              Nome do polo
-            </label>
+            <Label htmlFor="unit-name">Nome do polo</Label>
             <Input
               id="unit-name"
               placeholder="Polo Oeiras"
               value={name}
-              onChange={(event) => setName(event.target.value)}
+              onChange={(e) => setName(e.target.value)}
             />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="unit-code" className="text-sm font-medium">
-                Codigo
-              </label>
+              <Label htmlFor="unit-code">Codigo</Label>
               <Input
                 id="unit-code"
                 placeholder="oeiras"
                 value={code}
-                onChange={(event) => setCode(event.target.value)}
+                onChange={(e) => setCode(e.target.value)}
               />
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="unit-state" className="text-sm font-medium">
-                UF
-              </label>
+              <Label htmlFor="unit-state">UF</Label>
               <Input
                 id="unit-state"
                 placeholder="PI"
                 maxLength={2}
                 value={state}
-                onChange={(event) => setState(event.target.value.toUpperCase())}
+                onChange={(e) => setState(e.target.value.toUpperCase())}
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="unit-city" className="text-sm font-medium">
-              Cidade
-            </label>
+            <Label htmlFor="unit-city">Cidade</Label>
             <Input
               id="unit-city"
               placeholder="Oeiras"
               value={city}
-              onChange={(event) => setCity(event.target.value)}
+              onChange={(e) => setCity(e.target.value)}
             />
           </div>
+
+          {isEditing && (
+            <div className="flex items-center justify-between rounded-lg border border-border/50 px-4 py-3">
+              <div>
+                <p className="text-sm font-medium">Polo ativo</p>
+                <p className="text-xs text-muted-foreground">
+                  Polos inativos nao recebem novos acessos.
+                </p>
+              </div>
+              <Switch
+                checked={isActive}
+                onCheckedChange={setIsActive}
+                aria-label="Ativar ou desativar polo"
+              />
+            </div>
+          )}
         </div>
 
         <DialogFooter>
@@ -125,14 +138,7 @@ export function UnitDialog({
             type="button"
             disabled={isSaving || !name.trim()}
             onClick={() =>
-              void onSubmit({
-                id: editingUnit?.id,
-                name,
-                code,
-                city,
-                state,
-                isActive: editingUnit?.isActive ?? true,
-              })
+              void onSubmit({ id: editingUnit?.id, name, code, city, state, isActive })
             }
           >
             {isEditing ? "Salvar alteracoes" : "Criar polo"}
