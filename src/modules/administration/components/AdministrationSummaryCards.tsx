@@ -8,15 +8,32 @@ interface StatItemProps {
   icon: React.ReactNode;
   label: string;
   value: number | undefined;
-  variant?: StatVariant;
+  variant?: StatVariantExtended;
   loading?: boolean;
 }
 
-const variantStyles: Record<StatVariant, { icon: string; iconBg: string; value: string }> = {
+type StatVariantExtended = StatVariant | "primary" | "info" | "violet";
+
+const variantStyles: Record<StatVariantExtended, { icon: string; iconBg: string; value: string }> = {
   default: {
     icon: "text-muted-foreground",
     iconBg: "bg-muted",
     value: "text-foreground",
+  },
+  primary: {
+    icon: "text-primary",
+    iconBg: "bg-primary/10",
+    value: "text-primary",
+  },
+  info: {
+    icon: "text-blue-600 dark:text-blue-400",
+    iconBg: "bg-blue-100 dark:bg-blue-900/30",
+    value: "text-blue-600 dark:text-blue-400",
+  },
+  violet: {
+    icon: "text-violet-600 dark:text-violet-400",
+    iconBg: "bg-violet-100 dark:bg-violet-900/30",
+    value: "text-violet-600 dark:text-violet-400",
   },
   warning: {
     icon: "text-amber-600 dark:text-amber-400",
@@ -81,24 +98,28 @@ export function AdministrationSummaryCards({
         icon={<Building2 className="h-4 w-4" />}
         label="Polos ativos"
         value={activeUnitsCount}
+        variant="primary"
         loading={isLoading}
       />
       <StatItem
         icon={<Users className="h-4 w-4" />}
         label="Operadores"
         value={operatorsCount}
+        variant="info"
         loading={isLoading}
       />
       <StatItem
         icon={<Shield className="h-4 w-4" />}
         label="Vinculos ativos"
         value={accessCount}
+        variant="violet"
         loading={isLoading}
       />
       <StatItem
         icon={<Users className="h-4 w-4" />}
         label="Socios"
         value={totalMembers}
+        variant="default"
         loading={isLoading || totalMembers === undefined}
       />
     </div>

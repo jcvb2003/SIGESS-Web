@@ -9,7 +9,6 @@ import {
   UnitsManagementSection,
 } from "@/modules/administration/components";
 import { useAdministrationPage } from "@/modules/administration/hooks/useAdministrationPage";
-import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { usePermissions } from "@/shared/hooks/usePermissions";
 
 export default function AdministrationPage() {
@@ -22,11 +21,6 @@ export default function AdministrationPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
-      <PageHeader
-        title="Portal do Gestor"
-        description="Gerencie os polos, operadores e acessos da entidade."
-      />
-
       <AdministrationSummaryCards
         activeUnitsCount={page.counts.activeUnits}
         operatorsCount={page.counts.activeUsers}
