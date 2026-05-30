@@ -4,7 +4,6 @@ import type {
   TenantMembershipRecord,
   TenantUnitRecord,
 } from "@/modules/administration/services/administrationService";
-import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import {
   Card,
@@ -13,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/components/ui/card";
+import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 import { Switch } from "@/shared/components/ui/switch";
 import {
   Table,
@@ -87,7 +87,7 @@ export function UnitsManagementSection({
               <TableHead className="text-center">Socios</TableHead>
               <TableHead className="text-center">Req. pendentes</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="pr-6 text-right">Acoes</TableHead>
+              <TableHead className="pr-6 text-right w-24">Acoes</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -137,31 +137,36 @@ export function UnitsManagementSection({
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={unit.isActive ? "default" : "secondary"}>
-                        {unit.isActive ? "Ativo" : "Inativo"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="pr-6">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center gap-2">
                         <Switch
                           checked={unit.isActive}
                           onCheckedChange={() => onToggle(unit)}
                           disabled={isToggling}
                           aria-label={unit.isActive ? "Desativar polo" : "Ativar polo"}
                         />
+                        {unit.isActive ? (
+                          <StatusBadge variant="success" label="Ativo" />
+                        ) : (
+                          <StatusBadge variant="secondary" label="Inativo" />
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="pr-6">
+                      <div className="flex items-center justify-end gap-1">
                         <Button
                           type="button"
-                          variant="outline"
+                          variant="ghost"
                           size="icon"
                           onClick={() => onEdit(unit)}
                           aria-label="Editar polo"
+                          className="text-muted-foreground hover:text-foreground"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
                         {unit.isActive && (
                           <Button
                             type="button"
-                            variant="default"
+                            variant="outline"
                             size="sm"
                             className="gap-1.5"
                             onClick={() => onEnter(unit)}
