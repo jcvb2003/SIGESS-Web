@@ -1,5 +1,5 @@
 import { AlertCircle, Building2, FileText, Shield, Users } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { StatCard } from "@/shared/components/ui/StatCard";
 
 interface AdministrationSummaryCardsProps {
   readonly activeUnitsCount: number;
@@ -9,39 +9,7 @@ interface AdministrationSummaryCardsProps {
   readonly totalMembers?: number;
   readonly pendingRequirements?: number;
   readonly defaulters?: number;
-}
-
-function StatCard({
-  icon,
-  title,
-  description,
-  value,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  value: number | undefined;
-}) {
-  return (
-    <Card className="border-border/50 shadow-sm">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          {icon}
-          {title}
-        </CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="text-3xl font-bold">
-          {value === undefined ? (
-            <span className="text-muted-foreground text-2xl">—</span>
-          ) : (
-            value
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
+  readonly isLoading?: boolean;
 }
 
 export function AdministrationSummaryCards({
@@ -52,50 +20,58 @@ export function AdministrationSummaryCards({
   totalMembers,
   pendingRequirements,
   defaulters,
+  isLoading,
 }: AdministrationSummaryCardsProps) {
   return (
-    <div className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard
-          icon={<Building2 className="h-5 w-5 text-primary" />}
-          title="Polos ativos"
-          description={`${unitsCount} cadastrado${unitsCount !== 1 ? "s" : ""} no total`}
-          value={activeUnitsCount}
-        />
-        <StatCard
-          icon={<Users className="h-5 w-5 text-primary" />}
-          title="Operadores"
-          description="Cadastrados na entidade"
-          value={operatorsCount}
-        />
-        <StatCard
-          icon={<Shield className="h-5 w-5 text-primary" />}
-          title="Acessos ativos"
-          description="Vinculos operador-polo"
-          value={accessCount}
-        />
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard
-          icon={<Users className="h-5 w-5 text-emerald-600" />}
-          title="Socios"
-          description="Total consolidado da entidade"
-          value={totalMembers}
-        />
-        <StatCard
-          icon={<FileText className="h-5 w-5 text-amber-500" />}
-          title="Requerimentos pendentes"
-          description="Soma de todos os polos"
-          value={pendingRequirements}
-        />
-        <StatCard
-          icon={<AlertCircle className="h-5 w-5 text-destructive" />}
-          title="Inadimplentes"
-          description="Socios com mensalidade em atraso"
-          value={defaulters}
-        />
-      </div>
+    <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
+      <StatCard
+        title="Socios"
+        value={totalMembers ?? "—"}
+        icon={Users}
+        description="Total consolidado da entidade"
+        loading={isLoading || totalMembers === undefined}
+        variant="primary"
+      />
+      <StatCard
+        title="Requerimentos em aberto"
+        value={pendingRequirements ?? "—"}
+        icon={FileText}
+        description="Pendentes de analise"
+        loading={isLoading || pendingRequirements === undefined}
+        variant={pendingRequirements ? "warning" : "default"}
+      />
+      <StatCard
+        title="Em atraso"
+        value={defaulters ?? "—"}
+        icon={AlertCircle}
+        description="Socios com contribuicao vencida"
+        loading={isLoading || defaulters === undefined}
+        variant={defaulters ? "destructive" : "default"}
+      />
+      <StatCard
+        title="Polos ativos"
+        value={activeUnitsCount}
+        icon={Building2}
+        description={`${unitsCount} cadastrado${unitsCount !== 1 ? "s" : ""} no total`}
+        loading={isLoading}
+        variant="info"
+      />
+      <StatCard
+        title="Operadores"
+        value={operatorsCount}
+        icon={Users}
+        description="Cadastrados na entidade"
+        loading={isLoading}
+        variant="info"
+      />
+      <StatCard
+        title="Vinculos ativos"
+        value={accessCount}
+        icon={Shield}
+        description="Operador por polo"
+        loading={isLoading}
+        variant="secondary"
+      />
     </div>
   );
 }

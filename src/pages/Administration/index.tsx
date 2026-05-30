@@ -43,6 +43,7 @@ export default function AdministrationPage() {
         totalMembers={page.totalMembers}
         pendingRequirements={page.pendingRequirements}
         defaulters={page.defaulters}
+        isLoading={page.isLoading.units || page.isLoading.tenantUsers || page.isLoading.memberships}
       />
 
       <UnitsManagementSection
