@@ -242,8 +242,8 @@ function SidebarContent({
                     onClick={() => setActiveUnit(unit)}
                     className="flex items-center gap-2.5 cursor-pointer"
                   >
-                    <Building2 className="h-4 w-4 shrink-0" />
-                    <span className={cn("flex-1 truncate", isActive && "font-semibold")}>
+                    <Building2 className={cn("h-4 w-4 shrink-0", isActive && "!text-emerald-500")} />
+                    <span className={cn("flex-1 truncate", isActive && "font-semibold !text-emerald-500")}>
                       {unit.name}
                     </span>
                     {isActive && <Check className="h-3.5 w-3.5 shrink-0 !text-emerald-500" />}
