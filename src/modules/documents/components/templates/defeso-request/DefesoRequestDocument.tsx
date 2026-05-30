@@ -39,6 +39,7 @@ import { useRequestManagement } from "../../../hooks/useRequestManagement";
 import { DocumentTemplate } from "@/modules/settings/types/settings.types";
 import { usePdfGeneration } from "../../../hooks/usePdfGeneration";
 import { useParametersData } from "@/modules/settings/hooks/useParametersData";
+import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -95,7 +96,8 @@ export function DefesoRequestDocument({
     deleteRequest,
     isDeleting,
   } = useRequestManagement(fullMemberData?.cpf);
-  const { parameters } = useParametersData();
+  const { activeUnit } = useTenantUnits();
+  const { parameters } = useParametersData(activeUnit?.id);
   const [requestDate, setRequestDate] = useState<string>(
     format(new Date(), "yyyy-MM-dd"),
   );

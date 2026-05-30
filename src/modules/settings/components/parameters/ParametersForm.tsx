@@ -3,6 +3,7 @@ import { ParametersFormHeader } from "./ParametersFormHeader";
 import { FishingPeriodsSection } from "./FishingPeriodsSection";
 import { PublicationSection } from "./PublicationSection";
 import { useParametersData } from "../../hooks/useParametersData";
+import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 import { SystemParameters } from "../../types/settings.types";
 import { z } from "zod";
 import { optionalDateSchema, flexibleDateSchema } from "@/shared/utils/validators/dateValidators";
@@ -44,8 +45,9 @@ interface ParametersFormProps {
 }
 
 export function ParametersForm({ readOnly = false }: ParametersFormProps = {}) {
+  const { activeUnit } = useTenantUnits();
   const { parameters, isLoading, isSaving, saveParameters } =
-    useParametersData();
+    useParametersData(activeUnit?.id);
 
   const methods = useForm<ParametersFormData>({
     resolver: zodResolver(parametersSchema),

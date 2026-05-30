@@ -7,7 +7,7 @@ export const financeQueryKeys = {
   statement: (cpf: string) =>
     [...financeQueryKeys.all, "statement", cpf] as const,
   settings: (unitId?: string | null) => [...financeQueryKeys.all, "settings", unitId ?? null] as const,
-  chargeTypes: () => [...financeQueryKeys.all, "chargeTypes"] as const,
+  chargeTypes: (unitId?: string | null) => [...financeQueryKeys.all, "chargeTypes", unitId ?? null] as const,
   generatedCharges: (typeId?: string) =>
     [...financeQueryKeys.all, "generatedCharges", typeId] as const,
   memberConfig: (cpf: string) =>

@@ -174,13 +174,14 @@ export const settingsService = {
 
     return this.getEntity(settings.unitId);
   },
-  async getParameters(): Promise<ServiceResponse<SystemParameters>> {
-    const { data, error } = await supabase
+  async getParameters(unitId?: string | null): Promise<ServiceResponse<SystemParameters>> {
+    const query = supabase
       .from(PARAMETERS_TABLE)
       .select("*")
       .order("id", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .limit(1);
+    if (unitId) query.eq("unit_id", unitId);
+    const { data, error } = await query.maybeSingle();
     if (error) {
       console.error("Erro ao buscar parâmetros:", error);
       return { data: null, error };
@@ -227,15 +228,17 @@ export const settingsService = {
   },
   async saveParameters(
     input: SystemParameters,
+    unitId?: string | null,
   ): Promise<ServiceResponse<SystemParameters>> {
     let parameterId = input.id;
     if (!parameterId) {
-      const { data: latest, error: latestError } = await supabase
+      const idQuery = supabase
         .from(PARAMETERS_TABLE)
         .select("id")
         .order("id", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .limit(1);
+      if (unitId) idQuery.eq("unit_id", unitId);
+      const { data: latest, error: latestError } = await idQuery.maybeSingle();
       if (latestError) {
         console.error("Erro ao identificar parâmetro existente:", latestError);
         return { data: null, error: latestError };
@@ -246,6 +249,7 @@ export const settingsService = {
     const payload = {
       ...(parameterId ? { id: parameterId } : {}),
       ...(sharedTenantId ? { tenant_id: sharedTenantId } : {}),
+      ...(unitId ? { unit_id: unitId } : {}),
       inicio_pesca1: toNullable(input.defeso1Start),
       final_pesca1: toNullable(input.defeso1End),
       inicio_pesca2: toNullable(input.defeso2Start),
@@ -269,13 +273,15 @@ export const settingsService = {
       }
       return { data: null, error: new Error(errorMessage) };
     }
-    return this.getParameters();
+    return this.getParameters(unitId);
   },
-  async getLocalities(): Promise<ServiceResponse<Locality[]>> {
-    const { data, error } = await supabase
+  async getLocalities(unitId?: string | null): Promise<ServiceResponse<Locality[]>> {
+    const query = supabase
       .from(LOCALITIES_TABLE)
       .select("id, nome, codigo_localidade")
       .order("nome", { ascending: true });
+    if (unitId) query.eq("unit_id", unitId);
+    const { data, error } = await query;
     if (error) {
       console.error("Erro ao buscar localidades:", error);
       return { data: null, error };
@@ -287,7 +293,7 @@ export const settingsService = {
     }));
     return { data: localities, error: null };
   },
-  async saveLocality(locality: Locality): Promise<ServiceResponse<Locality>> {
+  async saveLocality(locality: Locality, unitId?: string | null): Promise<ServiceResponse<Locality>> {
     const normalizedName = locality.name.trim().toUpperCase();
 
     if (locality.id) {
@@ -315,10 +321,13 @@ export const settingsService = {
       };
     }
 
+    const sharedTenantId = await resolveCurrentSharedTenantId();
     const { data, error } = await supabase
       .from(LOCALITIES_TABLE)
       .insert({
         nome: normalizedName || null,
+        ...(unitId ? { unit_id: unitId } : {}),
+        ...(sharedTenantId ? { tenant_id: sharedTenantId } : {}),
       })
       .select("id, nome, codigo_localidade")
       .single();

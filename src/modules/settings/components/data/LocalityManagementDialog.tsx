@@ -28,6 +28,7 @@ import {
 import { Input } from "@/shared/components/ui/input";
 import { settingsService } from "../../services/settingsService";
 import { settingsQueryKeys } from "../../queryKeys";
+import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 import type { Locality } from "../../types/settings.types";
 
 interface LocalityManagementDialogProps {
@@ -42,13 +43,14 @@ export function LocalityManagementDialog({
   onCreated,
 }: Readonly<LocalityManagementDialogProps>) {
   const queryClient = useQueryClient();
+  const { activeUnit } = useTenantUnits();
   const [editingLocality, setEditingLocality] = useState<Locality | null>(null);
   const [name, setName] = useState("");
 
   const localitiesQuery = useQuery({
-    queryKey: settingsQueryKeys.localities(),
+    queryKey: settingsQueryKeys.localities(activeUnit?.id),
     queryFn: async () => {
-      const { data, error } = await settingsService.getLocalities();
+      const { data, error } = await settingsService.getLocalities(activeUnit?.id);
       if (error) throw error;
       return data;
     },
@@ -60,14 +62,13 @@ export function LocalityManagementDialog({
         id: values.id,
         name: values.name,
         code: "", // O código é gerado pelo banco
-      });
+      }, activeUnit?.id);
       if (error) throw error;
       return data;
     },
     onSuccess: async (newLocality) => {
-      // Aguarda o refetch completo para garantir que a nova localidade esteja na lista global
       await queryClient.refetchQueries({
-        queryKey: settingsQueryKeys.localities(),
+        queryKey: settingsQueryKeys.localities(activeUnit?.id),
       });
       
       toast.success("Localidade salva com sucesso.");
@@ -103,7 +104,7 @@ export function LocalityManagementDialog({
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: settingsQueryKeys.localities(),
+        queryKey: settingsQueryKeys.localities(activeUnit?.id),
       });
       toast.success("Localidade excluída com sucesso.");
     },

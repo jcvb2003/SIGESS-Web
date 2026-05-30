@@ -6,6 +6,7 @@ import { Loader2, Plus, Trash2, Tag } from "lucide-react";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { cn } from "@/shared/lib/utils";
 import { useChargeTypes } from "../../hooks/data/useChargeTypes";
+import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 import type { ChargeType } from "../../types/finance.types";
 
 import {
@@ -35,7 +36,8 @@ export function PaymentTypeSelector({
   onValueChange,
   onRemove,
 }: PaymentTypeSelectorProps) {
-  const { chargeTypes, isLoading } = useChargeTypes(true);
+  const { activeUnit } = useTenantUnits();
+  const { chargeTypes, isLoading } = useChargeTypes(true, activeUnit?.id);
   const [showAll, setShowAll] = useState(false);
 
   if (isLoading) {

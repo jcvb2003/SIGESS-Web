@@ -1,32 +1,39 @@
 import { supabase } from "@/shared/lib/supabase/client";
+import { resolveCurrentSharedTenantId } from "@/shared/utils/tenant";
 import type { ChargeType } from "../types/finance.types";
 
 export const chargeTypesService = {
-  async getAll(): Promise<ChargeType[]> {
-    const { data, error } = await supabase
-      .from("tipos_cobranca")
-      .select("*")
-      .order("nome");
+  async getAll(unitId?: string | null): Promise<ChargeType[]> {
+    const query = supabase.from("tipos_cobranca").select("*").order("nome");
+    if (unitId) query.eq("unit_id", unitId);
+    const { data, error } = await query;
 
     if (error) throw error;
     return data ?? [];
   },
 
-  async getActive(): Promise<ChargeType[]> {
-    const { data, error } = await supabase
+  async getActive(unitId?: string | null): Promise<ChargeType[]> {
+    const query = supabase
       .from("tipos_cobranca")
       .select("*")
       .eq("ativo", true)
       .order("nome");
+    if (unitId) query.eq("unit_id", unitId);
+    const { data, error } = await query;
 
     if (error) throw error;
     return data ?? [];
   },
 
-  async create(charge: Omit<ChargeType, "id" | "created_at" | "updated_at">): Promise<void> {
+  async create(charge: Omit<ChargeType, "id" | "created_at" | "updated_at">, unitId?: string | null): Promise<void> {
+    const sharedTenantId = await resolveCurrentSharedTenantId();
     const { error } = await supabase
       .from("tipos_cobranca")
-      .insert(charge);
+      .insert({
+        ...charge,
+        ...(unitId ? { unit_id: unitId } : {}),
+        ...(sharedTenantId ? { tenant_id: sharedTenantId } : {}),
+      });
 
     if (error) throw error;
   },

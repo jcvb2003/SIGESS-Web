@@ -18,6 +18,7 @@ import { RadioGroup, RadioGroupItem } from "@/shared/components/ui/radio-group";
 import { RequirementStatus } from "../types/requirement.types";
 import { BeneficioFilterType, CarenciaFilterType } from "../hooks/filters/useRequirementFilters";
 import { useParametersData } from "@/modules/settings/hooks/useParametersData";
+import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 import { format, parseISO, isValid } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -55,7 +56,8 @@ export function RequirementsFilterPanel({
     (_, i) => (new Date().getFullYear() - i).toString()
   );
   
-  const { parameters } = useParametersData();
+  const { activeUnit } = useTenantUnits();
+  const { parameters } = useParametersData(activeUnit?.id);
 
   const getFormattedDefeso = () => {
     const rawDate = parameters?.defeso1Start;

@@ -14,13 +14,15 @@ import { StateSelect } from "@/shared/components/form-fields/fields/StateSelect"
 import { SelectField } from "@/shared/components/form-fields/fields/SelectField";
 import { Button } from "@/shared/components/ui/button";
 import { useLocalitiesData } from "../../hooks/data/useLocalitiesData";
+import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 import { MapPin, Plus } from "lucide-react";
 import { LocalityManagementDialog } from "@/modules/settings/components/data/LocalityManagementDialog";
 
 export function AddressForm() {
   const { control, setValue } = useFormContext();
   const [isLocalityDialogOpen, setIsLocalityDialogOpen] = useState(false);
-  const { localities, loading } = useLocalitiesData();
+  const { activeUnit } = useTenantUnits();
+  const { localities, loading } = useLocalitiesData(activeUnit?.id);
 
   const localityOptions = localities
     .filter((locality) => !!locality.code)

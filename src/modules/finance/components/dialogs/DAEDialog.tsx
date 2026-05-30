@@ -21,6 +21,7 @@ import { Checkbox } from "@/shared/components/ui/checkbox";
 import { usePaymentSession } from "../../hooks/edit/usePaymentSession";
 import { useMemberStatement } from "../../hooks/data/useMemberStatement";
 import { useParametersData } from "@/modules/settings/hooks/useParametersData";
+import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 import { isMonthInDefeso } from "../../utils/defesoUtils";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { formatNumericInput } from "../shared/formatters";
@@ -80,9 +81,10 @@ export function DAEDialog({
 }: DAEDialogProps) {
   const currentYear = new Date().getFullYear();
   const queryClient = useQueryClient();
+  const { activeUnit } = useTenantUnits();
   const paymentMutation = usePaymentSession();
   const { daes: historyDaes } = useMemberStatement(open ? socioCpf : null);
-  const { parameters } = useParametersData();
+  const { parameters } = useParametersData(activeUnit?.id);
 
   const [valorTotal, setValorTotal] = useState(0);
   const [displayValue, setDisplayValue] = useState("");

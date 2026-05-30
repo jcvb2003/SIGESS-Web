@@ -59,15 +59,17 @@ export function useUpdateFinanceSettings() {
   });
 }
 
-export function useChargeTypeMutations() {
+export function useChargeTypeMutations(unitId?: string | null) {
   const queryClient = useQueryClient();
+  const invalidateChargeTypes = () =>
+    queryClient.invalidateQueries({ queryKey: financeQueryKeys.chargeTypes(unitId) });
 
   const createChargeType = useMutation({
     mutationFn: (charge: Omit<ChargeType, "id" | "created_at" | "updated_at">) =>
-      chargeTypesService.create(charge),
+      chargeTypesService.create(charge, unitId),
     onSuccess: () => {
       toast.success("Tipo de cobrança criado.");
-      queryClient.invalidateQueries({ queryKey: financeQueryKeys.chargeTypes() });
+      void invalidateChargeTypes();
     },
     onError: () => {
       toast.error("Erro ao criar tipo de cobrança.");
@@ -79,7 +81,7 @@ export function useChargeTypeMutations() {
       chargeTypesService.update(id, updates),
     onSuccess: () => {
       toast.success("Tipo de cobrança atualizado.");
-      queryClient.invalidateQueries({ queryKey: financeQueryKeys.chargeTypes() });
+      void invalidateChargeTypes();
     },
     onError: () => {
       toast.error("Erro ao atualizar tipo de cobrança.");
@@ -91,7 +93,7 @@ export function useChargeTypeMutations() {
       chargeTypesService.toggleActive(id, ativo),
     onSuccess: () => {
       toast.success("Status alterado.");
-      queryClient.invalidateQueries({ queryKey: financeQueryKeys.chargeTypes() });
+      void invalidateChargeTypes();
     },
     onError: () => {
       toast.error("Erro ao alterar status.");
@@ -102,7 +104,7 @@ export function useChargeTypeMutations() {
     mutationFn: (id: string) => chargeTypesService.delete(id),
     onSuccess: () => {
       toast.success("Tipo de cobrança excluído.");
-      queryClient.invalidateQueries({ queryKey: financeQueryKeys.chargeTypes() });
+      void invalidateChargeTypes();
     },
     onError: (error: unknown) => {
       // Postgres Error code 23503 is Foreign Key Violation

@@ -2,12 +2,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { settingsService } from "../services/settingsService";
 import { SystemParameters } from "../types/settings.types";
-export function useParametersData() {
+export function useParametersData(unitId?: string | null) {
   const queryClient = useQueryClient();
   const parametersQuery = useQuery({
-    queryKey: ["settings", "parameters"],
+    queryKey: ["settings", "parameters", unitId ?? null],
     queryFn: async () => {
-      const { data, error } = await settingsService.getParameters();
+      const { data, error } = await settingsService.getParameters(unitId);
       if (error) throw error;
       return data;
     },
@@ -15,12 +15,12 @@ export function useParametersData() {
   });
   const saveMutation = useMutation({
     mutationFn: async (values: SystemParameters) => {
-      const { data, error } = await settingsService.saveParameters(values);
+      const { data, error } = await settingsService.saveParameters(values, unitId);
       if (error) throw error;
       return data;
     },
     onSuccess: (data) => {
-      queryClient.setQueryData(["settings", "parameters"], data);
+      queryClient.setQueryData(["settings", "parameters", unitId ?? null], data);
       toast.success("Parâmetros salvos com sucesso.");
     },
     onError: (error: unknown) => {

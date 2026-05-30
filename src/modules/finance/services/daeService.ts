@@ -111,15 +111,19 @@ export const daeService = {
     orderBy: "data_pagamento_boleto" | "created_at" = "data_pagamento_boleto",
     unitId?: string | null,
   ): Promise<(DAEByPeriod & { id: string })[]> {
+    const selectFields = unitId
+      ? "id, data_pagamento_boleto, data_recebimento, created_at, socio_cpf, tipo_boleto, competencia_ano, competencia_mes, forma_pagamento, boleto_pago, valor, status, socios!inner(nome, unit_id)"
+      : "id, data_pagamento_boleto, data_recebimento, created_at, socio_cpf, tipo_boleto, competencia_ano, competencia_mes, forma_pagamento, boleto_pago, valor, status, socios(nome)";
+
     let query = supabase
       .from("financeiro_dae")
-      .select("id, data_pagamento_boleto, data_recebimento, created_at, socio_cpf, tipo_boleto, competencia_ano, competencia_mes, forma_pagamento, boleto_pago, valor, status, socios(nome)")
+      .select(selectFields)
       .eq("status", "pago")
       .gte("data_recebimento", startDate)
       .lte("data_recebimento", endDate)
       .order(orderBy, { ascending: false, nullsFirst: false })
       .limit(10000);
-    if (unitId) query = query.eq("unit_id", unitId);
+    if (unitId) query = query.eq("socios.unit_id", unitId);
     const { data, error } = await query;
 
     if (error) throw error;
