@@ -246,7 +246,7 @@ function SidebarContent({
                     <span className={cn("flex-1 truncate", isActive && "font-semibold")}>
                       {unit.name}
                     </span>
-                    {isActive && <Check className="h-3.5 w-3.5 shrink-0 text-emerald-500" />}
+                    {isActive && <Check className="h-3.5 w-3.5 shrink-0" style={{ color: "rgb(16 185 129)" }} />}
                   </DropdownMenuItem>
                 );
               })}
