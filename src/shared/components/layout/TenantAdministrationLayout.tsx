@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { Loader2, LogOut } from "lucide-react";
+import { Loader2, LogOut, Settings2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
+import { Separator } from "@/shared/components/ui/separator";
 import { useAuth } from "@/modules/auth/context/authContextStore";
 import { useEntityData } from "@/shared/hooks/useEntityData";
 import { usePortalContext } from "@/shared/hooks/usePortalContext";
@@ -28,39 +29,52 @@ export function TenantAdministrationLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 md:px-6 lg:px-10">
-          <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-muted/30">
+      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 md:px-6 lg:px-10">
+          {/* Identity */}
+          <div className="flex items-center gap-3 min-w-0">
             {entity?.logoUrl ? (
               <img
                 src={entity.logoUrl}
                 alt={entity.shortName || "Logo"}
-                className="h-10 w-10 rounded-xl object-contain border border-border/40 bg-card p-1.5"
+                className="h-9 w-9 shrink-0 rounded-lg object-contain border border-border/40 bg-card p-1"
               />
             ) : (
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border/40 bg-card text-sm font-bold text-primary">
-                SG
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/40 bg-primary/10 text-xs font-bold text-primary">
+                {entity?.shortName?.slice(0, 2).toUpperCase() || "SG"}
               </div>
             )}
-            <div>
-              <p className="text-sm font-semibold text-foreground">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-foreground leading-tight">
                 {entity?.name || "SIGESS"}
               </p>
-              <p className="text-xs text-muted-foreground">
-                Portal do Gestor
+              <p className="text-xs text-muted-foreground leading-tight">
+                {entity?.shortName && entity.shortName !== entity.name
+                  ? entity.shortName
+                  : "Entidade"}
               </p>
             </div>
           </div>
 
-          <Button variant="outline" onClick={() => void signOut()} className="gap-2">
+          <Separator orientation="vertical" className="h-8 shrink-0" />
+
+          {/* Portal label */}
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <Settings2 className="h-4 w-4 shrink-0" />
+            <span className="text-sm font-medium whitespace-nowrap">Portal do Gestor</span>
+          </div>
+
+          <div className="flex-1" />
+
+          <Button variant="ghost" size="sm" onClick={() => void signOut()} className="gap-2 text-muted-foreground hover:text-foreground">
             <LogOut className="h-4 w-4" />
-            Sair
+            <span className="hidden sm:inline">Sair</span>
           </Button>
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-6 md:px-6 lg:px-10">
+      <main className="mx-auto max-w-7xl px-4 py-8 md:px-6 lg:px-10">
         <Outlet />
       </main>
     </div>
