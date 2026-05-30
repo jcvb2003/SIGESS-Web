@@ -30,6 +30,7 @@ export interface ListRequirementsExtendedArgs {
   p_carencia: string;
   p_page: number;
   p_page_size: number;
+  p_unit_id?: string | null;
 }
 
 export type ExtendedRequirementRow = Partial<Requirement> & {

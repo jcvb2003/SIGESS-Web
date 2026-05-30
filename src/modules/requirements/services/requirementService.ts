@@ -33,7 +33,7 @@ export const requirementService = {
       p_carencia: filters.carenciaFilter || 'all',
       p_page: filters.page,
       p_page_size: filters.pageSize,
-      ...(filters.unitId ? { p_unit_id: filters.unitId } : {}),
+      p_unit_id: filters.unitId ?? null,
     });
 
     if (rpcError) throw rpcError;

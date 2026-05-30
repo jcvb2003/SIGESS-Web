@@ -75,6 +75,7 @@ export interface FinanceDashboardParams {
   filterGovRegistrationPending?: boolean;
   filterReleased?: boolean;
   filterExempt?: boolean;
+  _unitId?: string | null;
 }
 
 export interface PaymentSessionPayload {

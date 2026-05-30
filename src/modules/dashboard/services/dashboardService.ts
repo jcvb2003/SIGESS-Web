@@ -105,7 +105,7 @@ export const dashboardService = {
         .rpc('get_birthday_members', {
           p_day: today.getDate(),
           p_month: today.getMonth() + 1,
-          ...(unitId ? { p_unit_id: unitId } : {}),
+          p_unit_id: unitId ?? null,
         });
 
       if (error) {

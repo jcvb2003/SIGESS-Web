@@ -1241,7 +1241,7 @@ export type Database = {
         Returns: boolean
       }
       get_birthday_members: {
-        Args: { p_day: number; p_month: number }
+        Args: { p_day: number; p_month: number; p_unit_id?: string | null }
         Returns: {
           cpf: string
           data_de_nascimento: string
@@ -1270,7 +1270,12 @@ export type Database = {
         }[]
       }
       get_finance_tab_counts: {
-        Args: { p_ano_base?: number; p_search_term?: string; p_year?: number }
+        Args: {
+          p_ano_base?: number
+          p_search_term?: string
+          p_unit_id?: string | null
+          p_year?: number
+        }
         Returns: Json
       }
       get_members_by_birth_month: {
@@ -1293,6 +1298,7 @@ export type Database = {
           p_order_by?: string
           p_order_dir?: string
           p_start_date: string
+          p_unit_id?: string | null
         }
         Returns: {
           competencia_ano: number
@@ -1377,7 +1383,10 @@ export type Database = {
         Args: { p_grupo_id: string; p_items: Json; p_new_year: number }
         Returns: undefined
       }
-      update_extension_license: { Args: { p_key: string }; Returns: undefined }
+      update_extension_license: {
+        Args: { p_key: string; p_unit_id?: string | null }
+        Returns: undefined
+      }
       update_member_regime: {
         Args: { p_cpf: string; p_novo_regime: string; p_observacao?: string }
         Returns: undefined

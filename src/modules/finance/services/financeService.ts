@@ -146,7 +146,7 @@ export const financeService = {
       p_search_term: searchTerm,
       p_year: year,
       p_ano_base: anoBase,
-      ...(unitId ? { p_unit_id: unitId } : {}),
+      p_unit_id: unitId ?? null,
     });
     if (error) throw error;
     return data as Record<string, number>;
@@ -166,18 +166,14 @@ export const financeService = {
     const firstDayYear = `${year}-01-01`;
     const lastDayYear = `${year}-12-31`;
 
-    const lancSelectMes = unitId ? "valor, socios!inner(unit_id)" : "valor";
-    const lancSelectAno = unitId ? "valor, socios!inner(unit_id)" : "valor";
-    const daeSelect = unitId ? "id, socios!inner(unit_id)" : "id";
-
-    let qMes = supabase.from("financeiro_lancamentos").select(lancSelectMes).eq("status", "pago").gte("data_pagamento", firstDayMonth).lte("data_pagamento", lastDayMonth);
-    let qAno = supabase.from("financeiro_lancamentos").select(lancSelectAno).eq("status", "pago").gte("data_pagamento", firstDayYear).lte("data_pagamento", lastDayYear);
-    let qDae = supabase.from("financeiro_dae").select(daeSelect, { count: "exact", head: true }).eq("status", "pago").eq("boleto_pago", false);
+    let qMes = supabase.from("financeiro_lancamentos").select("valor").eq("status", "pago").gte("data_pagamento", firstDayMonth).lte("data_pagamento", lastDayMonth);
+    let qAno = supabase.from("financeiro_lancamentos").select("valor").eq("status", "pago").gte("data_pagamento", firstDayYear).lte("data_pagamento", lastDayYear);
+    let qDae = supabase.from("financeiro_dae").select("id", { count: "exact", head: true }).eq("status", "pago").eq("boleto_pago", false);
 
     if (unitId) {
-      qMes = qMes.eq("socios.unit_id", unitId);
-      qAno = qAno.eq("socios.unit_id", unitId);
-      qDae = qDae.eq("socios.unit_id", unitId);
+      qMes = qMes.eq("unit_id", unitId);
+      qAno = qAno.eq("unit_id", unitId);
+      qDae = qDae.eq("unit_id", unitId);
     }
 
     const [lancamentosMes, lancamentosAno, daeResult] = await Promise.all([qMes, qAno, qDae]);
@@ -283,7 +279,7 @@ export const financeService = {
       p_offset: from,
       p_order_by: orderBy,
       p_order_dir: "DESC",
-      ...(unitId ? { p_unit_id: unitId } : {}),
+      p_unit_id: unitId ?? null,
     });
 
     if (error) {
@@ -359,7 +355,7 @@ export const financeService = {
       p_offset: 0,
       p_order_by: orderBy,
       p_order_dir: "DESC",
-      ...(unitId ? { p_unit_id: unitId } : {}),
+      p_unit_id: unitId ?? null,
     });
     if (error) throw error;
     return (data as any[] || []).map((item) => ({

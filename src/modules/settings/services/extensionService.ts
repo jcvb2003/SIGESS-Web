@@ -76,7 +76,7 @@ export const extensionService = {
 
     const { error } = await rpcClient.rpc("update_extension_license", {
       p_key: key.trim() || null,
-      ...(unitId ? { p_unit_id: unitId } : {}),
+      p_unit_id: unitId ?? null,
     });
 
     if (error) {

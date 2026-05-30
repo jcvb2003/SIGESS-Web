@@ -116,7 +116,7 @@ export const reportsService = {
         p_carencia: carenciaFilter,
         p_page: page,
         p_page_size: pageSize,
-        ...(unitId ? { p_unit_id: unitId } : {}),
+        p_unit_id: unitId ?? null,
       },
       { count: "exact" }
     );
@@ -149,7 +149,7 @@ export const reportsService = {
           p_carencia: carenciaFilter,
           p_page: 1,
           p_page_size: 5000,
-          ...(unitId ? { p_unit_id: unitId } : {}),
+          p_unit_id: unitId ?? null,
         }
       );
       if (error) throw error;
