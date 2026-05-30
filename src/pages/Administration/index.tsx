@@ -3,6 +3,7 @@ import {
   AdministrationSummaryCards,
   MembershipDialog,
   MembershipsSection,
+  PlanInfoCard,
   TenantUserDialog,
   TenantUsersSection,
   UnitDialog,
@@ -28,6 +29,8 @@ export default function AdministrationPage() {
         totalMembers={page.totalMembers}
         isLoading={page.isLoading.units || page.isLoading.tenantUsers || page.isLoading.memberships}
       />
+
+      <PlanInfoCard />
 
       <UnitsManagementSection
         units={page.units}
