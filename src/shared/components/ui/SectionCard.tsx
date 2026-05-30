@@ -31,15 +31,19 @@ export function SectionCardHeader({
 
 /**
  * CardContent para tabelas full-bleed — sem padding horizontal, borda superior sutil.
+ * Scroll horizontal automático em mobile.
  */
 export function SectionCardTableContent({
   className,
+  children,
   ...props
 }: React.ComponentPropsWithoutRef<typeof CardContent>) {
   return (
     <CardContent
       className={cn("border-t border-border/10 pt-0 px-0", className)}
       {...props}
-    />
+    >
+      <div className="overflow-x-auto">{children}</div>
+    </CardContent>
   );
 }

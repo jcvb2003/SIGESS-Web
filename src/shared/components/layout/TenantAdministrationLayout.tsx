@@ -49,6 +49,9 @@ export function TenantAdministrationLayout() {
               <p className="truncate text-sm font-bold text-foreground leading-tight">
                 {entity?.name || "SIGESS"}
               </p>
+              <p className="text-[11px] text-muted-foreground leading-tight sm:hidden">
+                Portal do Gestor
+              </p>
             </div>
           </div>
 
@@ -75,7 +78,7 @@ export function TenantAdministrationLayout() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 md:px-6 lg:px-10">
+      <main className="mx-auto max-w-7xl px-3 py-6 sm:px-4 sm:py-8 md:px-6 lg:px-10">
         <Outlet />
       </main>
     </div>
