@@ -1,5 +1,7 @@
 import { CalendarClock, Users, ShieldCheck, ShieldAlert, CheckCircle2, XCircle } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { SectionCard } from "@/shared/components/ui/SectionCard";
+import { SectionLabel } from "@/shared/components/ui/SectionLabel";
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useUserMetadata } from "@/modules/auth/hooks/useUserMetadata";
@@ -25,7 +27,7 @@ export function PlanInfoCard() {
     : null;
 
   return (
-    <Card className="border-border/50 shadow-sm">
+    <SectionCard>
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           {isExpired ? (
@@ -36,14 +38,12 @@ export function PlanInfoCard() {
           Plano e acesso
         </CardTitle>
       </CardHeader>
-      <CardContent className="border-t border-border/10 pt-4">
+      <div className="border-t border-border/10 px-6 pt-4 pb-5">
         <div className="grid gap-4 sm:grid-cols-3">
 
           {/* Status */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Status
-            </span>
+            <SectionLabel>Status</SectionLabel>
             {loading ? (
               <Skeleton className="h-5 w-16" />
             ) : isExpired ? (
@@ -55,10 +55,10 @@ export function PlanInfoCard() {
 
           {/* Expiracao */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+            <SectionLabel>
               <CalendarClock className="h-3.5 w-3.5" />
               Expiracao
-            </span>
+            </SectionLabel>
             {loading ? (
               <Skeleton className="h-5 w-32" />
             ) : (
@@ -76,10 +76,10 @@ export function PlanInfoCard() {
 
           {/* Limite de socios */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+            <SectionLabel>
               <Users className="h-3.5 w-3.5" />
               Limite de socios
-            </span>
+            </SectionLabel>
             {loading ? (
               <Skeleton className="h-5 w-12" />
             ) : (
@@ -90,7 +90,7 @@ export function PlanInfoCard() {
           </div>
 
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </SectionCard>
   );
 }

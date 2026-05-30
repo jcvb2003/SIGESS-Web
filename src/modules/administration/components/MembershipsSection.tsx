@@ -12,13 +12,8 @@ import {
   AlertDialogTitle,
 } from "@/shared/components/ui/alert-dialog";
 import { Button } from "@/shared/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/shared/components/ui/card";
+import { CardDescription, CardTitle } from "@/shared/components/ui/card";
+import { SectionCard, SectionCardHeader, SectionCardTableContent } from "@/shared/components/ui/SectionCard";
 import {
   Table,
   TableBody,
@@ -56,8 +51,8 @@ export function MembershipsSection({
 
   return (
     <>
-      <Card className="border-border/50 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between gap-4">
+      <SectionCard>
+        <SectionCardHeader>
           <div>
             <CardTitle className="text-base flex items-center gap-2">
               <Shield className="h-5 w-5 text-primary" />
@@ -71,8 +66,8 @@ export function MembershipsSection({
             <Plus className="h-4 w-4" />
             Novo acesso
           </Button>
-        </CardHeader>
-        <CardContent className="border-t border-border/10 pt-0 px-0">
+        </SectionCardHeader>
+        <SectionCardTableContent>
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
@@ -135,8 +130,8 @@ export function MembershipsSection({
               )}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+        </SectionCardTableContent>
+      </SectionCard>
 
       <AlertDialog
         open={Boolean(pendingDeleteId)}
