@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { TenantUnitInput, TenantUnitRecord } from "@/modules/administration/services/administrationService";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -36,25 +36,20 @@ export function UnitDialog({
 
   const isEditing = Boolean(editingUnit?.id);
 
+  useEffect(() => {
+    if (open) {
+      setName(editingUnit?.name ?? "");
+      setCode(editingUnit?.code ?? "");
+      setCity(editingUnit?.city ?? "");
+      setState(editingUnit?.state ?? "");
+      setIsActive(editingUnit?.isActive ?? true);
+    }
+  }, [open, editingUnit]);
+
   return (
     <Dialog
       open={open}
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) {
-          setName("");
-          setCode("");
-          setCity("");
-          setState("");
-          setIsActive(true);
-        } else {
-          setName(editingUnit?.name ?? "");
-          setCode(editingUnit?.code ?? "");
-          setCity(editingUnit?.city ?? "");
-          setState(editingUnit?.state ?? "");
-          setIsActive(editingUnit?.isActive ?? true);
-        }
-        onOpenChange(nextOpen);
-      }}
+      onOpenChange={onOpenChange}
     >
       <DialogContent>
         <DialogHeader>
