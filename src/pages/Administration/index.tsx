@@ -32,8 +32,6 @@ export default function AdministrationPage() {
         operatorsCount={page.counts.activeUsers}
         accessCount={page.counts.memberships}
         totalMembers={page.totalMembers}
-        pendingRequirements={page.pendingRequirements}
-        defaulters={page.defaulters}
         isLoading={page.isLoading.units || page.isLoading.tenantUsers || page.isLoading.memberships}
       />
 

@@ -1,4 +1,4 @@
-import { AlertCircle, Building2, FileText, Shield, Users } from "lucide-react";
+import { Building2, Shield, Users } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 
@@ -64,8 +64,6 @@ interface AdministrationSummaryCardsProps {
   readonly operatorsCount: number;
   readonly accessCount: number;
   readonly totalMembers?: number;
-  readonly pendingRequirements?: number;
-  readonly defaulters?: number;
   readonly isLoading?: boolean;
 }
 
@@ -75,12 +73,10 @@ export function AdministrationSummaryCards({
   operatorsCount,
   accessCount,
   totalMembers,
-  pendingRequirements,
-  defaulters,
   isLoading,
 }: AdministrationSummaryCardsProps) {
   return (
-    <div className="rounded-xl border border-border/50 bg-card shadow-sm overflow-hidden divide-y divide-border/30 sm:divide-y-0 sm:divide-x sm:grid sm:grid-cols-3 lg:grid-cols-6">
+    <div className="rounded-xl border border-border/50 bg-card shadow-sm overflow-hidden divide-y divide-border/30 sm:divide-y-0 sm:divide-x sm:grid sm:grid-cols-2 lg:grid-cols-4">
       <StatItem
         icon={<Building2 className="h-4 w-4" />}
         label="Polos ativos"
@@ -104,20 +100,6 @@ export function AdministrationSummaryCards({
         label="Socios"
         value={totalMembers}
         loading={isLoading || totalMembers === undefined}
-      />
-      <StatItem
-        icon={<FileText className="h-4 w-4" />}
-        label="Req. em aberto"
-        value={pendingRequirements}
-        variant={pendingRequirements ? "warning" : "default"}
-        loading={isLoading || pendingRequirements === undefined}
-      />
-      <StatItem
-        icon={<AlertCircle className="h-4 w-4" />}
-        label="Em atraso"
-        value={defaulters}
-        variant={defaulters ? "destructive" : "default"}
-        loading={isLoading || defaulters === undefined}
       />
     </div>
   );
