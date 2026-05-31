@@ -1,21 +1,13 @@
 import { useMemo } from "react";
-import { Building2, Edit, LogIn, Plus } from "lucide-react";
+import { Building2, Edit, LogIn, MapPin, Plus, Users } from "lucide-react";
 import type {
   TenantMembershipRecord,
   TenantUnitRecord,
 } from "@/modules/administration/services/administrationService";
 import { Button } from "@/shared/components/ui/button";
 import { CardDescription, CardTitle } from "@/shared/components/ui/card";
-import { SectionCard, SectionCardHeader, SectionCardTableContent } from "@/shared/components/ui/SectionCard";
+import { SectionCard, SectionCardHeader } from "@/shared/components/ui/SectionCard";
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/shared/components/ui/table";
 
 interface UnitStat {
   sociosCount: number;
@@ -66,106 +58,113 @@ export function UnitsManagementSection({
           Novo polo
         </Button>
       </SectionCardHeader>
-      <SectionCardTableContent>
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead className="pl-6">Polo</TableHead>
-              <TableHead>Codigo</TableHead>
-              <TableHead>Cidade</TableHead>
-              <TableHead className="text-center">Operadores</TableHead>
-              <TableHead className="text-center">Socios</TableHead>
-              <TableHead className="text-center">Req. pendentes</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="pr-6 text-right w-24">Acoes</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
-                  Carregando polos...
-                </TableCell>
-              </TableRow>
-            ) : units.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
-                  Comece criando o primeiro polo da entidade.
-                </TableCell>
-              </TableRow>
-            ) : (
-              units.map((unit) => {
-                const stats = unitStats?.[unit.id];
-                return (
-                  <TableRow key={unit.id}>
-                    <TableCell className="pl-6 font-medium">{unit.name}</TableCell>
-                    <TableCell className="text-muted-foreground font-mono text-sm">
-                      {unit.code || "—"}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
+
+      <div className="px-6 pb-6">
+        {isLoading ? (
+          <p className="py-10 text-center text-sm text-muted-foreground">Carregando polos...</p>
+        ) : units.length === 0 ? (
+          <p className="py-10 text-center text-sm text-muted-foreground">
+            Comece criando o primeiro polo da entidade.
+          </p>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {units.map((unit) => {
+              const stats = unitStats?.[unit.id];
+              const operatorCount = operatorsByUnit.get(unit.id) ?? 0;
+
+              return (
+                <div
+                  key={unit.id}
+                  className={`flex flex-col gap-3 rounded-xl border border-border/50 p-4 transition-opacity ${!unit.isActive ? "opacity-60" : ""}`}
+                >
+                  {/* Header */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                        <Building2 className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-sm text-foreground">{unit.name}</p>
+                        <p className="text-xs text-muted-foreground font-mono">{unit.code || "—"}</p>
+                      </div>
+                    </div>
+                    <StatusBadge
+                      variant={unit.isActive ? "success" : "secondary"}
+                      label={unit.isActive ? "Ativo" : "Inativo"}
+                    />
+                  </div>
+
+                  {/* Localidade */}
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <MapPin className="h-3.5 w-3.5 shrink-0" />
+                    <span>
                       {unit.city
                         ? `${unit.city}${unit.state ? `/${unit.state}` : ""}`
-                        : "—"}
-                    </TableCell>
-                    <TableCell className="text-center tabular-nums">
-                      {operatorsByUnit.get(unit.id) ?? 0}
-                    </TableCell>
-                    <TableCell className="text-center tabular-nums">
-                      {stats ? stats.sociosCount : <span className="text-muted-foreground">—</span>}
-                    </TableCell>
-                    <TableCell className="text-center tabular-nums">
-                      {stats ? (
-                        stats.pendingReqCount > 0 ? (
-                          <span className="font-medium text-amber-600 dark:text-amber-400">
-                            {stats.pendingReqCount}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">0</span>
-                        )
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {unit.isActive ? (
-                        <StatusBadge variant="success" label="Ativo" />
-                      ) : (
-                        <StatusBadge variant="secondary" label="Inativo" />
-                      )}
-                    </TableCell>
-                    <TableCell className="pr-6">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onEdit(unit)}
-                          aria-label="Editar polo"
-                          className="h-8 w-8 p-0"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        {unit.isActive && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="gap-1.5"
-                            onClick={() => onEnter(unit)}
-                          >
-                            <LogIn className="h-3.5 w-3.5" />
-                            Entrar
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </SectionCardTableContent>
+                        : "Sem localidade"}
+                    </span>
+                  </div>
+
+                  {/* Stats */}
+                  <div className="grid grid-cols-3 gap-2 rounded-lg bg-secondary/30 px-3 py-2">
+                    <StatItem label="Operadores" value={operatorCount} />
+                    <StatItem label="Sócios" value={stats?.sociosCount ?? "—"} />
+                    <StatItem
+                      label="Pendentes"
+                      value={stats?.pendingReqCount ?? "—"}
+                      highlight={typeof stats?.pendingReqCount === "number" && stats.pendingReqCount > 0}
+                    />
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-end gap-2 pt-1 border-t border-border/30">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => onEdit(unit)}
+                      aria-label="Editar polo"
+                    >
+                      <Edit className="h-3.5 w-3.5" />
+                    </Button>
+                    {unit.isActive && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5 h-8"
+                        onClick={() => onEnter(unit)}
+                      >
+                        <LogIn className="h-3.5 w-3.5" />
+                        Entrar
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </SectionCard>
+  );
+}
+
+function StatItem({
+  label,
+  value,
+  highlight = false,
+}: {
+  label: string;
+  value: number | string;
+  highlight?: boolean;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-0.5">
+      <span className={`text-sm font-semibold tabular-nums ${highlight ? "text-amber-600 dark:text-amber-400" : "text-foreground"}`}>
+        {value}
+      </span>
+      <span className="text-[10px] text-muted-foreground">{label}</span>
+    </div>
   );
 }
