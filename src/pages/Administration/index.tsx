@@ -1,10 +1,7 @@
-import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import {
   AdministrationSummaryCards,
-  MembershipDialog,
   PlanInfoCard,
-  TenantUserDialog,
   UnitDialog,
   UnitsManagementSection,
 } from "@/modules/administration/components";
@@ -13,8 +10,6 @@ import { usePermissions } from "@/shared/hooks/usePermissions";
 
 export default function AdministrationPage() {
   const { canAccessTenantAdministration, isTenantAdministrationLoading } = usePermissions();
-  const [linkingUnitId, setLinkingUnitId] = useState<string | undefined>(undefined);
-
   const page = useAdministrationPage(canAccessTenantAdministration);
 
   if (isTenantAdministrationLoading) return null;
@@ -34,16 +29,20 @@ export default function AdministrationPage() {
 
       <UnitsManagementSection
         units={page.units}
+        tenantUsers={page.tenantUsers}
         membershipRows={page.membershipRows}
+        memberships={page.memberships}
         unitStats={page.unitStats}
         isLoading={page.isLoading.units || page.isLoading.memberships || page.isLoading.unitStats}
         isDeleting={page.mutations.deleteMembership.isPending}
+        isSavingMembership={page.mutations.createMembership.isPending}
+        isSavingUser={page.mutations.createTenantUser.isPending}
         onEdit={page.openEditUnit}
         onEnter={page.enterUnit}
         onCreate={page.openCreateUnit}
-        onCreateUser={() => page.setTenantUserDialogOpen(true)}
-        onLinkOperator={(unitId) => { setLinkingUnitId(unitId); page.setMembershipDialogOpen(true); }}
         onDeleteMembership={(id) => page.mutations.deleteMembership.mutate(id)}
+        onCreateMembership={page.mutations.createMembership.mutateAsync}
+        onCreateUser={page.mutations.createTenantUser.mutateAsync}
       />
 
       <UnitDialog
@@ -52,26 +51,6 @@ export default function AdministrationPage() {
         editingUnit={page.unitDialog.editing}
         onSubmit={(values) => page.mutations.saveUnit.mutateAsync(values)}
         isSaving={page.mutations.saveUnit.isPending}
-      />
-
-      <MembershipDialog
-        key={linkingUnitId ?? "no-unit"}
-        open={page.membershipDialogOpen}
-        onOpenChange={(open) => { page.setMembershipDialogOpen(open); if (!open) setLinkingUnitId(undefined); }}
-        users={page.tenantUsers.filter((u) => u.isActive && u.tenantRole !== "owner")}
-        units={page.units.filter((u) => u.isActive)}
-        existingMemberships={page.memberships}
-        onSubmit={(values) => page.mutations.createMembership.mutateAsync(values)}
-        isSaving={page.mutations.createMembership.isPending}
-        defaultUnitId={linkingUnitId}
-      />
-
-      <TenantUserDialog
-        open={page.tenantUserDialogOpen}
-        onOpenChange={page.setTenantUserDialogOpen}
-        existingEmails={page.tenantUsers.map((u) => u.email ?? "").filter(Boolean)}
-        onSubmit={(values) => page.mutations.createTenantUser.mutateAsync(values)}
-        isSaving={page.mutations.createTenantUser.isPending}
       />
     </div>
   );

@@ -37,8 +37,6 @@ export function useAdministrationPage(enabled: boolean) {
   // Dialog state
   const [unitDialogOpen, setUnitDialogOpen] = useState(false);
   const [editingUnit, setEditingUnit] = useState<TenantUnitRecord | null>(null);
-  const [membershipDialogOpen, setMembershipDialogOpen] = useState(false);
-  const [tenantUserDialogOpen, setTenantUserDialogOpen] = useState(false);
 
   // Queries
   const unitsQuery = useQuery({
@@ -112,7 +110,6 @@ export function useAdministrationPage(enabled: boolean) {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: administrationQueryKeys.tenantMemberships() });
       toast.success("Acesso criado com sucesso.");
-      setMembershipDialogOpen(false);
     },
     onError: (error: unknown) => toast.error(humanizeError(error)),
   });
@@ -138,7 +135,6 @@ export function useAdministrationPage(enabled: boolean) {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: administrationQueryKeys.tenantUsers() });
       toast.success("Usuario vinculado a entidade com sucesso.");
-      setTenantUserDialogOpen(false);
     },
     onError: (error: unknown) => toast.error(humanizeError(error)),
   });
@@ -195,16 +191,12 @@ export function useAdministrationPage(enabled: boolean) {
 
     // Dialog state
     unitDialog: { open: unitDialogOpen, editing: editingUnit },
-    membershipDialogOpen,
-    tenantUserDialogOpen,
 
     // Handlers
     openCreateUnit,
     openEditUnit,
     closeUnitDialog,
     enterUnit,
-    setMembershipDialogOpen,
-    setTenantUserDialogOpen,
 
     // Mutations
     mutations: {

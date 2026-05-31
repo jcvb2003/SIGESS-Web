@@ -1,30 +1,19 @@
-import { Building2, Edit, Link2, LogIn, MapPin, Trash2, UserCog } from "lucide-react";
-import type { MembershipRow, UnitStat } from "@/modules/administration/types";
+import { Building2, Edit, LogIn, MapPin, UserCog } from "lucide-react";
+import type { UnitStat } from "@/modules/administration/types";
 import type { TenantUnitRecord } from "@/modules/administration/services/administrationService";
 import { Button } from "@/shared/components/ui/button";
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 
 interface UnitCardProps {
   readonly unit: TenantUnitRecord;
-  readonly rows: MembershipRow[];
+  readonly operatorCount: number;
   readonly stats?: UnitStat;
-  readonly isDeleting: boolean;
+  readonly onOperators: () => void;
   readonly onEdit: () => void;
   readonly onEnter: () => void;
-  readonly onLinkOperator: () => void;
-  readonly onDeleteRequest: (membershipId: string) => void;
 }
 
-export function UnitCard({
-  unit,
-  rows,
-  stats,
-  isDeleting,
-  onEdit,
-  onEnter,
-  onLinkOperator,
-  onDeleteRequest,
-}: UnitCardProps) {
+export function UnitCard({ unit, operatorCount, stats, onOperators, onEdit, onEnter }: UnitCardProps) {
   return (
     <div
       className={`flex flex-col gap-3 rounded-xl border border-border/50 p-4 transition-opacity ${!unit.isActive ? "opacity-60" : ""}`}
@@ -58,7 +47,7 @@ export function UnitCard({
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-2 rounded-lg bg-secondary/30 px-3 py-2">
-        <StatItem label="Operadores" value={rows.length} />
+        <StatItem label="Operadores" value={operatorCount} />
         <StatItem label="Sócios" value={stats?.sociosCount ?? "—"} />
         <StatItem
           label="Pendentes"
@@ -67,41 +56,6 @@ export function UnitCard({
         />
       </div>
 
-      {/* Operators */}
-      {rows.length > 0 && (
-        <div className="space-y-1.5">
-          {rows.map(({ membership, user }) => (
-            <div
-              key={membership.id}
-              className={`flex items-center justify-between gap-2 rounded-md border border-border/40 bg-secondary/20 px-3 py-2 ${!membership.isActive ? "opacity-50" : ""}`}
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                <UserCog className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                <div className="min-w-0">
-                  <p className="truncate text-xs font-medium">
-                    {user?.name || user?.email || membership.userId}
-                  </p>
-                  {user?.email && user.name && (
-                    <p className="truncate text-[10px] text-muted-foreground">{user.email}</p>
-                  )}
-                </div>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
-                disabled={isDeleting}
-                onClick={() => onDeleteRequest(membership.id)}
-                aria-label="Remover acesso"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          ))}
-        </div>
-      )}
-
       {/* Actions */}
       <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/30 mt-auto">
         <Button
@@ -109,10 +63,10 @@ export function UnitCard({
           variant="outline"
           size="sm"
           className="gap-1.5 h-8"
-          onClick={onLinkOperator}
+          onClick={onOperators}
         >
-          <Link2 className="h-3.5 w-3.5" />
-          Vincular
+          <UserCog className="h-3.5 w-3.5" />
+          Operadores
         </Button>
         <div className="flex items-center gap-2">
           <Button
