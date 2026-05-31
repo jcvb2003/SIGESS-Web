@@ -1,6 +1,8 @@
 import { supabase } from "@/shared/lib/supabase/client";
+import { getAdminClient } from "@/shared/lib/supabase/admin-client";
 import { ServiceResponse } from "@/shared/services/base/serviceResponse";
 import { resolveCurrentSharedTenantId } from "@/shared/utils/tenant";
+import { TENANT_CONFIG_CACHE_KEY } from "@/config/tenants";
 import {
   EntitySettings,
   defaultEntitySettings,
@@ -36,6 +38,29 @@ const toOptional = (value: string | undefined | null): string | undefined => {
   return trimmed || undefined;
 };
 export const settingsService = {
+  async getTenantIdentity(): Promise<{ name: string; shortName: string; logoUrl?: string } | null> {
+    const cached = localStorage.getItem(TENANT_CONFIG_CACHE_KEY);
+    const tenantCode = cached ? (JSON.parse(cached) as { code?: string }).code : null;
+    if (!tenantCode) return null;
+
+    const adminClient = getAdminClient();
+    if (!adminClient) return null;
+
+    const { data, error } = await adminClient
+      .from("tenant_identity_public")
+      .select("name, short_name, logo_url")
+      .eq("tenant_code", tenantCode)
+      .maybeSingle();
+
+    if (error || !data) return null;
+    const d = data as { name: string; short_name?: string | null; logo_url?: string | null };
+    return {
+      name: d.name,
+      shortName: d.short_name ?? d.name,
+      logoUrl: d.logo_url ?? undefined,
+    };
+  },
+
   async getEntity(unitId?: string | null): Promise<ServiceResponse<EntitySettings>> {
     // 1. Buscar dados institucionais
     const entityQuery = supabase

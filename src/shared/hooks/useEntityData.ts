@@ -18,6 +18,21 @@ export function useEntityData() {
     },
     staleTime: 30 * 60 * 1000,
   });
+
+  const tenantRootQuery = useQuery({
+    queryKey: ["settings", "tenant-identity"],
+    queryFn: () => settingsService.getTenantIdentity(),
+    staleTime: 60 * 60 * 1000,
+    enabled: unitId === null,
+  });
+
+  const entity = (() => {
+    if (!entityQuery.data) return entityQuery.data;
+    if (unitId !== null || !tenantRootQuery.data) return entityQuery.data;
+    const root = tenantRootQuery.data;
+    return { ...entityQuery.data, name: root.name, shortName: root.shortName, logoUrl: root.logoUrl };
+  })();
+
   const saveMutation = useMutation({
     mutationFn: async (values: EntitySettings) => {
       const { data, error } = await settingsService.updateEntitySettings(values);
@@ -37,8 +52,8 @@ export function useEntityData() {
     },
   });
   return {
-    entity: entityQuery.data,
-    isLoading: entityQuery.isLoading,
+    entity,
+    isLoading: entityQuery.isLoading || (unitId === null && tenantRootQuery.isLoading),
     isSaving: saveMutation.isPending,
     error: entityQuery.error,
     refetch: entityQuery.refetch,
