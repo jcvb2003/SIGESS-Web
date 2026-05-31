@@ -100,7 +100,8 @@ export function RegistrationForm({
     }
   }, [initialData, form]);
   const { isSubmitting } = form.formState;
-  const handlePhotoActions = async (data: MemberRegistrationSchemaType) => {
+  const handlePhotoActions = async (data: MemberRegistrationSchemaType, memberId?: string) => {
+    const photoChanged = data.photoDelete || data.photoFile instanceof File;
     if (data.photoDelete) {
       const cpfToDelete = initialData?.cpf || data.cpf;
       if (cpfToDelete) {
@@ -108,6 +109,10 @@ export function RegistrationForm({
       }
     } else if (data.photoFile instanceof File) {
       await photoService.uploadPhoto(data.photoFile, data.cpf);
+    }
+    // Toca updated_at para que ?v= na URL da foto seja atualizado, invalidando o cache CDN.
+    if (photoChanged && memberId) {
+      await memberService.touchUpdatedAt(memberId);
     }
   };
 
@@ -138,7 +143,7 @@ export function RegistrationForm({
 
       if (isEditMode && memberUuid) {
         await memberService.updateMember(memberUuid, payload);
-        await handlePhotoActions(data);
+        await handlePhotoActions(data, memberUuid);
         toast.success("Sócio atualizado com sucesso.");
       } else {
         await memberService.create(payload, {

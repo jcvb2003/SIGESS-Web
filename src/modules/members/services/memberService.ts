@@ -238,6 +238,14 @@ export const memberService = {
       throw error;
     }
   },
+  async touchUpdatedAt(id: string): Promise<void> {
+    const { error } = await supabase
+      .from("socios")
+      .update({ updated_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) throw error;
+  },
+
   async countMembers(context?: MemberUnitContext): Promise<{ count: number }> {
     let q = supabase.from("socios").select("*", { count: "exact", head: true });
     if (context?.unitId) q = q.eq("unit_id", context.unitId);
