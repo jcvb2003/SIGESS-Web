@@ -393,11 +393,31 @@ export const administrationService = {
   },
 
   async deleteTenantUser(id: string): Promise<ServiceResponse<void>> {
-    const { error } = await supabase
+    // Resolve the auth user_id before deleting the tenant_users record
+    const { data: row, error: fetchError } = await supabase
+      .from("tenant_users" as never)
+      .select("user_id")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (fetchError) return { data: null, error: fetchError };
+
+    const { error: deleteError } = await supabase
       .from("tenant_users" as never)
       .delete()
       .eq("id", id);
-    return { data: null, error: error ?? null };
+
+    if (deleteError) return { data: null, error: deleteError };
+
+    // Delete auth user so the email is freed for future re-registration
+    const userId = (row as { user_id?: string } | null)?.user_id;
+    if (userId) {
+      await supabase.functions.invoke("manage-user", {
+        body: { action: "delete", payload: { userId } },
+      });
+    }
+
+    return { data: null, error: null };
   },
 
   async listUnitStats(): Promise<ServiceResponse<Record<string, { sociosCount: number; pendingReqCount: number }>>> {
