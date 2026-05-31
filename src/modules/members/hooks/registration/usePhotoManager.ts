@@ -31,9 +31,11 @@ export function usePhotoManager({
       try {
         setIsLoading(true);
         setError(null);
-        const url = photoService.getPhotoUrl(cpf);
+        // Prefer initialPhotoUrl (already cache-busted via ?v=updated_at from getMemberById).
+        // Fall back to a fresh URL only when no initialPhotoUrl is provided.
+        const url = initialPhotoUrl || photoService.getPhotoUrl(cpf, true);
         if (isMounted) {
-          setPhotoUrl(url || initialPhotoUrl || null);
+          setPhotoUrl(url || null);
         }
       } catch (err) {
         console.error("Erro ao carregar foto:", err);
@@ -95,7 +97,7 @@ export function usePhotoManager({
     deletePhoto: handleDelete,
     refreshPhoto: () => {
       if (cpf) {
-        const url = photoService.getPhotoUrl(cpf);
+        const url = photoService.getPhotoUrl(cpf, true);
         setPhotoUrl(url ?? null);
       }
     },

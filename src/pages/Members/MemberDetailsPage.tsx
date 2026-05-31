@@ -63,8 +63,8 @@ export default function MemberDetailsPage() {
       <RegistrationForm
         initialData={member}
         memberUuid={id}
-        onSuccess={() => navigate(-1)}
-        onCancel={() => navigate(-1)}
+        onSuccess={() => navigate("/members")}
+        onCancel={() => navigate("/members")}
       />
     </div>
   );
