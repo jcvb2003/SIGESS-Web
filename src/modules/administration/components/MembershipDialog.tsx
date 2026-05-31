@@ -30,6 +30,7 @@ interface MembershipDialogProps {
   readonly existingMemberships: Array<{ userId: string; unitId: string }>;
   readonly onSubmit: (values: TenantMembershipInput) => Promise<void>;
   readonly isSaving: boolean;
+  readonly defaultUnitId?: string;
 }
 
 export function MembershipDialog({
@@ -40,9 +41,10 @@ export function MembershipDialog({
   existingMemberships,
   onSubmit,
   isSaving,
+  defaultUnitId,
 }: MembershipDialogProps) {
   const [userId, setUserId] = useState("");
-  const [unitId, setUnitId] = useState("");
+  const [unitId, setUnitId] = useState(defaultUnitId ?? "");
 
   const isDuplicate =
     Boolean(userId) &&
@@ -55,7 +57,7 @@ export function MembershipDialog({
       onOpenChange={(nextOpen) => {
         if (!nextOpen) {
           setUserId("");
-          setUnitId("");
+          setUnitId(defaultUnitId ?? "");
         }
         onOpenChange(nextOpen);
       }}
@@ -85,21 +87,23 @@ export function MembershipDialog({
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="membership-unit">Polo</Label>
-            <Select value={unitId} onValueChange={setUnitId}>
-              <SelectTrigger id="membership-unit">
-                <SelectValue placeholder="Selecione um polo" />
-              </SelectTrigger>
-              <SelectContent>
-                {units.map((unit) => (
-                  <SelectItem key={unit.id} value={unit.id}>
-                    {unit.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {!defaultUnitId && (
+            <div className="space-y-2">
+              <Label htmlFor="membership-unit">Polo</Label>
+              <Select value={unitId} onValueChange={setUnitId}>
+                <SelectTrigger id="membership-unit">
+                  <SelectValue placeholder="Selecione um polo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {units.map((unit) => (
+                    <SelectItem key={unit.id} value={unit.id}>
+                      {unit.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
         </div>
 
