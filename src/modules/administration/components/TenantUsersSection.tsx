@@ -62,10 +62,13 @@ export function TenantUsersSection({
                   Carregando usuarios...
                 </TableCell>
               </TableRow>
-            ) : tenantUsers.length === 0 ? (
+            ) : tenantUsers.filter((u) => u.tenantRole !== "owner").length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="py-10 text-center text-muted-foreground">
-                  Adicione operadores antes de vincular acessos aos polos.
+                <TableCell colSpan={3} className="py-10 text-center">
+                  <p className="text-sm font-medium text-foreground">Nenhum operador cadastrado</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Use o botão "Novo usuario" para adicionar o primeiro operador desta entidade.
+                  </p>
                 </TableCell>
               </TableRow>
             ) : (
