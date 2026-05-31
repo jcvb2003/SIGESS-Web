@@ -34,9 +34,7 @@ export default function AdministrationPage() {
 
       <UnitsManagementSection
         units={page.units}
-        memberships={page.memberships}
         membershipRows={page.membershipRows}
-        tenantUsers={page.tenantUsers}
         unitStats={page.unitStats}
         isLoading={page.isLoading.units || page.isLoading.memberships || page.isLoading.unitStats}
         isDeleting={page.mutations.deleteMembership.isPending}
