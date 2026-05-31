@@ -1,4 +1,4 @@
-import { Building2, Edit, LogIn, MapPin, UserCog } from "lucide-react";
+import { Building2, Edit, LogIn, MapPin } from "lucide-react";
 import type { UnitStat } from "@/modules/administration/types";
 import type { TenantUnitRecord } from "@/modules/administration/services/administrationService";
 import { Button } from "@/shared/components/ui/button";
@@ -8,12 +8,11 @@ interface UnitCardProps {
   readonly unit: TenantUnitRecord;
   readonly operatorCount: number;
   readonly stats?: UnitStat;
-  readonly onOperators: () => void;
   readonly onEdit: () => void;
   readonly onEnter: () => void;
 }
 
-export function UnitCard({ unit, operatorCount, stats, onOperators, onEdit, onEnter }: UnitCardProps) {
+export function UnitCard({ unit, operatorCount, stats, onEdit, onEnter }: UnitCardProps) {
   return (
     <div
       className={`flex flex-col gap-3 rounded-xl border border-border/50 p-4 transition-opacity ${!unit.isActive ? "opacity-60" : ""}`}
@@ -57,41 +56,29 @@ export function UnitCard({ unit, operatorCount, stats, onOperators, onEdit, onEn
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/30 mt-auto">
+      <div className="flex items-center justify-end gap-2 pt-1 border-t border-border/30 mt-auto">
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="gap-1.5 h-8"
-          onClick={onOperators}
+          className="h-8 w-8 p-0"
+          onClick={onEdit}
+          aria-label="Editar polo"
         >
-          <UserCog className="h-3.5 w-3.5" />
-          Operadores
+          <Edit className="h-3.5 w-3.5" />
         </Button>
-        <div className="flex items-center gap-2">
+        {unit.isActive && (
           <Button
             type="button"
             variant="outline"
             size="sm"
-            className="h-8 w-8 p-0"
-            onClick={onEdit}
-            aria-label="Editar polo"
+            className="gap-1.5 h-8"
+            onClick={onEnter}
           >
-            <Edit className="h-3.5 w-3.5" />
+            <LogIn className="h-3.5 w-3.5" />
+            Entrar
           </Button>
-          {unit.isActive && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="gap-1.5 h-8"
-              onClick={onEnter}
-            >
-              <LogIn className="h-3.5 w-3.5" />
-              Entrar
-            </Button>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

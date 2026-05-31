@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Building2, Plus, UserCog, UserPlus } from "lucide-react";
+import { Building2, Plus, UserCog, UserPlus, X } from "lucide-react";
 import type { MembershipRow, UnitStat } from "@/modules/administration/types";
 import type {
   TenantMembershipInput,
@@ -28,7 +28,16 @@ import {
 import { SectionCard, SectionCardHeader } from "@/shared/components/ui/SectionCard";
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
-import { OperatorsSheet } from "./OperatorsSheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/components/ui/alert-dialog";
 import { UnitCard } from "./UnitCard";
 
 interface UnitsManagementSectionProps {
@@ -66,8 +75,8 @@ export function UnitsManagementSection({
   onCreateMembership,
   onCreateUser,
 }: UnitsManagementSectionProps) {
-  const [operatorsUnitId, setOperatorsUnitId] = useState<string | null>(null);
   const [newOperatorOpen, setNewOperatorOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const rowsByUnit = useMemo(() => {
     const map = new Map<string, MembershipRow[]>();
@@ -80,12 +89,13 @@ export function UnitsManagementSection({
     return map;
   }, [membershipRows]);
 
+  // userId → list of {unit, membershipId} for badge rendering + delete
   const unitsByUser = useMemo(() => {
-    const map = new Map<string, TenantUnitRecord[]>();
+    const map = new Map<string, { unit: TenantUnitRecord; membershipId: string }[]>();
     for (const row of membershipRows) {
       if (!row.unit) continue;
       const existing = map.get(row.membership.userId) ?? [];
-      existing.push(row.unit);
+      existing.push({ unit: row.unit, membershipId: row.membership.id });
       map.set(row.membership.userId, existing);
     }
     return map;
@@ -98,8 +108,8 @@ export function UnitsManagementSection({
 
   const activeUnits = useMemo(() => units.filter((u) => u.isActive), [units]);
 
-  const activeUnit = operatorsUnitId
-    ? (units.find((u) => u.id === operatorsUnitId) ?? null)
+  const pendingRow = pendingDeleteId
+    ? (membershipRows.find((r) => r.membership.id === pendingDeleteId) ?? null)
     : null;
 
   return (
@@ -115,10 +125,16 @@ export function UnitsManagementSection({
               Operadores e configuração dos polos da entidade.
             </CardDescription>
           </div>
-          <Button onClick={onCreate} variant="outline" size="sm" className="gap-2 shrink-0">
-            <Plus className="h-4 w-4" />
-            Novo polo
-          </Button>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button onClick={() => setNewOperatorOpen(true)} variant="outline" size="sm" className="gap-2">
+              <UserPlus className="h-4 w-4" />
+              Novo operador
+            </Button>
+            <Button onClick={onCreate} variant="outline" size="sm" className="gap-2">
+              <Plus className="h-4 w-4" />
+              Novo polo
+            </Button>
+          </div>
         </SectionCardHeader>
 
         <Tabs defaultValue="operadores" className="px-6 pb-6">
@@ -134,19 +150,7 @@ export function UnitsManagementSection({
           </TabsList>
 
           {/* Tab: Operadores */}
-          <TabsContent value="operadores" className="mt-0 space-y-3">
-            <div className="flex justify-end">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => setNewOperatorOpen(true)}
-              >
-                <UserPlus className="h-4 w-4" />
-                Novo operador
-              </Button>
-            </div>
-
+          <TabsContent value="operadores" className="mt-0">
             {isLoading ? (
               <p className="py-10 text-center text-sm text-muted-foreground">Carregando...</p>
             ) : operators.length === 0 ? (
@@ -190,24 +194,32 @@ export function UnitsManagementSection({
                         )}
                       </div>
 
-                      {/* Polo badges */}
+                      {/* Polo badges + vincular */}
                       <div className="flex items-center gap-1.5 flex-wrap justify-end">
                         {userUnits.length === 0 ? (
                           <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-400">
                             Sem polo
                           </span>
                         ) : (
-                          userUnits.map((u) => (
+                          userUnits.map(({ unit, membershipId }) => (
                             <span
-                              key={u.id}
-                              className="inline-flex items-center rounded-full border border-border/60 bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
+                              key={unit.id}
+                              className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-secondary pl-2 pr-1 py-0.5 text-[10px] font-medium text-muted-foreground"
                             >
-                              {u.name}
+                              {unit.name}
+                              <button
+                                type="button"
+                                disabled={isDeleting}
+                                className="rounded-full p-0.5 hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-50"
+                                aria-label={`Remover vínculo com ${unit.name}`}
+                                onClick={() => setPendingDeleteId(membershipId)}
+                              >
+                                <X className="h-2.5 w-2.5" />
+                              </button>
                             </span>
                           ))
                         )}
 
-                        {/* Vincular popover */}
                         {availableToLink.length > 0 && (
                           <Popover>
                             <PopoverTrigger asChild>
@@ -275,7 +287,6 @@ export function UnitsManagementSection({
                     unit={unit}
                     operatorCount={rowsByUnit.get(unit.id)?.length ?? 0}
                     stats={unitStats?.[unit.id]}
-                    onOperators={() => setOperatorsUnitId(unit.id)}
                     onEdit={() => onEdit(unit)}
                     onEnter={() => onEnter(unit)}
                   />
@@ -286,24 +297,38 @@ export function UnitsManagementSection({
         </Tabs>
       </SectionCard>
 
-      {activeUnit && (
-        <OperatorsSheet
-          key={activeUnit.id}
-          open={Boolean(operatorsUnitId)}
-          onOpenChange={(o) => { if (!o) setOperatorsUnitId(null); }}
-          unit={activeUnit}
-          rows={rowsByUnit.get(activeUnit.id) ?? []}
-          tenantUsers={tenantUsers}
-          existingMemberships={memberships}
-          isDeleting={isDeleting}
-          isSavingMembership={isSavingMembership}
-          isSavingUser={isSavingUser}
-          onDeleteMembership={onDeleteMembership}
-          onCreateMembership={onCreateMembership}
-          onCreateUser={onCreateUser}
-        />
-      )}
+      {/* Confirm remove membership */}
+      <AlertDialog
+        open={Boolean(pendingDeleteId)}
+        onOpenChange={(o) => { if (!o) setPendingDeleteId(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover vínculo</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingRow
+                ? `Remover ${pendingRow.user?.name || "este operador"} do polo ${pendingRow.unit?.name || "selecionado"}?`
+                : "Confirma a remoção deste vínculo?"}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingDeleteId(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (pendingDeleteId) {
+                  onDeleteMembership(pendingDeleteId);
+                  setPendingDeleteId(null);
+                }
+              }}
+            >
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
+      {/* New operator dialog */}
       <NewOperatorDialog
         open={newOperatorOpen}
         onOpenChange={setNewOperatorOpen}
@@ -328,102 +353,48 @@ interface NewOperatorDialogProps {
   readonly onSubmit: (input: TenantUserInput) => Promise<void>;
 }
 
-function NewOperatorDialog({
-  open,
-  onOpenChange,
-  existingEmails,
-  isSaving,
-  onSubmit,
-}: NewOperatorDialogProps) {
+function NewOperatorDialog({ open, onOpenChange, existingEmails, isSaving, onSubmit }: NewOperatorDialogProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  function reset() {
-    setName("");
-    setEmail("");
-    setPassword("");
-  }
+  function reset() { setName(""); setEmail(""); setPassword(""); }
 
   const emailExists = existingEmails.includes(email.trim().toLowerCase());
   const isValid = name.trim() && email.trim() && password.length >= 6 && !emailExists;
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(o) => {
-        if (!o) reset();
-        onOpenChange(o);
-      }}
-    >
+    <Dialog open={open} onOpenChange={(o) => { if (!o) reset(); onOpenChange(o); }}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Novo operador</DialogTitle>
           <DialogDescription>
-            Crie um usuário operador. Você pode vinculá-lo a um polo depois.
+            Crie um usuário operador. Vincule-o a um polo pela aba Operadores.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">
           <div className="space-y-1.5">
             <Label htmlFor="new-op-name">Nome</Label>
-            <Input
-              id="new-op-name"
-              placeholder="Nome completo"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={isSaving}
-            />
+            <Input id="new-op-name" placeholder="Nome completo" value={name} onChange={(e) => setName(e.target.value)} disabled={isSaving} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="new-op-email">E-mail</Label>
-            <Input
-              id="new-op-email"
-              type="email"
-              placeholder="email@exemplo.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={isSaving}
-            />
-            {emailExists && (
-              <p className="text-xs text-destructive">Este e-mail já está cadastrado.</p>
-            )}
+            <Input id="new-op-email" type="email" placeholder="email@exemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} disabled={isSaving} />
+            {emailExists && <p className="text-xs text-destructive">Este e-mail já está cadastrado.</p>}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="new-op-senha">Senha</Label>
-            <Input
-              id="new-op-senha"
-              type="password"
-              placeholder="Mínimo 6 caracteres"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={isSaving}
-            />
+            <Input id="new-op-senha" type="password" placeholder="Mínimo 6 caracteres" value={password} onChange={(e) => setPassword(e.target.value)} disabled={isSaving} />
           </div>
         </div>
 
         <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isSaving}
-          >
-            Cancelar
-          </Button>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>Cancelar</Button>
           <Button
             type="button"
             disabled={isSaving || !isValid}
-            onClick={() =>
-              void onSubmit({
-                email: email.trim(),
-                name: name.trim(),
-                tenantRole: "member",
-                mode: "create",
-                password,
-                autoConfirm: true,
-              })
-            }
+            onClick={() => void onSubmit({ email: email.trim(), name: name.trim(), tenantRole: "member", mode: "create", password, autoConfirm: true })}
           >
             {isSaving ? "Criando..." : "Criar operador"}
           </Button>
