@@ -15,6 +15,9 @@ import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext
 
 function humanizeError(error: unknown): string {
   const msg = error instanceof Error ? error.message : String(error ?? "");
+  if (msg.toLowerCase().includes("already been registered") || msg.toLowerCase().includes("already registered")) {
+    return "Este e-mail ja esta cadastrado no sistema.";
+  }
   if (msg.includes("23505") || msg.toLowerCase().includes("duplicate") || msg.toLowerCase().includes("already exists")) {
     return "Este registro ja existe.";
   }

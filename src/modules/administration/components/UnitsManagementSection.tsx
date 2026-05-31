@@ -437,8 +437,9 @@ function NewOperatorDialog({ open, onOpenChange, existingEmails, isSaving, onSub
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  function reset() { setName(""); setEmail(""); setPassword(""); }
+  function reset() { setName(""); setEmail(""); setPassword(""); setSubmitError(null); }
 
   const emailExists = existingEmails.includes(email.trim().toLowerCase());
   const isValid = name.trim() && email.trim() && password.length >= 6 && !emailExists;
@@ -461,7 +462,7 @@ function NewOperatorDialog({ open, onOpenChange, existingEmails, isSaving, onSub
           <div className="space-y-1.5">
             <Label htmlFor="new-op-email">E-mail</Label>
             <Input id="new-op-email" type="email" placeholder="email@exemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} disabled={isSaving} />
-            {emailExists && <p className="text-xs text-destructive">Este e-mail já está cadastrado.</p>}
+            {emailExists && <p className="text-xs text-destructive">Este e-mail já está cadastrado nesta entidade.</p>}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="new-op-senha">Senha</Label>
@@ -471,10 +472,23 @@ function NewOperatorDialog({ open, onOpenChange, existingEmails, isSaving, onSub
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>Cancelar</Button>
+          {submitError && <p className="text-xs text-destructive">{submitError}</p>}
           <Button
             type="button"
             disabled={isSaving || !isValid}
-            onClick={() => void onSubmit({ email: email.trim(), name: name.trim(), tenantRole: "member", mode: "create", password, autoConfirm: true })}
+            onClick={async () => {
+              setSubmitError(null);
+              try {
+                await onSubmit({ email: email.trim(), name: name.trim(), tenantRole: "member", mode: "create", password, autoConfirm: true });
+              } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err ?? "");
+                if (msg.toLowerCase().includes("already")) {
+                  setSubmitError("Este e-mail já está cadastrado no sistema.");
+                } else {
+                  setSubmitError(msg || "Erro ao criar operador.");
+                }
+              }
+            }}
           >
             {isSaving ? "Criando..." : "Criar operador"}
           </Button>
