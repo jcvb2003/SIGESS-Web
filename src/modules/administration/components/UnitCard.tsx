@@ -45,7 +45,7 @@ export function UnitCard({ unit, rows, stats, onEdit, onEnter }: UnitCardProps) 
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-2 rounded-lg bg-secondary/30 px-3 py-2">
+      <div className="grid grid-cols-3 gap-2 border-t border-border/40 pt-2">
         <StatItem label="Operadores" value={rows.length} />
         <StatItem label="Sócios" value={stats?.sociosCount ?? "—"} />
         <StatItem
@@ -61,7 +61,7 @@ export function UnitCard({ unit, rows, stats, onEdit, onEnter }: UnitCardProps) 
           {rows.map(({ membership, user }) => (
             <div
               key={membership.id}
-              className={`flex items-center gap-2 rounded-md border border-border/40 bg-secondary/20 px-3 py-2 ${!membership.isActive ? "opacity-50" : ""}`}
+              className={`flex items-center gap-2 border-t border-border/30 pt-2 first:border-t-0 first:pt-0 ${!membership.isActive ? "opacity-50" : ""}`}
             >
               <UserCog className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
               <div className="min-w-0">
