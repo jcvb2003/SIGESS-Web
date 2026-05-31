@@ -212,13 +212,14 @@ export function UnitsManagementSection({
                             userUnits.map(({ unit, membershipId }) => (
                               <span
                                 key={unit.id}
-                                className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-secondary pl-2.5 pr-1.5 py-0.5 text-[11px] font-medium text-foreground/70"
+                                className="inline-flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground"
                               >
+                                <span className="h-1.5 w-1.5 rounded-full bg-primary/60 shrink-0" />
                                 {unit.name}
                                 <button
                                   type="button"
                                   disabled={isDeleting}
-                                  className="rounded p-0.5 hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-50"
+                                  className="rounded p-0.5 hover:text-destructive transition-colors disabled:opacity-50"
                                   aria-label={`Remover vínculo com ${unit.name}`}
                                   onClick={() => setPendingDeleteId(membershipId)}
                                 >
