@@ -28,6 +28,7 @@ export interface TenantUserRecord {
   email: string | null;
   name: string | null;
   tenantRole: "owner" | "member";
+  operatorType: "presidente" | "auxiliar" | null;
   isActive: boolean;
 }
 
@@ -92,6 +93,7 @@ function mapTenantUserRow(row: Record<string, unknown>): TenantUserRecord {
     email: profile.email ? String(profile.email) : null,
     name: profile.nome ? String(profile.nome) : null,
     tenantRole: String(row.tenant_role) as TenantUserRecord["tenantRole"],
+    operatorType: (row.operator_type as TenantUserRecord["operatorType"]) ?? null,
     isActive: Boolean(row.is_active),
   };
 }
@@ -198,7 +200,7 @@ export const administrationService = {
 
     const { data, error } = await supabase
       .from("tenant_users" as never)
-      .select("id, tenant_id, user_id, tenant_role, is_active, user_profiles(email, nome)")
+      .select("id, tenant_id, user_id, tenant_role, operator_type, is_active, user_profiles(email, nome)")
       .eq("tenant_id", tenantIdResult.data)
       .order("created_at", { ascending: true });
 

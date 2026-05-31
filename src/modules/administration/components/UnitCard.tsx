@@ -49,9 +49,9 @@ export function UnitCard({ unit, rows, stats, onEdit, onEnter }: UnitCardProps) 
         <StatItem label="Operadores" value={rows.length} color="blue" />
         <StatItem label="Sócios" value={stats?.sociosCount ?? "—"} color="primary" />
         <StatItem
-          label="Pendentes"
-          value={stats?.pendingReqCount ?? "—"}
-          color={typeof stats?.pendingReqCount === "number" && stats.pendingReqCount > 0 ? "amber" : "muted"}
+          label="Auxiliares"
+          value={rows.filter((r) => r.user?.operatorType === "auxiliar").length}
+          color="muted"
         />
       </div>
 
