@@ -38,7 +38,7 @@ export const photoService = {
         .upload(fileName, file, {
           upsert: true,
           contentType: "image/jpeg",
-          cacheControl: "3600", // 1h de cache no CDN
+          cacheControl: "0",
         });
 
       if (uploadError) {

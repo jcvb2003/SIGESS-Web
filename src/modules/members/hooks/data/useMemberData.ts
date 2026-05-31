@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useDataTableState } from "@/shared/hooks/useDataTableState";
 import { memberService, type MemberUnitContext } from "../../services/memberService";
 import { memberQueryKeys } from "../../queryKeys";
@@ -69,8 +69,9 @@ export function useMembersListController() {
     confirmDelete,
   } = useMemberActions();
   const navigate = useNavigate();
-  const [viewMemberUuid, setViewMemberUuid] = useState<string | null>(null);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const viewMemberUuid = searchParams.get("view");
+  const isViewModalOpen = !!viewMemberUuid;
 
   const queryParams = useMemo<MemberSearchParams>(
     () => ({
@@ -171,13 +172,11 @@ export function useMembersListController() {
     navigate(`/members/${member.id}`);
   };
   const handleView = (member: MemberListItem) => {
-    setViewMemberUuid(member.id);
-    setIsViewModalOpen(true);
+    setSearchParams((prev) => { prev.set("view", member.id); return prev; });
   };
   const handleViewModalChange = (open: boolean) => {
-    setIsViewModalOpen(open);
     if (!open) {
-      setTimeout(() => setViewMemberUuid(null), 300);
+      setSearchParams((prev) => { prev.delete("view"); return prev; });
     }
   };
   const handleGenerateDocument = (member: MemberListItem) => {

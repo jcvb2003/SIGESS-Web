@@ -139,7 +139,6 @@ export default function Members() {
         onOpenChange={viewDialog.onOpenChange}
         memberUuid={viewDialog.memberUuid}
         onEdit={(id, member) => {
-          viewDialog.onOpenChange(false);
           table.onEdit(toMemberListItem(id, member));
         }}
         onDocuments={(id, member) => {
