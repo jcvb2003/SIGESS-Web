@@ -12,6 +12,7 @@ import {
 const ACTIVE_UNIT_STORAGE_KEY = "sigess_active_unit";
 const AVAILABLE_UNITS_STORAGE_KEY = "sigess_available_units";
 const DEV_UNITS_STORAGE_KEY = "sigess_dev_units";
+const TENANT_CONFIG_CACHE_KEY = "sigess_tenant_config";
 
 export interface TenantUnitSummary {
   id: string;
@@ -32,14 +33,55 @@ interface TenantUnitContextValue {
 
 const TenantUnitContext = createContext<TenantUnitContextValue | undefined>(undefined);
 
-function readStoredUnits(): { activeUnit: TenantUnitSummary | null; availableUnits: TenantUnitSummary[] } {
+// ─── Tenant-scoped storage helpers ──────────────────────────────────────────
+
+function getTenantCode(): string | null {
+  try {
+    const raw = globalThis.localStorage?.getItem(TENANT_CONFIG_CACHE_KEY);
+    if (!raw) return null;
+    return (JSON.parse(raw) as { code?: string }).code ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function scopedKey(base: string, tenantCode: string | null): string {
+  return tenantCode ? `${base}_${tenantCode}` : base;
+}
+
+function readStoredUnits(tenantCode: string | null): {
+  activeUnit: TenantUnitSummary | null;
+  availableUnits: TenantUnitSummary[];
+} {
   if (typeof globalThis === "undefined") {
     return { activeUnit: null, availableUnits: [] };
   }
 
   try {
-    const activeRaw = globalThis.localStorage.getItem(ACTIVE_UNIT_STORAGE_KEY);
-    const availableRaw = globalThis.localStorage.getItem(AVAILABLE_UNITS_STORAGE_KEY);
+    const activeKey = scopedKey(ACTIVE_UNIT_STORAGE_KEY, tenantCode);
+    const availableKey = scopedKey(AVAILABLE_UNITS_STORAGE_KEY, tenantCode);
+
+    let activeRaw = globalThis.localStorage.getItem(activeKey);
+    let availableRaw = globalThis.localStorage.getItem(availableKey);
+
+    // One-time migration from legacy global keys → scoped keys.
+    // Runs only when scoped key is absent, moves data and removes legacy key.
+    if (tenantCode && !activeRaw) {
+      const legacy = globalThis.localStorage.getItem(ACTIVE_UNIT_STORAGE_KEY);
+      if (legacy) {
+        globalThis.localStorage.setItem(activeKey, legacy);
+        globalThis.localStorage.removeItem(ACTIVE_UNIT_STORAGE_KEY);
+        activeRaw = legacy;
+      }
+    }
+    if (tenantCode && !availableRaw) {
+      const legacy = globalThis.localStorage.getItem(AVAILABLE_UNITS_STORAGE_KEY);
+      if (legacy) {
+        globalThis.localStorage.setItem(availableKey, legacy);
+        globalThis.localStorage.removeItem(AVAILABLE_UNITS_STORAGE_KEY);
+        availableRaw = legacy;
+      }
+    }
 
     const activeUnit = activeRaw ? (JSON.parse(activeRaw) as TenantUnitSummary) : null;
     const availableUnits = availableRaw ? (JSON.parse(availableRaw) as TenantUnitSummary[]) : [];
@@ -50,19 +92,26 @@ function readStoredUnits(): { activeUnit: TenantUnitSummary | null; availableUni
   }
 }
 
-function persistUnits(activeUnit: TenantUnitSummary | null, availableUnits: TenantUnitSummary[]) {
+function persistUnits(
+  activeUnit: TenantUnitSummary | null,
+  availableUnits: TenantUnitSummary[],
+  tenantCode: string | null,
+) {
   if (typeof globalThis === "undefined") return;
 
+  const activeKey = scopedKey(ACTIVE_UNIT_STORAGE_KEY, tenantCode);
+  const availableKey = scopedKey(AVAILABLE_UNITS_STORAGE_KEY, tenantCode);
+
   if (activeUnit) {
-    globalThis.localStorage.setItem(ACTIVE_UNIT_STORAGE_KEY, JSON.stringify(activeUnit));
+    globalThis.localStorage.setItem(activeKey, JSON.stringify(activeUnit));
   } else {
-    globalThis.localStorage.removeItem(ACTIVE_UNIT_STORAGE_KEY);
+    globalThis.localStorage.removeItem(activeKey);
   }
 
   if (availableUnits.length > 0) {
-    globalThis.localStorage.setItem(AVAILABLE_UNITS_STORAGE_KEY, JSON.stringify(availableUnits));
+    globalThis.localStorage.setItem(availableKey, JSON.stringify(availableUnits));
   } else {
-    globalThis.localStorage.removeItem(AVAILABLE_UNITS_STORAGE_KEY);
+    globalThis.localStorage.removeItem(availableKey);
   }
 }
 
@@ -108,7 +157,11 @@ function resolveNextActiveUnit(
   return null;
 }
 
+// ─── Provider ────────────────────────────────────────────────────────────────
+
 export function TenantUnitProvider({ children }: Readonly<{ children: ReactNode }>) {
+  const tenantCodeRef = useRef<string | null>(getTenantCode());
+
   const [activeUnit, setActiveUnitState] = useState<TenantUnitSummary | null>(null);
   const [availableUnits, setAvailableUnits] = useState<TenantUnitSummary[]>([]);
   const [hydrated, setHydrated] = useState(false);
@@ -124,7 +177,7 @@ export function TenantUnitProvider({ children }: Readonly<{ children: ReactNode 
   }, [availableUnits]);
 
   useEffect(() => {
-    const stored = readStoredUnits();
+    const stored = readStoredUnits(tenantCodeRef.current);
     setActiveUnitState(stored.activeUnit);
     setAvailableUnits(stored.availableUnits);
     setHydrated(true);
@@ -148,13 +201,13 @@ export function TenantUnitProvider({ children }: Readonly<{ children: ReactNode 
 
     setAvailableUnits(devUnits);
     setActiveUnitState(nextActiveUnit);
-    persistUnits(nextActiveUnit, devUnits);
+    persistUnits(nextActiveUnit, devUnits, tenantCodeRef.current);
   }, [activeUnit?.id, availableUnits.length, hydrated]);
 
   const setActiveUnit = useCallback((unit: TenantUnitSummary | null) => {
     setActiveUnitState(unit);
     activeUnitRef.current = unit;
-    persistUnits(unit, availableUnitsRef.current);
+    persistUnits(unit, availableUnitsRef.current, tenantCodeRef.current);
   }, []);
 
   const replaceUnits = useCallback((units: TenantUnitSummary[], activeUnitId?: string | null) => {
@@ -169,7 +222,7 @@ export function TenantUnitProvider({ children }: Readonly<{ children: ReactNode 
     activeUnitRef.current = nextActiveUnit;
     setAvailableUnits(normalizedUnits);
     setActiveUnitState(nextActiveUnit);
-    persistUnits(nextActiveUnit, normalizedUnits);
+    persistUnits(nextActiveUnit, normalizedUnits, tenantCodeRef.current);
   }, []);
 
   const clearUnits = useCallback(() => {
@@ -177,7 +230,7 @@ export function TenantUnitProvider({ children }: Readonly<{ children: ReactNode 
     activeUnitRef.current = null;
     setAvailableUnits([]);
     setActiveUnitState(null);
-    persistUnits(null, []);
+    persistUnits(null, [], tenantCodeRef.current);
   }, []);
 
   const value = useMemo<TenantUnitContextValue>(() => ({
