@@ -267,6 +267,7 @@ export const administrationService = {
           tenant_id: tenantIdResult.data,
           user_id: createdUserId,
           tenant_role: input.tenantRole,
+          operator_type: "presidente",
           is_active: true,
         } as never,
         { onConflict: "tenant_id,user_id" },
