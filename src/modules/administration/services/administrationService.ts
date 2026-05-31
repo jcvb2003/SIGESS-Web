@@ -163,10 +163,6 @@ function resolveCurrentTenantCode() {
   return globalThis.localStorage.getItem("sigess_tenant");
 }
 
-function mapTenantRoleToAuthRole(_tenantRole: TenantUserRoleInput) {
-  return "admin";
-}
-
 export const administrationService = {
   async listTenantMemberships(): Promise<ServiceResponse<TenantMembershipRecord[]>> {
     const tenantIdResult = await resolveCurrentTenantId();
@@ -223,7 +219,6 @@ export const administrationService = {
     }
 
     const tenantCode = resolveCurrentTenantCode();
-    const authRole = mapTenantRoleToAuthRole(input.tenantRole);
     const action = input.mode === "invite" ? "invite" : "create";
 
     const { data: functionData, error: functionError } = await supabase.functions.invoke(
@@ -234,7 +229,7 @@ export const administrationService = {
           payload: {
             email: input.email.trim(),
             nome: input.name.trim(),
-            role: authRole,
+            role: "admin",
             tenantCode,
             ...(input.mode === "create"
               ? {
@@ -340,22 +335,6 @@ export const administrationService = {
     };
   },
 
-  async setTenantUnitActive(
-    id: string,
-    isActive: boolean,
-  ): Promise<ServiceResponse<void>> {
-    const { error } = await supabase
-      .from("tenant_units" as never)
-      .update({ is_active: isActive } as never)
-      .eq("id", id);
-
-    if (error) {
-      return { data: null, error };
-    }
-
-    return { data: null, error: null };
-  },
-
   async createTenantMembership(
     input: TenantMembershipInput,
   ): Promise<ServiceResponse<TenantMembershipRecord>> {
@@ -416,41 +395,4 @@ export const administrationService = {
     return { data: result, error: null };
   },
 
-  async setTenantUserActive(id: string, isActive: boolean): Promise<ServiceResponse<void>> {
-    const { error } = await supabase
-      .from("tenant_users" as never)
-      .update({ is_active: isActive } as never)
-      .eq("id", id);
-
-    if (error) return { data: null, error };
-    return { data: null, error: null };
-  },
-
-  async countPendingRequirements(): Promise<ServiceResponse<number>> {
-    const year = new Date().getFullYear();
-    const { count, error } = await supabase
-      .from("requerimentos" as never)
-      .select("*", { count: "exact", head: true })
-      .eq("ano_referencia", year)
-      .not("status_mte", "in", '("deferido","indeferido")');
-
-    if (error) {
-      return { data: null, error };
-    }
-
-    return { data: count ?? 0, error: null };
-  },
-
-  async countDefaulters(): Promise<ServiceResponse<number>> {
-    const { count, error } = await supabase
-      .from("v_situacao_financeira_socio" as never)
-      .select("*", { count: "exact", head: true })
-      .not("situacao_geral", "in", '("EM_DIA","ISENTO")');
-
-    if (error) {
-      return { data: null, error };
-    }
-
-    return { data: count ?? 0, error: null };
-  },
 };

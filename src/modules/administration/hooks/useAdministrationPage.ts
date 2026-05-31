@@ -87,26 +87,6 @@ export function useAdministrationPage(enabled: boolean) {
     enabled,
   });
 
-  const pendingRequirementsQuery = useQuery({
-    queryKey: administrationQueryKeys.pendingRequirements(),
-    queryFn: async () => {
-      const { data, error } = await administrationService.countPendingRequirements();
-      if (error) throw error;
-      return data ?? 0;
-    },
-    enabled,
-  });
-
-  const defaultersQuery = useQuery({
-    queryKey: administrationQueryKeys.defaulters(),
-    queryFn: async () => {
-      const { data, error } = await administrationService.countDefaulters();
-      if (error) throw error;
-      return data ?? 0;
-    },
-    enabled,
-  });
-
   // Mutations
   const saveMutation = useMutation({
     mutationFn: async (values: TenantUnitInput) => {
@@ -145,18 +125,6 @@ export function useAdministrationPage(enabled: boolean) {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: administrationQueryKeys.tenantMemberships() });
       toast.success("Acesso removido com sucesso.");
-    },
-    onError: (error: unknown) => toast.error(humanizeError(error)),
-  });
-
-  const toggleTenantUserMutation = useMutation({
-    mutationFn: async (user: { id: string; isActive: boolean }) => {
-      const { error } = await administrationService.setTenantUserActive(user.id, !user.isActive);
-      if (error) throw error;
-    },
-    onSuccess: async (_, user) => {
-      await queryClient.invalidateQueries({ queryKey: administrationQueryKeys.tenantUsers() });
-      toast.success(user.isActive ? "Operador desativado." : "Operador ativado.");
     },
     onError: (error: unknown) => toast.error(humanizeError(error)),
   });
@@ -221,8 +189,6 @@ export function useAdministrationPage(enabled: boolean) {
     membershipRows,
     unitStats: unitStatsQuery.data,
     totalMembers: totalMembersQuery.data?.count,
-    pendingRequirements: pendingRequirementsQuery.data,
-    defaulters: defaultersQuery.data,
 
     // Counts
     counts: { activeUnits: activeUnitsCount, totalUnits: units.length, activeUsers: activeUsersCount, memberships: membershipsCount },
@@ -246,7 +212,6 @@ export function useAdministrationPage(enabled: boolean) {
       createMembership: { mutateAsync: membershipCreateMutation.mutateAsync, isPending: membershipCreateMutation.isPending },
       deleteMembership: { mutate: membershipDeleteMutation.mutate, isPending: membershipDeleteMutation.isPending },
       createTenantUser: { mutateAsync: tenantUserCreateMutation.mutateAsync, isPending: tenantUserCreateMutation.isPending },
-      toggleTenantUser: { mutate: toggleTenantUserMutation.mutate, isPending: toggleTenantUserMutation.isPending },
     },
   };
 }

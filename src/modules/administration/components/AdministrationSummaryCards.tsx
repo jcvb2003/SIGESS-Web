@@ -86,7 +86,6 @@ interface AdministrationSummaryCardsProps {
 
 export function AdministrationSummaryCards({
   activeUnitsCount,
-  unitsCount,
   operatorsCount,
   accessCount,
   totalMembers,
