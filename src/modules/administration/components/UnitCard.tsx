@@ -46,12 +46,12 @@ export function UnitCard({ unit, rows, stats, onEdit, onEnter }: UnitCardProps) 
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-2 rounded-lg bg-muted/50 px-3 py-2">
-        <StatItem label="Operadores" value={rows.length} />
-        <StatItem label="Sócios" value={stats?.sociosCount ?? "—"} />
+        <StatItem label="Operadores" value={rows.length} color="blue" />
+        <StatItem label="Sócios" value={stats?.sociosCount ?? "—"} color="primary" />
         <StatItem
           label="Pendentes"
           value={stats?.pendingReqCount ?? "—"}
-          highlight={typeof stats?.pendingReqCount === "number" && stats.pendingReqCount > 0}
+          color={typeof stats?.pendingReqCount === "number" && stats.pendingReqCount > 0 ? "amber" : "muted"}
         />
       </div>
 
@@ -106,20 +106,25 @@ export function UnitCard({ unit, rows, stats, onEdit, onEnter }: UnitCardProps) 
   );
 }
 
+const statColors = {
+  primary: "text-primary",
+  blue: "text-blue-600 dark:text-blue-400",
+  amber: "text-amber-600 dark:text-amber-400",
+  muted: "text-muted-foreground",
+};
+
 function StatItem({
   label,
   value,
-  highlight = false,
+  color = "muted",
 }: {
   label: string;
   value: number | string;
-  highlight?: boolean;
+  color?: keyof typeof statColors;
 }) {
   return (
     <div className="flex flex-col items-center gap-0.5">
-      <span
-        className={`text-sm font-semibold tabular-nums ${highlight ? "text-amber-600 dark:text-amber-400" : "text-foreground"}`}
-      >
+      <span className={`text-sm font-semibold tabular-nums ${statColors[color]}`}>
         {value}
       </span>
       <span className="text-[10px] text-muted-foreground">{label}</span>
