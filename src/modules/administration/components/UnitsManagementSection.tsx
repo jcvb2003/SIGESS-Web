@@ -168,14 +168,14 @@ export function UnitsManagementSection({
                   return (
                     <div
                       key={user.id}
-                      className={`flex items-center gap-3 rounded-lg border px-4 py-3 transition-colors ${
+                      className={`flex gap-3 rounded-lg border px-4 py-3 transition-colors ${
                         userUnits.length === 0
                           ? "border-amber-300/60 bg-amber-50/40 dark:border-amber-700/40 dark:bg-amber-950/20"
                           : "border-border/50 bg-card"
                       }`}
                     >
                       {/* Avatar */}
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold mt-0.5">
                         {(user.name || user.email || "?")
                           .split(" ")
                           .slice(0, 2)
@@ -184,86 +184,90 @@ export function UnitsManagementSection({
                           .toUpperCase()}
                       </div>
 
-                      {/* Info */}
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">
-                          {user.name || user.email}
-                        </p>
+                      {/* Info + polos */}
+                      <div className="min-w-0 flex-1 space-y-1.5">
+                        {/* Linha 1: nome + status */}
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="truncate text-sm font-medium">
+                            {user.name || user.email}
+                          </p>
+                          <StatusBadge
+                            variant={user.isActive ? "success" : "secondary"}
+                            label={user.isActive ? "Ativo" : "Inativo"}
+                          />
+                        </div>
+
+                        {/* Linha 2: email */}
                         {user.email && user.name && (
                           <p className="truncate text-xs text-muted-foreground">{user.email}</p>
                         )}
-                      </div>
 
-                      {/* Polo badges + vincular */}
-                      <div className="flex items-center gap-1.5 flex-wrap justify-end">
-                        {userUnits.length === 0 ? (
-                          <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-400">
-                            Sem polo
-                          </span>
-                        ) : (
-                          userUnits.map(({ unit, membershipId }) => (
-                            <span
-                              key={unit.id}
-                              className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-secondary pl-2 pr-1 py-0.5 text-[10px] font-medium text-muted-foreground"
-                            >
-                              {unit.name}
-                              <button
-                                type="button"
-                                disabled={isDeleting}
-                                className="rounded-full p-0.5 hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-50"
-                                aria-label={`Remover vínculo com ${unit.name}`}
-                                onClick={() => setPendingDeleteId(membershipId)}
-                              >
-                                <X className="h-2.5 w-2.5" />
-                              </button>
+                        {/* Linha 3: polos + vincular */}
+                        <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                          {userUnits.length === 0 ? (
+                            <span className="inline-flex items-center rounded-md border border-amber-300 bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-400">
+                              Sem polo
                             </span>
-                          ))
-                        )}
-
-                        {availableToLink.length > 0 && (
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 shrink-0 text-muted-foreground hover:text-primary"
-                                aria-label="Vincular a polo"
+                          ) : (
+                            userUnits.map(({ unit, membershipId }) => (
+                              <span
+                                key={unit.id}
+                                className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-secondary pl-2.5 pr-1.5 py-0.5 text-[11px] font-medium text-foreground/70"
                               >
-                                <Plus className="h-3.5 w-3.5" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent align="end" className="w-48 p-1">
-                              <p className="px-2 py-1.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
-                                Vincular a polo
-                              </p>
-                              {availableToLink.map((u) => (
+                                {unit.name}
                                 <button
-                                  key={u.id}
                                   type="button"
-                                  disabled={isSavingMembership}
-                                  className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-muted transition-colors disabled:opacity-50"
-                                  onClick={() =>
-                                    void onCreateMembership({
-                                      userId: user.userId,
-                                      unitId: u.id,
-                                      role: "unit_operator",
-                                      isActive: true,
-                                    })
-                                  }
+                                  disabled={isDeleting}
+                                  className="rounded p-0.5 hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-50"
+                                  aria-label={`Remover vínculo com ${unit.name}`}
+                                  onClick={() => setPendingDeleteId(membershipId)}
                                 >
-                                  {u.name}
+                                  <X className="h-3 w-3" />
                                 </button>
-                              ))}
-                            </PopoverContent>
-                          </Popover>
-                        )}
-                      </div>
+                              </span>
+                            ))
+                          )}
 
-                      <StatusBadge
-                        variant={user.isActive ? "success" : "secondary"}
-                        label={user.isActive ? "Ativo" : "Inativo"}
-                      />
+                          {availableToLink.length > 0 && (
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-6 gap-1 px-2 text-[11px] text-muted-foreground"
+                                >
+                                  <Plus className="h-3 w-3" />
+                                  Vincular
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent align="start" className="w-48 p-1">
+                                <p className="px-2 py-1.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                                  Vincular a polo
+                                </p>
+                                {availableToLink.map((u) => (
+                                  <button
+                                    key={u.id}
+                                    type="button"
+                                    disabled={isSavingMembership}
+                                    className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-muted transition-colors disabled:opacity-50"
+                                    onClick={() =>
+                                      void onCreateMembership({
+                                        userId: user.userId,
+                                        unitId: u.id,
+                                        role: "unit_operator",
+                                        isActive: true,
+                                      })
+                                    }
+                                  >
+                                    {u.name}
+                                  </button>
+                                ))}
+                              </PopoverContent>
+                            </Popover>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   );
                 })}
