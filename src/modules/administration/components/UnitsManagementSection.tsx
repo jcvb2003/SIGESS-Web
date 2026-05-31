@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Building2, Plus, Shield, UserCog } from "lucide-react";
+import { Building2, Plus, UserCog, UserPlus } from "lucide-react";
 import type { MembershipRow, UnitStat } from "@/modules/administration/types";
 import type {
   TenantMembershipInput,
@@ -10,6 +10,21 @@ import type {
 } from "@/modules/administration/services/administrationService";
 import { Button } from "@/shared/components/ui/button";
 import { CardDescription, CardTitle } from "@/shared/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/components/ui/dialog";
+import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/shared/components/ui/popover";
 import { SectionCard, SectionCardHeader } from "@/shared/components/ui/SectionCard";
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
@@ -52,6 +67,7 @@ export function UnitsManagementSection({
   onCreateUser,
 }: UnitsManagementSectionProps) {
   const [operatorsUnitId, setOperatorsUnitId] = useState<string | null>(null);
+  const [newOperatorOpen, setNewOperatorOpen] = useState(false);
 
   const rowsByUnit = useMemo(() => {
     const map = new Map<string, MembershipRow[]>();
@@ -64,10 +80,23 @@ export function UnitsManagementSection({
     return map;
   }, [membershipRows]);
 
-  const owners = useMemo(
-    () => tenantUsers.filter((u) => u.tenantRole === "owner"),
+  const unitsByUser = useMemo(() => {
+    const map = new Map<string, TenantUnitRecord[]>();
+    for (const row of membershipRows) {
+      if (!row.unit) continue;
+      const existing = map.get(row.membership.userId) ?? [];
+      existing.push(row.unit);
+      map.set(row.membership.userId, existing);
+    }
+    return map;
+  }, [membershipRows]);
+
+  const operators = useMemo(
+    () => tenantUsers.filter((u) => u.tenantRole !== "owner"),
     [tenantUsers],
   );
+
+  const activeUnits = useMemo(() => units.filter((u) => u.isActive), [units]);
 
   const activeUnit = operatorsUnitId
     ? (units.find((u) => u.id === operatorsUnitId) ?? null)
@@ -83,7 +112,7 @@ export function UnitsManagementSection({
               Administração
             </CardTitle>
             <CardDescription>
-              Gestores e configuração operacional dos polos da entidade.
+              Operadores e configuração dos polos da entidade.
             </CardDescription>
           </div>
           <Button onClick={onCreate} variant="outline" size="sm" className="gap-2 shrink-0">
@@ -92,11 +121,11 @@ export function UnitsManagementSection({
           </Button>
         </SectionCardHeader>
 
-        <Tabs defaultValue="polos" className="px-6 pb-6">
+        <Tabs defaultValue="operadores" className="px-6 pb-6">
           <TabsList className="mb-4 h-9">
-            <TabsTrigger value="gestores" className="text-xs gap-1.5">
-              <Shield className="h-3.5 w-3.5" />
-              Gestores
+            <TabsTrigger value="operadores" className="text-xs gap-1.5">
+              <UserCog className="h-3.5 w-3.5" />
+              Operadores
             </TabsTrigger>
             <TabsTrigger value="polos" className="text-xs gap-1.5">
               <Building2 className="h-3.5 w-3.5" />
@@ -104,41 +133,128 @@ export function UnitsManagementSection({
             </TabsTrigger>
           </TabsList>
 
-          {/* Tab: Gestores */}
-          <TabsContent value="gestores" className="mt-0">
+          {/* Tab: Operadores */}
+          <TabsContent value="operadores" className="mt-0 space-y-3">
+            <div className="flex justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => setNewOperatorOpen(true)}
+              >
+                <UserPlus className="h-4 w-4" />
+                Novo operador
+              </Button>
+            </div>
+
             {isLoading ? (
               <p className="py-10 text-center text-sm text-muted-foreground">Carregando...</p>
-            ) : owners.length === 0 ? (
+            ) : operators.length === 0 ? (
               <p className="py-10 text-center text-sm text-muted-foreground">
-                Nenhum gestor cadastrado.
+                Nenhum operador cadastrado.
               </p>
             ) : (
               <div className="space-y-2">
-                {owners.map((user) => (
-                  <div
-                    key={user.id}
-                    className="flex items-center gap-3 rounded-lg border border-border/50 bg-card px-4 py-3"
-                  >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">
-                      {(user.name || user.email || "?")
-                        .split(" ")
-                        .slice(0, 2)
-                        .map((n) => n[0])
-                        .join("")
-                        .toUpperCase()}
+                {operators.map((user) => {
+                  const userUnits = unitsByUser.get(user.userId) ?? [];
+                  const availableToLink = activeUnits.filter(
+                    (u) => !memberships.some((m) => m.userId === user.userId && m.unitId === u.id),
+                  );
+
+                  return (
+                    <div
+                      key={user.id}
+                      className={`flex items-center gap-3 rounded-lg border px-4 py-3 transition-colors ${
+                        userUnits.length === 0
+                          ? "border-amber-300/60 bg-amber-50/40 dark:border-amber-700/40 dark:bg-amber-950/20"
+                          : "border-border/50 bg-card"
+                      }`}
+                    >
+                      {/* Avatar */}
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">
+                        {(user.name || user.email || "?")
+                          .split(" ")
+                          .slice(0, 2)
+                          .map((n) => n[0])
+                          .join("")
+                          .toUpperCase()}
+                      </div>
+
+                      {/* Info */}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">
+                          {user.name || user.email}
+                        </p>
+                        {user.email && user.name && (
+                          <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                        )}
+                      </div>
+
+                      {/* Polo badges */}
+                      <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                        {userUnits.length === 0 ? (
+                          <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-400">
+                            Sem polo
+                          </span>
+                        ) : (
+                          userUnits.map((u) => (
+                            <span
+                              key={u.id}
+                              className="inline-flex items-center rounded-full border border-border/60 bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
+                            >
+                              {u.name}
+                            </span>
+                          ))
+                        )}
+
+                        {/* Vincular popover */}
+                        {availableToLink.length > 0 && (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 shrink-0 text-muted-foreground hover:text-primary"
+                                aria-label="Vincular a polo"
+                              >
+                                <Plus className="h-3.5 w-3.5" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent align="end" className="w-48 p-1">
+                              <p className="px-2 py-1.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                                Vincular a polo
+                              </p>
+                              {availableToLink.map((u) => (
+                                <button
+                                  key={u.id}
+                                  type="button"
+                                  disabled={isSavingMembership}
+                                  className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-muted transition-colors disabled:opacity-50"
+                                  onClick={() =>
+                                    void onCreateMembership({
+                                      userId: user.userId,
+                                      unitId: u.id,
+                                      role: "unit_operator",
+                                      isActive: true,
+                                    })
+                                  }
+                                >
+                                  {u.name}
+                                </button>
+                              ))}
+                            </PopoverContent>
+                          </Popover>
+                        )}
+                      </div>
+
+                      <StatusBadge
+                        variant={user.isActive ? "success" : "secondary"}
+                        label={user.isActive ? "Ativo" : "Inativo"}
+                      />
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{user.name || user.email}</p>
-                      {user.email && user.name && (
-                        <p className="truncate text-xs text-muted-foreground">{user.email}</p>
-                      )}
-                    </div>
-                    <StatusBadge
-                      variant={user.isActive ? "success" : "secondary"}
-                      label={user.isActive ? "Ativo" : "Inativo"}
-                    />
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </TabsContent>
@@ -187,6 +303,132 @@ export function UnitsManagementSection({
           onCreateUser={onCreateUser}
         />
       )}
+
+      <NewOperatorDialog
+        open={newOperatorOpen}
+        onOpenChange={setNewOperatorOpen}
+        existingEmails={tenantUsers.map((u) => u.email ?? "").filter(Boolean)}
+        isSaving={isSavingUser}
+        onSubmit={async (input) => {
+          await onCreateUser(input);
+          setNewOperatorOpen(false);
+        }}
+      />
     </>
+  );
+}
+
+// ─── New Operator Dialog ─────────────────────────────────────────────────────
+
+interface NewOperatorDialogProps {
+  readonly open: boolean;
+  readonly onOpenChange: (open: boolean) => void;
+  readonly existingEmails: string[];
+  readonly isSaving: boolean;
+  readonly onSubmit: (input: TenantUserInput) => Promise<void>;
+}
+
+function NewOperatorDialog({
+  open,
+  onOpenChange,
+  existingEmails,
+  isSaving,
+  onSubmit,
+}: NewOperatorDialogProps) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  function reset() {
+    setName("");
+    setEmail("");
+    setPassword("");
+  }
+
+  const emailExists = existingEmails.includes(email.trim().toLowerCase());
+  const isValid = name.trim() && email.trim() && password.length >= 6 && !emailExists;
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) reset();
+        onOpenChange(o);
+      }}
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Novo operador</DialogTitle>
+          <DialogDescription>
+            Crie um usuário operador. Você pode vinculá-lo a um polo depois.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="new-op-name">Nome</Label>
+            <Input
+              id="new-op-name"
+              placeholder="Nome completo"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              disabled={isSaving}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="new-op-email">E-mail</Label>
+            <Input
+              id="new-op-email"
+              type="email"
+              placeholder="email@exemplo.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={isSaving}
+            />
+            {emailExists && (
+              <p className="text-xs text-destructive">Este e-mail já está cadastrado.</p>
+            )}
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="new-op-senha">Senha</Label>
+            <Input
+              id="new-op-senha"
+              type="password"
+              placeholder="Mínimo 6 caracteres"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={isSaving}
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isSaving}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="button"
+            disabled={isSaving || !isValid}
+            onClick={() =>
+              void onSubmit({
+                email: email.trim(),
+                name: name.trim(),
+                tenantRole: "member",
+                mode: "create",
+                password,
+                autoConfirm: true,
+              })
+            }
+          >
+            {isSaving ? "Criando..." : "Criar operador"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
