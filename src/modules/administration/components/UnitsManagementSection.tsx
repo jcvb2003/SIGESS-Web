@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Building2, Plus, UserCog, UserPlus, X } from "lucide-react";
+import { Building2, MoreVertical, Plus, Trash2, UserCog, UserPlus, X } from "lucide-react";
 import type { MembershipRow, UnitStat } from "@/modules/administration/types";
 import type {
   TenantMembershipInput,
@@ -20,6 +20,13 @@ import {
 } from "@/shared/components/ui/dialog";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/shared/components/ui/dropdown-menu";
 import {
   Popover,
   PopoverContent,
@@ -50,12 +57,16 @@ interface UnitsManagementSectionProps {
   readonly isDeleting: boolean;
   readonly isSavingMembership: boolean;
   readonly isSavingUser: boolean;
+  readonly isTogglingUser: boolean;
+  readonly isDeletingUser: boolean;
   readonly onEdit: (unit: TenantUnitRecord) => void;
   readonly onEnter: (unit: TenantUnitRecord) => void;
   readonly onCreate: () => void;
   readonly onDeleteMembership: (membershipId: string) => void;
   readonly onCreateMembership: (input: TenantMembershipInput) => Promise<void>;
   readonly onCreateUser: (input: TenantUserInput) => Promise<void>;
+  readonly onSetUserActive: (id: string, isActive: boolean) => void;
+  readonly onDeleteUser: (id: string) => void;
 }
 
 export function UnitsManagementSection({
@@ -68,15 +79,20 @@ export function UnitsManagementSection({
   isDeleting,
   isSavingMembership,
   isSavingUser,
+  isTogglingUser,
+  isDeletingUser,
   onEdit,
   onEnter,
   onCreate,
   onDeleteMembership,
   onCreateMembership,
   onCreateUser,
+  onSetUserActive,
+  onDeleteUser,
 }: UnitsManagementSectionProps) {
   const [newOperatorOpen, setNewOperatorOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [pendingDeleteUserId, setPendingDeleteUserId] = useState<string | null>(null);
 
   const rowsByUnit = useMemo(() => {
     const map = new Map<string, MembershipRow[]>();
@@ -186,15 +202,45 @@ export function UnitsManagementSection({
 
                       {/* Info + polos */}
                       <div className="min-w-0 flex-1 space-y-1.5">
-                        {/* Linha 1: nome + status */}
+                        {/* Linha 1: nome + status + menu */}
                         <div className="flex items-center justify-between gap-2">
                           <p className="truncate text-sm font-medium">
                             {user.name || user.email}
                           </p>
-                          <StatusBadge
-                            variant={user.isActive ? "success" : "secondary"}
-                            label={user.isActive ? "Ativo" : "Inativo"}
-                          />
+                          <div className="flex items-center gap-1 shrink-0">
+                            <StatusBadge
+                              variant={user.isActive ? "success" : "secondary"}
+                              label={user.isActive ? "Ativo" : "Inativo"}
+                            />
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 text-muted-foreground"
+                                  disabled={isTogglingUser || isDeletingUser}
+                                >
+                                  <MoreVertical className="h-3.5 w-3.5" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => onSetUserActive(user.id, !user.isActive)}>
+                                  {user.isActive ? "Desativar" : "Ativar"}
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  disabled={userUnits.length > 0}
+                                  className={userUnits.length > 0 ? "opacity-50 cursor-not-allowed" : "text-destructive focus:text-destructive"}
+                                  title={userUnits.length > 0 ? "Remova os vínculos antes de excluir" : undefined}
+                                  onClick={() => { if (userUnits.length === 0) setPendingDeleteUserId(user.id); }}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5 mr-2" />
+                                  Excluir
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </div>
 
                         {/* Linha 2: email */}
@@ -328,6 +374,35 @@ export function UnitsManagementSection({
               }}
             >
               Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirm delete operator */}
+      <AlertDialog
+        open={Boolean(pendingDeleteUserId)}
+        onOpenChange={(o) => { if (!o) setPendingDeleteUserId(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir operador</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação remove o acesso do operador a esta entidade. Não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingDeleteUserId(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (pendingDeleteUserId) {
+                  onDeleteUser(pendingDeleteUserId);
+                  setPendingDeleteUserId(null);
+                }
+              }}
+            >
+              Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

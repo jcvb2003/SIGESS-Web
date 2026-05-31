@@ -383,6 +383,22 @@ export const administrationService = {
     return { data: null, error: null };
   },
 
+  async setTenantUserActive(id: string, isActive: boolean): Promise<ServiceResponse<void>> {
+    const { error } = await supabase
+      .from("tenant_users" as never)
+      .update({ is_active: isActive } as never)
+      .eq("id", id);
+    return { data: null, error: error ?? null };
+  },
+
+  async deleteTenantUser(id: string): Promise<ServiceResponse<void>> {
+    const { error } = await supabase
+      .from("tenant_users" as never)
+      .delete()
+      .eq("id", id);
+    return { data: null, error: error ?? null };
+  },
+
   async listUnitStats(): Promise<ServiceResponse<Record<string, { sociosCount: number; pendingReqCount: number }>>> {
     const { data, error } = await supabase.rpc("get_unit_stats" as never);
     if (error) return { data: null, error };

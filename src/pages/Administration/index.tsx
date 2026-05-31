@@ -43,6 +43,10 @@ export default function AdministrationPage() {
         onDeleteMembership={(id) => page.mutations.deleteMembership.mutate(id)}
         onCreateMembership={page.mutations.createMembership.mutateAsync}
         onCreateUser={page.mutations.createTenantUser.mutateAsync}
+        onSetUserActive={(id, isActive) => page.mutations.setTenantUserActive.mutate({ id, isActive })}
+        onDeleteUser={(id) => page.mutations.deleteTenantUser.mutate(id)}
+        isTogglingUser={page.mutations.setTenantUserActive.isPending}
+        isDeletingUser={page.mutations.deleteTenantUser.isPending}
       />
 
       <UnitDialog

@@ -139,6 +139,30 @@ export function useAdministrationPage(enabled: boolean) {
     onError: (error: unknown) => toast.error(humanizeError(error)),
   });
 
+  const setTenantUserActiveMutation = useMutation({
+    mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
+      const { error } = await administrationService.setTenantUserActive(id, isActive);
+      if (error) throw error;
+    },
+    onSuccess: async (_data, { isActive }) => {
+      await queryClient.invalidateQueries({ queryKey: administrationQueryKeys.tenantUsers() });
+      toast.success(isActive ? "Operador ativado." : "Operador desativado.");
+    },
+    onError: (error: unknown) => toast.error(humanizeError(error)),
+  });
+
+  const deleteTenantUserMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await administrationService.deleteTenantUser(id);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: administrationQueryKeys.tenantUsers() });
+      toast.success("Operador removido.");
+    },
+    onError: (error: unknown) => toast.error(humanizeError(error)),
+  });
+
   // Derived data
   const units = unitsQuery.data ?? [];
   const tenantUsers = tenantUsersQuery.data ?? [];
@@ -204,6 +228,8 @@ export function useAdministrationPage(enabled: boolean) {
       createMembership: { mutateAsync: membershipCreateMutation.mutateAsync, isPending: membershipCreateMutation.isPending },
       deleteMembership: { mutate: membershipDeleteMutation.mutate, isPending: membershipDeleteMutation.isPending },
       createTenantUser: { mutateAsync: tenantUserCreateMutation.mutateAsync, isPending: tenantUserCreateMutation.isPending },
+      setTenantUserActive: { mutate: setTenantUserActiveMutation.mutate, isPending: setTenantUserActiveMutation.isPending },
+      deleteTenantUser: { mutate: deleteTenantUserMutation.mutate, isPending: deleteTenantUserMutation.isPending },
     },
   };
 }
