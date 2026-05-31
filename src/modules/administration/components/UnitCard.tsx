@@ -1,18 +1,18 @@
-import { Building2, Edit, LogIn, MapPin } from "lucide-react";
-import type { UnitStat } from "@/modules/administration/types";
+import { Building2, Edit, LogIn, MapPin, UserCog } from "lucide-react";
+import type { MembershipRow, UnitStat } from "@/modules/administration/types";
 import type { TenantUnitRecord } from "@/modules/administration/services/administrationService";
 import { Button } from "@/shared/components/ui/button";
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 
 interface UnitCardProps {
   readonly unit: TenantUnitRecord;
-  readonly operatorCount: number;
+  readonly rows: MembershipRow[];
   readonly stats?: UnitStat;
   readonly onEdit: () => void;
   readonly onEnter: () => void;
 }
 
-export function UnitCard({ unit, operatorCount, stats, onEdit, onEnter }: UnitCardProps) {
+export function UnitCard({ unit, rows, stats, onEdit, onEnter }: UnitCardProps) {
   return (
     <div
       className={`flex flex-col gap-3 rounded-xl border border-border/50 p-4 transition-opacity ${!unit.isActive ? "opacity-60" : ""}`}
@@ -46,7 +46,7 @@ export function UnitCard({ unit, operatorCount, stats, onEdit, onEnter }: UnitCa
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-2 rounded-lg bg-secondary/30 px-3 py-2">
-        <StatItem label="Operadores" value={operatorCount} />
+        <StatItem label="Operadores" value={rows.length} />
         <StatItem label="Sócios" value={stats?.sociosCount ?? "—"} />
         <StatItem
           label="Pendentes"
@@ -54,6 +54,28 @@ export function UnitCard({ unit, operatorCount, stats, onEdit, onEnter }: UnitCa
           highlight={typeof stats?.pendingReqCount === "number" && stats.pendingReqCount > 0}
         />
       </div>
+
+      {/* Operators list */}
+      {rows.length > 0 && (
+        <div className="space-y-1.5">
+          {rows.map(({ membership, user }) => (
+            <div
+              key={membership.id}
+              className={`flex items-center gap-2 rounded-md border border-border/40 bg-secondary/20 px-3 py-2 ${!membership.isActive ? "opacity-50" : ""}`}
+            >
+              <UserCog className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              <div className="min-w-0">
+                <p className="truncate text-xs font-medium">
+                  {user?.name || user?.email || membership.userId}
+                </p>
+                {user?.email && user.name && (
+                  <p className="truncate text-[10px] text-muted-foreground">{user.email}</p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Actions */}
       <div className="flex items-center justify-end gap-2 pt-1 border-t border-border/30 mt-auto">

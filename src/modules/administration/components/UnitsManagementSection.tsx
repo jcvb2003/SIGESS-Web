@@ -285,7 +285,7 @@ export function UnitsManagementSection({
                   <UnitCard
                     key={unit.id}
                     unit={unit}
-                    operatorCount={rowsByUnit.get(unit.id)?.length ?? 0}
+                    rows={rowsByUnit.get(unit.id) ?? []}
                     stats={unitStats?.[unit.id]}
                     onEdit={() => onEdit(unit)}
                     onEnter={() => onEnter(unit)}
