@@ -55,6 +55,7 @@ export default function AdministrationPage() {
       />
 
       <MembershipDialog
+        key={linkingUnitId ?? "no-unit"}
         open={page.membershipDialogOpen}
         onOpenChange={(open) => { page.setMembershipDialogOpen(open); if (!open) setLinkingUnitId(undefined); }}
         users={page.tenantUsers.filter((u) => u.isActive && u.tenantRole !== "owner")}
