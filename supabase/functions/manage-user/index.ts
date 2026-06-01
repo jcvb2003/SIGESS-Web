@@ -257,6 +257,10 @@ function mapMergedUser(
   authUser: Partial<User> | null,
   publicUser: Record<string, unknown> | null,
 ) {
+  const bannedUntilRaw = (authUser as { banned_until?: string | null } | null)?.banned_until;
+  const bannedUntil = (bannedUntilRaw && bannedUntilRaw !== "") ? new Date(bannedUntilRaw) : null;
+  const ativo = !(bannedUntil && bannedUntil > new Date());
+
   return {
     id: String(publicUser?.id ?? authUser?.id ?? currentUser.id),
     email:
@@ -268,12 +272,11 @@ function mapMergedUser(
       (publicUser?.nome ? String(publicUser.nome) : null) ??
       ((authUser?.user_metadata as { nome?: string } | undefined)?.nome ?? null),
     role:
-      (publicUser?.role ? String(publicUser.role) : null) ??
       ((authUser?.app_metadata as { role?: string } | undefined)?.role ?? null) ??
       "user",
-    ativo: publicUser?.ativo !== undefined ? Boolean(publicUser.ativo) : true,
+    ativo,
     createdAt:
-      (publicUser?.createdAt ? String(publicUser.createdAt) : null) ??
+      (publicUser?.created_at ? String(publicUser.created_at) : null) ??
       authUser?.created_at ??
       currentUser.created_at,
     emailConfirmedAt: authUser?.email_confirmed_at ?? currentUser.email_confirmed_at,
@@ -304,22 +307,8 @@ async function handleInvite(admin: SupabaseClient, payload: Record<string, strin
 
   if (data.user) {
     await admin.auth.admin.updateUserById(data.user.id, { app_metadata: { role } });
-
-    const { error: upsertErr } = await admin.from("User").upsert(
-      {
-        id: data.user.id,
-        email: data.user.email,
-        nome,
-        role,
-        ativo: true,
-      },
-      { onConflict: "id" },
-    );
-
-    if (upsertErr) {
-      console.warn("[ManageUser] Aviso: Falha no upsert secundário (User):", upsertErr.message);
-    }
   }
+
   return data;
 }
 
@@ -363,15 +352,6 @@ async function handleCreate(admin: SupabaseClient, payload: Record<string, strin
   });
   if (error) throw error;
 
-  if (data.user) {
-    await admin.from("User").upsert({
-      id: data.user.id,
-      email: data.user.email,
-      nome,
-      role,
-      ativo: true,
-    });
-  }
   return data;
 }
 
@@ -408,8 +388,6 @@ async function handleDeactivate(admin: SupabaseClient, payload: Record<string, s
   const { error: authError } = await admin.auth.admin.updateUserById(userId, { ban_duration: "876600h" });
   if (authError) throw authError;
 
-  await admin.from("User").update({ ativo: false }).eq("id", userId);
-
   return { success: true, message: "Usuário desativado e banido no Auth" };
 }
 
@@ -420,7 +398,6 @@ async function handleActivate(admin: SupabaseClient, payload: Record<string, str
   const { error: authError } = await admin.auth.admin.updateUserById(userId, { ban_duration: "none" });
   if (authError) throw authError;
 
-  await admin.from("User").update({ ativo: true }).eq("id", userId);
   return { success: true, message: "Usuário ativado" };
 }
 
@@ -429,9 +406,6 @@ async function handleDelete(admin: SupabaseClient, payload: Record<string, strin
   if (!userId) throw new Error("userId é obrigatório para exclusão");
 
   console.log(`[ManageUser] Excluindo usuário: ${userId}`);
-
-  const { error: tableErr } = await admin.from("User").delete().eq("id", userId);
-  if (tableErr) console.warn("[ManageUser] Aviso: falha ao remover de User:", tableErr.message);
 
   const { error: authError } = await admin.auth.admin.deleteUser(userId);
   if (authError) throw authError;
@@ -480,7 +454,7 @@ async function handleList(
         ? null
         : [currentUser.id];
 
-  let dbQuery = admin.from("User").select("*");
+  let dbQuery = admin.from("user_profiles").select("id, email, nome, is_active, created_at");
   if (allowedIds && allowedIds.length > 0) {
     dbQuery = dbQuery.in("id", allowedIds);
   }
