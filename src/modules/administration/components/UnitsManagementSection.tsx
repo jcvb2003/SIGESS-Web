@@ -302,7 +302,6 @@ export function UnitsManagementSection({
                                       void onCreateMembership({
                                         userId: user.userId,
                                         unitId: u.id,
-                                        role: "unit_operator",
                                         isActive: true,
                                       })
                                     }

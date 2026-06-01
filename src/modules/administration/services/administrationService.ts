@@ -33,21 +33,18 @@ export interface TenantUserRecord {
 }
 
 export type TenantUserRoleInput = "member";
-export type TenantMembershipRole = "unit_operator";
 
 export interface TenantMembershipRecord {
   id: string;
   tenantId: string;
   userId: string;
   unitId: string;
-  role: TenantMembershipRole;
   isActive: boolean;
 }
 
 export interface TenantMembershipInput {
   userId: string;
   unitId: string;
-  role: TenantMembershipRole;
   isActive?: boolean;
 }
 
@@ -104,7 +101,6 @@ function mapTenantMembershipRow(row: Record<string, unknown>): TenantMembershipR
     tenantId: String(row.tenant_id),
     userId: String(row.user_id),
     unitId: String(row.unit_id),
-    role: String(row.role) as TenantMembershipRecord["role"],
     isActive: Boolean(row.is_active),
   };
 }
@@ -184,9 +180,7 @@ export const administrationService = {
 
     return {
       data: ((data ?? []) as Record<string, unknown>[])
-        .filter(
-          (row) => Boolean(row.unit_id) && row.role === "unit_operator",
-        )
+        .filter((row) => Boolean(row.unit_id))
         .map(mapTenantMembershipRow),
       error: null,
     };
@@ -350,9 +344,7 @@ export const administrationService = {
       tenant_id: tenantIdResult.data,
       user_id: input.userId,
       unit_id: input.unitId,
-      role: input.role,
       is_active: input.isActive ?? true,
-      is_default: false,
     };
 
     const { data, error } = await supabase

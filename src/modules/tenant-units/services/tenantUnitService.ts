@@ -166,20 +166,18 @@ export const tenantUnitService = {
         }
 
         const membershipRows = (memberships ?? []) as unknown as SharedUserUnitMembershipRow[];
-        const defaultMembership = membershipRows.find((m) => m.is_default) ?? null;
         const unitIds = membershipRows
           .map((m) => m.unit_id)
           .filter((unitId): unitId is string => Boolean(unitId));
 
         if (unitIds.length === 0) {
           return {
-            data: { availableUnits: [], preferredActiveUnitId: defaultMembership?.unit_id ?? null },
+            data: { availableUnits: [], preferredActiveUnitId: null },
             error: null,
           };
         }
 
         unitsQuery = unitsQuery.in("id", unitIds);
-        preferredActiveUnitId = defaultMembership?.unit_id ?? null;
       }
 
       const { data: units, error: unitsError } = await unitsQuery.order("name", { ascending: true });

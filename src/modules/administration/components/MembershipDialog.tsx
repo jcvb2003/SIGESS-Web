@@ -129,7 +129,6 @@ export function MembershipDialog({
               void onSubmit({
                 userId,
                 unitId,
-                role: "unit_operator",
                 isActive: true,
               })
             }

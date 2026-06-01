@@ -219,9 +219,7 @@ async function attachUserToSharedScope(
     tenant_id: scope.tenantId,
     user_id: createdUserId,
     unit_id: activeUnitId,
-    role: "unit_operator",
     is_active: true,
-    is_default: false,
     updated_at: new Date().toISOString(),
   };
 
