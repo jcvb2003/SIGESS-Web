@@ -64,6 +64,7 @@ export function UserManagementSection() {
   const { isAdmin } = usePermissions();
   const { user: currentUser } = useAuth();
   const currentUserId = currentUser?.id;
+  const canManageScopedUsers = isAdmin;
 
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -117,7 +118,7 @@ export function UserManagementSection() {
           </CardDescription>
         </div>
 
-        {isAdmin && (
+        {canManageScopedUsers && (
           <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
             <DialogTrigger asChild>
               <Button className="gap-2 shadow-sm font-bold">
@@ -334,7 +335,7 @@ export function UserManagementSection() {
                 const isSelf = u.id === currentUserId;
                 
                 // Se não for admin e não for o próprio usuário, não vê ações
-                if (!isAdmin && !isSelf) return null;
+                if (!canManageScopedUsers && !isSelf) return null;
 
                 const isConfirmed = !!u.emailConfirmedAt;
 
@@ -368,7 +369,7 @@ export function UserManagementSection() {
                     )}
 
                     {/* Reenviar confirmação — só se não confirmado e admin */}
-                    {!isConfirmed && isAdmin && (
+                    {!isConfirmed && canManageScopedUsers && (
                       <Button
                         size="sm"
                         variant="outline"
@@ -383,7 +384,7 @@ export function UserManagementSection() {
                     )}
 
                     {/* Ativar / Desativar — só admin */}
-                    {isAdmin && (
+                    {canManageScopedUsers && (
                       <Button
                         size="sm"
                         variant="outline"
@@ -404,7 +405,7 @@ export function UserManagementSection() {
                     )}
 
                     {/* Excluir — só admin, nunca o próprio usuário */}
-                    {isAdmin && (
+                    {canManageScopedUsers && (
                       <Button
                         size="sm"
                         variant="outline"

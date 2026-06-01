@@ -1,7 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { supabase } from '@/shared/lib/supabase/client';
 import { toast } from 'sonner';
 import { UserRole } from '@/shared/types/auth.types';
+import { useTenantUnits } from '@/modules/tenant-units/context/TenantUnitContext';
+import { usePermissions } from '@/shared/hooks/usePermissions';
 
 export interface User {
   id: string;
@@ -17,13 +19,26 @@ export interface User {
 export function useUserManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
+  const { activeUnit } = useTenantUnits();
+  const { tenantEntityRole } = usePermissions();
+  const activeUnitId = activeUnit?.id ?? null;
+  const isScopedSharedContext = tenantEntityRole !== null;
+
+  const scopedPayload = useMemo(
+    () => (isScopedSharedContext ? { activeUnitId } : {}),
+    [activeUnitId, isScopedSharedContext],
+  );
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('manage-user', {
-        body: { action: 'list' }
+        body: {
+          action: 'list',
+          payload: scopedPayload,
+        },
       });
+
       if (error) throw error;
       setUsers((data as User[])?.sort((a, b) => (a.nome || '').localeCompare(b.nome || '')) || []);
     } catch (err: unknown) {
@@ -32,14 +47,22 @@ export function useUserManagement() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [scopedPayload]);
 
   const inviteUser = async (payload: { email: string; nome: string; role: string }) => {
     try {
       const { data, error } = await supabase.functions.invoke('manage-user', {
-        body: { action: 'invite', payload },
+        body: {
+          action: 'invite',
+          payload: {
+            ...payload,
+            ...scopedPayload,
+          },
+        },
       });
+
       if (error) throw error;
+
       toast.success('Convite enviado com sucesso');
       await fetchUsers();
       return { data, error: null };
@@ -59,9 +82,17 @@ export function useUserManagement() {
   }) => {
     try {
       const { data, error } = await supabase.functions.invoke('manage-user', {
-        body: { action: 'create', payload },
+        body: {
+          action: 'create',
+          payload: {
+            ...payload,
+            ...scopedPayload,
+          },
+        },
       });
+
       if (error) throw error;
+
       toast.success('Usuário criado com sucesso');
       await fetchUsers();
       return { data, error: null };

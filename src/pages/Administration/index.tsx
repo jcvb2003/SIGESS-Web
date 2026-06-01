@@ -41,8 +41,12 @@ export default function AdministrationPage() {
         onEnter={page.enterUnit}
         onCreate={page.openCreateUnit}
         onDeleteMembership={(id) => page.mutations.deleteMembership.mutate(id)}
-        onCreateMembership={page.mutations.createMembership.mutateAsync}
-        onCreateUser={page.mutations.createTenantUser.mutateAsync}
+        onCreateMembership={async (input) => {
+          await page.mutations.createMembership.mutateAsync(input);
+        }}
+        onCreateUser={async (input) => {
+          await page.mutations.createTenantUser.mutateAsync(input);
+        }}
         onSetUserActive={(id, isActive) => page.mutations.setTenantUserActive.mutate({ id, isActive })}
         onDeleteUser={(id) => page.mutations.deleteTenantUser.mutate(id)}
         isTogglingUser={page.mutations.setTenantUserActive.isPending}
@@ -53,7 +57,9 @@ export default function AdministrationPage() {
         open={page.unitDialog.open}
         onOpenChange={(open) => { if (!open) page.closeUnitDialog(); else page.openCreateUnit(); }}
         editingUnit={page.unitDialog.editing}
-        onSubmit={(values) => page.mutations.saveUnit.mutateAsync(values)}
+        onSubmit={async (values) => {
+          await page.mutations.saveUnit.mutateAsync(values);
+        }}
         isSaving={page.mutations.saveUnit.isPending}
       />
     </div>
