@@ -16,7 +16,7 @@ import { usePortalContext } from "@/shared/hooks/usePortalContext";
 export function DashboardLayout() {
   const { session, loading: authLoading, signOut } = useAuth();
   const { activeUnit, hasMultipleUnits, hydrated } = useTenantUnits();
-  const { metadata, loading: metadataLoading } = useUserMetadata(activeUnit?.id);
+  const { metadata, loading: metadataLoading } = useUserMetadata();
   const { isPortalContextLoading, isStatePortal } = usePortalContext();
   const loading = authLoading || metadataLoading;
   const isMobile = useMobile();

@@ -51,7 +51,7 @@ export function RegistrationForm({
 }: Readonly<RegistrationFormProps>) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { activeUnit } = useTenantUnits();
-  const { metadata } = useUserMetadata(activeUnit?.id);
+  const { metadata } = useUserMetadata();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const isEditMode = !!memberUuid;
