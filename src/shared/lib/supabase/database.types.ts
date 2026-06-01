@@ -1099,6 +1099,39 @@ export type Database = {
         }
         Relationships: []
       }
+      tenants: {
+        Row: {
+          id: string
+          code: string
+          name: string
+          status: string
+          created_at: string
+          updated_at: string
+          max_socios: number | null
+          acesso_expira_em: string | null
+        }
+        Insert: {
+          id?: string
+          code: string
+          name: string
+          status?: string
+          created_at?: string
+          updated_at?: string
+          max_socios?: number | null
+          acesso_expira_em?: string | null
+        }
+        Update: {
+          id?: string
+          code?: string
+          name?: string
+          status?: string
+          created_at?: string
+          updated_at?: string
+          max_socios?: number | null
+          acesso_expira_em?: string | null
+        }
+        Relationships: []
+      }
       tipos_cobranca: {
         Row: {
           ativo: boolean | null
