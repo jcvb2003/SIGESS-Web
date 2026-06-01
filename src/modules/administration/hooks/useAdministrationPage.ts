@@ -191,6 +191,9 @@ export function useAdministrationPage(enabled: boolean) {
   const closeUnitDialog = () => { setUnitDialogOpen(false); setEditingUnit(null); };
 
   const enterUnit = (unit: TenantUnitRecord) => {
+    if (typeof globalThis !== "undefined") {
+      globalThis.localStorage.setItem("last_activity_timestamp", Date.now().toString());
+    }
     setActiveUnit({ id: unit.id, name: unit.name, code: unit.code ?? null, tenantId: unit.tenantId ?? null });
     // Não navega explicitamente — TenantAdministrationLayout detecta !isStatePortal
     // e faz <Navigate replace /> sozinho, evitando dupla navegação que causava logout esporádico.

@@ -4,12 +4,23 @@ import { Button } from "@/shared/components/ui/button";
 import { useAuth } from "@/modules/auth/context/authContextStore";
 import { useEntityData } from "@/shared/hooks/useEntityData";
 import { usePortalContext } from "@/shared/hooks/usePortalContext";
+import { useCallback } from "react";
+import { useIdleTimeout } from "@/modules/auth/hooks/useIdleTimeout";
+import { useNetworkStatus } from "@/shared/hooks/useNetworkStatus";
 
 export function TenantAdministrationLayout() {
   const { session, loading: authLoading, signOut } = useAuth();
   const { isPortalContextLoading, isStatePortal } = usePortalContext();
   const { entity } = useEntityData();
   const location = useLocation();
+  const handleIdleTimeout = useCallback(() => {
+    void signOut();
+  }, [signOut]);
+
+  useNetworkStatus();
+  useIdleTimeout({
+    onTimeout: handleIdleTimeout,
+  });
 
   if (authLoading || isPortalContextLoading) {
     return (

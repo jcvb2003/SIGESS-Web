@@ -215,21 +215,43 @@ async function attachUserToSharedScope(
 
   if (tenantUserError) throw tenantUserError;
 
-  const { error: membershipError } = await admin
-    .from("user_unit_memberships")
-    .upsert(
-      {
-        tenant_id: scope.tenantId,
-        user_id: createdUserId,
-        unit_id: activeUnitId,
-        role: "unit_operator",
-        is_active: true,
-        is_default: false,
-      },
-      { onConflict: "user_id,unit_id" },
-    );
+  const membershipPayload = {
+    tenant_id: scope.tenantId,
+    user_id: createdUserId,
+    unit_id: activeUnitId,
+    role: "unit_operator",
+    is_active: true,
+    is_default: false,
+    updated_at: new Date().toISOString(),
+  };
 
-  if (membershipError) throw membershipError;
+  const { data: existingMembership, error: existingMembershipError } = await admin
+    .from("user_unit_memberships")
+    .select("id")
+    .eq("user_id", createdUserId)
+    .eq("unit_id", activeUnitId)
+    .maybeSingle();
+
+  if (existingMembershipError) throw existingMembershipError;
+
+  if (existingMembership) {
+    const { error: updateMembershipError } = await admin
+      .from("user_unit_memberships")
+      .update(membershipPayload)
+      .eq("id", (existingMembership as { id: string }).id);
+
+    if (updateMembershipError) throw updateMembershipError;
+    return;
+  }
+
+  const { error: insertMembershipError } = await admin
+    .from("user_unit_memberships")
+    .insert({
+      ...membershipPayload,
+      created_at: new Date().toISOString(),
+    });
+
+  if (insertMembershipError) throw insertMembershipError;
 }
 
 function mapMergedUser(
