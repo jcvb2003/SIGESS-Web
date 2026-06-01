@@ -1358,7 +1358,7 @@ export type Database = {
         Returns: string
       }
       launch_bulk_contribution: {
-        Args: { p_tipo_cobranca_id: string }
+        Args: { p_tipo_cobranca_id: string; p_unit_id?: string | null }
         Returns: number
       }
       purge_cancelled_bulk_v1: {
