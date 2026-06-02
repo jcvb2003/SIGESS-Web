@@ -101,7 +101,6 @@ export function usePermissions() {
   return {
     role,
     isAdmin,
-    isSharedTenant,
     canAccessTenantAdministration,
     tenantEntityRole,
     tenantOperatorType,

@@ -3,14 +3,13 @@ export interface TenantConfig {
   supabaseUrl: string;
   supabaseAnonKey: string;
   deploymentMode: "isolated" | "shared";
-  hasPolos: boolean;
 }
 
 type EnvSource = {
   VITE_ADMIN_TENANT_CONFIG_URL?: string;
 };
 
-export const TENANT_CONFIG_CACHE_KEY = "sigess_tenant_config_v2";
+export const TENANT_CONFIG_CACHE_KEY = "sigess_tenant_config";
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 
 interface CachedTenantConfig extends TenantConfig {
@@ -49,7 +48,6 @@ export function getCachedTenantConfig(code?: string): TenantConfig | null {
     supabaseUrl: cached.supabaseUrl,
     supabaseAnonKey: cached.supabaseAnonKey,
     deploymentMode: cached.deploymentMode,
-    hasPolos: cached.hasPolos ?? false,
   };
 }
 
@@ -98,7 +96,6 @@ export async function resolveAndCacheTenant(code: string): Promise<TenantConfig>
       supabaseUrl: cached.supabaseUrl,
       supabaseAnonKey: cached.supabaseAnonKey,
       deploymentMode: cached.deploymentMode,
-      hasPolos: cached.hasPolos ?? false,
     };
   }
 
@@ -112,7 +109,6 @@ export async function resolveAndCacheTenant(code: string): Promise<TenantConfig>
         supabaseUrl: cached.supabaseUrl,
         supabaseAnonKey: cached.supabaseAnonKey,
         deploymentMode: cached.deploymentMode,
-      hasPolos: cached.hasPolos ?? false,
       };
     }
 
@@ -129,28 +125,29 @@ export async function resolveAndCacheTenant(code: string): Promise<TenantConfig>
       supabaseUrl: string;
       anonKey: string;
       deploymentMode?: "isolated" | "shared";
-      hasPolos?: boolean;
     };
     const config: TenantConfig = {
       label: data.label,
       supabaseUrl: data.supabaseUrl,
       supabaseAnonKey: data.anonKey,
       deploymentMode: data.deploymentMode === "shared" ? "shared" : "isolated",
-      hasPolos: data.hasPolos ?? false,
     };
     writeConfigCache(normalized, config, "remote");
     return config;
   } catch (err) {
     if (cached && (cached.deploymentMode === "isolated" || cached.deploymentMode === "shared")) {
-      const staleConfig = {
+      writeConfigCache(normalized, {
         label: cached.label,
         supabaseUrl: cached.supabaseUrl,
         supabaseAnonKey: cached.supabaseAnonKey,
         deploymentMode: cached.deploymentMode,
-        hasPolos: cached.hasPolos ?? false,
+      }, "stale");
+      return {
+        label: cached.label,
+        supabaseUrl: cached.supabaseUrl,
+        supabaseAnonKey: cached.supabaseAnonKey,
+        deploymentMode: cached.deploymentMode,
       };
-      writeConfigCache(normalized, staleConfig, "stale");
-      return staleConfig;
     }
     throw err;
   }
