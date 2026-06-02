@@ -36,7 +36,7 @@ export function usePermissions() {
 
   const tenantAdministrationQuery = useQuery({
     queryKey: ["permissions", "tenant-administration", user?.id ?? null, tenantConfig?.deploymentMode ?? null],
-    enabled: isSharedTenant && Boolean(user?.id),
+    enabled: Boolean(user?.id),
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -87,16 +87,15 @@ export function usePermissions() {
 
   const tenantOperatorType = tenantAdministrationData?.operatorType ?? null;
   const tenantEntityRole = tenantAdministrationData?.tenantRole ?? null;
-  const isSharedPresident = tenantEntityRole === "owner" || tenantOperatorType === "presidente";
-  const role = isSharedPresident ? "admin" : authRole;
+  const isPresidentRole = tenantOperatorType === "presidente";
+  const role = authRole === "admin" || isPresidentRole ? "admin" : authRole;
   const isAdmin = role === "admin";
-  const canAccessTenantAdministration =
-    isSharedTenant && (tenantAdministrationData?.hasTenantAccess ?? false);
-  const isEntityManager = isGestorRole(tenantEntityRole) || tenantOperatorType === "presidente";
+  const canAccessTenantAdministration = tenantEntityRole === "owner";
+  const isEntityManager = isGestorRole(tenantEntityRole);
 
   // Em shared: apenas o gestor (owner) pode alterar configurações globais da entidade.
   // Em isolated: qualquer admin pode (não há distinção de papel dentro da entidade).
-  const canManageEntitySettings = isSharedTenant ? isEntityManager : isAdmin;
+  const canManageEntitySettings = isSharedTenant ? isAdmin : isAdmin;
 
   return {
     role,

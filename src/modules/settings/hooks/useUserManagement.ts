@@ -1,10 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { supabase } from '@/shared/lib/supabase/client';
 import { toast } from 'sonner';
 import { UserRole } from '@/shared/types/auth.types';
 import { useTenantUnits } from '@/modules/tenant-units/context/TenantUnitContext';
 import { administrationService } from '@/modules/administration/services/administrationService';
 import { usePermissions } from '@/shared/hooks/usePermissions';
+import { useAuth } from '@/modules/auth/context/authContextStore';
 
 export interface User {
   id: string;
@@ -23,15 +24,28 @@ export interface User {
 export function useUserManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
-  const { activeUnit } = useTenantUnits();
-  const { tenantEntityRole } = usePermissions();
+  const { user: currentUser } = useAuth();
+  const { activeUnit, availableUnits } = useTenantUnits();
+  const { tenantEntityRole, isAdmin } = usePermissions();
+
   const activeUnitId = activeUnit?.id ?? null;
+  const hasPolos = availableUnits.length > 0;
+  const isSharedNoPolosContext = tenantEntityRole !== null && !hasPolos;
+  const isPoloScopedContext = tenantEntityRole !== null && hasPolos;
+
+  const scopedPayload = useMemo(
+    () => (isPoloScopedContext && activeUnitId ? { activeUnitId } : {}),
+    [activeUnitId, isPoloScopedContext],
+  );
+
+  const sortUsers = useCallback((items: User[]) => (
+    items.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''))
+  ), []);
+
   const fetchUsers = useCallback(async () => {
     setLoading(true);
-    const _isScopedSharedContext = tenantEntityRole !== null;
-    const _scopedPayload = _isScopedSharedContext && activeUnitId ? { activeUnitId } : {};
     try {
-      if (_isScopedSharedContext) {
+      if (isSharedNoPolosContext) {
         const { data, error } = await administrationService.listTenantUsers();
         if (error) throw error;
 
@@ -52,30 +66,34 @@ export function useUserManagement() {
           };
         });
 
-        setUsers(mappedUsers.sort((a, b) => (a.nome || '').localeCompare(b.nome || '')));
+        const visibleUsers = isAdmin
+          ? mappedUsers
+          : mappedUsers.filter((mappedUser) => mappedUser.id === currentUser?.id);
+
+        setUsers(sortUsers(visibleUsers));
         return;
       }
 
       const { data, error } = await supabase.functions.invoke('manage-user', {
         body: {
           action: 'list',
-          payload: _scopedPayload,
+          payload: scopedPayload,
         },
       });
 
       if (error) throw error;
-      setUsers((data as User[])?.sort((a, b) => (a.nome || '').localeCompare(b.nome || '')) || []);
+      setUsers(sortUsers((data as User[]) || []));
     } catch (err: unknown) {
       console.error('Erro ao buscar usuários:', err);
       toast.error('Ocorreu um erro ao carregar os usuários');
     } finally {
       setLoading(false);
     }
-  }, [tenantEntityRole, activeUnitId]);
+  }, [currentUser?.id, isAdmin, isSharedNoPolosContext, scopedPayload, sortUsers]);
 
   const inviteUser = async (payload: { email: string; nome: string; role: string }) => {
     try {
-      if (isScopedSharedContext) {
+      if (isSharedNoPolosContext) {
         const { error } = await administrationService.createTenantUser({
           email: payload.email,
           name: payload.nome,
@@ -120,7 +138,7 @@ export function useUserManagement() {
     email_confirm?: boolean;
   }) => {
     try {
-      if (isScopedSharedContext) {
+      if (isSharedNoPolosContext) {
         const { error } = await administrationService.createTenantUser({
           email: payload.email,
           name: payload.nome,
@@ -162,8 +180,8 @@ export function useUserManagement() {
   const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
     setLoading(true);
     try {
-      if (isScopedSharedContext) {
-        const targetUser = users.find((user) => user.id === userId);
+      if (isSharedNoPolosContext) {
+        const targetUser = users.find((managedUser) => managedUser.id === userId);
         if (!targetUser?.recordId) {
           throw new Error('Usuário do tenant não encontrado para atualização.');
         }
@@ -198,8 +216,8 @@ export function useUserManagement() {
   const deleteUser = async (userId: string) => {
     setLoading(true);
     try {
-      if (isScopedSharedContext) {
-        const targetUser = users.find((user) => user.id === userId);
+      if (isSharedNoPolosContext) {
+        const targetUser = users.find((managedUser) => managedUser.id === userId);
         if (!targetUser?.recordId) {
           throw new Error('Usuário do tenant não encontrado para exclusão.');
         }
