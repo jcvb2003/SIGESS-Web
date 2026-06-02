@@ -78,7 +78,7 @@ export function ParametersForm({ readOnly = false }: ParametersFormProps = {}) {
         fishingArea: parameters.fishingArea || "",
       });
     }
-  }, [parameters, methods]);
+  }, [parameters]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onSubmit = async (data: ParametersFormData) => {
     if (!parameters) return;

@@ -33,7 +33,7 @@ export function CustomizationForm() {
         logoPath: entity.logoPath || "",
       });
     }
-  }, [entity, methods]);
+  }, [entity]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onSubmit = async (data: EntityFormData) => {
     // We only update the color fields and name (required), other fields untouched
