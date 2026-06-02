@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/shared/lib/supabase/client';
 import { toast } from 'sonner';
 import { UserRole } from '@/shared/types/auth.types';
@@ -26,17 +26,12 @@ export function useUserManagement() {
   const { activeUnit } = useTenantUnits();
   const { tenantEntityRole } = usePermissions();
   const activeUnitId = activeUnit?.id ?? null;
-  const isScopedSharedContext = tenantEntityRole !== null;
-
-  const scopedPayload = useMemo(
-    () => (isScopedSharedContext && activeUnitId ? { activeUnitId } : {}),
-    [activeUnitId, isScopedSharedContext],
-  );
-
   const fetchUsers = useCallback(async () => {
     setLoading(true);
+    const _isScopedSharedContext = tenantEntityRole !== null;
+    const _scopedPayload = _isScopedSharedContext && activeUnitId ? { activeUnitId } : {};
     try {
-      if (isScopedSharedContext) {
+      if (_isScopedSharedContext) {
         const { data, error } = await administrationService.listTenantUsers();
         if (error) throw error;
 
@@ -64,7 +59,7 @@ export function useUserManagement() {
       const { data, error } = await supabase.functions.invoke('manage-user', {
         body: {
           action: 'list',
-          payload: scopedPayload,
+          payload: _scopedPayload,
         },
       });
 
@@ -76,7 +71,7 @@ export function useUserManagement() {
     } finally {
       setLoading(false);
     }
-  }, [isScopedSharedContext, scopedPayload]);
+  }, [tenantEntityRole, activeUnitId]);
 
   const inviteUser = async (payload: { email: string; nome: string; role: string }) => {
     try {
