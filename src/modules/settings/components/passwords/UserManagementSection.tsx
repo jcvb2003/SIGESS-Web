@@ -280,7 +280,7 @@ export function UserManagementSection() {
                     <Mail className="h-2.5 w-2.5" />
                     {u.email}
                   </span>
-                  {!u.emailConfirmedAt && (
+                  {!u.tenantRole && !u.emailConfirmedAt && (
                     <span className="text-[9px] text-amber-600 font-bold uppercase tracking-wider mt-0.5">
                       ● E-mail não confirmado
                     </span>
@@ -292,7 +292,7 @@ export function UserManagementSection() {
               header: "Perfil",
               cell: (u) => (
                 <div className="flex items-center gap-1.5">
-                  {u.role === 'admin' ? (
+                  {u.tenantRole === 'owner' || u.operatorType === 'presidente' || u.role === 'admin' ? (
                     <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 gap-1 py-0.5 px-2 font-bold uppercase text-[9px]">
                       <ShieldCheck className="h-3 w-3" />
                       Presidente
@@ -311,7 +311,7 @@ export function UserManagementSection() {
               className: "hidden md:table-cell",
               cell: (u) => (
                 <span className="text-xs text-muted-foreground">
-                  {formatDate(u.createdAt)}
+                  {u.createdAt ? formatDate(u.createdAt) : "-"}
                 </span>
               )
             },
@@ -338,6 +338,7 @@ export function UserManagementSection() {
                 if (!canManageScopedUsers && !isSelf) return null;
 
                 const isConfirmed = !!u.emailConfirmedAt;
+                const canResendConfirmation = !u.tenantRole && !isConfirmed && canManageScopedUsers;
 
                 const toggleButtonClass = (() => {
                   if (isSelf) return "opacity-40 cursor-not-allowed";
@@ -369,7 +370,7 @@ export function UserManagementSection() {
                     )}
 
                     {/* Reenviar confirmação — só se não confirmado e admin */}
-                    {!isConfirmed && canManageScopedUsers && (
+                    {canResendConfirmation && (
                       <Button
                         size="sm"
                         variant="outline"

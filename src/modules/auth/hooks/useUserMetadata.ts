@@ -38,7 +38,7 @@ export function useUserMetadata() {
           : false;
 
         setMetadata({
-          max_socios: configData?.max_socios || 100,
+          max_socios: configData?.max_socios ?? 0,
           acesso_expira_em: configData?.acesso_expira_em || null,
           isExpired,
         });

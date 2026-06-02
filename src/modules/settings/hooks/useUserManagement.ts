@@ -3,10 +3,12 @@ import { supabase } from '@/shared/lib/supabase/client';
 import { toast } from 'sonner';
 import { UserRole } from '@/shared/types/auth.types';
 import { useTenantUnits } from '@/modules/tenant-units/context/TenantUnitContext';
+import { administrationService } from '@/modules/administration/services/administrationService';
 import { usePermissions } from '@/shared/hooks/usePermissions';
 
 export interface User {
   id: string;
+  recordId?: string;
   email: string;
   nome: string | null;
   role: UserRole;
@@ -14,6 +16,8 @@ export interface User {
   max_socios: number | null;
   createdAt: string;
   emailConfirmedAt?: string | null;
+  tenantRole?: "owner" | "member" | null;
+  operatorType?: "presidente" | "auxiliar" | null;
 }
 
 export function useUserManagement() {
@@ -25,13 +29,38 @@ export function useUserManagement() {
   const isScopedSharedContext = tenantEntityRole !== null;
 
   const scopedPayload = useMemo(
-    () => (isScopedSharedContext ? { activeUnitId } : {}),
+    () => (isScopedSharedContext && activeUnitId ? { activeUnitId } : {}),
     [activeUnitId, isScopedSharedContext],
   );
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
+      if (isScopedSharedContext) {
+        const { data, error } = await administrationService.listTenantUsers();
+        if (error) throw error;
+
+        const mappedUsers: User[] = (data ?? []).map((row) => {
+          const isPresident = row.tenantRole === "owner" || row.operatorType === "presidente";
+          return {
+            id: row.userId,
+            recordId: row.id,
+            email: row.email ?? "",
+            nome: row.name,
+            role: isPresident ? "admin" : "user",
+            ativo: row.isActive,
+            max_socios: null,
+            createdAt: "",
+            emailConfirmedAt: null,
+            tenantRole: row.tenantRole,
+            operatorType: row.operatorType,
+          };
+        });
+
+        setUsers(mappedUsers.sort((a, b) => (a.nome || '').localeCompare(b.nome || '')));
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('manage-user', {
         body: {
           action: 'list',
@@ -47,10 +76,25 @@ export function useUserManagement() {
     } finally {
       setLoading(false);
     }
-  }, [scopedPayload]);
+  }, [isScopedSharedContext, scopedPayload]);
 
   const inviteUser = async (payload: { email: string; nome: string; role: string }) => {
     try {
+      if (isScopedSharedContext) {
+        const { error } = await administrationService.createTenantUser({
+          email: payload.email,
+          name: payload.nome,
+          tenantRole: "member",
+          operatorType: payload.role === "admin" ? "presidente" : "auxiliar",
+          mode: "invite",
+        });
+        if (error) throw error;
+
+        toast.success('Convite enviado com sucesso');
+        await fetchUsers();
+        return { data: null, error: null };
+      }
+
       const { data, error } = await supabase.functions.invoke('manage-user', {
         body: {
           action: 'invite',
@@ -81,6 +125,23 @@ export function useUserManagement() {
     email_confirm?: boolean;
   }) => {
     try {
+      if (isScopedSharedContext) {
+        const { error } = await administrationService.createTenantUser({
+          email: payload.email,
+          name: payload.nome,
+          tenantRole: "member",
+          operatorType: payload.role === "admin" ? "presidente" : "auxiliar",
+          mode: "create",
+          password: payload.password,
+          autoConfirm: payload.email_confirm,
+        });
+        if (error) throw error;
+
+        toast.success('Usuário criado com sucesso');
+        await fetchUsers();
+        return { data: null, error: null };
+      }
+
       const { data, error } = await supabase.functions.invoke('manage-user', {
         body: {
           action: 'create',
@@ -106,6 +167,22 @@ export function useUserManagement() {
   const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
     setLoading(true);
     try {
+      if (isScopedSharedContext) {
+        const targetUser = users.find((user) => user.id === userId);
+        if (!targetUser?.recordId) {
+          throw new Error('Usuário do tenant não encontrado para atualização.');
+        }
+
+        const { error } = await administrationService.setTenantUserActive(targetUser.recordId, !currentStatus);
+        if (error) throw error;
+
+        setUsers(prev => prev.map(u =>
+          u.id === userId ? { ...u, ativo: !currentStatus } : u
+        ));
+        toast.success(`Usuário ${currentStatus ? 'desativado' : 'ativado'} com sucesso`);
+        return;
+      }
+
       const action = currentStatus ? 'deactivate' : 'activate';
       const { error } = await supabase.functions.invoke('manage-user', {
         body: { action, payload: { userId, ativo: !currentStatus } },
@@ -126,6 +203,20 @@ export function useUserManagement() {
   const deleteUser = async (userId: string) => {
     setLoading(true);
     try {
+      if (isScopedSharedContext) {
+        const targetUser = users.find((user) => user.id === userId);
+        if (!targetUser?.recordId) {
+          throw new Error('Usuário do tenant não encontrado para exclusão.');
+        }
+
+        const { error } = await administrationService.deleteTenantUser(targetUser.recordId);
+        if (error) throw error;
+
+        setUsers(prev => prev.filter(u => u.id !== userId));
+        toast.success('Usuário excluído com sucesso');
+        return;
+      }
+
       const { error } = await supabase.functions.invoke('manage-user', {
         body: { action: 'delete', payload: { userId } },
       });

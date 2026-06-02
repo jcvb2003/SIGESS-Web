@@ -33,6 +33,7 @@ export interface TenantUserRecord {
 }
 
 export type TenantUserRoleInput = "member";
+export type TenantOperatorTypeInput = "presidente" | "auxiliar";
 
 export interface TenantMembershipRecord {
   id: string;
@@ -52,6 +53,7 @@ export interface TenantUserInput {
   email: string;
   name: string;
   tenantRole: TenantUserRoleInput;
+  operatorType?: TenantOperatorTypeInput;
   mode: "invite" | "create";
   password?: string;
   autoConfirm?: boolean;
@@ -216,6 +218,8 @@ export const administrationService = {
 
     const tenantCode = resolveCurrentTenantCode();
     const action = input.mode === "invite" ? "invite" : "create";
+    const operatorType = input.operatorType ?? "auxiliar";
+    const authRole = operatorType === "presidente" ? "admin" : "operador_administrativo";
 
     const { data: functionData, error: functionError } = await supabase.functions.invoke(
       "manage-user",
@@ -225,7 +229,7 @@ export const administrationService = {
           payload: {
             email: input.email.trim(),
             nome: input.name.trim(),
-            role: "admin",
+            role: authRole,
             tenantCode,
             ...(input.mode === "create"
               ? {
@@ -261,12 +265,12 @@ export const administrationService = {
           tenant_id: tenantIdResult.data,
           user_id: createdUserId,
           tenant_role: input.tenantRole,
-          operator_type: "presidente",
+          operator_type: operatorType,
           is_active: true,
         } as never,
         { onConflict: "tenant_id,user_id" },
       )
-      .select("id, tenant_id, user_id, tenant_role, is_active, user_profiles(email, nome)")
+      .select("id, tenant_id, user_id, tenant_role, operator_type, is_active, user_profiles(email, nome)")
       .single();
 
     if (error) {

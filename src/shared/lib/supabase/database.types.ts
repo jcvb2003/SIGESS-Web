@@ -72,7 +72,6 @@ export type Database = {
       }
       configuracao_entidade: {
         Row: {
-          acesso_expira_em: string | null
           cor_primaria: string
           cor_secundaria: string
           cor_sidebar: string
@@ -80,11 +79,9 @@ export type Database = {
           extensao_license_key: string | null
           id: number
           logo_path: string | null
-          max_socios: number | null
           updated_at: string | null
         }
         Insert: {
-          acesso_expira_em?: string | null
           cor_primaria?: string
           cor_secundaria?: string
           cor_sidebar?: string
@@ -92,11 +89,9 @@ export type Database = {
           extensao_license_key?: string | null
           id?: number
           logo_path?: string | null
-          max_socios?: number | null
           updated_at?: string | null
         }
         Update: {
-          acesso_expira_em?: string | null
           cor_primaria?: string
           cor_secundaria?: string
           cor_sidebar?: string
@@ -104,7 +99,6 @@ export type Database = {
           extensao_license_key?: string | null
           id?: number
           logo_path?: string | null
-          max_socios?: number | null
           updated_at?: string | null
         }
         Relationships: []

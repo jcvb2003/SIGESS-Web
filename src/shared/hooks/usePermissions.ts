@@ -31,18 +31,17 @@ export function usePermissions() {
 
   // O papel (role) é lido do app_metadata injetado no JWT (definido na migration)
   // Caso não exista, assume-se o papel padrão 'user' (Auxiliar)
-  const role = (user?.app_metadata?.role as UserRole) ?? "user";
-  const isAdmin = role === "admin";
+  const authRole = (user?.app_metadata?.role as UserRole) ?? "user";
   const isSharedTenant = tenantConfig?.deploymentMode === "shared";
 
   const tenantAdministrationQuery = useQuery({
     queryKey: ["permissions", "tenant-administration", user?.id ?? null, tenantConfig?.deploymentMode ?? null],
-    enabled: isAdmin && isSharedTenant && Boolean(user?.id),
+    enabled: isSharedTenant && Boolean(user?.id),
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tenant_users" as never)
-        .select("tenant_id, tenant_role")
+        .select("tenant_id, tenant_role, operator_type")
         .eq("user_id", user!.id)
         .eq("is_active", true)
         .limit(1)
@@ -53,6 +52,7 @@ export function usePermissions() {
           return {
             hasTenantAccess: false,
             tenantRole: null,
+            operatorType: null,
           };
         }
 
@@ -60,12 +60,17 @@ export function usePermissions() {
       }
 
       const tenantUser = data as
-        | { tenant_id?: string | null; tenant_role?: "owner" | "member" | null }
+        | {
+            tenant_id?: string | null;
+            tenant_role?: "owner" | "member" | null;
+            operator_type?: "presidente" | "auxiliar" | null;
+          }
         | null;
 
       return {
         hasTenantAccess: Boolean(tenantUser?.tenant_id),
         tenantRole: tenantUser?.tenant_role ?? null,
+        operatorType: tenantUser?.operator_type ?? null,
       };
     },
   });
@@ -74,25 +79,31 @@ export function usePermissions() {
     tenantAdministrationQuery.data ??
     (isSharedTenant
       ? null
-      : {
-          hasTenantAccess: false,
-          tenantRole: null,
-        });
+        : {
+            hasTenantAccess: false,
+            tenantRole: null,
+            operatorType: null,
+          });
 
-  const canAccessTenantAdministration =
-    isAdmin && (tenantAdministrationData?.hasTenantAccess ?? false);
+  const tenantOperatorType = tenantAdministrationData?.operatorType ?? null;
   const tenantEntityRole = tenantAdministrationData?.tenantRole ?? null;
-  const isEntityManager = isGestorRole(tenantEntityRole);
+  const isSharedPresident = tenantEntityRole === "owner" || tenantOperatorType === "presidente";
+  const role = isSharedPresident ? "admin" : authRole;
+  const isAdmin = role === "admin";
+  const canAccessTenantAdministration =
+    isSharedTenant && (tenantAdministrationData?.hasTenantAccess ?? false);
+  const isEntityManager = isGestorRole(tenantEntityRole) || tenantOperatorType === "presidente";
 
   // Em shared: apenas o gestor (owner) pode alterar configurações globais da entidade.
   // Em isolated: qualquer admin pode (não há distinção de papel dentro da entidade).
-  const canManageEntitySettings = isSharedTenant ? (isAdmin && isEntityManager) : isAdmin;
+  const canManageEntitySettings = isSharedTenant ? isEntityManager : isAdmin;
 
   return {
     role,
     isAdmin,
     canAccessTenantAdministration,
     tenantEntityRole,
+    tenantOperatorType,
     isEntityManager,
     isTenantAdministrationLoading: tenantAdministrationQuery.isLoading,
     canManageEntitySettings,
