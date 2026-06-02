@@ -10,7 +10,7 @@ type EnvSource = {
   VITE_ADMIN_TENANT_CONFIG_URL?: string;
 };
 
-export const TENANT_CONFIG_CACHE_KEY = "sigess_tenant_config";
+export const TENANT_CONFIG_CACHE_KEY = "sigess_tenant_config_v2";
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 
 interface CachedTenantConfig extends TenantConfig {
