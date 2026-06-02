@@ -6,12 +6,22 @@ export function usePortalContext() {
     canAccessTenantAdministration,
     isEntityManager,
     isTenantAdministrationLoading,
+    isAdmin,
+    isSharedTenant,
   } = usePermissions();
   const { availableUnits, activeUnit, hydrated } = useTenantUnits();
 
+  const hasUnits = availableUnits.length > 0;
+
+  // Shared com gestor (owner/presidente) OU isolated com admin e polos
   const isStatePortal =
-    canAccessTenantAdministration && isEntityManager && hydrated && !activeUnit;
-  const isOperationalPortal = hydrated && !isStatePortal && availableUnits.length > 0;
+    hydrated &&
+    !activeUnit &&
+    (
+      (canAccessTenantAdministration && isEntityManager) ||
+      (!isSharedTenant && isAdmin && hasUnits)
+    );
+  const isOperationalPortal = hydrated && !isStatePortal && hasUnits;
 
   return {
     isPortalContextLoading: isTenantAdministrationLoading || !hydrated,
