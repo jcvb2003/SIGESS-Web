@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { settingsService } from "@/modules/settings/services/settingsService";
@@ -26,12 +27,12 @@ export function useEntityData() {
     enabled: unitId === null,
   });
 
-  const entity = (() => {
+  const entity = useMemo(() => {
     if (!entityQuery.data) return entityQuery.data;
     if (unitId !== null || !tenantRootQuery.data) return entityQuery.data;
     const root = tenantRootQuery.data;
     return { ...entityQuery.data, name: root.name, shortName: root.shortName, logoUrl: root.logoUrl };
-  })();
+  }, [entityQuery.data, unitId, tenantRootQuery.data]);
 
   const saveMutation = useMutation({
     mutationFn: async (values: EntitySettings) => {
