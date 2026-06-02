@@ -62,11 +62,13 @@ export const settingsService = {
   },
 
   async getEntity(unitId?: string | null): Promise<ServiceResponse<EntitySettings>> {
+    const sharedTenantId = await resolveCurrentSharedTenantId();
     // 1. Buscar dados institucionais
     const entityQuery = supabase
       .from(ENTITY_TABLE)
       .select("*")
       .limit(1);
+    if (sharedTenantId) entityQuery.eq("tenant_id", sharedTenantId);
     if (unitId) entityQuery.eq("unit_id", unitId);
     const { data: entityData, error: entityError } = await entityQuery.maybeSingle();
 
@@ -77,6 +79,7 @@ export const settingsService = {
 
     // 2. Buscar dados de configuração/aparência
     const configQuery = supabase.from(CONFIG_TABLE).select("*").limit(1);
+    if (sharedTenantId) configQuery.eq("tenant_id", sharedTenantId);
     if (unitId) configQuery.eq("unit_id", unitId);
     const { data: configData, error: configError } = await configQuery.maybeSingle();
 
@@ -140,10 +143,18 @@ export const settingsService = {
   ): Promise<ServiceResponse<EntitySettings>> {
     // 1. Atualizar dados institucionais
     const sharedTenantId = await resolveCurrentSharedTenantId();
+    let entityId = settings.id;
+    if (!entityId) {
+      const currentEntityQuery = supabase.from(ENTITY_TABLE).select("id").limit(1);
+      if (sharedTenantId) currentEntityQuery.eq("tenant_id", sharedTenantId);
+      if (settings.unitId) currentEntityQuery.eq("unit_id", settings.unitId);
+      const { data: currentEntity } = await currentEntityQuery.maybeSingle();
+      entityId = currentEntity?.id ? String(currentEntity.id) : undefined;
+    }
     const { error: entityError } = await supabase
       .from(ENTITY_TABLE)
       .upsert({
-        id: settings.id,
+        id: entityId,
         ...(settings.unitId ? { unit_id: settings.unitId } : {}),
         ...(sharedTenantId ? { tenant_id: sharedTenantId } : {}),
         nome_entidade: toNullable(settings.name),
@@ -177,6 +188,7 @@ export const settingsService = {
     // ou usamos o fato de que o upsert lidará com isso se tivermos o ID da config.
     // Para simplificar, buscamos o primeiro registro da config.
     const currentConfigQuery = supabase.from(CONFIG_TABLE).select("id").limit(1);
+    if (sharedTenantId) currentConfigQuery.eq("tenant_id", sharedTenantId);
     if (settings.unitId) currentConfigQuery.eq("unit_id", settings.unitId);
     const { data: currentConfig } = await currentConfigQuery.maybeSingle();
 

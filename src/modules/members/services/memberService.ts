@@ -248,7 +248,11 @@ export const memberService = {
 
   async countMembers(context?: MemberUnitContext): Promise<{ count: number }> {
     let q = supabase.from("socios").select("*", { count: "exact", head: true });
-    if (context?.unitId) q = q.eq("unit_id", context.unitId);
+    if (context?.tenantId) {
+      q = q.eq("tenant_id", context.tenantId);
+    } else if (context?.unitId) {
+      q = q.eq("unit_id", context.unitId);
+    }
     const { count, error } = await q;
     if (error) throw error;
     return { count: count || 0 };
