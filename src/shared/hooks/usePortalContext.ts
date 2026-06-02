@@ -1,5 +1,6 @@
 import { usePermissions } from "@/shared/hooks/usePermissions";
 import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
+import { getCurrentTenantConfig } from "@/config/tenants";
 
 export function usePortalContext() {
   const {
@@ -10,7 +11,9 @@ export function usePortalContext() {
     isSharedTenant,
   } = usePermissions();
   const { availableUnits, activeUnit, hydrated } = useTenantUnits();
+  const tenantConfig = getCurrentTenantConfig();
 
+  const hasPolos = tenantConfig?.hasPolos ?? false;
   const hasUnits = availableUnits.length > 0;
 
   // Shared com gestor (owner/presidente) OU isolated com admin e polos
@@ -19,9 +22,9 @@ export function usePortalContext() {
     !activeUnit &&
     (
       (canAccessTenantAdministration && isEntityManager) ||
-      (!isSharedTenant && isAdmin && hasUnits)
+      (!isSharedTenant && isAdmin && hasPolos)
     );
-  const isOperationalPortal = hydrated && !isStatePortal && hasUnits;
+  const isOperationalPortal = hydrated && !isStatePortal && (hasUnits || hasPolos);
 
   return {
     isPortalContextLoading: isTenantAdministrationLoading || !hydrated,

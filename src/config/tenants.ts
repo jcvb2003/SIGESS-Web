@@ -3,6 +3,7 @@ export interface TenantConfig {
   supabaseUrl: string;
   supabaseAnonKey: string;
   deploymentMode: "isolated" | "shared";
+  hasPolos: boolean;
 }
 
 type EnvSource = {
@@ -48,6 +49,7 @@ export function getCachedTenantConfig(code?: string): TenantConfig | null {
     supabaseUrl: cached.supabaseUrl,
     supabaseAnonKey: cached.supabaseAnonKey,
     deploymentMode: cached.deploymentMode,
+    hasPolos: cached.hasPolos ?? false,
   };
 }
 
@@ -96,6 +98,7 @@ export async function resolveAndCacheTenant(code: string): Promise<TenantConfig>
       supabaseUrl: cached.supabaseUrl,
       supabaseAnonKey: cached.supabaseAnonKey,
       deploymentMode: cached.deploymentMode,
+      hasPolos: cached.hasPolos ?? false,
     };
   }
 
@@ -109,6 +112,7 @@ export async function resolveAndCacheTenant(code: string): Promise<TenantConfig>
         supabaseUrl: cached.supabaseUrl,
         supabaseAnonKey: cached.supabaseAnonKey,
         deploymentMode: cached.deploymentMode,
+      hasPolos: cached.hasPolos ?? false,
       };
     }
 
@@ -125,29 +129,28 @@ export async function resolveAndCacheTenant(code: string): Promise<TenantConfig>
       supabaseUrl: string;
       anonKey: string;
       deploymentMode?: "isolated" | "shared";
+      hasPolos?: boolean;
     };
     const config: TenantConfig = {
       label: data.label,
       supabaseUrl: data.supabaseUrl,
       supabaseAnonKey: data.anonKey,
       deploymentMode: data.deploymentMode === "shared" ? "shared" : "isolated",
+      hasPolos: data.hasPolos ?? false,
     };
     writeConfigCache(normalized, config, "remote");
     return config;
   } catch (err) {
     if (cached && (cached.deploymentMode === "isolated" || cached.deploymentMode === "shared")) {
-      writeConfigCache(normalized, {
+      const staleConfig = {
         label: cached.label,
         supabaseUrl: cached.supabaseUrl,
         supabaseAnonKey: cached.supabaseAnonKey,
         deploymentMode: cached.deploymentMode,
-      }, "stale");
-      return {
-        label: cached.label,
-        supabaseUrl: cached.supabaseUrl,
-        supabaseAnonKey: cached.supabaseAnonKey,
-        deploymentMode: cached.deploymentMode,
+        hasPolos: cached.hasPolos ?? false,
       };
+      writeConfigCache(normalized, staleConfig, "stale");
+      return staleConfig;
     }
     throw err;
   }
