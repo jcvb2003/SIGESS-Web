@@ -41,6 +41,9 @@ export interface TenantMembershipRecord {
   userId: string;
   unitId: string;
   isActive: boolean;
+  userEmail?: string | null;
+  userName?: string | null;
+  operatorType?: "presidente" | "auxiliar" | null;
 }
 
 export interface TenantMembershipInput {
@@ -98,12 +101,18 @@ function mapTenantUserRow(row: Record<string, unknown>): TenantUserRecord {
 }
 
 function mapTenantMembershipRow(row: Record<string, unknown>): TenantMembershipRecord {
+  const tenantUser = (row.tenant_users ?? {}) as Record<string, unknown>;
+  const profile = (tenantUser.user_profiles ?? {}) as Record<string, unknown>;
+
   return {
     id: String(row.id),
     tenantId: String(row.tenant_id),
     userId: String(row.user_id),
     unitId: String(row.unit_id),
     isActive: Boolean(row.is_active),
+    userEmail: profile.email ? String(profile.email) : null,
+    userName: profile.nome ? String(profile.nome) : null,
+    operatorType: (tenantUser.operator_type as TenantMembershipRecord["operatorType"]) ?? null,
   };
 }
 
@@ -172,7 +181,7 @@ export const administrationService = {
 
     const { data, error } = await supabase
       .from("user_unit_memberships" as never)
-      .select("*")
+      .select("id, tenant_id, user_id, unit_id, is_active, tenant_users(operator_type, user_profiles(email, nome))")
       .eq("tenant_id", tenantIdResult.data)
       .order("created_at", { ascending: true });
 

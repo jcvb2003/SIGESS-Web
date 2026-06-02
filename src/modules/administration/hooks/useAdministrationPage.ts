@@ -34,7 +34,7 @@ function humanizeError(error: unknown): string {
 }
 
 export function useAdministrationPage(enabled: boolean) {
-  const { setActiveUnit } = useTenantUnits();
+  const { replaceUnits, setActiveUnit } = useTenantUnits();
   const queryClient = useQueryClient();
 
   // Dialog state
@@ -180,7 +180,18 @@ export function useAdministrationPage(enabled: boolean) {
     const unitMap = new Map(units.map((u) => [u.id, u]));
     return memberships.map((m) => ({
       membership: m,
-      user: userMap.get(m.userId) ?? null,
+      user: userMap.get(m.userId) ?? (m.userName || m.userEmail
+        ? {
+            id: `membership-${m.id}`,
+            tenantId: m.tenantId,
+            userId: m.userId,
+            email: m.userEmail ?? null,
+            name: m.userName ?? null,
+            tenantRole: "member",
+            operatorType: m.operatorType ?? null,
+            isActive: m.isActive,
+          }
+        : null),
       unit: m.unitId ? (unitMap.get(m.unitId) ?? null) : null,
     }));
   }, [memberships, tenantUsers, units]);
@@ -194,6 +205,17 @@ export function useAdministrationPage(enabled: boolean) {
     if (typeof globalThis !== "undefined") {
       globalThis.localStorage.setItem("last_activity_timestamp", Date.now().toString());
     }
+    replaceUnits(
+      units
+        .filter((candidate) => candidate.isActive)
+        .map((candidate) => ({
+          id: candidate.id,
+          name: candidate.name,
+          code: candidate.code ?? null,
+          tenantId: candidate.tenantId ?? null,
+        })),
+      unit.id,
+    );
     setActiveUnit({ id: unit.id, name: unit.name, code: unit.code ?? null, tenantId: unit.tenantId ?? null });
     // Não navega explicitamente — TenantAdministrationLayout detecta !isStatePortal
     // e faz <Navigate replace /> sozinho, evitando dupla navegação que causava logout esporádico.
