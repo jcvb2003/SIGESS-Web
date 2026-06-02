@@ -68,7 +68,7 @@ export function usePermissions() {
         | null;
 
       return {
-        hasTenantAccess: Boolean(tenantUser?.tenant_id),
+        hasTenantAccess: tenantUser?.tenant_role === "owner",
         tenantRole: tenantUser?.tenant_role ?? null,
         operatorType: tenantUser?.operator_type ?? null,
       };

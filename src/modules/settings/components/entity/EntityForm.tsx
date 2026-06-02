@@ -70,7 +70,7 @@ export function EntityForm({ readOnly = false }: EntityFormProps = {}) {
         corSidebar: entity.corSidebar || "0 0% 98%",
       });
     }
-  }, [entity, methods]);
+  }, [entity]); // eslint-disable-line react-hooks/exhaustive-deps
   const onSubmit = async (data: EntityFormData) => {
     const values: EntitySettings = {
       id: entity?.id,
