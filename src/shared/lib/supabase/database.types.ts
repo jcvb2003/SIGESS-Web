@@ -1279,6 +1279,7 @@ export type Database = {
       get_finance_audit_log_v1: {
         Args: {
           p_tenant_id: string
+          p_unit_id?: string | null
           p_limit?: number
           p_offset?: number
           p_operation?: string
