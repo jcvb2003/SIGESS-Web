@@ -1,15 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { financeQueryKeys } from "../../queryKeys";
 import { financeService } from "../../services/financeService";
-import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 
 export function useFinanceStats(year: number, month: number) {
-  const { activeUnit } = useTenantUnits();
-  const unitId = activeUnit?.id ?? null;
-
   const query = useQuery({
-    queryKey: financeQueryKeys.stats(year, month, unitId),
-    queryFn: () => financeService.getMonthlyStats(year, month, unitId),
+    queryKey: financeQueryKeys.stats(year, month),
+    queryFn: () => financeService.getMonthlyStats(year, month),
     staleTime: 0,
   });
 

@@ -170,37 +170,18 @@ export const financeService = {
   async getMonthlyStats(
     year: number,
     month: number,
-    unitId?: string | null,
   ): Promise<{ arrecadado: number; arrecadadoAno: number; qtdPagamentos: number; daePendente: number }> {
     const firstDayMonth = `${year}-${String(month).padStart(2, "0")}-01`;
     const lastDayMonth = new Date(year, month, 0).toLocaleDateString("sv");
     const firstDayYear = `${year}-01-01`;
     const lastDayYear = `${year}-12-31`;
 
-    const buildQueries = (withUnit: boolean) => {
-      let qMes = supabase.from("financeiro_lancamentos").select("valor").eq("status", "pago").gte("data_pagamento", firstDayMonth).lte("data_pagamento", lastDayMonth);
-      let qAno = supabase.from("financeiro_lancamentos").select("valor").eq("status", "pago").gte("data_pagamento", firstDayYear).lte("data_pagamento", lastDayYear);
-      let qDae = supabase.from("financeiro_dae").select("id", { count: "exact", head: true }).eq("status", "pago").eq("boleto_pago", false);
-      if (withUnit && unitId) {
-        qMes = qMes.eq("unit_id", unitId);
-        qAno = qAno.eq("unit_id", unitId);
-        qDae = qDae.eq("unit_id", unitId);
-      }
-      return [qMes, qAno, qDae] as const;
-    };
+    // financeiro_lancamentos e financeiro_dae nao tem unit_id no schema canonical
+    const qMes = supabase.from("financeiro_lancamentos").select("valor").eq("status", "pago").gte("data_pagamento", firstDayMonth).lte("data_pagamento", lastDayMonth);
+    const qAno = supabase.from("financeiro_lancamentos").select("valor").eq("status", "pago").gte("data_pagamento", firstDayYear).lte("data_pagamento", lastDayYear);
+    const qDae = supabase.from("financeiro_dae").select("id", { count: "exact", head: true }).eq("status", "pago").eq("boleto_pago", false);
 
-    let [lancamentosMes, lancamentosAno, daeResult] = await Promise.all(buildQueries(true));
-
-    // Coluna unit_id pode não existir em projetos que ainda não passaram pela Wave 3b (ex: Z2, BREVES).
-    // Nesse caso, refaz as queries sem o filtro de unidade.
-    const missingColumn = (e: unknown) => (e as { code?: string } | null)?.code === "42703";
-    if (
-      missingColumn(lancamentosMes.error) ||
-      missingColumn(lancamentosAno.error) ||
-      missingColumn(daeResult.error)
-    ) {
-      [lancamentosMes, lancamentosAno, daeResult] = await Promise.all(buildQueries(false));
-    }
+    const [lancamentosMes, lancamentosAno, daeResult] = await Promise.all([qMes, qAno, qDae]);
 
     if (lancamentosMes.error) throw lancamentosMes.error;
     if (lancamentosAno.error) throw lancamentosAno.error;
