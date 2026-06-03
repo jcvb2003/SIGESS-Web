@@ -170,16 +170,25 @@ export const financeService = {
   async getMonthlyStats(
     year: number,
     month: number,
+    unitId?: string | null,
   ): Promise<{ arrecadado: number; arrecadadoAno: number; qtdPagamentos: number; daePendente: number }> {
     const firstDayMonth = `${year}-${String(month).padStart(2, "0")}-01`;
     const lastDayMonth = new Date(year, month, 0).toLocaleDateString("sv");
     const firstDayYear = `${year}-01-01`;
     const lastDayYear = `${year}-12-31`;
 
-    // financeiro_lancamentos e financeiro_dae nao tem unit_id no schema canonical
-    const qMes = supabase.from("financeiro_lancamentos").select("valor").eq("status", "pago").gte("data_pagamento", firstDayMonth).lte("data_pagamento", lastDayMonth);
-    const qAno = supabase.from("financeiro_lancamentos").select("valor").eq("status", "pago").gte("data_pagamento", firstDayYear).lte("data_pagamento", lastDayYear);
-    const qDae = supabase.from("financeiro_dae").select("id", { count: "exact", head: true }).eq("status", "pago").eq("boleto_pago", false);
+    // financeiro_lancamentos e financeiro_dae nao tem unit_id direto;
+    // escopo por polo e feito via relacao socio_cpf -> socios.unit_id
+    const unitSelect = unitId ? "valor, socios!inner(unit_id)" : "valor";
+    let qMes = supabase.from("financeiro_lancamentos").select(unitSelect).eq("status", "pago").gte("data_pagamento", firstDayMonth).lte("data_pagamento", lastDayMonth);
+    let qAno = supabase.from("financeiro_lancamentos").select(unitSelect).eq("status", "pago").gte("data_pagamento", firstDayYear).lte("data_pagamento", lastDayYear);
+    const daeSelect = unitId ? "id, socios!inner(unit_id)" : "id";
+    let qDae = supabase.from("financeiro_dae").select(daeSelect, { count: "exact", head: true }).eq("status", "pago").eq("boleto_pago", false);
+    if (unitId) {
+      qMes = qMes.eq("socios.unit_id", unitId);
+      qAno = qAno.eq("socios.unit_id", unitId);
+      qDae = qDae.eq("socios.unit_id", unitId);
+    }
 
     const [lancamentosMes, lancamentosAno, daeResult] = await Promise.all([qMes, qAno, qDae]);
 
