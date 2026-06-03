@@ -194,12 +194,17 @@ export const financeService = {
     // Coluna unit_id pode não existir em projetos que ainda não passaram pela Wave 3b (ex: Z2, BREVES).
     // Nesse caso, refaz as queries sem o filtro de unidade.
     const missingColumn = (e: unknown) => (e as { code?: string } | null)?.code === "42703";
-    if (missingColumn(lancamentosMes.error) || missingColumn(lancamentosAno.error)) {
+    if (
+      missingColumn(lancamentosMes.error) ||
+      missingColumn(lancamentosAno.error) ||
+      missingColumn(daeResult.error)
+    ) {
       [lancamentosMes, lancamentosAno, daeResult] = await Promise.all(buildQueries(false));
     }
 
     if (lancamentosMes.error) throw lancamentosMes.error;
     if (lancamentosAno.error) throw lancamentosAno.error;
+    if (daeResult.error) throw daeResult.error;
 
     const arrecadado = (lancamentosMes.data ?? []).reduce(
       (sum, l) => sum + (Number(l.valor) || 0),
