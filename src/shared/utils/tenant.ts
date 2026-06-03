@@ -39,11 +39,12 @@ export async function resolveCurrentSharedTenantId(): Promise<string | null> {
 }
 
 /**
- * Retorna o tenant_id do usuário atual em qualquer modo de deployment.
- * Necessário para chamar funções SECURITY DEFINER que exigem p_tenant_id explícito.
- * Em modo shared: usa tenant_users. Em modo isolated: também usa tenant_users (flat).
+ * Retorna o tenant_id via tenant_users para uso em funções SECURITY DEFINER
+ * que exigem p_tenant_id explícito (contornam RLS e não podem depender do contexto implícito).
+ * Pressupõe que o usuário tem vínculo ativo em tenant_users — não cobre usuários
+ * representados exclusivamente por user_unit_memberships sem entrada em tenant_users.
  */
-export async function resolveTenantIdForRpc(): Promise<string | null> {
+export async function resolveTenantIdViaTenantUsers(): Promise<string | null> {
   if (_cachedRpcTenantId !== undefined) return _cachedRpcTenantId;
 
   const { data: userData } = await authService.getUser();
@@ -70,6 +71,9 @@ export async function resolveTenantIdForRpc(): Promise<string | null> {
   _cachedRpcTenantId = (data as { tenant_id?: string } | null)?.tenant_id ?? null;
   return _cachedRpcTenantId;
 }
+
+/** @deprecated use resolveTenantIdViaTenantUsers */
+export const resolveTenantIdForRpc = resolveTenantIdViaTenantUsers;
 
 export function clearSharedTenantIdCache(): void {
   _cachedSharedTenantId = undefined;

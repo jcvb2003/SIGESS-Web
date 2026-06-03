@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/shared/lib/supabase/client";
-import { resolveTenantIdForRpc } from "@/shared/utils/tenant";
+import { resolveTenantIdViaTenantUsers } from "@/shared/utils/tenant";
 import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 
 export interface AuditLogEntry {
@@ -37,7 +37,7 @@ export function useFinanceAudit(options: UseFinanceAuditOptions = {}) {
   return useQuery({
     queryKey: ["finance-audit-log", tableName, operation, limit, offset, unitId],
     queryFn: async () => {
-      const tenantId = await resolveTenantIdForRpc();
+      const tenantId = await resolveTenantIdViaTenantUsers();
       if (!tenantId) throw new Error("Tenant não identificado para auditoria financeira.");
 
       const { data, error } = await supabase.rpc("get_finance_audit_log_v1", {
