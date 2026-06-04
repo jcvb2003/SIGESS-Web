@@ -46,12 +46,12 @@ export function UnitCard({ unit, rows, stats, onEdit, onEnter }: UnitCardProps) 
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-2 rounded-lg bg-muted/50 px-3 py-2">
-        <StatItem label="Operadores" value={rows.length} color="blue" />
+        <StatItem label="Presidentes" value={rows.length} color="blue" />
         <StatItem label="Sócios" value={stats?.sociosCount ?? "—"} color="primary" />
         <StatItem
-          label="Auxiliares"
-          value={rows.filter((r) => r.user?.operatorType === "auxiliar").length}
-          color="muted"
+          label="Status"
+          value={unit.isActive ? "Ativo" : "Inativo"}
+          color={unit.isActive ? "amber" : "muted"}
         />
       </div>
 

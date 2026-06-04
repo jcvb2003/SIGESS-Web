@@ -98,6 +98,7 @@ export function UnitsManagementSection({
     const map = new Map<string, MembershipRow[]>();
     for (const row of membershipRows) {
       if (!row.membership.unitId) continue;
+      if (row.user?.operatorType !== "presidente") continue;
       const existing = map.get(row.membership.unitId) ?? [];
       existing.push(row);
       map.set(row.membership.unitId, existing);
