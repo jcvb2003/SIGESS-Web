@@ -9,8 +9,9 @@ import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { formatDate } from "@/shared/utils/date";
 import { Calendar, History } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
+import { Checkbox } from "@/shared/components/ui/checkbox";
 import { DataTablePagination } from "@/shared/components/layout/DataTablePagination";
-import type { PaymentByPeriod } from "@/modules/finance/types/finance.types";
+import type { PaymentByPeriod, PaymentType } from "@/modules/finance/types/finance.types";
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { DataTableSearch } from "@/shared/components/layout/DataTableSearch";
 import { financeService } from "@/modules/finance/services/financeService";
@@ -31,11 +32,17 @@ import {
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 import { ReportPageHeaderActions } from "@/modules/reports/components/ReportPageHeaderActions";
 import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
+import {
+  getPaymentCompetenciaLabel,
+  getPaymentTypeLabel,
+  PAYMENT_TYPE_FILTER_OPTIONS,
+} from "@/modules/finance/utils/paymentReportLabels";
 
 interface FilterForm {
   startDate: string;
   endDate: string;
   searchTerm: string;
+  selectedTypes: PaymentType[];
 }
 
 const PAYMENT_ORDER_FIELDS = ["data_pagamento", "created_at"] as const;
@@ -45,6 +52,20 @@ function parsePaymentOrderField(value: string | null): PaymentOrderField {
   return PAYMENT_ORDER_FIELDS.includes(value as PaymentOrderField)
     ? (value as PaymentOrderField)
     : "data_pagamento";
+}
+
+function parseSelectedTypes(value: string | null): PaymentType[] {
+  if (!value) return PAYMENT_TYPE_FILTER_OPTIONS.map((option) => option.value);
+
+  const validTypes = new Set(PAYMENT_TYPE_FILTER_OPTIONS.map((option) => option.value));
+  const selected = value
+    .split(",")
+    .map((item) => item.trim())
+    .filter((item): item is PaymentType => validTypes.has(item as PaymentType));
+
+  return selected.length
+    ? selected
+    : PAYMENT_TYPE_FILTER_OPTIONS.map((option) => option.value);
 }
 
 export default function PaymentsByPeriodPage() {
@@ -66,12 +87,14 @@ export default function PaymentsByPeriodPage() {
       startDate: searchParams.get("startDate") || `${new Date().getFullYear()}-01-01`,
       endDate: searchParams.get("endDate") || new Date().toISOString().split("T")[0],
       searchTerm: searchParams.get("search") || "",
+      selectedTypes: parseSelectedTypes(searchParams.get("types")),
     },
   });
 
   const startDate = useWatch({ control: methods.control, name: "startDate" });
   const endDate = useWatch({ control: methods.control, name: "endDate" });
   const searchTerm = useWatch({ control: methods.control, name: "searchTerm" });
+  const selectedTypes = useWatch({ control: methods.control, name: "selectedTypes" });
 
   // Sincronização com a URL
   useEffect(() => {
@@ -80,6 +103,11 @@ export default function PaymentsByPeriodPage() {
     if (endDate) params.set("endDate", endDate);
     if (searchTerm) params.set("search", searchTerm);
     else params.delete("search");
+    if (selectedTypes.length === PAYMENT_TYPE_FILTER_OPTIONS.length) {
+      params.delete("types");
+    } else {
+      params.set("types", selectedTypes.join(","));
+    }
     
     params.set("page", String(page));
     params.set("pageSize", String(pageSize));
@@ -88,34 +116,37 @@ export default function PaymentsByPeriodPage() {
     if (params.toString() !== searchParams.toString()) {
       setSearchParams(params, { replace: true });
     }
-  }, [startDate, endDate, searchTerm, page, pageSize, orderBy, searchParams, setSearchParams]);
+  }, [startDate, endDate, searchTerm, selectedTypes, page, pageSize, orderBy, searchParams, setSearchParams]);
 
   const { data, isLoading, isFetching } = usePaymentsByPeriod(startDate, endDate, page, pageSize, orderBy);
   
-  const payments = useMemo(() => {
-    const list = data?.data ?? [];
-    if (!searchTerm) return list;
+  const filterPayments = useCallback((list: PaymentByPeriod[]) => {
+    const filteredByType =
+      selectedTypes.length === PAYMENT_TYPE_FILTER_OPTIONS.length
+        ? list
+        : list.filter((payment) => selectedTypes.includes(payment.tipo as PaymentType));
+    if (!searchTerm) return filteredByType;
     
     const term = searchTerm.toLowerCase();
-    return list.filter(p => 
+    return filteredByType.filter(p => 
       p.nome?.toLowerCase().includes(term) || 
       p.cpf?.includes(term) ||
-      p.tipo?.toLowerCase().includes(term)
+      p.tipo?.toLowerCase().includes(term) ||
+      getPaymentTypeLabel(p.tipo).toLowerCase().includes(term)
     );
-  }, [data?.data, searchTerm]);
+  }, [searchTerm, selectedTypes]);
+
+  const payments = useMemo(() => {
+    const list = data?.data ?? [];
+    return filterPayments(list);
+  }, [data?.data, filterPayments]);
 
   const totalCount = data?.total ?? 0;
 
-  const renderCompetencia = useCallback((payment: PaymentByPeriod) => {
-    if (payment.tipo === "anuidade") {
-      return payment.competencia_ano;
-    }
-    if (payment.tipo === "mensalidade") {
-      const mes = String(payment.competencia_mes).padStart(2, "0");
-      return `${mes}/${payment.competencia_ano}`;
-    }
-    return "—";
-  }, []);
+  const renderCompetencia = useCallback(
+    (payment: PaymentByPeriod) => getPaymentCompetenciaLabel(payment),
+    [],
+  );
 
   const columns = useMemo<ColumnDef<PaymentByPeriod>[]>(() => [
     {
@@ -145,10 +176,10 @@ export default function PaymentsByPeriodPage() {
       cell: (p) => (
         <StatusBadge 
           variant="info" 
-          label={p.tipo.replaceAll("_", " ").toUpperCase()} 
+          label={getPaymentTypeLabel(p.tipo).toUpperCase()} 
         />
       ),
-      className: "w-[140px]"
+      className: "w-[180px]"
     },
     {
       header: "Competência",
@@ -250,8 +281,9 @@ export default function PaymentsByPeriodPage() {
     const toastId = toast.loading("Gerando exportação Excel...");
     try {
       const allData = await financeService.fetchAllPayments(startDate, endDate, orderBy, unitId);
-      if (!allData.length) { toast.dismiss(toastId); toast.error("Sem dados para exportar."); return; }
-      await reportsService.exportPaymentsToExcel(allData);
+      const filteredData = filterPayments(allData);
+      if (!filteredData.length) { toast.dismiss(toastId); toast.error("Sem dados para exportar."); return; }
+      await reportsService.exportPaymentsToExcel(filteredData);
       toast.dismiss(toastId);
       toast.success("Excel exportado com sucesso!");
     } catch (err) {
@@ -265,8 +297,9 @@ export default function PaymentsByPeriodPage() {
     const toastId = toast.loading("Gerando PDF...");
     try {
       const allData = await financeService.fetchAllPayments(startDate, endDate, orderBy, unitId);
-      if (!allData.length) { toast.dismiss(toastId); toast.error("Sem dados para exportar."); return; }
-      await reportsService.exportPaymentsToPdf(allData);
+      const filteredData = filterPayments(allData);
+      if (!filteredData.length) { toast.dismiss(toastId); toast.error("Sem dados para exportar."); return; }
+      await reportsService.exportPaymentsToPdf(filteredData);
       toast.dismiss(toastId);
       toast.success("PDF gerado com sucesso!");
     } catch (err) {
@@ -322,6 +355,37 @@ export default function PaymentsByPeriodPage() {
                   />
                 </div>
               </div>
+
+              <div className="space-y-3">
+                <span className="text-xs font-semibold text-muted-foreground uppercase">
+                  Tipo de pagamento
+                </span>
+                <div className="grid gap-3 rounded-xl border border-border/60 bg-muted/10 p-4">
+                  {PAYMENT_TYPE_FILTER_OPTIONS.map((option) => {
+                    const checked = selectedTypes.includes(option.value);
+                    return (
+                      <label
+                        key={option.value}
+                        className="flex items-center gap-3 text-sm text-foreground/90"
+                      >
+                        <Checkbox
+                          checked={checked}
+                          onCheckedChange={(value) => {
+                            const nextSelected = value
+                              ? Array.from(new Set([...selectedTypes, option.value]))
+                              : selectedTypes.filter((type) => type !== option.value);
+
+                            methods.setValue("selectedTypes", nextSelected, {
+                              shouldDirty: true,
+                            });
+                          }}
+                        />
+                        <span>{option.label}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
             <SheetFooter className="mt-8 mb-6 flex flex-col sm:flex-row gap-3">
@@ -333,8 +397,10 @@ export default function PaymentsByPeriodPage() {
                   methods.reset({
                     startDate: `${new Date().getFullYear()}-01-01`,
                     endDate: new Date().toISOString().split("T")[0],
-                    searchTerm: ""
+                    searchTerm: "",
+                    selectedTypes: PAYMENT_TYPE_FILTER_OPTIONS.map((option) => option.value),
                   });
+                  setPage(1);
                 }}
               >
                 Limpar filtros

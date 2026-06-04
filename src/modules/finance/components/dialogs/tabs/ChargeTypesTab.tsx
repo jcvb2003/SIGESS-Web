@@ -79,21 +79,23 @@ export function ChargeTypesTab({
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                title={ct.ativo ? "Desativar" : "Ativar"}
-                onClick={() => onToggleActive(ct.id, !ct.ativo)}
-                className={cn(
-                  "p-1 transition-all duration-200 hover:scale-110",
-                  ct.ativo ? "text-emerald-500" : "text-amber-500"
-                )}
-              >
-                {ct.ativo ? (
-                  <ToggleRight className="h-5 w-5" />
-                ) : (
-                  <ToggleLeft className="h-5 w-5" />
-                )}
-              </button>
+              {ct.categoria === "contribuicao" ? (
+                <button
+                  type="button"
+                  title={ct.ativo ? "Desativar" : "Ativar"}
+                  onClick={() => onToggleActive(ct.id, !ct.ativo)}
+                  className={cn(
+                    "p-1 transition-all duration-200 hover:scale-110",
+                    ct.ativo ? "text-emerald-500" : "text-amber-500"
+                  )}
+                >
+                  {ct.ativo ? (
+                    <ToggleRight className="h-5 w-5" />
+                  ) : (
+                    <ToggleLeft className="h-5 w-5" />
+                  )}
+                </button>
+              ) : null}
               <button
                 type="button"
                 title="Editar"
@@ -140,6 +142,7 @@ export function ChargeTypesTab({
                 </h3>
              </div>
             <ChargeTypeForm
+              key={editingCharge === "new" ? "new" : editingCharge.id}
               initial={editingCharge === "new" ? null : editingCharge}
               isPending={isMutationPending}
               onSubmit={handleFormSubmit}

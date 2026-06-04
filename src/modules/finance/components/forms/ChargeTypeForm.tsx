@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useMemo } from "react";
 import { useForm, Controller, type Resolver, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -11,7 +11,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/shared/components/ui/select";
 import {
   AlertDialog,
@@ -45,6 +44,56 @@ interface ChargeTypeFormProps {
   readonly onDelete?: () => Promise<void>;
 }
 
+function normalizeChargeCategory(
+  value?: string | null,
+): "contribuicao" | "cadastro_governamental" {
+  const normalized = value
+    ?.normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+
+  if (normalized === "cadastro" || normalized === "cadastro_governamental") {
+    return "cadastro_governamental";
+  }
+
+  return "contribuicao";
+}
+
+function normalizeObrigatoriedade(
+  value?: string | null,
+): "compulsoria" | "facultativa" | null {
+  const normalized = value
+    ?.normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+
+  if (normalized === "compulsoria" || normalized === "obrigatoria") {
+    return "compulsoria";
+  }
+
+  if (normalized === "facultativa" || normalized === "opcional") {
+    return "facultativa";
+  }
+
+  return null;
+}
+
+function getCategoriaLabel(value?: string | null) {
+  if (value === "cadastro_governamental") return "Cadastro Governamental";
+  if (value === "contribuicao") return "Contribuição";
+  return "Selecione";
+}
+
+function getObrigatoriedadeLabel(value?: string | null) {
+  if (value === "compulsoria") return "Compulsória";
+  if (value === "facultativa") return "Facultativa";
+  return "Selecione";
+}
+
 export function ChargeTypeForm({
   initial,
   isPending,
@@ -52,35 +101,30 @@ export function ChargeTypeForm({
   onCancel,
   onDelete,
 }: ChargeTypeFormProps) {
+  const formValues = useMemo<ChargeTypeFormInput>(
+    () => ({
+      categoria: initial ? normalizeChargeCategory(initial.categoria) : "contribuicao",
+      nome: initial?.nome ?? "",
+      descricao: initial?.descricao ?? "",
+      valorPadrao: initial?.valor_padrao ?? null,
+      obrigatoriedade: initial
+        ? normalizeObrigatoriedade(initial.obrigatoriedade)
+        : null,
+      ativo: initial?.ativo ?? true,
+    }),
+    [initial],
+  );
+
   const {
     register,
     control,
     handleSubmit,
-    reset,
     formState: { errors, isDirty },
   } = useForm<ChargeTypeFormInput>({
     resolver: zodResolver(chargeTypeSchema) as Resolver<ChargeTypeFormInput>,
-    defaultValues: {
-      categoria: "contribuicao",
-      nome: "",
-      descricao: "",
-      valorPadrao: null,
-      obrigatoriedade: null,
-      ativo: true,
-    },
+    defaultValues: formValues,
+    values: formValues,
   });
-
-  useEffect(() => {
-    if (!initial) return;
-    reset({
-      categoria: initial.categoria as "contribuicao" | "cadastro_governamental",
-      nome: initial.nome ?? "",
-      descricao: initial.descricao ?? "",
-      valorPadrao: initial.valor_padrao ?? null,
-      obrigatoriedade: (initial.obrigatoriedade as "compulsoria" | "facultativa" | null) ?? null,
-      ativo: initial.ativo ?? true,
-    });
-  }, [initial, reset]);
 
   const categoria = useWatch({
     control,
@@ -105,7 +149,7 @@ export function ChargeTypeForm({
             render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger className="h-9 text-xs">
-                  <SelectValue />
+                  <span>{getCategoriaLabel(field.value)}</span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="contribuicao">Contribuição</SelectItem>
@@ -130,13 +174,13 @@ export function ChargeTypeForm({
               name="obrigatoriedade"
               render={({ field }) => (
                 <Select
-                  value={field.value ?? ""}
+                  value={field.value ?? undefined}
                   onValueChange={(v) =>
                     field.onChange(v as "compulsoria" | "facultativa")
                   }
                 >
                   <SelectTrigger className="h-9 text-xs">
-                    <SelectValue placeholder="Selecione" />
+                    <span>{getObrigatoriedadeLabel(field.value)}</span>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="compulsoria">Compulsória</SelectItem>

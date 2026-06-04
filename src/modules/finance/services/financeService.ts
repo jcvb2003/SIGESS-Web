@@ -38,6 +38,15 @@ const createDashboardQuery = (withCount = false, unitId?: string | null) => {
 };
 type DashboardQuery = ReturnType<typeof createDashboardQuery>;
 
+const createDashboardCountQuery = (unitId?: string | null) => {
+  const base = supabase
+    .from("v_situacao_financeira_socio")
+    .select("cpf", { count: "exact", head: true });
+  return unitId ? base.eq("unit_id", unitId) : base;
+};
+
+type DashboardCountQuery = ReturnType<typeof createDashboardCountQuery>;
+
 export const financeService = {
   async getDashboard(
     params: FinanceDashboardParams,
@@ -143,6 +152,52 @@ export const financeService = {
     return filteredQuery;
   },
 
+  applyDashboardCountFilters(
+    query: DashboardCountQuery,
+    params: FinanceDashboardParams,
+    requiredYears: number[],
+  ) {
+    const { tab, filterAnnuityOk, filterAnnuityOverdue, filterExempt, filterReleased } = params;
+    let filteredQuery = query;
+
+    if (params.searchTerm) {
+      filteredQuery = filteredQuery.or(`nome.ilike.%${params.searchTerm}%,cpf.ilike.%${params.searchTerm}%`);
+    }
+
+    if (tab === "isentos") {
+      filteredQuery = filteredQuery.eq("isento", true);
+    } else if (tab === "liberados") {
+      filteredQuery = filteredQuery.eq("liberado_presidente", true);
+    } else if (tab === "em-dia") {
+      filteredQuery = filteredQuery.eq("situacao_geral", "EM_DIA");
+    } else if (tab === "inadimplentes") {
+      filteredQuery = filteredQuery.eq("situacao_geral", "EM_ATRASO");
+    }
+
+    if (filterAnnuityOk) {
+      filteredQuery = filteredQuery
+        .not("isento", "eq", true)
+        .not("liberado_presidente", "eq", true);
+      if (requiredYears.length > 0) {
+        filteredQuery = filteredQuery.contains("anuidades_pagas", requiredYears);
+      }
+    }
+    if (filterAnnuityOverdue) {
+      filteredQuery = filteredQuery
+        .not("isento", "eq", true)
+        .not("liberado_presidente", "eq", true)
+        .or(`anuidades_pagas.is.null,anuidades_pagas.not.cs.{${requiredYears.join(",")}}`);
+    }
+    if (filterExempt) {
+      filteredQuery = filteredQuery.eq("isento", true);
+    }
+    if (filterReleased) {
+      filteredQuery = filteredQuery.eq("liberado_presidente", true);
+    }
+
+    return filteredQuery;
+  },
+
   /**
    * Retorna contagens por aba para os badges do dashboard.
    */
@@ -152,15 +207,39 @@ export const financeService = {
     anoBase: number,
     unitId?: string | null,
   ): Promise<Record<string, number>> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase.rpc as any)("get_finance_tab_counts", {
-      p_search_term: searchTerm,
-      p_year: year,
-      p_ano_base: anoBase,
-      p_unit_id: unitId ?? null,
-    });
-    if (error) throw error;
-    return data as Record<string, number>;
+    const requiredYears: number[] = [];
+    for (let y = anoBase; y <= year; y++) requiredYears.push(y);
+
+    const tabs: FinanceDashboardParams["tab"][] = [
+      "todos",
+      "em-dia",
+      "inadimplentes",
+      "liberados",
+      "isentos",
+    ];
+
+    const results = await Promise.all(
+      tabs.map(async (tab) => {
+        const query = this.applyDashboardCountFilters(
+          createDashboardCountQuery(unitId),
+          {
+            page: 1,
+            pageSize: 1,
+            searchTerm,
+            year,
+            anoBase,
+            tab,
+          },
+          requiredYears,
+        );
+
+        const { count, error } = await query;
+        if (error) throw error;
+        return [tab, count ?? 0] as const;
+      }),
+    );
+
+    return Object.fromEntries(results);
   },
 
   /**
@@ -196,12 +275,15 @@ export const financeService = {
     if (lancamentosAno.error) throw lancamentosAno.error;
     if (daeResult.error) throw daeResult.error;
 
-    const arrecadado = (lancamentosMes.data ?? []).reduce(
+    const lancamentosMesRows = (lancamentosMes.data ?? []) as Array<{ valor?: number | string | null }>;
+    const lancamentosAnoRows = (lancamentosAno.data ?? []) as Array<{ valor?: number | string | null }>;
+
+    const arrecadado = lancamentosMesRows.reduce(
       (sum, l) => sum + (Number(l.valor) || 0),
       0,
     );
 
-    const arrecadadoAno = (lancamentosAno.data ?? []).reduce(
+    const arrecadadoAno = lancamentosAnoRows.reduce(
       (sum, l) => sum + (Number(l.valor) || 0),
       0,
     );

@@ -129,6 +129,10 @@ export interface PaymentByPeriod {
   valor: number;
 }
 
+export interface PaymentsByPeriodFilters {
+  selectedTypes: PaymentType[];
+}
+
 export interface DAEByPeriod {
   data_pagamento_boleto: string | null;
   data_recebimento: string | null;

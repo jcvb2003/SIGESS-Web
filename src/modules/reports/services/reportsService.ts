@@ -7,6 +7,10 @@ import type {
   RequirementsRpcClient,
 } from "@/modules/requirements/types/requirement.types";
 import { getFishingRegistryDisplay } from "@/modules/members/utils/fisherIdentity";
+import {
+  getPaymentCompetenciaLabel,
+  getPaymentTypeLabel,
+} from "@/modules/finance/utils/paymentReportLabels";
 import { formatDate } from "@/shared/utils/date";
 export interface RequestReportItem {
   id: string;
@@ -249,8 +253,8 @@ export const reportsService = {
       "Data Pag.": formatDate(item.data_pagamento),
       Nome: item.nome,
       CPF: item.cpf,
-      Tipo: item.tipo,
-      "Competência": item.competencia_mes ? `${String(item.competencia_mes).padStart(2, '0')}/${item.competencia_ano}` : item.competencia_ano,
+      Tipo: getPaymentTypeLabel(item.tipo),
+      "Competência": getPaymentCompetenciaLabel(item),
       Forma: item.forma_pagamento,
       Valor: item.valor,
     }));
@@ -275,8 +279,8 @@ export const reportsService = {
       formatDate(item.data_pagamento),
       item.nome,
       item.cpf,
-      item.tipo,
-      item.competencia_mes ? `${String(item.competencia_mes).padStart(2, '0')}/${item.competencia_ano}` : item.competencia_ano,
+      getPaymentTypeLabel(item.tipo),
+      getPaymentCompetenciaLabel(item),
       item.forma_pagamento,
       item.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
     ]);
