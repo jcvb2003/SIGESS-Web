@@ -118,7 +118,7 @@ export function UnitsManagementSection({
   }, [membershipRows]);
 
   const operators = useMemo(
-    () => tenantUsers.filter((u) => u.tenantRole !== "owner"),
+    () => tenantUsers.filter((u) => u.tenantRole !== "owner" && u.operatorType === "presidente"),
     [tenantUsers],
   );
 
@@ -144,7 +144,7 @@ export function UnitsManagementSection({
           <div className="flex items-center gap-2 shrink-0">
             <Button onClick={() => setNewOperatorOpen(true)} variant="outline" size="sm" className="gap-2">
               <UserPlus className="h-4 w-4" />
-              Novo operador
+              Novo presidente
             </Button>
             <Button onClick={onCreate} variant="outline" size="sm" className="gap-2">
               <Plus className="h-4 w-4" />
@@ -447,9 +447,9 @@ function NewOperatorDialog({ open, onOpenChange, existingEmails, isSaving, onSub
     <Dialog open={open} onOpenChange={(o) => { if (!o) reset(); onOpenChange(o); }}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Novo operador</DialogTitle>
+          <DialogTitle>Novo presidente</DialogTitle>
           <DialogDescription>
-            Crie um usuário operador. Vincule-o a um polo pela aba Operadores.
+            Crie um presidente e vincule-o a um polo pela aba Operadores.
           </DialogDescription>
         </DialogHeader>
 
@@ -478,7 +478,15 @@ function NewOperatorDialog({ open, onOpenChange, existingEmails, isSaving, onSub
             onClick={async () => {
               setSubmitError(null);
               try {
-                await onSubmit({ email: email.trim(), name: name.trim(), tenantRole: "member", mode: "create", password, autoConfirm: true });
+                await onSubmit({
+                  email: email.trim(),
+                  name: name.trim(),
+                  tenantRole: "member",
+                  operatorType: "presidente",
+                  mode: "create",
+                  password,
+                  autoConfirm: true,
+                });
               } catch (err) {
                 const msg = err instanceof Error ? err.message : String(err ?? "");
                 if (msg.toLowerCase().includes("already")) {

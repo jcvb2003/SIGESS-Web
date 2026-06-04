@@ -150,7 +150,7 @@ function resolveNextActiveUnit(
 
   const preferredUnit =
     normalizedUnits.find((unit) => unit.id === preferredActiveUnitId) ?? null;
-  if (preferredUnit && currentActiveUnitId) {
+  if (preferredUnit) {
     return preferredUnit;
   }
 

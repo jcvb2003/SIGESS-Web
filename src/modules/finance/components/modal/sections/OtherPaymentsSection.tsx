@@ -38,6 +38,36 @@ interface OtherPaymentsSectionProps {
   readonly onToggleSelection?: (id: string, type: 'lancamento' | 'dae') => void;
 }
 
+function formatCompetencia(competenciaMes?: number | null, competenciaAno?: number | null) {
+  if (!competenciaAno) return null;
+  if (competenciaMes) return `${String(competenciaMes).padStart(2, "0")}/${competenciaAno}`;
+  return String(competenciaAno);
+}
+
+function getPaymentLabel(lancamento: FinanceLancamento) {
+  const baseLabel =
+    lancamento.descricao ||
+    (lancamento.tipo ? TYPE_LABELS[lancamento.tipo] : "") ||
+    lancamento.tipo;
+
+  const competencia = formatCompetencia(
+    lancamento.competencia_mes,
+    lancamento.competencia_ano,
+  );
+
+  if (lancamento.tipo === "mensalidade" && competencia) {
+    return {
+      title: baseLabel || "Mensalidade",
+      subtitle: `Competência ${competencia}`,
+    };
+  }
+
+  return {
+    title: baseLabel,
+    subtitle: competencia && !lancamento.descricao ? `Referência ${competencia}` : null,
+  };
+}
+
 export function OtherPaymentsSection({ 
   lancamentos, 
   memberName, 
@@ -96,15 +126,18 @@ export function OtherPaymentsSection({
         Outros lançamentos
       </p>
       <div className="space-y-1">
-        {sorted.map((l) => (
-          <div
-            key={l.id}
-            className={cn(
-              "flex items-center gap-3 rounded-lg py-2 px-2 hover:bg-emerald-50/40 dark:hover:bg-emerald-900/30 border border-transparent hover:border-emerald-100/50 dark:hover:border-emerald-800/50 transition-colors",
-              isSelectionMode && "cursor-pointer"
-            )}
-            onClick={() => isSelectionMode && onToggleSelection?.(l.id, 'lancamento')}
-          >
+        {sorted.map((l) => {
+          const paymentLabel = getPaymentLabel(l);
+
+          return (
+            <div
+              key={l.id}
+              className={cn(
+                "flex items-center gap-3 rounded-lg py-2 px-2 hover:bg-emerald-50/40 dark:hover:bg-emerald-900/30 border border-transparent hover:border-emerald-100/50 dark:hover:border-emerald-800/50 transition-colors",
+                isSelectionMode && "cursor-pointer"
+              )}
+              onClick={() => isSelectionMode && onToggleSelection?.(l.id, 'lancamento')}
+            >
             {isSelectionMode && (
               <div className="flex-shrink-0 mr-1">
                 <div className={cn(
@@ -120,8 +153,15 @@ export function OtherPaymentsSection({
             <div className="w-14 text-[11px] font-semibold text-muted-foreground">
               {formatDate(l.data_pagamento)}
             </div>
-            <div className="flex-1 min-w-0 text-xs font-medium text-foreground">
-              {l.descricao || (l.tipo ? TYPE_LABELS[l.tipo] : "") || l.tipo}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-medium text-foreground">
+                {paymentLabel.title}
+              </p>
+              {paymentLabel.subtitle ? (
+                <p className="mt-0.5 text-[10px] font-medium text-muted-foreground">
+                  {paymentLabel.subtitle}
+                </p>
+              ) : null}
             </div>
             <div className="text-right">
               <p className="text-xs font-semibold text-foreground leading-none">
@@ -195,7 +235,8 @@ export function OtherPaymentsSection({
               </div>
             )}
           </div>
-        ))}
+          );
+        })}
       </div>
 
       <SessionReceiptDialog

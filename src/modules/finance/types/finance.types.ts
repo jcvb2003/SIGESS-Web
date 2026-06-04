@@ -54,6 +54,7 @@ export interface MemberFinancialSummary {
   isento: boolean;
   liberadoPresidente: boolean;
   anuidadesPagas: number[] | null;
+  mesesPagosAtual?: number[] | null;
   ultimoPagamento: string | null;
   status: FinancialStatusType;
   codigoSocio?: string | null;

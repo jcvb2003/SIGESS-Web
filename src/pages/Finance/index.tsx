@@ -119,7 +119,7 @@ export default function FinancePage() {
       )
     },
     {
-      header: "Anuidades",
+      header: "Cobrança",
       cell: (m: MemberFinancialSummary) => (
         <AnnuitiesCell member={m} currentYear={currentYear} anoBase={anoBase} />
       )

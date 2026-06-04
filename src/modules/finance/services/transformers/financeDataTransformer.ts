@@ -28,6 +28,7 @@ export function toMemberFinancialSummary(
     isento,
     liberadoPresidente: liberado,
     anuidadesPagas,
+    mesesPagosAtual,
     ultimoPagamento: row.ultimo_pagamento ?? null,
     status,
   };
