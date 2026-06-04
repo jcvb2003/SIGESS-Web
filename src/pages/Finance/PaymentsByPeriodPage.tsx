@@ -3,7 +3,10 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card } from "@/shared/components/ui/card";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { DateField } from "@/shared/components/form-fields/fields/DateField";
-import { usePaymentsByPeriod } from "@/modules/finance/hooks/data/usePaymentsByPeriod";
+import {
+  useAllPaymentsByPeriod,
+  usePaymentsByPeriod,
+} from "@/modules/finance/hooks/data/usePaymentsByPeriod";
 import { DataTable, ColumnDef } from "@/shared/components/layout/DataTable";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { formatDate } from "@/shared/utils/date";
@@ -95,6 +98,9 @@ export default function PaymentsByPeriodPage() {
   const endDate = useWatch({ control: methods.control, name: "endDate" });
   const searchTerm = useWatch({ control: methods.control, name: "searchTerm" });
   const selectedTypes = useWatch({ control: methods.control, name: "selectedTypes" });
+  const hasFrontendFilters =
+    searchTerm.trim().length > 0 ||
+    selectedTypes.length !== PAYMENT_TYPE_FILTER_OPTIONS.length;
 
   // Sincronização com a URL
   useEffect(() => {
@@ -118,7 +124,16 @@ export default function PaymentsByPeriodPage() {
     }
   }, [startDate, endDate, searchTerm, selectedTypes, page, pageSize, orderBy, searchParams, setSearchParams]);
 
-  const { data, isLoading, isFetching } = usePaymentsByPeriod(startDate, endDate, page, pageSize, orderBy);
+  const {
+    data,
+    isLoading,
+    isFetching,
+  } = usePaymentsByPeriod(startDate, endDate, page, pageSize, orderBy);
+  const {
+    data: allPaymentsData,
+    isLoading: isLoadingAll,
+    isFetching: isFetchingAll,
+  } = useAllPaymentsByPeriod(startDate, endDate, orderBy, hasFrontendFilters);
   
   const filterPayments = useCallback((list: PaymentByPeriod[]) => {
     const filteredByType =
@@ -137,11 +152,22 @@ export default function PaymentsByPeriodPage() {
   }, [searchTerm, selectedTypes]);
 
   const payments = useMemo(() => {
-    const list = data?.data ?? [];
-    return filterPayments(list);
-  }, [data?.data, filterPayments]);
+    if (!hasFrontendFilters) {
+      return data?.data ?? [];
+    }
 
-  const totalCount = data?.total ?? 0;
+    const filteredList = filterPayments(allPaymentsData ?? []);
+    const from = (page - 1) * pageSize;
+    return filteredList.slice(from, from + pageSize);
+  }, [allPaymentsData, data?.data, filterPayments, hasFrontendFilters, page, pageSize]);
+
+  const totalCount = useMemo(() => {
+    if (!hasFrontendFilters) {
+      return data?.total ?? 0;
+    }
+
+    return filterPayments(allPaymentsData ?? []).length;
+  }, [allPaymentsData, data?.total, filterPayments, hasFrontendFilters]);
 
   const renderCompetencia = useCallback(
     (payment: PaymentByPeriod) => getPaymentCompetenciaLabel(payment),
@@ -252,8 +278,8 @@ export default function PaymentsByPeriodPage() {
       <DataTable
         columns={columns}
         data={payments}
-        isLoading={isLoading}
-        isFetching={isFetching}
+        isLoading={hasFrontendFilters ? isLoadingAll : isLoading}
+        isFetching={hasFrontendFilters ? isFetchingAll : isFetching}
         variant="minimal"
         skeletonCount={10}
         emptyMessage="Nenhum pagamento encontrado"

@@ -19,3 +19,20 @@ export function usePaymentsByPeriod(
     staleTime: 0,
   });
 }
+
+export function useAllPaymentsByPeriod(
+  startDate: string,
+  endDate: string,
+  orderBy: "data_pagamento" | "created_at" = "data_pagamento",
+  enabled = true,
+) {
+  const { activeUnit } = useTenantUnits();
+  const unitId = activeUnit?.id ?? null;
+
+  return useQuery({
+    queryKey: ["all-payments-by-period", startDate, endDate, orderBy, unitId],
+    queryFn: () => financeService.fetchAllPayments(startDate, endDate, orderBy, unitId),
+    enabled: enabled && !!startDate && !!endDate,
+    staleTime: 0,
+  });
+}
