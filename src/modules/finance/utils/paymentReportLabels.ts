@@ -21,9 +21,21 @@ export const PAYMENT_TYPE_FILTER_OPTIONS: Array<{
   { value: "cadastro_governamental", label: "Cadastro governamental" },
 ];
 
-export function getPaymentTypeLabel(tipo?: string | null) {
-  if (!tipo) return "Sem tipo";
-  return PAYMENT_TYPE_LABELS[tipo as PaymentType] ?? tipo.replaceAll("_", " ");
+export function getPaymentTypeLabel(
+  paymentOrType?: Pick<PaymentByPeriod, "tipo" | "tipo_exibicao"> | string | null,
+) {
+  if (!paymentOrType) return "Sem tipo";
+
+  if (typeof paymentOrType === "object") {
+    const tipoExibicao = paymentOrType.tipo_exibicao?.trim();
+    if (tipoExibicao) return tipoExibicao;
+
+    const tipo = paymentOrType.tipo;
+    if (!tipo) return "Sem tipo";
+    return PAYMENT_TYPE_LABELS[tipo as PaymentType] ?? tipo.replaceAll("_", " ");
+  }
+
+  return PAYMENT_TYPE_LABELS[paymentOrType as PaymentType] ?? paymentOrType.replaceAll("_", " ");
 }
 
 export function getPaymentCompetenciaLabel(payment: Pick<PaymentByPeriod, "tipo" | "competencia_ano" | "competencia_mes">) {
@@ -37,4 +49,3 @@ export function getPaymentCompetenciaLabel(payment: Pick<PaymentByPeriod, "tipo"
 
   return "—";
 }
-

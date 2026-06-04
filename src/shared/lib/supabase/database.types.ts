@@ -1326,7 +1326,9 @@ export type Database = {
           p_offset?: number
           p_order_by?: string
           p_order_dir?: string
+          p_search?: string | null
           p_start_date: string
+          p_types?: string[] | null
           p_unit_id?: string | null
         }
         Returns: {
@@ -1339,6 +1341,7 @@ export type Database = {
           socio_cpf: string
           socio_nome: string
           tipo: string
+          tipo_exibicao: string
           total_amount: number
           total_count: number
           valor: number

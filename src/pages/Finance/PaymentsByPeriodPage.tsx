@@ -1,12 +1,9 @@
 import { useForm, useWatch, FormProvider } from "react-hook-form";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/shared/components/ui/card";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { DateField } from "@/shared/components/form-fields/fields/DateField";
-import {
-  useAllPaymentsByPeriod,
-  usePaymentsByPeriod,
-} from "@/modules/finance/hooks/data/usePaymentsByPeriod";
+import { usePaymentsByPeriod } from "@/modules/finance/hooks/data/usePaymentsByPeriod";
 import { DataTable, ColumnDef } from "@/shared/components/layout/DataTable";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { formatDate } from "@/shared/utils/date";
@@ -51,46 +48,23 @@ interface FilterForm {
 const PAYMENT_ORDER_FIELDS = ["data_pagamento", "created_at"] as const;
 type PaymentOrderField = (typeof PAYMENT_ORDER_FIELDS)[number];
 
-function parsePaymentOrderField(value: string | null): PaymentOrderField {
-  return PAYMENT_ORDER_FIELDS.includes(value as PaymentOrderField)
-    ? (value as PaymentOrderField)
-    : "data_pagamento";
-}
-
-function parseSelectedTypes(value: string | null): PaymentType[] {
-  if (!value) return PAYMENT_TYPE_FILTER_OPTIONS.map((option) => option.value);
-
-  const validTypes = new Set(PAYMENT_TYPE_FILTER_OPTIONS.map((option) => option.value));
-  const selected = value
-    .split(",")
-    .map((item) => item.trim())
-    .filter((item): item is PaymentType => validTypes.has(item as PaymentType));
-
-  return selected.length
-    ? selected
-    : PAYMENT_TYPE_FILTER_OPTIONS.map((option) => option.value);
-}
-
 export default function PaymentsByPeriodPage() {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { activeUnit } = useTenantUnits();
   const unitId = activeUnit?.id ?? null;
   
   // Estados de controle local
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const [page, setPage] = useState(Number(searchParams.get("page")) || 1);
-  const [pageSize, setPageSize] = useState(Number(searchParams.get("pageSize")) || 20);
-  const [orderBy, setOrderBy] = useState<PaymentOrderField>(
-    parsePaymentOrderField(searchParams.get("orderBy")),
-  );
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [orderBy, setOrderBy] = useState<PaymentOrderField>("data_pagamento");
 
   const methods = useForm<FilterForm>({
     defaultValues: {
-      startDate: searchParams.get("startDate") || `${new Date().getFullYear()}-01-01`,
-      endDate: searchParams.get("endDate") || new Date().toISOString().split("T")[0],
-      searchTerm: searchParams.get("search") || "",
-      selectedTypes: parseSelectedTypes(searchParams.get("types")),
+      startDate: `${new Date().getFullYear()}-01-01`,
+      endDate: new Date().toISOString().split("T")[0],
+      searchTerm: "",
+      selectedTypes: PAYMENT_TYPE_FILTER_OPTIONS.map((option) => option.value),
     },
   });
 
@@ -98,76 +72,28 @@ export default function PaymentsByPeriodPage() {
   const endDate = useWatch({ control: methods.control, name: "endDate" });
   const searchTerm = useWatch({ control: methods.control, name: "searchTerm" });
   const selectedTypes = useWatch({ control: methods.control, name: "selectedTypes" });
-  const hasFrontendFilters =
-    searchTerm.trim().length > 0 ||
-    selectedTypes.length !== PAYMENT_TYPE_FILTER_OPTIONS.length;
 
   // Sincronização com a URL
   useEffect(() => {
-    const params = new URLSearchParams(searchParams);
-    if (startDate) params.set("startDate", startDate);
-    if (endDate) params.set("endDate", endDate);
-    if (searchTerm) params.set("search", searchTerm);
-    else params.delete("search");
-    if (selectedTypes.length === PAYMENT_TYPE_FILTER_OPTIONS.length) {
-      params.delete("types");
-    } else {
-      params.set("types", selectedTypes.join(","));
-    }
-    
-    params.set("page", String(page));
-    params.set("pageSize", String(pageSize));
-    params.set("orderBy", orderBy);
-
-    if (params.toString() !== searchParams.toString()) {
-      setSearchParams(params, { replace: true });
-    }
-  }, [startDate, endDate, searchTerm, selectedTypes, page, pageSize, orderBy, searchParams, setSearchParams]);
+    setPage(1);
+  }, [startDate, endDate, searchTerm, selectedTypes]);
 
   const {
     data,
     isLoading,
     isFetching,
-  } = usePaymentsByPeriod(startDate, endDate, page, pageSize, orderBy);
-  const {
-    data: allPaymentsData,
-    isLoading: isLoadingAll,
-    isFetching: isFetchingAll,
-  } = useAllPaymentsByPeriod(startDate, endDate, orderBy, hasFrontendFilters);
+  } = usePaymentsByPeriod(
+    startDate,
+    endDate,
+    page,
+    pageSize,
+    orderBy,
+    searchTerm,
+    selectedTypes,
+  );
   
-  const filterPayments = useCallback((list: PaymentByPeriod[]) => {
-    const filteredByType =
-      selectedTypes.length === PAYMENT_TYPE_FILTER_OPTIONS.length
-        ? list
-        : list.filter((payment) => selectedTypes.includes(payment.tipo as PaymentType));
-    if (!searchTerm) return filteredByType;
-    
-    const term = searchTerm.toLowerCase();
-    return filteredByType.filter(p => 
-      p.nome?.toLowerCase().includes(term) || 
-      p.cpf?.includes(term) ||
-      p.tipo?.toLowerCase().includes(term) ||
-      getPaymentTypeLabel(p.tipo).toLowerCase().includes(term)
-    );
-  }, [searchTerm, selectedTypes]);
-
-  const payments = useMemo(() => {
-    if (!hasFrontendFilters) {
-      return data?.data ?? [];
-    }
-
-    const filteredList = filterPayments(allPaymentsData ?? []);
-    const from = (page - 1) * pageSize;
-    return filteredList.slice(from, from + pageSize);
-  }, [allPaymentsData, data?.data, filterPayments, hasFrontendFilters, page, pageSize]);
-
-  const totalCount = useMemo(() => {
-    if (!hasFrontendFilters) {
-      return data?.total ?? 0;
-    }
-
-    return filterPayments(allPaymentsData ?? []).length;
-  }, [allPaymentsData, data?.total, filterPayments, hasFrontendFilters]);
+  const payments = data?.data ?? [];
+  const totalCount = data?.total ?? 0;
 
   const renderCompetencia = useCallback(
     (payment: PaymentByPeriod) => getPaymentCompetenciaLabel(payment),
@@ -202,7 +128,7 @@ export default function PaymentsByPeriodPage() {
       cell: (p) => (
         <StatusBadge 
           variant="info" 
-          label={getPaymentTypeLabel(p.tipo).toUpperCase()} 
+          label={getPaymentTypeLabel(p).toUpperCase()} 
         />
       ),
       className: "w-[180px]"
@@ -278,8 +204,8 @@ export default function PaymentsByPeriodPage() {
       <DataTable
         columns={columns}
         data={payments}
-        isLoading={hasFrontendFilters ? isLoadingAll : isLoading}
-        isFetching={hasFrontendFilters ? isFetchingAll : isFetching}
+        isLoading={isLoading}
+        isFetching={isFetching}
         variant="minimal"
         skeletonCount={10}
         emptyMessage="Nenhum pagamento encontrado"
@@ -306,10 +232,16 @@ export default function PaymentsByPeriodPage() {
   const handleExportExcel = async () => {
     const toastId = toast.loading("Gerando exportação Excel...");
     try {
-      const allData = await financeService.fetchAllPayments(startDate, endDate, orderBy, unitId);
-      const filteredData = filterPayments(allData);
-      if (!filteredData.length) { toast.dismiss(toastId); toast.error("Sem dados para exportar."); return; }
-      await reportsService.exportPaymentsToExcel(filteredData);
+      const allData = await financeService.fetchAllPayments(
+        startDate,
+        endDate,
+        orderBy,
+        unitId,
+        searchTerm,
+        selectedTypes,
+      );
+      if (!allData.length) { toast.dismiss(toastId); toast.error("Sem dados para exportar."); return; }
+      await reportsService.exportPaymentsToExcel(allData);
       toast.dismiss(toastId);
       toast.success("Excel exportado com sucesso!");
     } catch (err) {
@@ -322,10 +254,16 @@ export default function PaymentsByPeriodPage() {
   const handleExportPdf = async () => {
     const toastId = toast.loading("Gerando PDF...");
     try {
-      const allData = await financeService.fetchAllPayments(startDate, endDate, orderBy, unitId);
-      const filteredData = filterPayments(allData);
-      if (!filteredData.length) { toast.dismiss(toastId); toast.error("Sem dados para exportar."); return; }
-      await reportsService.exportPaymentsToPdf(filteredData);
+      const allData = await financeService.fetchAllPayments(
+        startDate,
+        endDate,
+        orderBy,
+        unitId,
+        searchTerm,
+        selectedTypes,
+      );
+      if (!allData.length) { toast.dismiss(toastId); toast.error("Sem dados para exportar."); return; }
+      await reportsService.exportPaymentsToPdf(allData);
       toast.dismiss(toastId);
       toast.success("PDF gerado com sucesso!");
     } catch (err) {

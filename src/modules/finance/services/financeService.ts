@@ -7,6 +7,7 @@ import type {
   FinanceLancamento,
   FinanceLancamentoInsert,
   PaymentByPeriod,
+  PaymentType,
 } from "../types/finance.types";
 import { toMemberFinancialSummary } from "./transformers/financeDataTransformer";
 
@@ -21,6 +22,7 @@ interface PaymentByPeriodRow {
   socio_nome: string;
   socio_cpf: string;
   tipo: string;
+  tipo_exibicao: string | null;
   competencia_ano: number;
   competencia_mes: number | null;
   forma_pagamento: string;
@@ -365,6 +367,8 @@ export const financeService = {
     pageSize: number = 20,
     orderBy: "data_pagamento" | "created_at" = "data_pagamento",
     unitId?: string | null,
+    searchTerm = "",
+    selectedTypes?: PaymentType[],
   ): Promise<{ data: (PaymentByPeriod & { id: string })[]; total: number; totalAmount: number }> {
     const from = (page - 1) * pageSize;
 
@@ -376,6 +380,8 @@ export const financeService = {
       p_offset: from,
       p_order_by: orderBy,
       p_order_dir: "DESC",
+      p_search: searchTerm || null,
+      p_types: selectedTypes?.length ? selectedTypes : null,
       p_unit_id: unitId ?? null,
     });
 
@@ -385,7 +391,7 @@ export const financeService = {
         details: error.details,
         hint: error.hint,
         code: error.code,
-        params: { startDate, endDate, page, pageSize, orderBy }
+        params: { startDate, endDate, page, pageSize, orderBy, searchTerm, selectedTypes }
       });
       throw error;
     }
@@ -399,6 +405,7 @@ export const financeService = {
       nome: item.socio_nome,
       cpf: item.socio_cpf,
       tipo: item.tipo,
+      tipo_exibicao: item.tipo_exibicao,
       competencia_ano: item.competencia_ano,
       competencia_mes: item.competencia_mes,
       forma_pagamento: item.forma_pagamento,
@@ -443,7 +450,9 @@ export const financeService = {
     endDate: string,
     orderBy: "data_pagamento" | "created_at" = "data_pagamento",
     unitId?: string | null,
-  ): Promise<any[]> {
+    searchTerm = "",
+    selectedTypes?: PaymentType[],
+  ): Promise<(PaymentByPeriod & { id: string })[]> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.rpc as any)("get_payments_by_period_paginated", {
       p_start_date: startDate,
@@ -452,15 +461,18 @@ export const financeService = {
       p_offset: 0,
       p_order_by: orderBy,
       p_order_dir: "DESC",
+      p_search: searchTerm || null,
+      p_types: selectedTypes?.length ? selectedTypes : null,
       p_unit_id: unitId ?? null,
     });
     if (error) throw error;
-    return (data as any[] || []).map((item) => ({
+    return ((data as PaymentByPeriodRow[]) || []).map((item) => ({
       id: item.id,
       data_pagamento: item.data_pagamento,
       nome: item.socio_nome,
       cpf: item.socio_cpf,
       tipo: item.tipo,
+      tipo_exibicao: item.tipo_exibicao,
       competencia_ano: item.competencia_ano,
       competencia_mes: item.competencia_mes,
       forma_pagamento: item.forma_pagamento,

@@ -123,14 +123,11 @@ export interface PaymentByPeriod {
   nome: string;
   cpf: string;
   tipo: string;
+  tipo_exibicao?: string | null;
   competencia_ano: number | null;
   competencia_mes: number | null;
   forma_pagamento: string;
   valor: number;
-}
-
-export interface PaymentsByPeriodFilters {
-  selectedTypes: PaymentType[];
 }
 
 export interface DAEByPeriod {
