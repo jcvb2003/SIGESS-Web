@@ -1,5 +1,4 @@
 import { authService } from "@/modules/auth/services/authService";
-import { getCurrentTenantConfig } from "@/config/tenants";
 import type { ServiceResponse } from "@/shared/services/base/serviceResponse";
 import type { User } from "@supabase/supabase-js";
 import { getSupabaseClient } from "@/shared/lib/supabase/client";
@@ -97,17 +96,6 @@ export const tenantUnitService = {
   async getUserAssignedUnitsFromSharedProject(
     user: User | null | undefined,
   ): Promise<ServiceResponse<ResolvedTenantUnits>> {
-    const tenantConfig = getCurrentTenantConfig();
-    if (tenantConfig?.deploymentMode !== "shared") {
-      return {
-        data: {
-          availableUnits: [],
-          preferredActiveUnitId: null,
-        },
-        error: null,
-      };
-    }
-
     if (!user) {
       return {
         data: {
