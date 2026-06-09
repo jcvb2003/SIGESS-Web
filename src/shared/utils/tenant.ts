@@ -1,4 +1,3 @@
-import { getCurrentTenantConfig } from "@/config/tenants";
 import { authService } from "@/modules/auth/services/authService";
 import { supabase } from "@/shared/lib/supabase/client";
 
@@ -6,12 +5,9 @@ let _cachedSharedTenantId: string | null | undefined = undefined;
 let _cachedRpcTenantId: string | null | undefined = undefined;
 
 /**
- * Retorna o tenant_id do usuário atual quando em modo shared.
- * Retorna null em modo isolated sem nenhuma query ao banco.
+ * Retorna o tenant_id do usuário atual para todas as topologias.
  */
 export async function resolveCurrentSharedTenantId(): Promise<string | null> {
-  if (getCurrentTenantConfig()?.deploymentMode !== "shared") return null;
-
   if (_cachedSharedTenantId !== undefined) return _cachedSharedTenantId;
 
   const { data: userData } = await authService.getUser();
