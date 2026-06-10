@@ -10,7 +10,7 @@ export const entitySchema = z.object({
   number: z.string().toUpperCase().optional(),
   district: z.string().toUpperCase().optional(),
   city: z.string().toUpperCase().optional(),
-  state: z.string().toUpperCase().optional(),
+  state: z.string().optional(),
   cep: z.string().optional(),
   phone1: z.string().optional(),
   phone2: z.string().optional(),
