@@ -377,13 +377,21 @@ export const administrationService = {
   },
 
   async deleteTenantMembership(id: string): Promise<ServiceResponse<void>> {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("user_unit_memberships" as never)
       .delete()
+      .select("id")
       .eq("id", id);
 
     if (error) {
       return { data: null, error };
+    }
+
+    if (!data || data.length === 0) {
+      return {
+        data: null,
+        error: new Error("O vinculo nao foi excluido. Verifique se seu perfil tem permissao para essa operacao."),
+      };
     }
 
     return { data: null, error: null };
@@ -407,12 +415,19 @@ export const administrationService = {
 
     if (fetchError) return { data: null, error: fetchError };
 
-    const { error: deleteError } = await supabase
+    const { data: deletedRows, error: deleteError } = await supabase
       .from("tenant_users" as never)
       .delete()
+      .select("id")
       .eq("id", id);
 
     if (deleteError) return { data: null, error: deleteError };
+    if (!deletedRows || deletedRows.length === 0) {
+      return {
+        data: null,
+        error: new Error("O usuario do tenant nao foi excluido. Verifique se seu perfil tem permissao para essa operacao."),
+      };
+    }
 
     // Delete auth user so the email is freed for future re-registration
     const userId = (row as { user_id?: string } | null)?.user_id;

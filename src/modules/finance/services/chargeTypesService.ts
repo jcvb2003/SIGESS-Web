@@ -56,11 +56,15 @@ export const chargeTypesService = {
     if (error) throw error;
   },
   async delete(id: string): Promise<void> {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("tipos_cobranca")
       .delete()
+      .select("id")
       .eq("id", id);
 
     if (error) throw error;
+    if (!data || data.length === 0) {
+      throw new Error("O tipo de cobranca nao foi excluido. Verifique se seu perfil tem permissao para essa operacao.");
+    }
   },
 };

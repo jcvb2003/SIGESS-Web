@@ -200,8 +200,15 @@ export const reportsService = {
     return allData;
   },
   async deleteRequest(id: string): Promise<void> {
-    const { error } = await supabase.from("requerimentos").delete().eq("id", id);
+    const { data, error } = await supabase
+      .from("requerimentos")
+      .delete()
+      .eq("id", id)
+      .select("id");
     if (error) throw error;
+    if (!data || data.length === 0) {
+      throw new Error("O requerimento nao foi excluido. Verifique se seu perfil tem permissao para essa operacao.");
+    }
   },
 
   async exportToExcel(data: RequestReportItem[]): Promise<void> {

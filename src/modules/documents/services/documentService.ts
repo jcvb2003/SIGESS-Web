@@ -92,10 +92,20 @@ export const documentService = {
     };
   },
   async deleteRequest(id: string): Promise<ServiceResponse<void>> {
-    const { error } = await supabase.from("requerimentos").delete().eq("id", id);
+    const { data, error } = await supabase
+      .from("requerimentos")
+      .delete()
+      .eq("id", id)
+      .select("id");
     if (error) {
       console.error("Erro ao excluir requerimento:", error);
       return { data: null, error };
+    }
+    if (!data || data.length === 0) {
+      return {
+        data: null,
+        error: new Error("O requerimento nao foi excluido. Verifique se seu perfil tem permissao para essa operacao."),
+      };
     }
     return { data: null, error: null };
   },

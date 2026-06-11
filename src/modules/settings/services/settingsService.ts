@@ -389,13 +389,20 @@ export const settingsService = {
     };
   },
   async deleteLocality(id: string): Promise<ServiceResponse<void>> {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from(LOCALITIES_TABLE)
       .delete()
+      .select("id")
       .eq("id", id);
     if (error) {
       console.error("Erro ao excluir localidade:", error);
       return { data: null, error };
+    }
+    if (!data || data.length === 0) {
+      return {
+        data: null,
+        error: new Error("A localidade nao foi excluida. Verifique se seu perfil tem permissao para essa operacao."),
+      };
     }
     return { data: null, error: null };
   },
@@ -569,13 +576,20 @@ export const settingsService = {
         );
       }
     }
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from(DOCUMENT_TEMPLATES_TABLE)
       .delete()
+      .select("id")
       .eq("id", template.id);
     if (error) {
       console.error("Erro ao excluir template de documento:", error);
       return { data: null, error };
+    }
+    if (!data || data.length === 0) {
+      return {
+        data: null,
+        error: new Error("O template nao foi excluido. Verifique se seu perfil tem permissao para essa operacao."),
+      };
     }
     return { data: null, error: null };
   },

@@ -14,6 +14,8 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { compressMemberPhoto } from "@/shared/utils/image-compression";
 import { supabase } from "@/shared/lib/supabase/client";
+import { resolveTenantIdViaTenantUsers } from "@/shared/utils/tenant";
+import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 import { photoService } from "../../services/photoService";
 import { QRCodeCanvas } from "qrcode.react";
 import {
@@ -37,6 +39,7 @@ type FotoUploadToken = {
 export function MemberPhotoField() {
   const { control, setValue, getValues } = useFormContext();
   const cpf = useWatch({ control, name: "cpf" });
+  const { activeUnit } = useTenantUnits();
 
   // photoUrl vive inteiramente no form - sobrevive ao unmount/remount das abas
   const photoUrl = useWatch({ control, name: "photoPreviewUrl" });
@@ -139,12 +142,19 @@ export function MemberPhotoField() {
     setIsGeneratingToken(true);
     try {
       const cleanCpf = cpf.replace(/\D/g, "");
+      const tenantId =
+        activeUnit?.tenantId ?? (await resolveTenantIdViaTenantUsers());
+      const unitId = activeUnit?.id ?? null;
+
+      if (!tenantId) {
+        throw new Error("Escopo do tenant nao resolvido para gerar token de foto.");
+      }
 
       /* eslint-disable @typescript-eslint/no-explicit-any */
       const { data, error } = await ((supabase.from(
         "foto_upload_tokens" as any,
       ) as any)
-        .insert([{ socio_cpf: cleanCpf }])
+        .insert([{ socio_cpf: cleanCpf, tenant_id: tenantId, unit_id: unitId }])
         .select("token")
         .single());
       /* eslint-enable @typescript-eslint/no-explicit-any */
@@ -205,7 +215,26 @@ export function MemberPhotoField() {
       )
       .subscribe();
 
+    const intervalId = globalThis.setInterval(async () => {
+      /* eslint-disable @typescript-eslint/no-explicit-any */
+      const { data, error } = await ((supabase.from("foto_upload_tokens" as any) as any)
+        .select("foto_base64")
+        .eq("token", qrToken)
+        .maybeSingle());
+      /* eslint-enable @typescript-eslint/no-explicit-any */
+
+      if (error) {
+        return;
+      }
+
+      const tokenData = data as { foto_base64?: string | null } | null;
+      if (tokenData?.foto_base64) {
+        await processBase64Photo(tokenData.foto_base64);
+      }
+    }, 2000);
+
     return () => {
+      globalThis.clearInterval(intervalId);
       supabase.removeChannel(channel);
     };
   }, [qrToken, isQrModalOpen, processBase64Photo]);

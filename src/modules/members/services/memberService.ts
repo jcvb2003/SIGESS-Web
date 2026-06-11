@@ -174,9 +174,16 @@ export const memberService = {
         throw photoResult.error;
       }
     }
-    const { error } = await supabase.from("socios").delete().eq("id", id);
+    const { data, error } = await supabase
+      .from("socios")
+      .delete()
+      .eq("id", id)
+      .select("id");
     if (error) {
       throw error;
+    }
+    if (!data || data.length === 0) {
+      throw new Error("O socio nao foi excluido. Verifique se seu perfil tem permissao para essa operacao.");
     }
   },
   async getLocalities(): Promise<LocalityOption[]> {
