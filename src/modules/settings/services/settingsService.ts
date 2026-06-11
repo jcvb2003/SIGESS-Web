@@ -39,8 +39,14 @@ const toOptional = (value: string | undefined | null): string | undefined => {
 };
 
 const normalizeUf = (value: unknown): string => {
-  const normalized = toStringValue(value).trim().toUpperCase();
-  return normalized;
+  const normalized = toStringValue(value)
+    .normalize("NFD")
+    .replaceAll(/[\u0300-\u036f]/g, "")
+    .replaceAll(/[^a-zA-Z]/g, "")
+    .trim()
+    .toUpperCase();
+
+  return normalized.slice(0, 2);
 };
 export const settingsService = {
   async getTenantIdentity(): Promise<{ name: string; shortName: string; logoUrl?: string } | null> {

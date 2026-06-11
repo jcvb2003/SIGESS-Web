@@ -18,19 +18,19 @@ export function EntityForm({ readOnly = false }: EntityFormProps = {}) {
   const { entity, isLoading, isSaving, saveEntity } = useEntityData();
   const methods = useForm<EntityFormData>({
     resolver: zodResolver(entitySchema),
-    defaultValues: {
-      name: "",
-      shortName: "",
-      cnpj: "",
-      street: "",
-      number: "",
-      district: "",
-      city: "",
-      state: undefined,
-      cep: "",
-      phone1: "",
-      phone2: "",
-      email: "",
+      defaultValues: {
+        name: "",
+        shortName: "",
+        cnpj: "",
+        street: "",
+        number: "",
+        district: "",
+        city: "",
+        state: "",
+        cep: "",
+        phone1: "",
+        phone2: "",
+        email: "",
       federation: "",
       confederation: "",
       pole: "",
@@ -53,7 +53,7 @@ export function EntityForm({ readOnly = false }: EntityFormProps = {}) {
         number: entity.number || "",
         district: entity.district || "",
         city: entity.city || "",
-        state: entity.state || undefined,
+        state: entity.state || "",
         cep: entity.cep || "",
         phone1: entity.phone1 || "",
         phone2: entity.phone2 || "",
@@ -68,6 +68,12 @@ export function EntityForm({ readOnly = false }: EntityFormProps = {}) {
         corPrimaria: entity.corPrimaria || "160 84% 39%",
         corSecundaria: entity.corSecundaria || "152 69% 41%",
         corSidebar: entity.corSidebar || "0 0% 98%",
+      });
+
+      methods.setValue("state", entity.state || "", {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
       });
     }
   }, [entity]); // eslint-disable-line react-hooks/exhaustive-deps
