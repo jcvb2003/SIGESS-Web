@@ -16,7 +16,6 @@ function jsonResponse(data: unknown, status = 200): Response {
 type TenantRole = "owner" | "member";
 
 interface AccessScope {
-  mode: "isolated" | "shared";
   isAdmin: boolean;
   tenantId: string | null;
   tenantRole: TenantRole | null;
@@ -40,7 +39,7 @@ async function getActiveTenantUnitIds(admin: SupabaseClient, tenantId: string) {
 
 function hasTenantWidePresidentScope(scope: AccessScope, tenantUnitIds: string[]) {
   return (
-    scope.mode === "shared" &&
+    scope.tenantId !== null &&
     scope.tenantRole !== "owner" &&
     scope.operatorType === "presidente" &&
     tenantUnitIds.length === 1
@@ -52,7 +51,7 @@ async function resolveSharedTargetUnitId(
   scope: AccessScope,
   activeUnitId?: string | null,
 ) {
-  if (scope.mode !== "shared" || !scope.tenantId) {
+  if (!scope.tenantId) {
     return null;
   }
 
@@ -86,20 +85,6 @@ async function findAuthUserByEmail(admin: SupabaseClient, email: string) {
   return null;
 }
 
-function isMissingSharedSchemaError(error: unknown) {
-  if (!error || typeof error !== "object") return false;
-  const candidate = error as { code?: string; message?: string; status?: number };
-  const code = String(candidate.code ?? "");
-  const message = String(candidate.message ?? "");
-  return (
-    candidate.status === 404 ||
-    code === "42P01" ||
-    code === "PGRST205" ||
-    message.includes("tenant_users") ||
-    message.includes("user_unit_memberships")
-  );
-}
-
 async function resolveAccessScope(admin: SupabaseClient, currentUser: User): Promise<AccessScope> {
   const isAdmin = currentUser.app_metadata?.role === "admin";
 
@@ -111,23 +96,18 @@ async function resolveAccessScope(admin: SupabaseClient, currentUser: User): Pro
     .limit(1)
     .maybeSingle();
 
-  if (tenantUserError) {
-    if (isMissingSharedSchemaError(tenantUserError)) {
-      return { mode: "isolated", isAdmin, tenantId: null, tenantRole: null, operatorType: null, unitIds: [] };
-    }
-    throw tenantUserError;
-  }
+  if (tenantUserError) throw tenantUserError;
 
   const tenantId = (tenantUser as { tenant_id?: string | null } | null)?.tenant_id ?? null;
   const tenantRole = ((tenantUser as { tenant_role?: TenantRole | null } | null)?.tenant_role ?? null) as TenantRole | null;
   const operatorType = (tenantUser as { operator_type?: string | null } | null)?.operator_type ?? null;
 
   if (!tenantId || !tenantRole) {
-    return { mode: "isolated", isAdmin, tenantId: null, tenantRole: null, operatorType: null, unitIds: [] };
+    return { isAdmin, tenantId: null, tenantRole: null, operatorType: null, unitIds: [] };
   }
 
   if (tenantRole === "owner") {
-    return { mode: "shared", isAdmin, tenantId, tenantRole, operatorType: null, unitIds: [] };
+    return { isAdmin, tenantId, tenantRole, operatorType: null, unitIds: [] };
   }
 
   const { data: memberships, error: membershipsError } = await admin
@@ -137,15 +117,9 @@ async function resolveAccessScope(admin: SupabaseClient, currentUser: User): Pro
     .eq("user_id", currentUser.id)
     .eq("is_active", true);
 
-  if (membershipsError) {
-    if (isMissingSharedSchemaError(membershipsError)) {
-      return { mode: "shared", isAdmin, tenantId, tenantRole, operatorType, unitIds: [] };
-    }
-    throw membershipsError;
-  }
+  if (membershipsError) throw membershipsError;
 
   return {
-    mode: "shared",
     isAdmin,
     tenantId,
     tenantRole,
@@ -158,14 +132,14 @@ async function resolveAccessScope(admin: SupabaseClient, currentUser: User): Pro
 
 function canManageOtherUsers(scope: AccessScope) {
   if (scope.isAdmin) return true;
-  if (scope.mode === "shared") {
+  if (scope.tenantId !== null) {
     return scope.tenantRole === "owner" || scope.operatorType === "presidente";
   }
   return false;
 }
 
 function canViewAllUsers(scope: AccessScope) {
-  if (scope.mode === "shared") {
+  if (scope.tenantId !== null) {
     return scope.tenantRole === "owner" || scope.operatorType === "presidente";
   }
   return scope.isAdmin;
@@ -264,7 +238,7 @@ async function attachUserToSharedScope(
   role: string,
   activeUnitId?: string | null,
 ) {
-  if (scope.mode !== "shared" || !scope.tenantId) {
+  if (!scope.tenantId) {
     return;
   }
   const sharedTarget = await resolveSharedTargetUnitId(admin, scope, activeUnitId);
@@ -563,11 +537,11 @@ async function handleList(
 ) {
   const scope = await resolveAccessScope(admin, currentUser);
   console.log(
-    `[ManageUser] Listando usuários (mode=${scope.mode}, tenantRole=${scope.tenantRole ?? "n/a"}, operatorType=${scope.operatorType ?? "n/a"}, isAdmin=${scope.isAdmin})...`,
+    `[ManageUser] Listando usuários (tenantId=${scope.tenantId ?? "n/a"}, tenantRole=${scope.tenantRole ?? "n/a"}, operatorType=${scope.operatorType ?? "n/a"}, isAdmin=${scope.isAdmin})...`,
   );
 
   const allowedIds =
-    scope.mode === "shared"
+    scope.tenantId !== null
       ? await listSharedAllowedIds(
           admin,
           scope,
@@ -666,7 +640,7 @@ serve(async (req: Request) => {
     }
 
     if (
-      accessScope.mode === "shared" &&
+      accessScope.tenantId !== null &&
       accessScope.tenantRole !== "owner" &&
       accessScope.unitIds.length > 0 &&
       ["deactivate", "activate", "delete", "toggleUserStatus"].includes(String(action))
@@ -712,4 +686,3 @@ serve(async (req: Request) => {
     return jsonResponse({ error: message, detail }, status);
   }
 });
-
