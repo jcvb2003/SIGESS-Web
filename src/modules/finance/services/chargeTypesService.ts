@@ -1,5 +1,5 @@
 import { supabase } from "@/shared/lib/supabase/client";
-import { resolveCurrentSharedTenantId } from "@/shared/utils/tenant";
+import { resolveTenantIdViaTenantUsers } from "@/shared/utils/tenant";
 import type { ChargeType } from "../types/finance.types";
 
 export const chargeTypesService = {
@@ -26,7 +26,7 @@ export const chargeTypesService = {
   },
 
   async create(charge: Omit<ChargeType, "id" | "created_at" | "updated_at">, unitId?: string | null): Promise<void> {
-    const sharedTenantId = await resolveCurrentSharedTenantId();
+    const sharedTenantId = await resolveTenantIdViaTenantUsers();
     const { error } = await supabase
       .from("tipos_cobranca")
       .insert({

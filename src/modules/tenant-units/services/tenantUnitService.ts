@@ -57,21 +57,7 @@ export interface ResolvedTenantUnits {
   preferredActiveUnitId: string | null;
 }
 
-function isMissingSharedSchemaError(error: unknown) {
-  if (!error || typeof error !== "object") {
-    return false;
-  }
 
-  const candidate = error as { code?: string; message?: string; status?: number };
-  return (
-    candidate.status === 404 ||
-    candidate.code === "42P01" ||
-    candidate.code === "PGRST205" ||
-    candidate.message?.toLowerCase().includes("user_unit_memberships") === true ||
-    candidate.message?.toLowerCase().includes("tenant_units") === true ||
-    candidate.message?.toLowerCase().includes("tenant_users") === true
-  );
-}
 
 export const tenantUnitService = {
   getUserAssignedUnitsFromUser(user: User | null | undefined): TenantUnitSummary[] {
@@ -119,9 +105,6 @@ export const tenantUnitService = {
         .maybeSingle();
 
       if (tenantUserError) {
-        if (isMissingSharedSchemaError(tenantUserError)) {
-          return { data: { availableUnits: [], preferredActiveUnitId: null }, error: null };
-        }
         return { data: null, error: tenantUserError };
       }
 
@@ -147,9 +130,6 @@ export const tenantUnitService = {
           .eq("is_active", true);
 
         if (membershipsError) {
-          if (isMissingSharedSchemaError(membershipsError)) {
-            return { data: { availableUnits: [], preferredActiveUnitId: null }, error: null };
-          }
           return { data: null, error: membershipsError };
         }
 
@@ -171,9 +151,6 @@ export const tenantUnitService = {
       const { data: units, error: unitsError } = await unitsQuery.order("name", { ascending: true });
 
       if (unitsError) {
-        if (isMissingSharedSchemaError(unitsError)) {
-          return { data: { availableUnits: [], preferredActiveUnitId: null }, error: null };
-        }
         return { data: null, error: unitsError };
       }
 
@@ -187,16 +164,6 @@ export const tenantUnitService = {
         error: null,
       };
     } catch (error) {
-      if (isMissingSharedSchemaError(error)) {
-        return {
-          data: {
-            availableUnits: [],
-            preferredActiveUnitId: null,
-          },
-          error: null,
-        };
-      }
-
       const normalizedError =
         error instanceof Error ? error : new Error("Nao foi possivel resolver os polos do tenant shared.");
       return { data: null, error: normalizedError };

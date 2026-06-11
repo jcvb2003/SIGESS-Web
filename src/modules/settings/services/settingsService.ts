@@ -1,7 +1,7 @@
 import { supabase } from "@/shared/lib/supabase/client";
 import { getAdminClient } from "@/shared/lib/supabase/admin-client";
 import { ServiceResponse } from "@/shared/services/base/serviceResponse";
-import { resolveCurrentSharedTenantId } from "@/shared/utils/tenant";
+import { resolveTenantIdViaTenantUsers } from "@/shared/utils/tenant";
 import { TENANT_CONFIG_CACHE_KEY } from "@/config/tenants";
 import {
   EntitySettings,
@@ -62,7 +62,7 @@ export const settingsService = {
   },
 
   async getEntity(unitId?: string | null): Promise<ServiceResponse<EntitySettings>> {
-    const sharedTenantId = await resolveCurrentSharedTenantId();
+    const sharedTenantId = await resolveTenantIdViaTenantUsers();
     // 1. Buscar dados institucionais
     const entityQuery = supabase
       .from(ENTITY_TABLE)
@@ -142,7 +142,7 @@ export const settingsService = {
     settings: EntitySettings,
   ): Promise<ServiceResponse<EntitySettings>> {
     // 1. Atualizar dados institucionais
-    const sharedTenantId = await resolveCurrentSharedTenantId();
+    const sharedTenantId = await resolveTenantIdViaTenantUsers();
     let entityId = settings.id;
     if (!entityId) {
       const currentEntityQuery = supabase.from(ENTITY_TABLE).select("id").limit(1);
@@ -282,7 +282,7 @@ export const settingsService = {
       }
       parameterId = latest?.id ? String(latest.id) : undefined;
     }
-    const sharedTenantId = await resolveCurrentSharedTenantId();
+    const sharedTenantId = await resolveTenantIdViaTenantUsers();
     const payload = {
       ...(parameterId ? { id: parameterId } : {}),
       ...(sharedTenantId ? { tenant_id: sharedTenantId } : {}),
@@ -358,7 +358,7 @@ export const settingsService = {
       };
     }
 
-    const sharedTenantId = await resolveCurrentSharedTenantId();
+    const sharedTenantId = await resolveTenantIdViaTenantUsers();
     const { data, error } = await supabase
       .from(LOCALITIES_TABLE)
       .insert({
@@ -512,7 +512,7 @@ export const settingsService = {
     }
     const { data: publicUrlData } = storage.getPublicUrl(uploadData.path);
     const fileUrl = publicUrlData.publicUrl;
-    const sharedTenantId = await resolveCurrentSharedTenantId();
+    const sharedTenantId = await resolveTenantIdViaTenantUsers();
     const { data, error } = await supabase
       .from(DOCUMENT_TEMPLATES_TABLE)
       .insert({

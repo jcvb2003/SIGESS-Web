@@ -1,8 +1,24 @@
+export type Topology =
+  | "isolated_single"
+  | "isolated_polo"
+  | "shared_multi_single"
+  | "shared_multi_polo"
+  | "shared_hybrid"
+  | "unconfigured";
+
 export interface TenantConfig {
   label: string;
   supabaseUrl: string;
   supabaseAnonKey: string;
-  deploymentMode: "isolated" | "shared";
+  topology: Topology;
+}
+
+export function isSharedTopology(topology: Topology): boolean {
+  return topology.startsWith("shared");
+}
+
+export function hasPoloTopology(topology: Topology): boolean {
+  return topology === "isolated_polo" || topology === "shared_multi_polo" || topology === "shared_hybrid";
 }
 
 type EnvSource = {
@@ -22,6 +38,24 @@ export function normalizeTenantCode(code: string): string {
   return code.toLowerCase().trim();
 }
 
+function deriveTopologyFromLegacy(deploymentMode?: string): Topology {
+  return deploymentMode === "shared" ? "shared_multi_single" : "isolated_single";
+}
+
+function isValidTopology(value: unknown): value is Topology {
+  return (
+    typeof value === "string" &&
+    [
+      "isolated_single",
+      "isolated_polo",
+      "shared_multi_single",
+      "shared_multi_polo",
+      "shared_hybrid",
+      "unconfigured",
+    ].includes(value)
+  );
+}
+
 function readConfigCacheEntry(code?: string): CachedTenantConfig | null {
   try {
     const raw =
@@ -32,7 +66,13 @@ function readConfigCacheEntry(code?: string): CachedTenantConfig | null {
 
     const cached: CachedTenantConfig = JSON.parse(raw);
     if (code && cached.code !== normalizeTenantCode(code)) return null;
-    return cached;
+
+    // migrate legacy cache entries that have deploymentMode instead of topology
+    if (!isValidTopology(cached.topology) && (cached as any).deploymentMode) {
+      cached.topology = deriveTopologyFromLegacy((cached as any).deploymentMode);
+    }
+
+    return isValidTopology(cached.topology) ? cached : null;
   } catch {
     return null;
   }
@@ -41,13 +81,12 @@ function readConfigCacheEntry(code?: string): CachedTenantConfig | null {
 export function getCachedTenantConfig(code?: string): TenantConfig | null {
   const cached = readConfigCacheEntry(code);
   if (!cached) return null;
-  if (cached.deploymentMode !== "isolated" && cached.deploymentMode !== "shared") return null;
 
   return {
     label: cached.label,
     supabaseUrl: cached.supabaseUrl,
     supabaseAnonKey: cached.supabaseAnonKey,
-    deploymentMode: cached.deploymentMode,
+    topology: cached.topology,
   };
 }
 
@@ -86,16 +125,12 @@ export async function resolveAndCacheTenant(code: string): Promise<TenantConfig>
   const normalized = normalizeTenantCode(code);
 
   const cached = readConfigCacheEntry(normalized);
-  if (
-    cached &&
-    (cached.deploymentMode === "isolated" || cached.deploymentMode === "shared") &&
-    Date.now() - cached.cachedAt < CACHE_TTL_MS
-  ) {
+  if (cached && Date.now() - cached.cachedAt < CACHE_TTL_MS) {
     return {
       label: cached.label,
       supabaseUrl: cached.supabaseUrl,
       supabaseAnonKey: cached.supabaseAnonKey,
-      deploymentMode: cached.deploymentMode,
+      topology: cached.topology,
     };
   }
 
@@ -103,15 +138,14 @@ export async function resolveAndCacheTenant(code: string): Promise<TenantConfig>
   const configUrl = env?.VITE_ADMIN_TENANT_CONFIG_URL;
 
   if (!configUrl) {
-    if (cached && (cached.deploymentMode === "isolated" || cached.deploymentMode === "shared")) {
+    if (cached) {
       return {
         label: cached.label,
         supabaseUrl: cached.supabaseUrl,
         supabaseAnonKey: cached.supabaseAnonKey,
-        deploymentMode: cached.deploymentMode,
+        topology: cached.topology,
       };
     }
-
     throw new Error("Dynamic Config Resolver não configurado no ambiente");
   }
 
@@ -124,29 +158,35 @@ export async function resolveAndCacheTenant(code: string): Promise<TenantConfig>
       label: string;
       supabaseUrl: string;
       anonKey: string;
-      deploymentMode?: "isolated" | "shared";
+      topology?: string;
+      deploymentMode?: string;
     };
+
+    const topology: Topology = isValidTopology(data.topology)
+      ? data.topology
+      : deriveTopologyFromLegacy(data.deploymentMode);
+
     const config: TenantConfig = {
       label: data.label,
       supabaseUrl: data.supabaseUrl,
       supabaseAnonKey: data.anonKey,
-      deploymentMode: data.deploymentMode === "shared" ? "shared" : "isolated",
+      topology,
     };
     writeConfigCache(normalized, config, "remote");
     return config;
   } catch (err) {
-    if (cached && (cached.deploymentMode === "isolated" || cached.deploymentMode === "shared")) {
+    if (cached) {
       writeConfigCache(normalized, {
         label: cached.label,
         supabaseUrl: cached.supabaseUrl,
         supabaseAnonKey: cached.supabaseAnonKey,
-        deploymentMode: cached.deploymentMode,
+        topology: cached.topology,
       }, "stale");
       return {
         label: cached.label,
         supabaseUrl: cached.supabaseUrl,
         supabaseAnonKey: cached.supabaseAnonKey,
-        deploymentMode: cached.deploymentMode,
+        topology: cached.topology,
       };
     }
     throw err;
