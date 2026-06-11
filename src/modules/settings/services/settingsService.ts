@@ -37,6 +37,11 @@ const toOptional = (value: string | undefined | null): string | undefined => {
   const trimmed = value?.trim();
   return trimmed || undefined;
 };
+
+const normalizeUf = (value: unknown): string => {
+  const normalized = toStringValue(value).trim().toUpperCase();
+  return normalized;
+};
 export const settingsService = {
   async getTenantIdentity(): Promise<{ name: string; shortName: string; logoUrl?: string } | null> {
     const cached = localStorage.getItem(TENANT_CONFIG_CACHE_KEY);
@@ -114,7 +119,7 @@ export const settingsService = {
         street: toStringValue(entityData.endereco),
         district: toStringValue(entityData.bairro),
         city: toStringValue(entityData.cidade),
-        state: toStringValue(entityData.uf),
+        state: normalizeUf(entityData.uf),
         cep: toStringValue(entityData.cep),
         phone1: toStringValue(entityData.fone),
         phone2: toStringValue(entityData.celular),
@@ -164,7 +169,7 @@ export const settingsService = {
         numero: toNullable(settings.number),
         bairro: toNullable(settings.district),
         cidade: toNullable(settings.city),
-        uf: toNullable(settings.state),
+        uf: toNullable(normalizeUf(settings.state)),
         cep: toNullable(settings.cep),
         fone: toNullable(settings.phone1),
         celular: toNullable(settings.phone2),

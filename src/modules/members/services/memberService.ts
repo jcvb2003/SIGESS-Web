@@ -250,7 +250,8 @@ export const memberService = {
     let q = supabase.from("socios").select("*", { count: "exact", head: true });
     if (context?.tenantId) {
       q = q.eq("tenant_id", context.tenantId);
-    } else if (context?.unitId) {
+    }
+    if (context?.unitId) {
       q = q.eq("unit_id", context.unitId);
     }
     const { count, error } = await q;
