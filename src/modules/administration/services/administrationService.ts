@@ -57,6 +57,7 @@ export interface TenantUserInput {
   name: string;
   tenantRole: TenantUserRoleInput;
   operatorType?: TenantOperatorTypeInput;
+  unitId?: string;
   mode: "invite" | "create";
   password?: string;
   autoConfirm?: boolean;
@@ -240,6 +241,7 @@ export const administrationService = {
             nome: input.name.trim(),
             role: authRole,
             tenantCode,
+            ...(input.unitId ? { activeUnitId: input.unitId } : {}),
             ...(input.mode === "create"
               ? {
                   password: input.password,

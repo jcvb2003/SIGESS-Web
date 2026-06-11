@@ -137,6 +137,8 @@ export function useAdministrationPage(enabled: boolean) {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: administrationQueryKeys.tenantUsers() });
+      await queryClient.invalidateQueries({ queryKey: administrationQueryKeys.tenantMemberships() });
+      await queryClient.invalidateQueries({ queryKey: administrationQueryKeys.unitStats() });
       toast.success("Usuario vinculado a entidade com sucesso.");
     },
     onError: (error: unknown) => toast.error(humanizeError(error)),

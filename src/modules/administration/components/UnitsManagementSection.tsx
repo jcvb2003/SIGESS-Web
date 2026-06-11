@@ -21,6 +21,13 @@ import {
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -413,6 +420,7 @@ export function UnitsManagementSection({
         open={newOperatorOpen}
         onOpenChange={setNewOperatorOpen}
         existingEmails={tenantUsers.map((u) => u.email ?? "").filter(Boolean)}
+        units={activeUnits}
         isSaving={isSavingUser}
         onSubmit={async (input) => {
           await onCreateUser(input);
@@ -429,20 +437,22 @@ interface NewOperatorDialogProps {
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
   readonly existingEmails: string[];
+  readonly units: TenantUnitRecord[];
   readonly isSaving: boolean;
   readonly onSubmit: (input: TenantUserInput) => Promise<void>;
 }
 
-function NewOperatorDialog({ open, onOpenChange, existingEmails, isSaving, onSubmit }: NewOperatorDialogProps) {
+function NewOperatorDialog({ open, onOpenChange, existingEmails, units, isSaving, onSubmit }: NewOperatorDialogProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [unitId, setUnitId] = useState("");
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  function reset() { setName(""); setEmail(""); setPassword(""); setSubmitError(null); }
+  function reset() { setName(""); setEmail(""); setPassword(""); setUnitId(""); setSubmitError(null); }
 
   const emailExists = existingEmails.includes(email.trim().toLowerCase());
-  const isValid = name.trim() && email.trim() && password.length >= 6 && !emailExists;
+  const isValid = name.trim() && email.trim() && password.length >= 6 && unitId && !emailExists;
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) reset(); onOpenChange(o); }}>
@@ -450,11 +460,26 @@ function NewOperatorDialog({ open, onOpenChange, existingEmails, isSaving, onSub
         <DialogHeader>
           <DialogTitle>Novo presidente</DialogTitle>
           <DialogDescription>
-            Crie um presidente e vincule-o a um polo pela aba Operadores.
+            Crie um presidente ja vinculado ao polo correspondente.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="new-op-unit">Polo</Label>
+            <Select value={unitId} onValueChange={setUnitId} disabled={isSaving}>
+              <SelectTrigger id="new-op-unit">
+                <SelectValue placeholder="Selecione um polo" />
+              </SelectTrigger>
+              <SelectContent>
+                {units.map((unit) => (
+                  <SelectItem key={unit.id} value={unit.id}>
+                    {unit.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="space-y-1.5">
             <Label htmlFor="new-op-name">Nome</Label>
             <Input id="new-op-name" placeholder="Nome completo" value={name} onChange={(e) => setName(e.target.value)} disabled={isSaving} />
@@ -484,6 +509,7 @@ function NewOperatorDialog({ open, onOpenChange, existingEmails, isSaving, onSub
                   name: name.trim(),
                   tenantRole: "member",
                   operatorType: "presidente",
+                  unitId,
                   mode: "create",
                   password,
                   autoConfirm: true,

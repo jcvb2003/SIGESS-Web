@@ -385,13 +385,19 @@ async function handleInviteWithScope(
     null;
 
   if (createdUserId) {
+    const targetUnitId =
+      typeof payload.activeUnitId === "string"
+        ? payload.activeUnitId
+        : typeof payload.unitId === "string"
+          ? payload.unitId
+          : null;
     await attachUserToSharedScope(
       admin,
       scope,
       currentUser,
       createdUserId,
       String(payload.role ?? "user"),
-      typeof payload.activeUnitId === "string" ? payload.activeUnitId : null,
+      targetUnitId,
     );
   }
 
@@ -422,7 +428,12 @@ async function handleCreateWithScope(
   payload: Record<string, string | boolean>,
 ) {
   const role = String(payload.role ?? "user");
-  const activeUnitId = typeof payload.activeUnitId === "string" ? payload.activeUnitId : null;
+  const activeUnitId =
+    typeof payload.activeUnitId === "string"
+      ? payload.activeUnitId
+      : typeof payload.unitId === "string"
+        ? payload.unitId
+        : null;
   try {
     const data = await handleCreate(admin, payload);
     const createdUserId =
