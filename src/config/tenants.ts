@@ -38,10 +38,6 @@ export function normalizeTenantCode(code: string): string {
   return code.toLowerCase().trim();
 }
 
-function deriveTopologyFromLegacy(deploymentMode?: string): Topology {
-  return deploymentMode === "shared" ? "shared_multi_single" : "isolated_single";
-}
-
 function isValidTopology(value: unknown): value is Topology {
   return (
     typeof value === "string" &&
@@ -66,11 +62,6 @@ function readConfigCacheEntry(code?: string): CachedTenantConfig | null {
 
     const cached: CachedTenantConfig = JSON.parse(raw);
     if (code && cached.code !== normalizeTenantCode(code)) return null;
-
-    // migrate legacy cache entries that have deploymentMode instead of topology
-    if (!isValidTopology(cached.topology) && (cached as any).deploymentMode) {
-      cached.topology = deriveTopologyFromLegacy((cached as any).deploymentMode);
-    }
 
     return isValidTopology(cached.topology) ? cached : null;
   } catch {
@@ -159,12 +150,13 @@ export async function resolveAndCacheTenant(code: string): Promise<TenantConfig>
       supabaseUrl: string;
       anonKey: string;
       topology?: string;
-      deploymentMode?: string;
     };
 
-    const topology: Topology = isValidTopology(data.topology)
-      ? data.topology
-      : deriveTopologyFromLegacy(data.deploymentMode);
+    if (!isValidTopology(data.topology)) {
+      throw new Error(`Topologia inválida ou ausente na resposta: "${data.topology}"`);
+    }
+
+    const topology: Topology = data.topology;
 
     const config: TenantConfig = {
       label: data.label,
