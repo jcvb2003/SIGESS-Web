@@ -5,7 +5,7 @@ import { tenantUnitService } from "../services/tenantUnitService";
 
 export function TenantUnitBootstrapper() {
   const { session, user } = useAuth();
-  const { hydrated, replaceUnits, clearUnits } = useTenantUnits();
+  const { hydrated, replaceUnits, clearUnits, setBootstrapped } = useTenantUnits();
   const lastResolvedUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -16,6 +16,7 @@ export function TenantUnitBootstrapper() {
     if (!session || !user) {
       lastResolvedUserIdRef.current = null;
       clearUnits();
+      setBootstrapped(true);
       return;
     }
 
@@ -23,19 +24,21 @@ export function TenantUnitBootstrapper() {
       return;
     }
 
+    setBootstrapped(false);
     let cancelled = false;
 
     const resolveUnits = async () => {
-      const { data } = await tenantUnitService.resolveTenantUnits(user);
-      lastResolvedUserIdRef.current = user.id;
-      if (cancelled) {
-        return;
+      try {
+        const { data } = await tenantUnitService.resolveTenantUnits(user);
+        lastResolvedUserIdRef.current = user.id;
+        if (cancelled) return;
+        replaceUnits(data?.availableUnits ?? [], data?.preferredActiveUnitId ?? null);
+      } catch {
+        lastResolvedUserIdRef.current = user.id;
+        if (cancelled) return;
+      } finally {
+        if (!cancelled) setBootstrapped(true);
       }
-
-      replaceUnits(
-        data?.availableUnits ?? [],
-        data?.preferredActiveUnitId ?? null,
-      );
     };
 
     void resolveUnits();
@@ -43,7 +46,7 @@ export function TenantUnitBootstrapper() {
     return () => {
       cancelled = true;
     };
-  }, [clearUnits, hydrated, replaceUnits, session, user]);
+  }, [clearUnits, hydrated, replaceUnits, session, setBootstrapped, user]);
 
   return null;
 }

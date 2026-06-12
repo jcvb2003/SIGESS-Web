@@ -271,17 +271,9 @@ export const administrationService = {
 
     const { data, error } = await supabase
       .from("tenant_users" as never)
-      .upsert(
-        {
-          tenant_id: tenantIdResult.data,
-          user_id: createdUserId,
-          tenant_role: input.tenantRole,
-          operator_type: operatorType,
-          is_active: true,
-        } as never,
-        { onConflict: "tenant_id,user_id" },
-      )
       .select("id, tenant_id, user_id, tenant_role, operator_type, is_active, user_profiles(email, nome)")
+      .eq("tenant_id" as never, tenantIdResult.data)
+      .eq("user_id" as never, createdUserId)
       .single();
 
     if (error) {

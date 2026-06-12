@@ -4,17 +4,16 @@ import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext
 export function usePortalContext() {
   const {
     canAccessTenantAdministration,
-    isEntityManager,
     isTenantAdministrationLoading,
   } = usePermissions();
-  const { availableUnits, activeUnit, hydrated } = useTenantUnits();
+  const { availableUnits, activeUnit, bootstrapped } = useTenantUnits();
 
   const isStatePortal =
-    canAccessTenantAdministration && isEntityManager && hydrated && !activeUnit;
-  const isOperationalPortal = hydrated && !isStatePortal && availableUnits.length > 0;
+    canAccessTenantAdministration && bootstrapped && !activeUnit;
+  const isOperationalPortal = bootstrapped && !isStatePortal && availableUnits.length > 0;
 
   return {
-    isPortalContextLoading: isTenantAdministrationLoading || !hydrated,
+    isPortalContextLoading: isTenantAdministrationLoading || !bootstrapped,
     isStatePortal,
     isOperationalPortal,
   };

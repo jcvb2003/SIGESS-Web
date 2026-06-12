@@ -3,8 +3,6 @@ import { getCurrentTenantConfig } from "@/config/tenants";
 import { useAuth } from "@/modules/auth/context/authContextStore";
 import { supabase } from "@/shared/lib/supabase/client";
 import { UserRole } from "@/shared/types/auth.types";
-import { isGestorRole } from "@/shared/utils/roleHelpers";
-
 /**
  * Hook para gerenciar as permissões do usuário logado.
  * As permissões são baseadas no `role` presente no `app_metadata` do usuário (Supabase Auth).
@@ -54,7 +52,6 @@ export function usePermissions() {
   const role = authRole === "admin" || isPresidentRole ? "admin" : authRole;
   const isAdmin = role === "admin";
   const canAccessTenantAdministration = tenantEntityRole === "owner";
-  const isEntityManager = isGestorRole(tenantEntityRole);
   const canManageEntitySettings = isAdmin;
 
   return {
@@ -63,7 +60,6 @@ export function usePermissions() {
     canAccessTenantAdministration,
     tenantEntityRole,
     tenantOperatorType,
-    isEntityManager,
     isTenantAdministrationLoading: tenantAdministrationQuery.isLoading,
     canManageEntitySettings,
     canCancelPayments: isAdmin,

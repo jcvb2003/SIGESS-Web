@@ -1,4 +1,3 @@
-import { authService } from "@/modules/auth/services/authService";
 import type { ServiceResponse } from "@/shared/services/base/serviceResponse";
 import type { User } from "@supabase/supabase-js";
 import { getSupabaseClient } from "@/shared/lib/supabase/client";
@@ -7,41 +6,6 @@ import type {
   SharedTenantUnitRow,
   SharedUserUnitMembershipRow,
 } from "./sharedTenant.types";
-
-type UnitsMetadataCandidate =
-  | TenantUnitSummary[]
-  | {
-      available_units?: TenantUnitSummary[];
-      units?: TenantUnitSummary[];
-      memberships?: TenantUnitSummary[];
-    }
-  | null
-  | undefined;
-
-function normalizeUnits(candidate: UnitsMetadataCandidate): TenantUnitSummary[] {
-  const rawUnits = Array.isArray(candidate)
-    ? candidate
-    : candidate?.available_units ?? candidate?.units ?? candidate?.memberships ?? [];
-
-  if (!Array.isArray(rawUnits)) {
-    return [];
-  }
-
-  return rawUnits
-    .filter(
-      (unit): unit is TenantUnitSummary =>
-        Boolean(unit) &&
-        typeof unit.id === "string" &&
-        unit.id.trim().length > 0 &&
-        typeof unit.name === "string" &&
-        unit.name.trim().length > 0,
-    )
-    .map((unit) => ({
-      id: unit.id,
-      name: unit.name,
-      code: unit.code ?? null,
-    }));
-}
 
 function mapSharedUnitToSummary(unit: SharedTenantUnitRow): TenantUnitSummary {
   return {
@@ -57,28 +21,7 @@ export interface ResolvedTenantUnits {
   preferredActiveUnitId: string | null;
 }
 
-
-
 export const tenantUnitService = {
-  getUserAssignedUnitsFromUser(user: User | null | undefined): TenantUnitSummary[] {
-    const appMetadata = user?.app_metadata as
-      | {
-          available_units?: TenantUnitSummary[];
-          units?: TenantUnitSummary[];
-          memberships?: TenantUnitSummary[];
-        }
-      | undefined;
-
-    return normalizeUnits(appMetadata);
-  },
-
-  getPreferredActiveUnitIdFromUser(user: User | null | undefined) {
-    const appMetadata = user?.app_metadata as
-      | { active_unit_id?: string | null }
-      | undefined;
-    return appMetadata?.active_unit_id ?? null;
-  },
-
   async getUserAssignedUnitsFromSharedProject(
     user: User | null | undefined,
   ): Promise<ServiceResponse<ResolvedTenantUnits>> {
@@ -173,58 +116,13 @@ export const tenantUnitService = {
   async resolveTenantUnits(
     user: User | null | undefined,
   ): Promise<ServiceResponse<ResolvedTenantUnits>> {
-    const metadataUnits = this.getUserAssignedUnitsFromUser(user);
-    const metadataPreferredActiveUnitId = this.getPreferredActiveUnitIdFromUser(user);
-
     const sharedResolution = await this.getUserAssignedUnitsFromSharedProject(user);
-    const sharedUnits = sharedResolution.data?.availableUnits ?? [];
-    const sharedPreferredActiveUnitId = sharedResolution.data?.preferredActiveUnitId ?? null;
-
-    if (sharedUnits.length > 0) {
-      return {
-        data: {
-          availableUnits: sharedUnits,
-          preferredActiveUnitId:
-            sharedPreferredActiveUnitId ?? metadataPreferredActiveUnitId,
-        },
-        error: null,
-      };
-    }
-
-    if (metadataUnits.length > 0) {
-      return {
-        data: {
-          availableUnits: metadataUnits,
-          preferredActiveUnitId: metadataPreferredActiveUnitId,
-        },
-        error: null,
-      };
-    }
-
-    const { data, error } = await authService.getUser();
-    if (error) {
-      return { data: null, error };
-    }
-
-    const refreshedUser = data?.user;
     return {
       data: {
-        availableUnits: this.getUserAssignedUnitsFromUser(refreshedUser),
-        preferredActiveUnitId: this.getPreferredActiveUnitIdFromUser(refreshedUser),
+        availableUnits: sharedResolution.data?.availableUnits ?? [],
+        preferredActiveUnitId: sharedResolution.data?.preferredActiveUnitId ?? null,
       },
-      error: null,
-    };
-  },
-
-  async getUserAssignedUnits(): Promise<ServiceResponse<TenantUnitSummary[]>> {
-    const { data, error } = await authService.getUser();
-    if (error) {
-      return { data: null, error };
-    }
-
-    return {
-      data: this.getUserAssignedUnitsFromUser(data?.user),
-      error: null,
+      error: sharedResolution.error,
     };
   },
 };

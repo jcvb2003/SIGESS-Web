@@ -25,13 +25,13 @@ export function useUserManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const { user: currentUser } = useAuth();
-  const { activeUnit, availableUnits } = useTenantUnits();
+  const { activeUnit, availableUnits, bootstrapped } = useTenantUnits();
   const { tenantEntityRole, isAdmin } = usePermissions();
 
   const activeUnitId = activeUnit?.id ?? null;
   const hasPolos = availableUnits.length > 0;
-  const isSharedNoPolosContext = tenantEntityRole !== null && !hasPolos;
-  const isPoloScopedContext = tenantEntityRole !== null && hasPolos;
+  const isSharedNoPolosContext = bootstrapped && tenantEntityRole !== null && !hasPolos;
+  const isPoloScopedContext = bootstrapped && tenantEntityRole !== null && hasPolos;
 
   const scopedPayload = useMemo(
     () => (isPoloScopedContext && activeUnitId ? { activeUnitId } : {}),
@@ -92,6 +92,9 @@ export function useUserManagement() {
   }, [currentUser?.id, isAdmin, isSharedNoPolosContext, scopedPayload, sortUsers]);
 
   const inviteUser = async (payload: { email: string; nome: string; role: string }) => {
+    if (!bootstrapped) {
+      return { data: null, error: new Error("Contexto de polos ainda não carregado.") };
+    }
     try {
       if (isSharedNoPolosContext) {
         const { error } = await administrationService.createTenantUser({
@@ -137,6 +140,9 @@ export function useUserManagement() {
     password?: string;
     email_confirm?: boolean;
   }) => {
+    if (!bootstrapped) {
+      return { data: null, error: new Error("Contexto de polos ainda não carregado.") };
+    }
     try {
       if (isSharedNoPolosContext) {
         const { error } = await administrationService.createTenantUser({

@@ -6,7 +6,9 @@ import {
   useMemo,
   useRef,
   useState,
+  type Dispatch,
   type ReactNode,
+  type SetStateAction,
 } from "react";
 
 const ACTIVE_UNIT_STORAGE_KEY = "sigess_active_unit";
@@ -26,6 +28,8 @@ interface TenantUnitContextValue {
   availableUnits: TenantUnitSummary[];
   hasMultipleUnits: boolean;
   hydrated: boolean;
+  bootstrapped: boolean;
+  setBootstrapped: Dispatch<SetStateAction<boolean>>;
   setActiveUnit: (unit: TenantUnitSummary | null) => void;
   replaceUnits: (units: TenantUnitSummary[], activeUnitId?: string | null) => void;
   clearUnits: () => void;
@@ -165,6 +169,7 @@ export function TenantUnitProvider({ children }: Readonly<{ children: ReactNode 
   const [activeUnit, setActiveUnitState] = useState<TenantUnitSummary | null>(null);
   const [availableUnits, setAvailableUnits] = useState<TenantUnitSummary[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const [bootstrapped, setBootstrapped] = useState(false);
   const activeUnitRef = useRef<TenantUnitSummary | null>(null);
   const availableUnitsRef = useRef<TenantUnitSummary[]>([]);
 
@@ -238,10 +243,12 @@ export function TenantUnitProvider({ children }: Readonly<{ children: ReactNode 
     availableUnits,
     hasMultipleUnits: availableUnits.length > 1,
     hydrated,
+    bootstrapped,
+    setBootstrapped,
     setActiveUnit,
     replaceUnits,
     clearUnits,
-  }), [activeUnit, availableUnits, hydrated, setActiveUnit, replaceUnits, clearUnits]);
+  }), [activeUnit, availableUnits, hydrated, bootstrapped, setBootstrapped, setActiveUnit, replaceUnits, clearUnits]);
 
   return (
     <TenantUnitContext.Provider value={value}>
