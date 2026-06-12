@@ -338,7 +338,7 @@ export function UserManagementSection() {
                 if (!canManageScopedUsers && !isSelf) return null;
 
                 const isConfirmed = !!u.emailConfirmedAt;
-                const canResendConfirmation = !u.tenantRole && !isConfirmed && canManageScopedUsers;
+                const canResendConfirmation = !isConfirmed && canManageScopedUsers;
 
                 const toggleButtonClass = (() => {
                   if (isSelf) return "opacity-40 cursor-not-allowed";

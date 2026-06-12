@@ -571,12 +571,31 @@ async function handleList(
   const { data: publicUsers, error: dbErr } = await dbQuery;
   if (dbErr) throw dbErr;
 
+  // Busca tenantRole/operatorType para os usuários listados
+  const tenantUserMap = new Map<string, { tenant_role: string | null; operator_type: string | null }>();
+  if (scope.tenantId && allowedIds && allowedIds.length > 0) {
+    const { data: tuData } = await admin
+      .from("tenant_users")
+      .select("user_id, tenant_role, operator_type")
+      .eq("tenant_id", scope.tenantId)
+      .in("user_id", allowedIds);
+    for (const row of tuData ?? []) {
+      const r = row as { user_id: string; tenant_role: string | null; operator_type: string | null };
+      tenantUserMap.set(r.user_id, { tenant_role: r.tenant_role, operator_type: r.operator_type });
+    }
+  }
+
   if (!canViewAllUsers(scope)) {
     const selfPublicUser =
       (publicUsers?.find((user) => String((user as { id?: string }).id ?? "") === currentUser.id) as Record<string, unknown> | undefined) ??
       null;
+    const selfTu = tenantUserMap.get(currentUser.id);
 
-    return [mapMergedUser(currentUser, currentUser, selfPublicUser)];
+    return [{
+      ...mapMergedUser(currentUser, currentUser, selfPublicUser),
+      tenantRole: selfTu?.tenant_role ?? null,
+      operatorType: selfTu?.operator_type ?? null,
+    }];
   }
 
   const { data: { users }, error: authError } = await admin.auth.admin.listUsers({ perPage: 1000 });
@@ -593,7 +612,12 @@ async function handleList(
       const publicUser =
         (publicUsers?.find((user) => String((user as { id?: string }).id ?? "") === authUser.id) as Record<string, unknown> | undefined) ??
         null;
-      return mapMergedUser(currentUser, authUser, publicUser);
+      const tu = tenantUserMap.get(authUser.id);
+      return {
+        ...mapMergedUser(currentUser, authUser, publicUser),
+        tenantRole: tu?.tenant_role ?? null,
+        operatorType: tu?.operator_type ?? null,
+      };
     });
 }
 
