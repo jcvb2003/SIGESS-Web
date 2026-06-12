@@ -23,6 +23,31 @@ interface AccessScope {
   unitIds: string[];
 }
 
+async function resolveTenantCodeForRedirect(
+  admin: SupabaseClient,
+  scope: AccessScope,
+  payloadTenantCode?: string | null,
+) {
+  if (typeof payloadTenantCode === "string" && payloadTenantCode.trim() !== "") {
+    return payloadTenantCode.trim();
+  }
+
+  if (!scope.tenantId) {
+    return null;
+  }
+
+  const { data, error } = await admin
+    .from("tenants")
+    .select("code")
+    .eq("id", scope.tenantId)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  const code = (data as { code?: string | null } | null)?.code ?? null;
+  return code && code.trim() !== "" ? code.trim() : null;
+}
+
 async function getActiveTenantUnitIds(admin: SupabaseClient, tenantId: string) {
   const { data: units, error } = await admin
     .from("tenant_units")
@@ -372,13 +397,30 @@ async function handleInvite(admin: SupabaseClient, payload: Record<string, strin
   return data;
 }
 
+async function handleInviteWithResolvedTenantCode(
+  admin: SupabaseClient,
+  scope: AccessScope,
+  payload: Record<string, string>,
+) {
+  const tenantCode = await resolveTenantCodeForRedirect(
+    admin,
+    scope,
+    typeof payload.tenantCode === "string" ? payload.tenantCode : null,
+  );
+
+  return handleInvite(admin, {
+    ...payload,
+    ...(tenantCode ? { tenantCode } : {}),
+  });
+}
+
 async function handleInviteWithScope(
   admin: SupabaseClient,
   scope: AccessScope,
   currentUser: User,
   payload: Record<string, string>,
 ) {
-  const data = await handleInvite(admin, payload);
+  const data = await handleInviteWithResolvedTenantCode(admin, scope, payload);
   const createdUserId =
     (data as { user?: { id?: string } } | null)?.user?.id ??
     (data as { id?: string } | null)?.id ??
@@ -539,6 +581,23 @@ async function handleResendConfirmation(admin: SupabaseClient, payload: Record<s
   if (error) throw error;
 
   return { success: true, message: "E-mail de confirmação reenviado com sucesso" };
+}
+
+async function handleResendConfirmationWithScope(
+  admin: SupabaseClient,
+  scope: AccessScope,
+  payload: Record<string, string>,
+) {
+  const tenantCode = await resolveTenantCodeForRedirect(
+    admin,
+    scope,
+    typeof payload.tenantCode === "string" ? payload.tenantCode : null,
+  );
+
+  return handleResendConfirmation(admin, {
+    ...payload,
+    ...(tenantCode ? { tenantCode } : {}),
+  });
 }
 
 async function handleList(
@@ -702,6 +761,12 @@ serve(async (req: Request) => {
         ? await handleList(supabaseAdmin, user, payload)
         : action === "invite"
           ? await handleInviteWithScope(supabaseAdmin, accessScope, user, payload as Record<string, string>)
+          : action === "resend_confirmation"
+            ? await handleResendConfirmationWithScope(
+                supabaseAdmin,
+                accessScope,
+                payload as Record<string, string>,
+              )
           : action === "create"
             ? await handleCreateWithScope(
                 supabaseAdmin,

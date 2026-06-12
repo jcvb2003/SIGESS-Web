@@ -23,22 +23,45 @@ export function useUserManagement() {
   const { activeUnit, bootstrapped } = useTenantUnits();
 
   const activeUnitId = activeUnit?.id ?? null;
+  const tenantCode =
+    typeof globalThis === "undefined" ? null : globalThis.localStorage.getItem("sigess_tenant");
 
   const scopedPayload = useMemo(
-    () => (activeUnitId ? { activeUnitId } : {}),
-    [activeUnitId],
+    () => ({
+      ...(activeUnitId ? { activeUnitId } : {}),
+      ...(tenantCode ? { tenantCode } : {}),
+    }),
+    [activeUnitId, tenantCode],
   );
 
   const sortUsers = useCallback((items: User[]) => (
     items.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''))
   ), []);
 
+  const invokeManageUser = useCallback(
+    async (action: string, payload: Record<string, unknown>) => {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) {
+        throw new Error('Sessão autenticada não encontrada.');
+      }
+
+      return supabase.functions.invoke('manage-user', {
+        body: { action, payload },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+    },
+    [],
+  );
+
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('manage-user', {
-        body: { action: 'list', payload: scopedPayload },
-      });
+      const { data, error } = await invokeManageUser('list', scopedPayload);
       if (error) throw error;
       setUsers(sortUsers((data as User[]) || []));
     } catch (err: unknown) {
@@ -47,16 +70,15 @@ export function useUserManagement() {
     } finally {
       setLoading(false);
     }
-  }, [scopedPayload, sortUsers]);
+  }, [invokeManageUser, scopedPayload, sortUsers]);
 
   const inviteUser = async (payload: { email: string; nome: string; role: string }) => {
     if (!bootstrapped) {
-      return { data: null, error: new Error("Contexto de polos ainda não carregado.") };
+      return { data: null, error: new Error('Contexto de polos ainda não carregado.') };
     }
+
     try {
-      const { data, error } = await supabase.functions.invoke('manage-user', {
-        body: { action: 'invite', payload: { ...payload, ...scopedPayload } },
-      });
+      const { data, error } = await invokeManageUser('invite', { ...payload, ...scopedPayload });
       if (error) throw error;
       toast.success('Convite enviado com sucesso');
       await fetchUsers();
@@ -76,12 +98,11 @@ export function useUserManagement() {
     email_confirm?: boolean;
   }) => {
     if (!bootstrapped) {
-      return { data: null, error: new Error("Contexto de polos ainda não carregado.") };
+      return { data: null, error: new Error('Contexto de polos ainda não carregado.') };
     }
+
     try {
-      const { data, error } = await supabase.functions.invoke('manage-user', {
-        body: { action: 'create', payload: { ...payload, ...scopedPayload } },
-      });
+      const { data, error } = await invokeManageUser('create', { ...payload, ...scopedPayload });
       if (error) throw error;
       toast.success('Usuário criado com sucesso');
       await fetchUsers();
@@ -97,13 +118,13 @@ export function useUserManagement() {
     setLoading(true);
     try {
       const action = currentStatus ? 'deactivate' : 'activate';
-      const { error } = await supabase.functions.invoke('manage-user', {
-        body: { action, payload: { userId, ativo: !currentStatus } },
-      });
+      const { error } = await invokeManageUser(action, { userId, ativo: !currentStatus });
       if (error) throw error;
-      setUsers(prev => prev.map(u =>
-        u.id === userId ? { ...u, ativo: !currentStatus } : u
-      ));
+
+      setUsers((prev) => prev.map((user) => (
+        user.id === userId ? { ...user, ativo: !currentStatus } : user
+      )));
+
       toast.success(`Usuário ${currentStatus ? 'desativado' : 'ativado'} com sucesso`);
     } catch (err: unknown) {
       console.error('Erro ao alterar status:', err);
@@ -116,11 +137,9 @@ export function useUserManagement() {
   const deleteUser = async (userId: string) => {
     setLoading(true);
     try {
-      const { error } = await supabase.functions.invoke('manage-user', {
-        body: { action: 'delete', payload: { userId } },
-      });
+      const { error } = await invokeManageUser('delete', { userId });
       if (error) throw error;
-      setUsers(prev => prev.filter(u => u.id !== userId));
+      setUsers((prev) => prev.filter((user) => user.id !== userId));
       toast.success('Usuário excluído com sucesso');
     } catch (err: unknown) {
       console.error('Erro ao excluir usuário:', err);
@@ -132,9 +151,7 @@ export function useUserManagement() {
 
   const resendConfirmation = async (email: string) => {
     try {
-      const { error } = await supabase.functions.invoke('manage-user', {
-        body: { action: 'resend_confirmation', payload: { email } },
-      });
+      const { error } = await invokeManageUser('resend_confirmation', { email, ...scopedPayload });
       if (error) throw error;
       toast.success('Link de confirmação reenviado com sucesso');
     } catch (err: unknown) {
