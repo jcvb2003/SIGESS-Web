@@ -36,6 +36,7 @@ export function TenantUnitBootstrapper() {
       } catch {
         lastResolvedUserIdRef.current = user.id;
         if (cancelled) return;
+        clearUnits();
       } finally {
         if (!cancelled) setBootstrapped(true);
       }
