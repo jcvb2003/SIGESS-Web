@@ -7,7 +7,7 @@ export function useDashboardStats() {
   return useQuery({
     queryKey: ["dashboard-stats", unitId],
     queryFn: () => dashboardService.getStats(unitId),
-    enabled: bootstrapped,
+    enabled: bootstrapped && !!unitId,
   });
 }
 export function useRecentMembers() {
@@ -15,7 +15,7 @@ export function useRecentMembers() {
   return useQuery({
     queryKey: ["dashboard-recent-members", unitId],
     queryFn: () => dashboardService.getRecentMembers(unitId),
-    enabled: bootstrapped,
+    enabled: bootstrapped && !!unitId,
   });
 }
 export function useBirthdayMembers() {
@@ -23,6 +23,6 @@ export function useBirthdayMembers() {
   return useQuery({
     queryKey: ["dashboard-birthday-members", unitId],
     queryFn: () => dashboardService.getBirthdayMembers(unitId),
-    enabled: bootstrapped,
+    enabled: bootstrapped && !!unitId,
   });
 }

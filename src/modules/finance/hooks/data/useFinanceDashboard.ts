@@ -10,7 +10,7 @@ export function useFinanceDashboard(params: FinanceDashboardParams) {
     queryKey: financeQueryKeys.dashboard({ ...params, _unitId: unitId }),
     queryFn: () => financeService.getDashboard(params, unitId),
     staleTime: 0,
-    enabled: bootstrapped,
+    enabled: bootstrapped && !!unitId,
   });
 
   return {

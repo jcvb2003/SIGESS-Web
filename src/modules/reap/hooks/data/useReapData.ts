@@ -65,7 +65,7 @@ export function useReapListController() {
       searchTerm: debouncedTerm,
       statusFilter,
       unitId,
-      enabled: bootstrapped,
+      enabled: bootstrapped && !!unitId,
     }),
     [page, pageSize, debouncedTerm, statusFilter, unitId, bootstrapped]
   );

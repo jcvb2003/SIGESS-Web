@@ -14,10 +14,14 @@ import type {
   RgpStatusFilter,
 } from "../../types/member.types";
 
-export function useMemberData(params: MemberSearchParams, context?: MemberUnitContext) {
+export function useMemberData(
+  params: MemberSearchParams & { enabled?: boolean },
+  context?: MemberUnitContext,
+) {
   const query = useQuery({
     queryKey: memberQueryKeys.list({ ...params, _unitId: context?.unitId ?? null }),
     queryFn: () => memberService.searchMembers(params, context),
+    enabled: params.enabled !== false,
   });
   return {
     members: query.data?.items ?? [],
@@ -99,11 +103,11 @@ export function useMembersListController() {
     ],
   );
 
-  const { tenantId, unitId } = useActiveScope();
+  const { tenantId, unitId, bootstrapped } = useActiveScope();
   const unitContext: MemberUnitContext = { tenantId, unitId };
 
   const { members, total, isLoading, isFetching, error, refetch } =
-    useMemberData(queryParams, unitContext);
+    useMemberData({ ...queryParams, enabled: bootstrapped && !!unitId }, unitContext);
 
   const handleSort = (field: string) => {
     setSortConfig((prev) => ({

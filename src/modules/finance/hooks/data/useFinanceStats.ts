@@ -10,7 +10,7 @@ export function useFinanceStats(year: number, month: number) {
     queryKey: financeQueryKeys.stats(year, month, unitId),
     queryFn: () => financeService.getMonthlyStats(year, month, unitId),
     staleTime: 0,
-    enabled: bootstrapped,
+    enabled: bootstrapped && !!unitId,
   });
 
   return {

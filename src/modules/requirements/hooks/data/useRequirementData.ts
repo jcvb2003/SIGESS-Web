@@ -68,7 +68,7 @@ export function useRequirementsListController() {
       ano: yearFilter,
       carenciaFilter: carenciaFilter,
       unitId,
-      enabled: bootstrapped,
+      enabled: bootstrapped && !!unitId,
     }),
     [page, pageSize, debouncedTerm, statusFilter, beneficioFilter, yearFilter, carenciaFilter, unitId, bootstrapped]
   );

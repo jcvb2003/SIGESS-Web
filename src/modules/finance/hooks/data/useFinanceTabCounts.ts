@@ -22,7 +22,7 @@ export function useFinanceTabCounts(
     queryKey: financeQueryKeys.tabCounts(searchTerm, year, anoBase, unitId),
     queryFn: () => financeService.getTabCounts(searchTerm, year, anoBase, unitId),
     staleTime: 0,
-    enabled: bootstrapped,
+    enabled: bootstrapped && !!unitId,
   });
 
   return {

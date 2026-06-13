@@ -52,6 +52,6 @@ export function useFinanceAudit(options: UseFinanceAuditOptions = {}) {
       return (data as AuditLogEntry[]) || [];
     },
     staleTime: 0,
-    enabled: bootstrapped,
+    enabled: bootstrapped && !!unitId,
   });
 }
