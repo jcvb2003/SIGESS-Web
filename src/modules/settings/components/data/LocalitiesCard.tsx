@@ -11,16 +11,16 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { settingsService } from "../../services/settingsService";
 import { settingsQueryKeys } from "../../queryKeys";
-import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 import { LocalityManagementDialog } from "./LocalityManagementDialog";
 export function LocalitiesCard() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { activeUnit } = useTenantUnits();
+  const { unitId } = useActiveScope();
 
   const localitiesQuery = useQuery({
-    queryKey: settingsQueryKeys.localities(activeUnit?.id),
+    queryKey: settingsQueryKeys.localities(unitId),
     queryFn: async () => {
-      const { data, error } = await settingsService.getLocalities(activeUnit?.id);
+      const { data, error } = await settingsService.getLocalities(unitId);
       if (error) throw error;
       return data;
     },

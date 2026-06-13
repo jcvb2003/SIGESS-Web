@@ -28,7 +28,7 @@ import {
 import { Input } from "@/shared/components/ui/input";
 import { settingsService } from "../../services/settingsService";
 import { settingsQueryKeys } from "../../queryKeys";
-import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 import type { Locality } from "../../types/settings.types";
 
 interface LocalityManagementDialogProps {
@@ -43,14 +43,14 @@ export function LocalityManagementDialog({
   onCreated,
 }: Readonly<LocalityManagementDialogProps>) {
   const queryClient = useQueryClient();
-  const { activeUnit } = useTenantUnits();
+  const { unitId } = useActiveScope();
   const [editingLocality, setEditingLocality] = useState<Locality | null>(null);
   const [name, setName] = useState("");
 
   const localitiesQuery = useQuery({
-    queryKey: settingsQueryKeys.localities(activeUnit?.id),
+    queryKey: settingsQueryKeys.localities(unitId),
     queryFn: async () => {
-      const { data, error } = await settingsService.getLocalities(activeUnit?.id);
+      const { data, error } = await settingsService.getLocalities(unitId);
       if (error) throw error;
       return data;
     },
@@ -62,13 +62,13 @@ export function LocalityManagementDialog({
         id: values.id,
         name: values.name,
         code: "", // O código é gerado pelo banco
-      }, activeUnit?.id);
+      }, unitId);
       if (error) throw error;
       return data;
     },
     onSuccess: async (newLocality) => {
       await queryClient.refetchQueries({
-        queryKey: settingsQueryKeys.localities(activeUnit?.id),
+        queryKey: settingsQueryKeys.localities(unitId),
       });
       
       toast.success("Localidade salva com sucesso.");
@@ -104,7 +104,7 @@ export function LocalityManagementDialog({
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: settingsQueryKeys.localities(activeUnit?.id),
+        queryKey: settingsQueryKeys.localities(unitId),
       });
       toast.success("Localidade excluída com sucesso.");
     },

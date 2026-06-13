@@ -31,7 +31,7 @@ import {
 
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 import { ReportPageHeaderActions } from "@/modules/reports/components/ReportPageHeaderActions";
-import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 import {
   getPaymentCompetenciaLabel,
   getPaymentTypeLabel,
@@ -50,8 +50,7 @@ type PaymentOrderField = (typeof PAYMENT_ORDER_FIELDS)[number];
 
 export default function PaymentsByPeriodPage() {
   const navigate = useNavigate();
-  const { activeUnit } = useTenantUnits();
-  const unitId = activeUnit?.id ?? null;
+  const { unitId } = useActiveScope();
   
   // Estados de controle local
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);

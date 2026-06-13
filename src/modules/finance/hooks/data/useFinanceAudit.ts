@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/shared/lib/supabase/client";
 import { resolveTenantIdViaTenantUsers } from "@/shared/utils/tenant";
-import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 
 export interface AuditLogEntry {
   id: string;
@@ -31,8 +31,7 @@ export function useFinanceAudit(options: UseFinanceAuditOptions = {}) {
     offset = 0
   } = options;
 
-  const { activeUnit } = useTenantUnits();
-  const unitId = activeUnit?.id ?? null;
+  const { unitId, bootstrapped } = useActiveScope();
 
   return useQuery({
     queryKey: ["finance-audit-log", tableName, operation, limit, offset, unitId],
@@ -53,5 +52,6 @@ export function useFinanceAudit(options: UseFinanceAuditOptions = {}) {
       return (data as AuditLogEntry[]) || [];
     },
     staleTime: 0,
+    enabled: bootstrapped,
   });
 }

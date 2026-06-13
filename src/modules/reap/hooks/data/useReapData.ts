@@ -4,7 +4,7 @@ import { reapService } from "../../services/reapService";
 import { reapQueryKeys } from "../../queryKeys";
 import { useReapFilters, ReapStatusFilter } from "../filters/useReapFilters";
 import { useDataTableState } from "@/shared/hooks/useDataTableState";
-import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 
 export function useReapData(filters: {
   searchTerm?: string;
@@ -12,10 +12,12 @@ export function useReapData(filters: {
   pageSize: number;
   statusFilter?: string;
   unitId?: string | null;
+  enabled?: boolean;
 }) {
   const query = useQuery({
     queryKey: reapQueryKeys.list(filters),
     queryFn: () => reapService.list(filters),
+    enabled: filters.enabled !== false,
   });
 
   return {
@@ -45,7 +47,7 @@ export function useReapDetail(cpf: string | null) {
 }
 
 export function useReapListController() {
-  const { activeUnit } = useTenantUnits();
+  const { unitId, bootstrapped } = useActiveScope();
   const {
     page, setPage,
     pageSize, setPageSize,
@@ -62,9 +64,10 @@ export function useReapListController() {
       pageSize,
       searchTerm: debouncedTerm,
       statusFilter,
-      unitId: activeUnit?.id ?? null,
+      unitId,
+      enabled: bootstrapped,
     }),
-    [page, pageSize, debouncedTerm, statusFilter, activeUnit?.id]
+    [page, pageSize, debouncedTerm, statusFilter, unitId, bootstrapped]
   );
 
   const { members, total, isLoading, isFetching, error, refetch } = useReapData(queryParams);

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { daeService } from "../../services/daeService";
-import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 
 export function useDAEsByPeriod(
   startDate: string,
@@ -9,8 +9,7 @@ export function useDAEsByPeriod(
   pageSize: number = 20,
   orderBy: "data_pagamento_boleto" | "created_at" = "data_pagamento_boleto",
 ) {
-  const { activeUnit } = useTenantUnits();
-  const unitId = activeUnit?.id ?? null;
+  const { unitId } = useActiveScope();
 
   return useQuery({
     queryKey: ["daes-by-period", startDate, endDate, page, pageSize, orderBy, unitId],

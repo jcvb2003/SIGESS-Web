@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { PaymentType } from "../../types/finance.types";
 import { financeService } from "../../services/financeService";
-import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 
 export function usePaymentsByPeriod(
   startDate: string,
@@ -12,8 +12,7 @@ export function usePaymentsByPeriod(
   searchTerm = "",
   selectedTypes?: PaymentType[],
 ) {
-  const { activeUnit } = useTenantUnits();
-  const unitId = activeUnit?.id ?? null;
+  const { unitId } = useActiveScope();
 
   return useQuery({
     queryKey: ["payments-by-period", startDate, endDate, page, pageSize, orderBy, searchTerm, selectedTypes, unitId],

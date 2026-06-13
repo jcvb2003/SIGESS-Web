@@ -3,12 +3,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { settingsService } from "@/modules/settings/services/settingsService";
 import type { EntitySettings } from "@/modules/settings/types/settings.types";
-import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 
 export function useEntityData() {
   const queryClient = useQueryClient();
-  const { activeUnit } = useTenantUnits();
-  const unitId = activeUnit?.id ?? null;
+  const { unitId } = useActiveScope();
 
   const entityQuery = useQuery({
     queryKey: ["settings", "entity", unitId],

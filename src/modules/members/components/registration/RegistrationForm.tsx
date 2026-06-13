@@ -32,7 +32,7 @@ import { useCpfValidation } from "../../hooks/registration/useCpfValidation";
 import { photoService } from "../../services/photoService";
 import { useUserMetadata } from "@/modules/auth/hooks/useUserMetadata";
 import { useEntityData } from "@/modules/settings/hooks/useEntityData";
-import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
 
@@ -50,15 +50,15 @@ export function RegistrationForm({
   onCancel,
 }: Readonly<RegistrationFormProps>) {
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const { activeUnit } = useTenantUnits();
+  const { tenantId, unitId } = useActiveScope();
   const { metadata } = useUserMetadata();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const isEditMode = !!memberUuid;
 
-  const unitContext = { tenantId: activeUnit?.tenantId ?? null, unitId: activeUnit?.id ?? null };
+  const unitContext = { tenantId, unitId };
   const { data: countData } = useQuery({
-    queryKey: memberQueryKeys.count(activeUnit?.id ?? null),
+    queryKey: memberQueryKeys.count(unitId),
     queryFn: () => memberService.countMembers(unitContext),
     enabled: !isEditMode,
   });
@@ -146,10 +146,7 @@ export function RegistrationForm({
         await handlePhotoActions(data, memberUuid);
         toast.success("Sócio atualizado com sucesso.");
       } else {
-        await memberService.create(payload, {
-          tenantId: activeUnit?.tenantId ?? null,
-          unitId: activeUnit?.id ?? null,
-        });
+        await memberService.create(payload, { tenantId, unitId });
         if (data.photoFile instanceof File) {
           await photoService.uploadPhoto(data.photoFile, data.cpf);
         }

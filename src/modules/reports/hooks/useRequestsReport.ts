@@ -2,15 +2,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { reportsService } from "../services/reportsService";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 export function useRequestsReport(
   searchTerm: string,
   reportType: string = "requerimentos",
   carenciaFilter: string = "all",
   enabled = true
 ) {
-  const { activeUnit } = useTenantUnits();
-  const unitId = activeUnit?.id ?? null;
+  const { unitId } = useActiveScope();
   const queryClient = useQueryClient();
   const [pageBySearch, setPageBySearch] = useState<Record<string, number>>({});
   const [pageSize, setPageSize] = useState(10);

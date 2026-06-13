@@ -1,11 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { financeQueryKeys } from "../../queryKeys";
 import { financeSettingsService } from "../../services/financeSettingsService";
-import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 
 export function useFinanceSettings() {
-  const { activeUnit } = useTenantUnits();
-  const unitId = activeUnit?.id ?? null;
+  const { unitId } = useActiveScope();
 
   const query = useQuery({
     queryKey: financeQueryKeys.settings(unitId),

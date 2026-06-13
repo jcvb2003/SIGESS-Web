@@ -12,7 +12,7 @@ import { Loader2, Settings, CreditCard, Wrench } from "lucide-react";
 
 import { useFinanceSettings } from "../../hooks/data/useFinanceSettings";
 import { useChargeTypes } from "../../hooks/data/useChargeTypes";
-import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 import { 
   useUpdateFinanceSettings, 
   useChargeTypeMutations 
@@ -43,14 +43,14 @@ export function FinanceSettingsDialog({
   onOpenChange 
 }: FinanceSettingsDialogProps) {
   const { isAdmin } = usePermissions();
-  const { activeUnit } = useTenantUnits();
+  const { unitId } = useActiveScope();
   // Data Fetching
   const { settings, isLoading: loadingSettings } = useFinanceSettings();
-  const { chargeTypes, isLoading: loadingChargeTypes } = useChargeTypes(false, activeUnit?.id);
-  
+  const { chargeTypes, isLoading: loadingChargeTypes } = useChargeTypes(false, unitId);
+
   // Mutations
   const updateSettingsMutation = useUpdateFinanceSettings();
-  const { createChargeType, updateChargeType, toggleActive, deleteChargeType } = useChargeTypeMutations(activeUnit?.id);
+  const { createChargeType, updateChargeType, toggleActive, deleteChargeType } = useChargeTypeMutations(unitId);
 
   // Form para aba de Parâmetros
   const {

@@ -7,10 +7,9 @@ import { documentQueryKeys } from "../queryKeys";
 import type {
   DocumentSearchParams,
 } from "../types/document.types";
-import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 export function useExistingRequests(params: DocumentSearchParams) {
-  const { activeUnit } = useTenantUnits();
-  const unitId = activeUnit?.id ?? null;
+  const { unitId } = useActiveScope();
   const query = useQuery({
     queryKey: [...documentQueryKeys.list(params), unitId],
     queryFn: async () => {

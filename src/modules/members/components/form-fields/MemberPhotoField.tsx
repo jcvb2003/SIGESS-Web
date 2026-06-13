@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { compressMemberPhoto } from "@/shared/utils/image-compression";
 import { supabase } from "@/shared/lib/supabase/client";
 import { resolveTenantIdViaTenantUsers } from "@/shared/utils/tenant";
-import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 import { photoService } from "../../services/photoService";
 import { QRCodeCanvas } from "qrcode.react";
 import {
@@ -39,7 +39,7 @@ type FotoUploadToken = {
 export function MemberPhotoField() {
   const { control, setValue, getValues } = useFormContext();
   const cpf = useWatch({ control, name: "cpf" });
-  const { activeUnit } = useTenantUnits();
+  const { tenantId: scopeTenantId, unitId } = useActiveScope();
 
   // photoUrl vive inteiramente no form - sobrevive ao unmount/remount das abas
   const photoUrl = useWatch({ control, name: "photoPreviewUrl" });
@@ -143,8 +143,7 @@ export function MemberPhotoField() {
     try {
       const cleanCpf = cpf.replace(/\D/g, "");
       const tenantId =
-        activeUnit?.tenantId ?? (await resolveTenantIdViaTenantUsers());
-      const unitId = activeUnit?.id ?? null;
+        scopeTenantId ?? (await resolveTenantIdViaTenantUsers());
 
       if (!tenantId) {
         throw new Error("Escopo do tenant nao resolvido para gerar token de foto.");

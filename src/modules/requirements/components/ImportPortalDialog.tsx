@@ -12,7 +12,7 @@ import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Badge } from "@/shared/components/ui/badge";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { requirementService } from "../services/requirementService";
-import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 import { useQueryClient } from "@tanstack/react-query";
 import { requirementQueryKeys } from "../queryKeys";
 import { read, utils } from "xlsx";
@@ -40,7 +40,7 @@ export function ImportPortalDialog({
   anoAtual,
 }: Readonly<ImportPortalDialogProps>) {
   const queryClient = useQueryClient();
-  const { activeUnit } = useTenantUnits();
+  const { unitId } = useActiveScope();
   const [results, setResults] = useState<ReconciliationResult[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -62,7 +62,7 @@ export function ImportPortalDialog({
     setIsAnalyzing(true);
     setProgress(0);
     try {
-      const context = await requirementService.getReconciliationContext(activeUnit?.id);
+      const context = await requirementService.getReconciliationContext(unitId);
       const indexes = buildMemberIndexes(context.members);
 
       // Pequena pausa para garantir que o navegador renderize o estado de "Analisando"

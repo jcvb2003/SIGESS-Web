@@ -6,7 +6,7 @@ import { memberService, type MemberUnitContext } from "../../services/memberServ
 import { memberQueryKeys } from "../../queryKeys";
 import { useMemberFilters } from "../filters/useMemberFilters";
 import { useMemberActions } from "../edit/useMemberActions";
-import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 import type {
   MemberListItem,
   MemberSearchParams,
@@ -99,11 +99,8 @@ export function useMembersListController() {
     ],
   );
 
-  const { activeUnit } = useTenantUnits();
-  const unitContext: MemberUnitContext = {
-    tenantId: activeUnit?.tenantId ?? null,
-    unitId: activeUnit?.id ?? null,
-  };
+  const { tenantId, unitId } = useActiveScope();
+  const unitContext: MemberUnitContext = { tenantId, unitId };
 
   const { members, total, isLoading, isFetching, error, refetch } =
     useMemberData(queryParams, unitContext);

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 import {
   Card,
   CardContent,
@@ -29,7 +29,7 @@ import { Separator } from "@/shared/components/ui/separator";
 import { formatDate } from "@/shared/utils/date";
 
 export function ExtensionSettings() {
-  const { activeUnit } = useTenantUnits();
+  const { unitId } = useActiveScope();
   const [licenseKey, setLicenseKey] = useState("");
   const [licenseInfo, setLicenseInfo] = useState<LicenseInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -57,7 +57,7 @@ export function ExtensionSettings() {
   const loadLocalKey = useCallback(async () => {
     setIsLoading(true);
     try {
-      const key = await extensionService.getLicenseKey(activeUnit?.id);
+      const key = await extensionService.getLicenseKey(unitId);
       if (key) {
         setLicenseKey(key);
         await refreshLicenseInfo(key);
@@ -77,7 +77,7 @@ export function ExtensionSettings() {
 
     setIsSaving(true);
     try {
-      const { error } = await extensionService.saveLicenseKey(licenseKey, activeUnit?.id);
+      const { error } = await extensionService.saveLicenseKey(licenseKey, unitId);
       if (error) throw error;
       
       await refreshLicenseInfo(licenseKey);
