@@ -1,4 +1,4 @@
-import { Outlet, Navigate, useLocation } from "react-router-dom";
+import { Outlet, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { AppSidebar } from "./AppSidebar";
 import { useMobile } from "@/shared/hooks/useMobile";
 import { cn } from "@/shared/lib/utils";
@@ -15,15 +15,18 @@ import { usePortalContext } from "@/shared/hooks/usePortalContext";
 import { PortariaProvider } from "@/shared/context/PortariaContext";
 import { GlobalMemberSearch } from "./GlobalMemberSearch";
 import { GlobalPortariaSelect } from "./GlobalPortariaSelect";
+import { MemberDetailsModal } from "@/modules/members/components/modal/MemberDetailsModal";
 
 export function DashboardLayout() {
-  const { session, loading: authLoading, signOut } = useAuth();
+  const { session, user, loading: authLoading, signOut } = useAuth();
   const { activeUnit, hasMultipleUnits, hydrated } = useTenantUnits();
   const { metadata, loading: metadataLoading } = useUserMetadata();
   const { isPortalContextLoading, isStatePortal } = usePortalContext();
   const loading = authLoading || metadataLoading;
   const isMobile = useMobile();
+  const navigate = useNavigate();
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
+  const [globalSelectedMemberId, setGlobalSelectedMemberId] = useState<string | null>(null);
   const location = useLocation();
   const handleIdleTimeout = useCallback(() => {
     void signOut();
@@ -74,9 +77,40 @@ export function DashboardLayout() {
         />
 
         <div className="flex flex-1 flex-col overflow-hidden min-w-0">
-          <header className="hidden lg:flex h-12 shrink-0 items-center gap-3 border-b border-border/50 bg-background px-5">
-            <GlobalMemberSearch />
-            <GlobalPortariaSelect />
+          <header
+            className="hidden lg:flex h-14 shrink-0 items-center px-5 bg-background"
+            style={{
+              borderBottom: "1px solid transparent",
+              backgroundImage: "linear-gradient(hsl(var(--background)), hsl(var(--background))), linear-gradient(to right, transparent 5%, #00DF81 50%, transparent 95%)",
+              backgroundOrigin: "border-box",
+              backgroundClip: "padding-box, border-box",
+            }}
+          >
+            <div className="w-64 shrink-0" />
+
+            <div className="flex-1 flex justify-center px-4">
+              <GlobalMemberSearch onSelect={setGlobalSelectedMemberId} />
+            </div>
+
+            <div className="flex items-center justify-end gap-4 w-64 shrink-0 min-w-0">
+              <GlobalPortariaSelect />
+              <div className="h-6 w-px bg-border shrink-0" />
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold ring-2 ring-primary/25">
+                  {(user?.user_metadata?.full_name as string | undefined)?.charAt(0)?.toUpperCase()
+                    ?? user?.email?.charAt(0)?.toUpperCase()
+                    ?? "?"}
+                </div>
+                <div className="flex flex-col min-w-0 leading-tight">
+                  <span className="text-xs font-semibold text-foreground truncate">
+                    {(user?.user_metadata?.full_name as string | undefined) ?? user?.email?.split("@")[0]}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground/70 truncate">
+                    {user?.email}
+                  </span>
+                </div>
+              </div>
+            </div>
           </header>
 
           <main
@@ -90,6 +124,24 @@ export function DashboardLayout() {
             </div>
           </main>
         </div>
+
+        <MemberDetailsModal
+          open={!!globalSelectedMemberId}
+          onOpenChange={(open) => { if (!open) setGlobalSelectedMemberId(null); }}
+          memberUuid={globalSelectedMemberId}
+          onEdit={(id) => {
+            setGlobalSelectedMemberId(null);
+            navigate(`/members/${id}`);
+          }}
+          onDelete={() => {
+            setGlobalSelectedMemberId(null);
+            navigate("/members");
+          }}
+          onDocuments={() => {
+            setGlobalSelectedMemberId(null);
+            navigate("/documents");
+          }}
+        />
 
         {metadata?.isExpired && <AccessExpiredModal open={true} />}
         <PWABanner />

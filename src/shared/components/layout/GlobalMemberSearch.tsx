@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import { Search, Loader2, User } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
 import { memberService } from "@/modules/members/services/memberService";
@@ -20,8 +19,11 @@ function maskCpf(cpf: string | null): string {
   return `${digits.slice(0, 3)}.***.***-${digits.slice(9)}`;
 }
 
-export function GlobalMemberSearch() {
-  const navigate = useNavigate();
+interface GlobalMemberSearchProps {
+  onSelect: (id: string) => void;
+}
+
+export function GlobalMemberSearch({ onSelect }: GlobalMemberSearchProps) {
   const { tenantId, unitId } = useActiveScope();
   const [term, setTerm] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -79,7 +81,7 @@ export function GlobalMemberSearch() {
     setTerm("");
     setResults([]);
     setIsOpen(false);
-    navigate(`/members/${id}`);
+    onSelect(id);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
