@@ -6,7 +6,7 @@ import { useLogin } from "../hooks/useLogin";
 import { authService } from "../services/authService";
 import { initSupabaseClient } from "@/shared/lib/supabase/client";
 import { Button } from "@/shared/components/ui/button";
-import { Loader2, Fish } from "lucide-react";
+import { Loader2, Eye, EyeOff, LogIn } from "lucide-react";
 import {
   FormControl,
   FormField,
@@ -85,7 +85,7 @@ export function LoginForm() {
     <div className="space-y-6">
       <div className="text-center space-y-2">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 shadow-lg mb-2">
-          <Fish className="h-9 w-9 text-primary/80" />
+          <img src="/logo.svg" alt="SIGESS" className="h-9 w-9 object-contain" />
         </div>
         <h1 className="text-3xl font-bold tracking-tight text-primary">
           SIGESS
@@ -261,10 +261,10 @@ export function LoginForm() {
                             showPassword ? "Ocultar senha" : "Mostrar senha"
                           }
                         >
-                          <Fish
-                            className={`h-5 w-5 transition-transform duration-300 ${showPassword ? "scale-x-[-1] text-primary" : ""
-                              }`}
-                          />
+                          {showPassword
+                            ? <EyeOff className="h-5 w-5" />
+                            : <Eye className="h-5 w-5" />
+                          }
                         </button>
                       </div>
                     </FormControl>
@@ -286,7 +286,7 @@ export function LoginForm() {
                     </>
                   ) : (
                     <>
-                      <Fish className="mr-2 h-5 w-5" />
+                      <LogIn className="mr-2 h-5 w-5" />
                       Entrar
                     </>
                   )}

@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LogOut, Menu, Fish, Sun, Moon, ChevronsUpDown, Building2, LayoutDashboard, Check } from "lucide-react";
+import { LogOut, Menu, Sun, Moon, ChevronsUpDown, Building2, LayoutDashboard, Check } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/components/ui/button";
 import { useAuth } from "@/modules/auth/context/authContextStore";
@@ -89,7 +89,7 @@ function SidebarContent({
             ) : isEntityLoading ? (
               <div className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin opacity-50" />
             ) : (
-              <Fish className="h-6 w-6" />
+              <img src="/logo.svg" alt="SIGESS" className="h-full w-full object-contain p-1.5 logo-multiply" />
             )}
           </div>
           <div
