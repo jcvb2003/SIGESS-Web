@@ -38,6 +38,8 @@ const AdministrationPage = lazy(() => import("@/pages/Administration"));
 const MemberFichaPage = lazy(() => import("@/pages/Members/MemberFichaPage"));
 const MemberCardPage = lazy(() => import("@/pages/Members/MemberCardPage"));
 const SelectUnitPage = lazy(() => import("@/pages/SelectUnit"));
+const SubscriptionPage = lazy(() => import("@/pages/Subscription"));
+const PaymentPortalPage = lazy(() => import("@/pages/PaymentPortal"));
 
 function PublicRoute() {
   const { session, loading } = useAuth();
@@ -59,6 +61,10 @@ const router = createBrowserRouter([
   {
     path: "/foto-upload",
     element: <FotoUploadPage />,
+  },
+  {
+    path: "/pay/:token",
+    element: <PaymentPortalPage />,
   },
   {
     path: "/ficha-socio/:id",
@@ -155,6 +161,10 @@ const router = createBrowserRouter([
       {
         path: "/settings",
         element: <SettingsPage />,
+      },
+      {
+        path: "/subscription",
+        element: <SubscriptionPage />,
       },
     ],
   },
