@@ -83,6 +83,7 @@ export const memberService = {
       searchTerm,
       statusFilter,
       localityCode,
+      portariaId,
       birthMonth,
       gender,
       rgpStatus,
@@ -92,7 +93,7 @@ export const memberService = {
     let query = supabase
       .from("socios")
       .select(
-        "id, codigo_do_socio, nome, cpf, data_de_admissao, situacao, codigo_localidade, data_de_nascimento, updated_at",
+        "id, codigo_do_socio, nome, cpf, data_de_admissao, situacao, codigo_localidade, portaria_id, data_de_nascimento, updated_at",
         {
           count: "exact",
         },
@@ -112,6 +113,9 @@ export const memberService = {
     }
     if (localityCode && localityCode !== "all") {
       query = query.eq("codigo_localidade", localityCode);
+    }
+    if (portariaId && portariaId !== "all") {
+      query = query.eq("portaria_id", portariaId);
     }
     if (gender && gender !== "all") {
       query = query.eq("sexo", gender);

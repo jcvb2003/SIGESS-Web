@@ -31,6 +31,12 @@ export interface Locality {
   name: string;
   code?: string;
 }
+export interface Portaria {
+  id?: string;
+  codigoPortaria: string;
+  nome: string;
+  isActive?: boolean;
+}
 export interface DocumentTemplate {
   id: string;
   name: string;

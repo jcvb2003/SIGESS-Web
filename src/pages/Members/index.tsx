@@ -11,6 +11,7 @@ import { MemberDateCell } from "@/modules/members/components/table/cells/MemberD
 import { MemberStatusCell } from "@/modules/members/components/table/cells/MemberStatusCell";
 import { MembersTableActions } from "@/modules/members/components/table/MembersTableActions";
 import { useLocalitiesData } from "@/modules/members/hooks/data/useLocalitiesData";
+import { usePortariasData } from "@/modules/members/hooks/data/usePortariasData";
 import { useActiveScope } from "@/shared/hooks/useActiveScope";
 import { MemberListItem } from "@/modules/members/types/member.types";
 import { useMembersListController } from "@/modules/members/hooks/data/useMemberData";
@@ -22,6 +23,7 @@ export default function Members() {
     useMembersListController();
   const { unitId } = useActiveScope();
   const { localities } = useLocalitiesData(unitId);
+  const { portarias } = usePortariasData(unitId);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
@@ -78,6 +80,14 @@ export default function Members() {
                   return <span className="text-sm text-muted-foreground">{localityName}</span>;
                 }
               },
+              ...(portarias.length >= 1 ? [{
+                header: "Portaria",
+                className: "whitespace-nowrap hidden lg:table-cell",
+                cell: (m: MemberListItem) => {
+                  const p = portarias.find((pt) => pt.id === m.portaria_id);
+                  return <span className="text-sm text-muted-foreground">{p ? `${p.codigoPortaria} - ${p.nome}` : "-"}</span>;
+                }
+              }] : []),
               {
                 header: "Data de filiação",
                 className: "whitespace-nowrap hidden md:table-cell",

@@ -12,6 +12,9 @@ import { useNetworkStatus } from "@/shared/hooks/useNetworkStatus";
 import { PWABanner } from "@/shared/components/feedback/PWABanner";
 import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 import { usePortalContext } from "@/shared/hooks/usePortalContext";
+import { PortariaProvider } from "@/shared/context/PortariaContext";
+import { GlobalMemberSearch } from "./GlobalMemberSearch";
+import { GlobalPortariaSelect } from "./GlobalPortariaSelect";
 
 export function DashboardLayout() {
   const { session, loading: authLoading, signOut } = useAuth();
@@ -62,7 +65,14 @@ export function DashboardLayout() {
   }
 
   return (
+    <PortariaProvider>
     <div className="min-h-screen bg-background relative flex flex-col font-sans">
+      {/* Header global: busca de sócio + filtro de portaria */}
+      <header className="sticky top-0 z-30 hidden lg:flex h-12 items-center gap-3 border-b border-border/60 bg-background/95 backdrop-blur px-6 supports-[backdrop-filter]:bg-background/80">
+        <GlobalMemberSearch />
+        <GlobalPortariaSelect />
+      </header>
+
       <div className="flex flex-1 relative">
         <AppSidebar
           onMouseEnter={() => setIsSidebarHovered(true)}
@@ -85,5 +95,6 @@ export function DashboardLayout() {
       {metadata?.isExpired && <AccessExpiredModal open={true} />}
       <PWABanner />
     </div>
+    </PortariaProvider>
   );
 }

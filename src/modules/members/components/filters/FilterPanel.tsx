@@ -20,6 +20,8 @@ import type {
   StatusFilter,
   RgpStatusFilter,
 } from "../../types/member.types";
+import type { Portaria } from "@/modules/settings/types/settings.types";
+
 interface FilterPanelProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -33,10 +35,14 @@ interface FilterPanelProps {
   onGenderChange: (value: string) => void;
   rgpStatusFilter: RgpStatusFilter;
   onRgpStatusChange: (value: string) => void;
+  portariaFilter: string;
+  onPortariaChange: (value: string) => void;
   localities: LocalityOption[];
+  portarias: Portaria[];
   onClear: () => void;
   onApply: () => void;
 }
+
 export function FilterPanel(props: Readonly<FilterPanelProps>) {
   const {
     open,
@@ -51,10 +57,14 @@ export function FilterPanel(props: Readonly<FilterPanelProps>) {
     onGenderChange,
     rgpStatusFilter,
     onRgpStatusChange,
+    portariaFilter,
+    onPortariaChange,
     localities,
+    portarias,
     onClear,
     onApply,
   } = props;
+
   const months = [
     { value: "1", label: "Janeiro" },
     { value: "2", label: "Fevereiro" },
@@ -69,6 +79,7 @@ export function FilterPanel(props: Readonly<FilterPanelProps>) {
     { value: "11", label: "Novembro" },
     { value: "12", label: "Dezembro" },
   ];
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
@@ -87,12 +98,12 @@ export function FilterPanel(props: Readonly<FilterPanelProps>) {
               <SelectTrigger className="h-10 w-full">
                 <SelectValue placeholder="Situação" />
               </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  <SelectItem value="ATIVO">Ativo</SelectItem>
-                  <SelectItem value="INATIVO">Inativo</SelectItem>
-                  <SelectItem value="APOSENTADO">Aposentado</SelectItem>
-                  <SelectItem value="FALECIDO">Falecido</SelectItem>
+              <SelectContent>
+                <SelectItem value="all">Todas</SelectItem>
+                <SelectItem value="ATIVO">Ativo</SelectItem>
+                <SelectItem value="INATIVO">Inativo</SelectItem>
+                <SelectItem value="APOSENTADO">Aposentado</SelectItem>
+                <SelectItem value="FALECIDO">Falecido</SelectItem>
                 <SelectItem value="TRANSFERIDO">Transferido</SelectItem>
                 <SelectItem value="CANCELADO">Cancelado</SelectItem>
                 <SelectItem value="SUSPENSO">Suspenso</SelectItem>
@@ -118,6 +129,24 @@ export function FilterPanel(props: Readonly<FilterPanelProps>) {
               </SelectContent>
             </Select>
           </FilterSection>
+
+          {portarias.length >= 1 && (
+            <FilterSection title="Portaria">
+              <Select value={portariaFilter} onValueChange={onPortariaChange}>
+                <SelectTrigger className="h-10 w-full">
+                  <SelectValue placeholder="Todas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  {portarias.map((p) => (
+                    <SelectItem key={p.id} value={p.id!}>
+                      {p.codigoPortaria} - {p.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FilterSection>
+          )}
 
           <FilterSection title="Mês de Aniversário">
             <Select

@@ -661,6 +661,39 @@ export type Database = {
         }
         Relationships: []
       }
+      portarias: {
+        Row: {
+          id: string
+          tenant_id: string
+          unit_id: string | null
+          codigo_portaria: string
+          nome: string
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id: string
+          unit_id?: string | null
+          codigo_portaria: string
+          nome: string
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant_id?: string
+          unit_id?: string | null
+          codigo_portaria?: string
+          nome?: string
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       logs_eventos_requerimento: {
         Row: {
           created_at: string | null
@@ -947,6 +980,7 @@ export type Database = {
           num_rgp: string | null
           observacoes: string | null
           pai: string | null
+          portaria_id: string | null
           rg: string | null
           rgp_uf: string | null
           secao: string | null
@@ -992,6 +1026,7 @@ export type Database = {
           num_rgp?: string | null
           observacoes?: string | null
           pai?: string | null
+          portaria_id?: string | null
           rg?: string | null
           rgp_uf?: string | null
           secao?: string | null
@@ -1037,6 +1072,7 @@ export type Database = {
           num_rgp?: string | null
           observacoes?: string | null
           pai?: string | null
+          portaria_id?: string | null
           rg?: string | null
           rgp_uf?: string | null
           secao?: string | null

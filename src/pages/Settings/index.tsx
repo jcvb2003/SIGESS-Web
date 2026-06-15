@@ -12,6 +12,7 @@ import {
 import { ImportExportCard } from "@/modules/settings/components/data/ImportExportCard";
 import { DocumentsCard } from "@/modules/settings/components/data/DocumentsCard";
 import { LocalitiesCard } from "@/modules/settings/components/data/LocalitiesCard";
+import { PortariasCard } from "@/modules/settings/components/data/PortariasCard";
 import { PhotoImportCard } from "@/modules/settings/components/data/PhotoImportCard";
 import { EntityForm } from "@/modules/settings/components/entity/EntityForm";
 import { CustomizationForm } from "@/modules/settings/components/entity/CustomizationForm";
@@ -45,6 +46,7 @@ export default function Settings() {
                 </fieldset>
                 <DocumentsCard canWrite={canManageEntitySettings} />
                 <LocalitiesCard />
+                <PortariasCard />
                 <fieldset disabled={!isAdmin} className={!isAdmin ? "opacity-50 grayscale pointer-events-none" : ""}>
                   <PhotoImportCard />
                 </fieldset>

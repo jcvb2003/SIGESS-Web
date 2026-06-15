@@ -60,10 +60,13 @@ export function useMembersListController() {
     setGenderFilter,
     rgpStatusFilter,
     setRgpStatusFilter,
+    portariaFilter,
+    setPortariaFilter,
     isFiltersOpen,
     setIsFiltersOpen,
     clearFilters,
     localities,
+    portarias,
   } = useMemberFilters();
   const {
     isDeleteDialogOpen,
@@ -84,6 +87,7 @@ export function useMembersListController() {
       searchTerm: debouncedTerm,
       statusFilter,
       localityCode: localityFilter,
+      portariaId: portariaFilter === "all" ? null : portariaFilter,
       birthMonth: birthMonthFilter,
       gender: genderFilter,
       rgpStatus: rgpStatusFilter,
@@ -96,6 +100,7 @@ export function useMembersListController() {
       debouncedTerm,
       statusFilter,
       localityFilter,
+      portariaFilter,
       birthMonthFilter,
       genderFilter,
       rgpStatusFilter,
@@ -162,6 +167,10 @@ export function useMembersListController() {
 
   const handleRgpStatusChange = (value: string) => {
     setRgpStatusFilter(value as RgpStatusFilter);
+    setPage(1);
+  };
+  const handlePortariaFilterChange = (value: string) => {
+    setPortariaFilter(value);
     setPage(1);
   };
   const handleClearFilters = () => {
@@ -240,7 +249,10 @@ export function useMembersListController() {
       onGenderChange: handleGenderChange,
       rgpStatusFilter,
       onRgpStatusChange: handleRgpStatusChange,
+      portariaFilter,
+      onPortariaChange: handlePortariaFilterChange,
       localities,
+      portarias,
       onClear: handleClearFilters,
       onApply: () => setIsFiltersOpen(false),
     },

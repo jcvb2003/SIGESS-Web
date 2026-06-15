@@ -36,6 +36,7 @@ export interface MemberRegistrationForm {
   id?: string;
   codigoDoSocio: string;
   codigoLocalidade: string;
+  portariaId?: string | null;
   nome: string;
   apelido: string;
   cpf: string;
@@ -93,6 +94,7 @@ export interface MemberListItem {
   data_de_admissao: string | null;
   situacao: string | null;
   codigo_localidade?: string | null;
+  portaria_id?: string | null;
   foto_url?: string | null;
 }
 export interface MembersResult {
@@ -105,6 +107,7 @@ export interface MemberSearchParams {
   searchTerm: string;
   statusFilter: StatusFilter;
   localityCode: string;
+  portariaId?: string | null;
   birthMonth?: string;
   gender: string;
   rgpStatus: RgpStatusFilter;

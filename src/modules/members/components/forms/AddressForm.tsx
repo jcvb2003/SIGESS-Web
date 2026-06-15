@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useFormContext } from "react-hook-form";
 import {
   Card,
@@ -14,15 +14,18 @@ import { StateSelect } from "@/shared/components/form-fields/fields/StateSelect"
 import { SelectField } from "@/shared/components/form-fields/fields/SelectField";
 import { Button } from "@/shared/components/ui/button";
 import { useLocalitiesData } from "../../hooks/data/useLocalitiesData";
+import { usePortariasData } from "../../hooks/data/usePortariasData";
 import { useActiveScope } from "@/shared/hooks/useActiveScope";
 import { MapPin, Plus } from "lucide-react";
 import { LocalityManagementDialog } from "@/modules/settings/components/data/LocalityManagementDialog";
 
 export function AddressForm() {
-  const { control, setValue } = useFormContext();
+  const { control, setValue, trigger } = useFormContext();
   const [isLocalityDialogOpen, setIsLocalityDialogOpen] = useState(false);
   const { unitId } = useActiveScope();
   const { localities, loading } = useLocalitiesData(unitId);
+  const { portarias } = usePortariasData(unitId);
+  const hasMultiplePortarias = portarias.length >= 2;
 
   const localityOptions = localities
     .filter((locality) => !!locality.code)
@@ -30,6 +33,16 @@ export function AddressForm() {
       label: locality.name,
       value: locality.code as string,
     }));
+
+  const portariaOptions = portarias.map((p) => ({
+    label: `${p.codigoPortaria} - ${p.nome}`,
+    value: p.id!,
+  }));
+
+  // Revalida portariaId quando o threshold muda (RHF não reage ao resolver sozinho)
+  useEffect(() => {
+    void trigger("portariaId");
+  }, [hasMultiplePortarias, trigger]);
 
   const handleLocalityCreated = (code: string) => {
     setValue("codigoLocalidade", code, {
@@ -130,6 +143,17 @@ export function AddressForm() {
               </Button>
             </div>
           </div>
+
+          {hasMultiplePortarias && (
+            <SelectField
+              control={control}
+              name="portariaId"
+              label="Portaria"
+              placeholder="Selecione a portaria"
+              options={portariaOptions}
+              required
+            />
+          )}
         </CardContent>
       </Card>
 
