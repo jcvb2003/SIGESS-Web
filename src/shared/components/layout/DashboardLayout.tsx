@@ -66,35 +66,34 @@ export function DashboardLayout() {
 
   return (
     <PortariaProvider>
-    <div className="min-h-screen bg-background relative flex flex-col font-sans">
-      {/* Header global: busca de sócio + filtro de portaria */}
-      <header className="sticky top-0 z-30 hidden lg:flex h-12 items-center gap-3 border-b border-border/60 bg-background/95 backdrop-blur px-6 supports-[backdrop-filter]:bg-background/80">
-        <GlobalMemberSearch />
-        <GlobalPortariaSelect />
-      </header>
-
-      <div className="flex flex-1 relative">
+      <div className="h-screen overflow-hidden bg-background flex font-sans">
         <AppSidebar
           onMouseEnter={() => setIsSidebarHovered(true)}
           onMouseLeave={() => setIsSidebarHovered(false)}
           isHovered={isSidebarHovered}
         />
 
-        <main
-          className={cn(
-            "flex-1 p-4 md:p-6 lg:p-10 transition-all duration-300 ease-in-out min-w-0 w-full overflow-x-hidden",
-            isMobile ? "pt-16" : "pt-4",
-          )}
-        >
-          <div className="mx-auto max-w-7xl animate-in fade-in-50 duration-500 slide-in-from-bottom-4">
-            <Outlet />
-          </div>
-        </main>
-      </div>
+        <div className="flex flex-1 flex-col overflow-hidden min-w-0">
+          <header className="hidden lg:flex h-12 shrink-0 items-center gap-3 border-b border-border/50 bg-background px-5">
+            <GlobalMemberSearch />
+            <GlobalPortariaSelect />
+          </header>
 
-      {metadata?.isExpired && <AccessExpiredModal open={true} />}
-      <PWABanner />
-    </div>
+          <main
+            className={cn(
+              "flex-1 overflow-y-auto p-4 md:p-6 lg:p-10 transition-all duration-300 ease-in-out",
+              isMobile && "pt-16",
+            )}
+          >
+            <div className="mx-auto max-w-7xl animate-in fade-in-50 duration-500 slide-in-from-bottom-4">
+              <Outlet />
+            </div>
+          </main>
+        </div>
+
+        {metadata?.isExpired && <AccessExpiredModal open={true} />}
+        <PWABanner />
+      </div>
     </PortariaProvider>
   );
 }
