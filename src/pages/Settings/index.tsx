@@ -7,6 +7,7 @@ import {
   KeyRound,
   Palette,
   Puzzle,
+  CreditCard,
 } from "lucide-react";
 import { ImportExportCard } from "@/modules/settings/components/data/ImportExportCard";
 import { DocumentsCard } from "@/modules/settings/components/data/DocumentsCard";
@@ -17,6 +18,7 @@ import { CustomizationForm } from "@/modules/settings/components/entity/Customiz
 import { ParametersForm } from "@/modules/settings/components/parameters/ParametersForm";
 import { UserManagementSection } from "@/modules/settings/components/passwords/UserManagementSection";
 import { ExtensionSettings } from "@/modules/settings/components/extension/ExtensionSettings";
+import { BillingTab } from "@/modules/billing/components/BillingTab";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 export default function Settings() {
@@ -82,6 +84,12 @@ export default function Settings() {
             icon: Puzzle,
             content: <ExtensionSettings />,
             disabled: !isAdmin
+          },
+          {
+            value: "assinatura",
+            label: "Assinatura",
+            icon: CreditCard,
+            content: <BillingTab />,
           }
         ]}
       />
