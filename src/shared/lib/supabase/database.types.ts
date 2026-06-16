@@ -954,6 +954,7 @@ export type Database = {
           alfabetizado: string | null
           apelido: string | null
           bairro: string | null
+          caf: string | null
           caepf: string | null
           cei: string | null
           cep: string | null
@@ -1000,6 +1001,7 @@ export type Database = {
           alfabetizado?: string | null
           apelido?: string | null
           bairro?: string | null
+          caf?: string | null
           caepf?: string | null
           cei?: string | null
           cep?: string | null
@@ -1046,6 +1048,7 @@ export type Database = {
           alfabetizado?: string | null
           apelido?: string | null
           bairro?: string | null
+          caf?: string | null
           caepf?: string | null
           cei?: string | null
           cep?: string | null

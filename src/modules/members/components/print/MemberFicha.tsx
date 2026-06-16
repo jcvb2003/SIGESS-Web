@@ -104,6 +104,7 @@ export function MemberFicha({ member }: MemberFichaProps) {
             <LabelValue label="Zona / Seção" value={`${member.zonaEleitoral} / ${member.secaoEleitoral}`} />
             <LabelValue label="NIT / PIS" value={member.nit} />
             <LabelValue label="CEI / CAEPF" value={member.cei || member.caepf} />
+            <LabelValue label="CAF" value={member.caf} />
             <LabelValue label="E-mail" value={member.email} className="col-span-2" />
             <LabelValue label="Telefone" value={member.telefone} />
           </InfoGroup>

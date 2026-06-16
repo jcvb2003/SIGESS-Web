@@ -81,7 +81,7 @@ export function MemberDocumentsForm() {
           <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">
             Registros Profissionais
           </p>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <NitField control={control} name="nit" />
             <TextField
               control={control}
@@ -93,8 +93,15 @@ export function MemberDocumentsForm() {
               autoUppercase
             />
             <CaepfField control={control} name="caepf" />
+            <TextField
+              control={control}
+              name="caf"
+              label="CAF"
+              placeholder="CAF"
+              autoUppercase
+            />
           </div>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-4">
             <TextField
               control={control}
               name="rgp"

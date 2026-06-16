@@ -44,6 +44,7 @@ export interface MemberDatabase {
   nit?: string;
   cei?: string;
   caepf?: string;
+  caf?: string;
   rgp?: string;
   num_rgp?: string;
   uf_rgp?: string;

@@ -1,0 +1,6 @@
+BEGIN;
+
+ALTER TABLE public.socios
+  ADD COLUMN IF NOT EXISTS caf text;
+
+COMMIT;

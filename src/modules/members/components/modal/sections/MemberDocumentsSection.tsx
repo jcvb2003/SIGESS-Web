@@ -36,6 +36,7 @@ export function MemberDocumentsSection({
           <InfoItem label="CAEPF" value={member.caepf} />
           <InfoItem label="CEI" value={member.cei} />
           <InfoItem label="NIS/NIT/PIS" value={member.nit} />
+          <InfoItem label="CAF" value={member.caf} />
           <InfoItem label="RGP" value={member.rgp} />
           <InfoItem label="Tipo RGP" value={member.tipoRgp === "NONE" ? "—" : member.tipoRgp} />
           <InfoItem label="Emissão RGP" value={formatDate(member.emissaoRgp)} />

@@ -75,6 +75,7 @@ const CAPTURED_FIELDS: Array<keyof MemberRegistrationSchemaType> = [
   "nit",
   "cei",
   "caepf",
+  "caf",
   "rgp",
   "tipoRgp",
   "emissaoRgp",

@@ -187,6 +187,7 @@ export const memberRegistrationSchema = z
     caepf: optionalStringSchema,
     nit: nitSchema,
     cei: optionalStringSchema,
+    caf: optionalStringSchema,
     rgp: optionalStringSchema,
     tipoRgp: z.enum(["INICIAL", "PROTOCOLO", "RECADASTRAMENTO", "NONE"]).optional().or(z.literal("")),
     emissaoRgp: documentIssueDateSchema,
