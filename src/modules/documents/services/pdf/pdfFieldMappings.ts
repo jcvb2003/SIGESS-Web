@@ -34,6 +34,23 @@ export function getPdfFieldMappings(): Record<string, string[]> {
     email: ["Email do requerente"],
     estado_civil: ["Estado civil"],
 
+    // Carteira Agro
+    agro_nome: ["Nome do requerente"],
+    agro_nascimento: ["Nascimento"],
+    agro_data_filiacao: ["Data de filiação"],
+    agro_mae: ["Mãe"],
+    agro_pai: ["Pai"],
+    agro_cpf: ["CPF do requerente"],
+    agro_rg: ["RG"],
+    agro_nis: ["NIS"],
+    agro_pis: ["PIS"],
+    agro_ctps: ["CTPS"],
+    agro_caepf: ["CAEPF"],
+    agro_caf: ["CAF"],
+    agro_matricula: ["Mátricula"],
+    agro_categoria: ["Categoria"],
+    agro_data: ["Data"],
+
     // Dados de Defeso / Portarias
     nrpub: ["Número da portaria"],
     dtpub: ["Data da publicação da portaria"],
@@ -74,4 +91,3 @@ export function getPdfFieldMappings(): Record<string, string[]> {
     data: ["Data da assinatura"],
   };
 }
-
