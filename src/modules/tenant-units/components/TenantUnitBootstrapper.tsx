@@ -4,12 +4,16 @@ import { useTenantUnits } from "../context/TenantUnitContext";
 import { tenantUnitService } from "../services/tenantUnitService";
 
 export function TenantUnitBootstrapper() {
-  const { session, user } = useAuth();
+  const { session, user, loading } = useAuth();
   const { hydrated, replaceUnits, clearUnits, setBootstrapped } = useTenantUnits();
   const lastResolvedUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!hydrated) {
+      return;
+    }
+
+    if (loading) {
       return;
     }
 
@@ -47,7 +51,7 @@ export function TenantUnitBootstrapper() {
     return () => {
       cancelled = true;
     };
-  }, [clearUnits, hydrated, replaceUnits, session, setBootstrapped, user]);
+  }, [clearUnits, hydrated, loading, replaceUnits, session, setBootstrapped, user]);
 
   return null;
 }

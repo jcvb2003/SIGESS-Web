@@ -7,6 +7,9 @@ import type {
   SharedUserUnitMembershipRow,
 } from "./sharedTenant.types";
 
+const ACTIVE_UNIT_STORAGE_KEY = "sigess_active_unit";
+const TENANT_CONFIG_CACHE_KEY = "sigess_tenant_config";
+
 function mapSharedUnitToSummary(unit: SharedTenantUnitRow): TenantUnitSummary {
   return {
     id: unit.id,
@@ -14,6 +17,41 @@ function mapSharedUnitToSummary(unit: SharedTenantUnitRow): TenantUnitSummary {
     code: unit.code ?? null,
     tenantId: unit.tenant_id ?? null,
   };
+}
+
+function getTenantCode(): string | null {
+  try {
+    const raw = globalThis.localStorage?.getItem(TENANT_CONFIG_CACHE_KEY);
+    if (!raw) return null;
+    return (JSON.parse(raw) as { code?: string }).code ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function scopedKey(base: string, tenantCode: string | null): string {
+  return tenantCode ? `${base}_${tenantCode}` : base;
+}
+
+function readStoredActiveUnit(): TenantUnitSummary | null {
+  if (typeof globalThis === "undefined") {
+    return null;
+  }
+
+  try {
+    const tenantCode = getTenantCode();
+    const raw = globalThis.localStorage.getItem(
+      scopedKey(ACTIVE_UNIT_STORAGE_KEY, tenantCode),
+    );
+
+    if (!raw) {
+      return null;
+    }
+
+    return JSON.parse(raw) as TenantUnitSummary;
+  } catch {
+    return null;
+  }
 }
 
 export interface ResolvedTenantUnits {
@@ -62,8 +100,39 @@ export const tenantUnitService = {
       let preferredActiveUnitId: string | null = null;
 
       if (gestorTenantId) {
-        // Gestor: lista todos os polos do tenant
+        const storedActiveUnit = readStoredActiveUnit();
+
         unitsQuery = unitsQuery.eq("tenant_id", gestorTenantId);
+
+        const { data: units, error: unitsError } = await unitsQuery.order("name", {
+          ascending: true,
+        });
+
+        if (unitsError) {
+          return { data: null, error: unitsError };
+        }
+
+        const unitRows = (units ?? []) as unknown as SharedTenantUnitRow[];
+
+        if (storedActiveUnit?.tenantId === gestorTenantId) {
+          return {
+            data: {
+              availableUnits: unitRows.map(mapSharedUnitToSummary),
+              preferredActiveUnitId: storedActiveUnit.id,
+            },
+            error: null,
+          };
+        }
+
+        // Gestor (owner) inicia no portal administrativo do tenant quando nao
+        // existe um polo explicitamente selecionado na sessao atual.
+        return {
+          data: {
+            availableUnits: [],
+            preferredActiveUnitId: null,
+          },
+          error: null,
+        };
       } else {
         // Operador: lista apenas os polos vinculados
         const { data: memberships, error: membershipsError } = await client
