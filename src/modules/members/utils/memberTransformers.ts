@@ -38,6 +38,7 @@ export const mapRowToListItem = (
     data_de_admissao: typeof row.data_de_admissao === 'string' ? row.data_de_admissao : null,
     situacao: typeof row.situacao === 'string' ? row.situacao : null,
     codigo_localidade: typeof row.codigo_localidade === 'string' ? row.codigo_localidade : null,
+    portaria_id: typeof row.portaria_id === 'string' ? row.portaria_id : null,
     foto_url: cpf && photoUrlBuilder ? (photoUrlBuilder(cpf, updatedAt) ?? null) : null,
   };
 };

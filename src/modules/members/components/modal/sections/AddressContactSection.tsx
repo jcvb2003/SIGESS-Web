@@ -1,4 +1,7 @@
 import { MemberRegistrationForm } from "../../../types/member.types";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
+import { useLocalitiesData } from "../../../hooks/data/useLocalitiesData";
+import { usePortariasData } from "../../../hooks/data/usePortariasData";
 import {
   Card,
   CardContent,
@@ -11,6 +14,16 @@ interface AddressContactSectionProps {
   member: MemberRegistrationForm;
 }
 export function AddressContactSection({ member }: AddressContactSectionProps) {
+  const { unitId } = useActiveScope();
+  const { localities } = useLocalitiesData(unitId);
+  const { portarias } = usePortariasData(unitId);
+  const localityName =
+    localities.find((locality) => locality.code === member.codigoLocalidade)?.name || member.codigoLocalidade || "";
+  const activePortaria = portarias.find((portaria) => portaria.id === member.portariaId);
+  const portariaLabel = activePortaria
+    ? `${activePortaria.codigoPortaria} - ${activePortaria.nome}`
+    : "";
+
   return (
     <Card className="border-border/40 shadow-sm">
       <CardHeader className="pb-4">
@@ -27,6 +40,8 @@ export function AddressContactSection({ member }: AddressContactSectionProps) {
           <InfoItem label="Cidade" value={member.cidade} />
           <InfoItem label="UF" value={member.uf} />
           <InfoItem label="CEP" value={member.cep} />
+          <InfoItem label="Localidade" value={localityName} />
+          <InfoItem label="Portaria" value={portariaLabel} />
           <InfoItem label="Telefone" value={member.telefone} />
           <InfoItem label="Email" value={member.email} />
         </div>
