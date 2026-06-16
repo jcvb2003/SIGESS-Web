@@ -93,6 +93,7 @@ export const memberRegistrationSchema = z
     dataDeAdmissao: requiredDateSchema("Data de admissão inválida"),
 
     codigoLocalidade: numberStringSchema,
+    portariaId: optionalStringSchema,
     situacao: z
       .enum([
         "ATIVO",

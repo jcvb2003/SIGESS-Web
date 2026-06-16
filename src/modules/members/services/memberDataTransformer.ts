@@ -76,6 +76,7 @@ export function toMemberInsertPayload(
     codigo_localidade: input.codigoLocalidade
       ? String(input.codigoLocalidade)
       : null,
+    portaria_id: input.portariaId || null,
     nome: toUpperOrEmpty(input.nome),
     apelido: toUpperOrEmpty(input.apelido),
     cpf: formatCPF(input.cpf),
@@ -151,6 +152,7 @@ export function fromMemberRecord(
     codigoLocalidade: record.codigo_localidade
       ? String(record.codigo_localidade)
       : "",
+    portariaId: record.portaria_id ?? "",
     nome: getString(record.nome),
     apelido: getString(record.apelido),
     cpf: getString(record.cpf),

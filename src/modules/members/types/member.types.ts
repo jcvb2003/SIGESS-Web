@@ -36,7 +36,7 @@ export interface MemberRegistrationForm {
   id?: string;
   codigoDoSocio: string;
   codigoLocalidade: string;
-  portariaId?: string | null;
+  portariaId?: string;
   nome: string;
   apelido: string;
   cpf: string;
@@ -122,6 +122,7 @@ export interface LocalityOption {
 export const initialMemberRegistrationForm: MemberRegistrationForm = {
   codigoDoSocio: "",
   codigoLocalidade: "",
+  portariaId: "",
   nome: "",
   apelido: "",
   cpf: "",
