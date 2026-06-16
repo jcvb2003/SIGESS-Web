@@ -1,4 +1,5 @@
 import { Outlet, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { AppSidebar } from "./AppSidebar";
 import { useMobile } from "@/shared/hooks/useMobile";
 import { cn } from "@/shared/lib/utils";
@@ -32,6 +33,23 @@ export function DashboardLayout() {
     void signOut();
   }, [signOut]);
   useNetworkStatus();
+
+  // html/body não têm overflow:hidden por padrão, o que permite que o documento
+  // scroll quando o conteúdo (ex: /registration) ultrapassa o viewport.
+  // Com isso o sidebar — que tem sticky bloqueado pelo overflow:hidden do container
+  // pai — sobe junto com o documento. Bloquear aqui evita o scroll do documento
+  // sem afetar rotas fora do DashboardLayout (login, impressão, portal de pagamento).
+  useEffect(() => {
+    const prevBody = document.body.style.overflow;
+    const prevHtml = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevBody;
+      document.documentElement.style.overflow = prevHtml;
+    };
+  }, []);
+
   useIdleTimeout({
     onTimeout: handleIdleTimeout,
   });
