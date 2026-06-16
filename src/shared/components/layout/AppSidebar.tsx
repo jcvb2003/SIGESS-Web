@@ -13,7 +13,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/shared/components/ui/sheet";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import {
   Tooltip,
   TooltipContent,
@@ -41,6 +41,7 @@ type SidebarContentProps = {
   onSignOut: () => void;
   accountMenuOpen: boolean;
   onAccountMenuOpenChange: (open: boolean) => void;
+  navScrollRef?: React.RefObject<HTMLDivElement | null>;
 };
 
 function SidebarContent({
@@ -52,6 +53,7 @@ function SidebarContent({
   onSignOut,
   accountMenuOpen,
   onAccountMenuOpenChange,
+  navScrollRef,
 }: Readonly<SidebarContentProps>) {
   const navigate = useNavigate();
   const { entity, isLoading: isEntityLoading } = useEntityData();
@@ -107,17 +109,16 @@ function SidebarContent({
 
       {/* polo ativo movido para o trigger do dropdown abaixo */}
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-3">
+      <div
+        ref={navScrollRef}
+        className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-3"
+      >
         <nav className="space-y-1">
           {navigationItems.map((item) => {
             const isActive =
               pathname === item.href ||
               (item.href !== "/dashboard" &&
                 pathname.startsWith(`${item.href}/`));
-
-            const handleItemClick = () => {
-              onNavigate();
-            };
 
             let linkStatusClasses =
               "text-sidebar-foreground/80 hover:bg-primary-foreground/20 hover:text-sidebar-foreground dark:hover:bg-white/10 dark:hover:text-white";
@@ -130,7 +131,7 @@ function SidebarContent({
             const LinkContent = (
               <Link
                 to={item.href}
-                onClick={handleItemClick}
+                onClick={onNavigate}
                 className={cn(
                   "flex items-center rounded-xl py-3 text-sm font-semibold transition-all whitespace-nowrap relative overflow-hidden group my-1",
                   isCollapsed
@@ -318,8 +319,17 @@ export function AppSidebar({
   const isMobile = useMobile();
   const [open, setOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const navScrollRef = useRef<HTMLDivElement>(null);
   const isExpanded = isMobile || isHovered || accountMenuOpen;
   const isCollapsed = !isExpanded;
+
+  // Clicar num link do nav foca o <a>, o browser faz scrollIntoView dentro do
+  // overflow-y-auto do nav div e o scrollTop não-zero persiste após a navegação.
+  // Resetar aqui, após o layout, corrige sem remover a capacidade de scroll em
+  // viewports muito pequenos (onde os 10 itens podem não caber).
+  useLayoutEffect(() => {
+    if (navScrollRef.current) navScrollRef.current.scrollTop = 0;
+  }, [pathname]);
 
   if (isMobile) {
     return (
@@ -352,6 +362,7 @@ export function AppSidebar({
             onSignOut={signOut}
             accountMenuOpen={accountMenuOpen}
             onAccountMenuOpenChange={setAccountMenuOpen}
+            navScrollRef={navScrollRef}
           />
         </SheetContent>
       </Sheet>
@@ -381,6 +392,7 @@ export function AppSidebar({
           onSignOut={signOut}
           accountMenuOpen={accountMenuOpen}
           onAccountMenuOpenChange={setAccountMenuOpen}
+          navScrollRef={navScrollRef}
         />
       </div>
     </aside>
