@@ -151,7 +151,6 @@ export function AddressForm() {
               label="Portaria"
               placeholder="Selecione a portaria"
               options={portariaOptions}
-              required
             />
           )}
         </CardContent>

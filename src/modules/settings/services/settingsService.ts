@@ -467,13 +467,19 @@ export const settingsService = {
     }
 
     const sharedTenantId = await resolveTenantIdViaTenantUsers();
+    if (!sharedTenantId) {
+      return {
+        data: null,
+        error: new Error("Tenant atual nao identificado para salvar portaria."),
+      };
+    }
     const { data, error } = await supabase
       .from(PORTARIAS_TABLE)
       .insert({
         codigo_portaria: normalizedCodigo,
         nome: normalizedNome,
         ...(unitId ? { unit_id: unitId } : {}),
-        ...(sharedTenantId ? { tenant_id: sharedTenantId } : {}),
+        tenant_id: sharedTenantId,
       })
       .select("id, codigo_portaria, nome, is_active")
       .single();

@@ -46,7 +46,7 @@ export function GlobalMemberSearch({ onSelect }: GlobalMemberSearchProps) {
           pageSize: 8,
           searchTerm: value,
           statusFilter: "all",
-          localityCode: undefined,
+          localityCode: "",
           portariaId: null, // busca global: nunca filtra por portaria ativa
           birthMonth: "",
           gender: "all",
