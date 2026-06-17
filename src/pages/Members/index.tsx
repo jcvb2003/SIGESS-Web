@@ -22,7 +22,7 @@ export default function Members() {
   const { search, table, pagination, filterPanel, deleteDialog, viewDialog } =
     useMembersListController();
   const { unitId } = useActiveScope();
-  const { localities } = useLocalitiesData(unitId);
+  const { localities } = useLocalitiesData();
   const { portarias } = usePortariasData(unitId);
 
   return (

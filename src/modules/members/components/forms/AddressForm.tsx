@@ -23,7 +23,7 @@ export function AddressForm() {
   const { control, setValue, trigger } = useFormContext();
   const [isLocalityDialogOpen, setIsLocalityDialogOpen] = useState(false);
   const { unitId } = useActiveScope();
-  const { localities, loading } = useLocalitiesData(unitId);
+  const { localities, loading } = useLocalitiesData();
   const { portarias } = usePortariasData(unitId);
   const hasMultiplePortarias = portarias.length >= 2;
 

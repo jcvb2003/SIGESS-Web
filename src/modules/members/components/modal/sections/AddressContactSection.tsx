@@ -15,7 +15,7 @@ interface AddressContactSectionProps {
 }
 export function AddressContactSection({ member }: AddressContactSectionProps) {
   const { unitId } = useActiveScope();
-  const { localities } = useLocalitiesData(unitId);
+  const { localities } = useLocalitiesData();
   const { portarias } = usePortariasData(unitId);
   const localityName =
     localities.find((locality) => locality.code === member.codigoLocalidade)?.name || member.codigoLocalidade || "";
