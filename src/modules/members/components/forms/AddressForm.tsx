@@ -15,16 +15,14 @@ import { SelectField } from "@/shared/components/form-fields/fields/SelectField"
 import { Button } from "@/shared/components/ui/button";
 import { useLocalitiesData } from "../../hooks/data/useLocalitiesData";
 import { usePortariasData } from "../../hooks/data/usePortariasData";
-import { useActiveScope } from "@/shared/hooks/useActiveScope";
 import { MapPin, Plus } from "lucide-react";
 import { LocalityManagementDialog } from "@/modules/settings/components/data/LocalityManagementDialog";
 
 export function AddressForm() {
   const { control, setValue, trigger } = useFormContext();
   const [isLocalityDialogOpen, setIsLocalityDialogOpen] = useState(false);
-  const { unitId } = useActiveScope();
   const { localities, loading } = useLocalitiesData();
-  const { portarias } = usePortariasData(unitId);
+  const { portarias } = usePortariasData();
   const hasMultiplePortarias = portarias.length >= 2;
 
   const localityOptions = localities

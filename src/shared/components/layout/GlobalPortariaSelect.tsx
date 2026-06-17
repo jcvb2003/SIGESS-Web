@@ -7,11 +7,9 @@ import {
 } from "@/shared/components/ui/select";
 import { usePortariaScope } from "@/shared/context/PortariaContext";
 import { usePortariasData } from "@/modules/members/hooks/data/usePortariasData";
-import { useActiveScope } from "@/shared/hooks/useActiveScope";
 
 export function GlobalPortariaSelect() {
-  const { unitId } = useActiveScope();
-  const { portarias } = usePortariasData(unitId);
+  const { portarias } = usePortariasData();
   const { activePortariaId, setActivePortariaId } = usePortariaScope();
 
   if (portarias.length < 2) return null;

@@ -12,7 +12,6 @@ import { MemberStatusCell } from "@/modules/members/components/table/cells/Membe
 import { MembersTableActions } from "@/modules/members/components/table/MembersTableActions";
 import { useLocalitiesData } from "@/modules/members/hooks/data/useLocalitiesData";
 import { usePortariasData } from "@/modules/members/hooks/data/usePortariasData";
-import { useActiveScope } from "@/shared/hooks/useActiveScope";
 import { MemberListItem } from "@/modules/members/types/member.types";
 import { useMembersListController } from "@/modules/members/hooks/data/useMemberData";
 import { toMemberListItem } from "@/modules/members/utils/memberTransformers";
@@ -21,9 +20,8 @@ import { PageHeader } from "@/shared/components/layout/PageHeader";
 export default function Members() {
   const { search, table, pagination, filterPanel, deleteDialog, viewDialog } =
     useMembersListController();
-  const { unitId } = useActiveScope();
   const { localities } = useLocalitiesData();
-  const { portarias } = usePortariasData(unitId);
+  const { portarias } = usePortariasData();
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">

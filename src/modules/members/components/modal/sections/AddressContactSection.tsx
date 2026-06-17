@@ -1,5 +1,4 @@
 import { MemberRegistrationForm } from "../../../types/member.types";
-import { useActiveScope } from "@/shared/hooks/useActiveScope";
 import { useLocalitiesData } from "../../../hooks/data/useLocalitiesData";
 import { usePortariasData } from "../../../hooks/data/usePortariasData";
 import {
@@ -14,9 +13,8 @@ interface AddressContactSectionProps {
   member: MemberRegistrationForm;
 }
 export function AddressContactSection({ member }: AddressContactSectionProps) {
-  const { unitId } = useActiveScope();
   const { localities } = useLocalitiesData();
-  const { portarias } = usePortariasData(unitId);
+  const { portarias } = usePortariasData();
   const localityName =
     localities.find((locality) => locality.code === member.codigoLocalidade)?.name || member.codigoLocalidade || "";
   const activePortaria = portarias.find((portaria) => portaria.id === member.portariaId);

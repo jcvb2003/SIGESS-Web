@@ -2,8 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { settingsQueryKeys } from "@/modules/settings/queryKeys";
 import { settingsService } from "@/modules/settings/services/settingsService";
 import type { Portaria } from "@/modules/settings/types/settings.types";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 
-export function usePortariasData(unitId?: string | null) {
+export function usePortariasData() {
+  const { unitId, bootstrapped } = useActiveScope();
+
   const {
     data: portarias,
     isLoading,
@@ -16,6 +19,7 @@ export function usePortariasData(unitId?: string | null) {
       return response.data || [];
     },
     staleTime: 30 * 60 * 1000,
+    enabled: bootstrapped && !!unitId,
   });
   return {
     portarias: (portarias || []) as Portaria[],
