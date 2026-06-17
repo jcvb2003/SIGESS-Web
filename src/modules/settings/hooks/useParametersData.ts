@@ -2,8 +2,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { settingsService } from "../services/settingsService";
 import { SystemParameters } from "../types/settings.types";
-export function useParametersData(unitId?: string | null) {
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
+
+export function useParametersData() {
+  const { unitId, bootstrapped } = useActiveScope();
   const queryClient = useQueryClient();
+
   const parametersQuery = useQuery({
     queryKey: ["settings", "parameters", unitId ?? null],
     queryFn: async () => {
@@ -12,7 +16,9 @@ export function useParametersData(unitId?: string | null) {
       return data;
     },
     staleTime: 30 * 60 * 1000,
+    enabled: bootstrapped && !!unitId,
   });
+
   const saveMutation = useMutation({
     mutationFn: async (values: SystemParameters) => {
       const { data, error } = await settingsService.saveParameters(values, unitId);
@@ -31,6 +37,7 @@ export function useParametersData(unitId?: string | null) {
       toast.error(message);
     },
   });
+
   return {
     parameters: parametersQuery.data,
     isLoading: parametersQuery.isLoading,
