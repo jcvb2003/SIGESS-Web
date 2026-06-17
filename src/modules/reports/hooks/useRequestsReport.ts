@@ -9,7 +9,8 @@ export function useRequestsReport(
   carenciaFilter: string = "all",
   enabled = true
 ) {
-  const { unitId } = useActiveScope();
+  const { unitId, bootstrapped } = useActiveScope();
+  const scopeReady = bootstrapped && !!unitId;
   const queryClient = useQueryClient();
   const [pageBySearch, setPageBySearch] = useState<Record<string, number>>({});
   const [pageSize, setPageSize] = useState(10);
@@ -25,7 +26,7 @@ export function useRequestsReport(
       }
       return reportsService.fetchRequestsReport(page, pageSize, searchTerm, unitId);
     },
-    enabled,
+    enabled: scopeReady && enabled,
     placeholderData: (previousData) => previousData,
   });
   const deleteMutation = useMutation({

@@ -4,12 +4,13 @@ import { financeSettingsService } from "../../services/financeSettingsService";
 import { useActiveScope } from "@/shared/hooks/useActiveScope";
 
 export function useFinanceSettings() {
-  const { unitId } = useActiveScope();
+  const { unitId, bootstrapped } = useActiveScope();
 
   const query = useQuery({
     queryKey: financeQueryKeys.settings(unitId),
     queryFn: () => financeSettingsService.getSettings(unitId),
     staleTime: 30 * 60 * 1000,
+    enabled: bootstrapped && !!unitId,
   });
 
   return {

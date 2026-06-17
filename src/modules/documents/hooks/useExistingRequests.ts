@@ -9,7 +9,7 @@ import type {
 } from "../types/document.types";
 import { useActiveScope } from "@/shared/hooks/useActiveScope";
 export function useExistingRequests(params: DocumentSearchParams) {
-  const { unitId } = useActiveScope();
+  const { unitId, bootstrapped } = useActiveScope();
   const query = useQuery({
     queryKey: [...documentQueryKeys.list(params), unitId],
     queryFn: async () => {
@@ -17,6 +17,7 @@ export function useExistingRequests(params: DocumentSearchParams) {
       if (error) throw error;
       return data;
     },
+    enabled: bootstrapped && !!unitId,
   });
   return {
     documents: query.data?.items ?? [],

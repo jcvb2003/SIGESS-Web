@@ -9,12 +9,12 @@ export function useDAEsByPeriod(
   pageSize: number = 20,
   orderBy: "data_pagamento_boleto" | "created_at" = "data_pagamento_boleto",
 ) {
-  const { unitId } = useActiveScope();
+  const { unitId, bootstrapped } = useActiveScope();
 
   return useQuery({
     queryKey: ["daes-by-period", startDate, endDate, page, pageSize, orderBy, unitId],
     queryFn: () => daeService.getDAEsByPeriod(startDate, endDate, page, pageSize, orderBy, unitId),
-    enabled: !!startDate && !!endDate,
+    enabled: bootstrapped && !!unitId && !!startDate && !!endDate,
     staleTime: 0,
   });
 }

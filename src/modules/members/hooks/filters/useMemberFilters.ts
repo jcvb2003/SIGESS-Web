@@ -20,7 +20,7 @@ export function useMemberFilters() {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   const { activePortariaId, setActivePortariaId } = usePortariaScope();
-  const { unitId } = useActiveScope();
+  const { unitId, bootstrapped } = useActiveScope();
 
   const localitiesQuery = useQuery<LocalityOption[]>({
     queryKey: settingsQueryKeys.localities(),
@@ -35,6 +35,7 @@ export function useMemberFilters() {
       return response.data || [];
     },
     staleTime: 30 * 60 * 1000,
+    enabled: bootstrapped && !!unitId,
   });
 
   // portariaFilter é derivado do contexto global para manter sincronia com o header

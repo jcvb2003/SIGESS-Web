@@ -12,7 +12,7 @@ export function usePaymentsByPeriod(
   searchTerm = "",
   selectedTypes?: PaymentType[],
 ) {
-  const { unitId } = useActiveScope();
+  const { unitId, bootstrapped } = useActiveScope();
 
   return useQuery({
     queryKey: ["payments-by-period", startDate, endDate, page, pageSize, orderBy, searchTerm, selectedTypes, unitId],
@@ -27,7 +27,7 @@ export function usePaymentsByPeriod(
         searchTerm,
         selectedTypes,
       ),
-    enabled: !!startDate && !!endDate,
+    enabled: bootstrapped && !!unitId && !!startDate && !!endDate,
     staleTime: 0,
   });
 }
