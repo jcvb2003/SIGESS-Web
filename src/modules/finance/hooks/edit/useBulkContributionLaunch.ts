@@ -6,11 +6,14 @@ import { useActiveScope } from "@/shared/hooks/useActiveScope";
 
 export function useBulkContributionLaunch() {
   const queryClient = useQueryClient();
-  const { unitId } = useActiveScope();
+  const { unitId, bootstrapped } = useActiveScope();
+  const isReady = bootstrapped && !!unitId;
 
-  return useMutation({
-    mutationFn: (chargeTypeId: string) =>
-      generatedChargesService.launchBulk(chargeTypeId, unitId),
+  const mutation = useMutation({
+    mutationFn: (chargeTypeId: string) => {
+      if (!unitId) throw new Error('Unidade não resolvida');
+      return generatedChargesService.launchBulk(chargeTypeId, unitId);
+    },
     onSuccess: (count) => {
       toast.success(`${count} pendência(s) gerada(s) com sucesso.`);
       queryClient.invalidateQueries({ queryKey: financeQueryKeys.all });
@@ -19,4 +22,6 @@ export function useBulkContributionLaunch() {
       toast.error("Erro ao lançar contribuição em massa.");
     },
   });
+
+  return { ...mutation, isReady };
 }
