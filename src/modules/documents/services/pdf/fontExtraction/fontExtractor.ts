@@ -99,9 +99,13 @@ class PdfFontExtractor {
     return cleanFontName;
   }
   private validateFontSize(fontSize: number): number {
-    if (typeof fontSize !== "number" || Number.isNaN(fontSize) || fontSize <= 0) {
+    if (typeof fontSize !== "number" || Number.isNaN(fontSize) || fontSize < 0) {
       this.warn("Tamanho da fonte inválido, usando 12 como padrão");
       return 12;
+    }
+    if (fontSize === 0) {
+      // 0 Tf em AcroForm significa auto-size nativo do campo.
+      return 0;
     }
     if (fontSize < 6) {
       this.warn("Tamanho da fonte muito pequeno, ajustando para 6pt");

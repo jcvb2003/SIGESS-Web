@@ -107,7 +107,7 @@ export function UserManagementSection() {
   );
 
   return (
-    <Card className="border-border/50 shadow-md">
+      <Card className="border-border/50 shadow-md">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <div>
           <CardTitle className="text-xl font-bold flex items-center gap-2">
@@ -460,6 +460,6 @@ export function UserManagementSection() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Card>
+      </Card>
   );
 }

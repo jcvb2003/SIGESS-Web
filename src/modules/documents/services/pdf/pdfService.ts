@@ -3,7 +3,10 @@ import fontkit from "@pdf-lib/fontkit";
 import { toast } from "sonner";
 import { fillPdfForm } from "./pdfFormFiller";
 import { DocumentTemplate } from "../../../settings/types/settings.types";
-import { FieldFontConfig } from "./fontExtraction/fontExtractor";
+import {
+  FieldFontConfig,
+  pdfFontExtractor,
+} from "./fontExtraction/fontExtractor";
 import {
   resetFontSystem,
   applyGlobalFontConfig,
@@ -101,7 +104,7 @@ export const pdfService = {
     try {
       resetFontSystem();
 
-      const [pdfBytes, fieldConfigurations] = await Promise.all([
+      const [pdfBytes, parsedFieldConfigurations] = await Promise.all([
         fetchTemplateBytes(template),
         Promise.resolve(parseFontConfigurations(template.fontConfigurations)),
       ]);
@@ -110,13 +113,32 @@ export const pdfService = {
       pdfDoc.registerFontkit(fontkit);
 
       const form = pdfDoc.getForm();
-      await fillPdfForm(form, data);
+      const isOtherDocument = template.documentType === "other";
+      let fieldConfigurations = parsedFieldConfigurations;
 
-      if (fieldConfigurations.length > 0) {
+      if (isOtherDocument && fieldConfigurations.length === 0) {
+        const extracted = await pdfFontExtractor.extractFieldFontConfigurations(
+          pdfBytes,
+        );
+        fieldConfigurations = extracted.fieldConfigurations;
+      }
+
+      const hasFieldConfigurations = fieldConfigurations.length > 0;
+
+      await fillPdfForm(
+        form,
+        data,
+        pdfDoc,
+        fieldConfigurations,
+      );
+
+      if (!isOtherDocument && hasFieldConfigurations) {
         await applyGlobalFontConfig(pdfDoc, fieldConfigurations);
       }
 
-      const pdfBytesSaved = await pdfDoc.save({ updateFieldAppearances: true });
+      const pdfBytesSaved = await pdfDoc.save({
+        updateFieldAppearances: !(isOtherDocument && hasFieldConfigurations),
+      });
       const blob = new Blob([pdfBytesSaved.buffer as ArrayBuffer], { type: "application/pdf" });
 
       return openPdfWindow(blob, fileName);

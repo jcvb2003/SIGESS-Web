@@ -1,18 +1,24 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { Loader2, LogOut } from "lucide-react";
+import { KeyRound, Loader2, LogOut } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { useAuth } from "@/modules/auth/context/authContextStore";
 import { useEntityData } from "@/shared/hooks/useEntityData";
 import { usePortalContext } from "@/shared/hooks/usePortalContext";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useIdleTimeout } from "@/modules/auth/hooks/useIdleTimeout";
 import { useNetworkStatus } from "@/shared/hooks/useNetworkStatus";
+import {
+  Dialog,
+  DialogContent,
+} from "@/shared/components/ui/dialog";
+import { PasswordChangeForm } from "@/modules/settings/components/passwords/PasswordChangeForm";
 
 export function TenantAdministrationLayout() {
   const { session, loading: authLoading, signOut } = useAuth();
   const { isPortalContextLoading, isStatePortal } = usePortalContext();
   const { entity } = useEntityData();
   const location = useLocation();
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const handleIdleTimeout = useCallback(() => {
     void signOut();
   }, [signOut]);
@@ -73,8 +79,22 @@ export function TenantAdministrationLayout() {
             </span>
           </div>
 
-          {/* Sair */}
-          <div className="flex items-center justify-end flex-1">
+          {/* Perfil + sair */}
+          <div className="flex items-center justify-end gap-2 flex-1">
+            <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setProfileDialogOpen(true)}
+                className="gap-2 h-8 text-xs"
+              >
+                <KeyRound className="h-3.5 w-3.5" />
+                <span>Perfil</span>
+              </Button>
+              <DialogContent className="p-0 border-none sm:max-w-md">
+                <PasswordChangeForm onSuccess={() => setProfileDialogOpen(false)} />
+              </DialogContent>
+            </Dialog>
             <Button
               variant="outline"
               size="sm"

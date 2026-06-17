@@ -19,7 +19,6 @@ async function applyFieldConfig(
   if (config) {
     try {
       const font = await getFont(config.fontConfig.fontName, pdfDoc);
-      field.updateAppearances(font);
       field.setFontSize(config.fontConfig.fontSize);
       switch (config.fontConfig.alignment) {
         case "center":
@@ -33,6 +32,9 @@ async function applyFieldConfig(
           field.setAlignment(TextAlignment.Left);
           break;
       }
+      // Em templates "other", este refresh local e o que materializa o valor
+      // com a fonte/tamanho/alinhamento corretos sem depender de foco manual.
+      field.updateAppearances(font);
     } catch (error) {
       console.warn(
         `Erro ao aplicar configuração de fonte para o campo ${fieldName}:`,

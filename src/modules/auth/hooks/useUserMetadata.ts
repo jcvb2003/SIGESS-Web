@@ -6,6 +6,7 @@ interface UserMetadata {
   max_socios: number | null;
   acesso_expira_em: string | null;
   isExpired: boolean;
+  profileName: string | null;
 }
 
 export function useUserMetadata() {
@@ -22,15 +23,29 @@ export function useUserMetadata() {
 
     const fetchMetadata = async () => {
       try {
-        const { data: configData, error: configError } = await supabase
-          .from("tenants")
-          .select("max_socios, acesso_expira_em")
-          .limit(1)
-          .maybeSingle();
+        const [
+          { data: configData, error: configError },
+          { data: profileData, error: profileError },
+        ] = await Promise.all([
+          supabase
+            .from("tenants")
+            .select("max_socios, acesso_expira_em")
+            .limit(1)
+            .maybeSingle(),
+          supabase
+            .from("user_profiles")
+            .select("nome")
+            .eq("id", user.id)
+            .maybeSingle(),
+        ]);
 
         if (configError) {
           console.error("Error fetching config metadata:", configError);
           return;
+        }
+
+        if (profileError) {
+          console.error("Error fetching profile metadata:", profileError);
         }
 
         const isExpired = configData?.acesso_expira_em 
@@ -41,6 +56,7 @@ export function useUserMetadata() {
           max_socios: configData?.max_socios ?? 0,
           acesso_expira_em: configData?.acesso_expira_em || null,
           isExpired,
+          profileName: profileData?.nome?.trim() || null,
         });
       } catch (err) {
         console.error("Unexpected error fetching user metadata:", err);

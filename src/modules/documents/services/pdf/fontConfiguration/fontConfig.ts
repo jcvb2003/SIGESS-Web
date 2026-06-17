@@ -63,6 +63,35 @@ export async function getFont(
         font = await pdfDoc.embedFont(boldItalicBytes);
         break;
       }
+      case "arial":
+      case "arialmt": {
+        const regularBytes = await loadFontFile("/fonts/arial.ttf");
+        font = await pdfDoc.embedFont(regularBytes);
+        break;
+      }
+      case "arial-bold":
+      case "arialbdmt":
+      case "arial-boldmt": {
+        const boldBytes = await loadFontFile("/fonts/arial-bold.ttf");
+        font = await pdfDoc.embedFont(boldBytes);
+        break;
+      }
+      case "arial-italic":
+      case "arialitalic":
+      case "arialitalicmt":
+      case "arial-it": {
+        const italicBytes = await loadFontFile("/fonts/arial-italic.ttf");
+        font = await pdfDoc.embedFont(italicBytes);
+        break;
+      }
+      case "arial-bold-italic":
+      case "arialbolditalic":
+      case "arialbolditalicmt":
+      case "arialbi": {
+        const boldItalicBytes = await loadFontFile("/fonts/arial-bold-italic.ttf");
+        font = await pdfDoc.embedFont(boldItalicBytes);
+        break;
+      }
       case "courier":
       case "couriernew":
       case "courier-new":
