@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { supabase } from '@/shared/lib/supabase/client';
 import { toast } from 'sonner';
 import { UserRole } from '@/shared/types/auth.types';
-import { useTenantUnits } from '@/modules/tenant-units/context/TenantUnitContext';
+import { useActiveScope } from '@/shared/hooks/useActiveScope';
 
 export interface User {
   id: string;
@@ -20,9 +20,7 @@ export interface User {
 export function useUserManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
-  const { activeUnit, bootstrapped } = useTenantUnits();
-
-  const activeUnitId = activeUnit?.id ?? null;
+  const { unitId: activeUnitId, bootstrapped } = useActiveScope();
   const tenantCode =
     typeof globalThis === "undefined" ? null : globalThis.localStorage.getItem("sigess_tenant");
 
