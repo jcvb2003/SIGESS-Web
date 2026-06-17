@@ -46,7 +46,7 @@ export function FinanceSettingsDialog({
   const { unitId } = useActiveScope();
   // Data Fetching
   const { settings, isLoading: loadingSettings } = useFinanceSettings();
-  const { chargeTypes, isLoading: loadingChargeTypes } = useChargeTypes(false, unitId);
+  const { chargeTypes, isLoading: loadingChargeTypes } = useChargeTypes(false);
 
   // Mutations
   const updateSettingsMutation = useUpdateFinanceSettings();
