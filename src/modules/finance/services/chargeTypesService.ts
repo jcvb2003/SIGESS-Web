@@ -25,13 +25,14 @@ export const chargeTypesService = {
     return data ?? [];
   },
 
-  async create(charge: Omit<ChargeType, "id" | "created_at" | "updated_at">, unitId?: string | null): Promise<void> {
+  async create(charge: Omit<ChargeType, "id" | "created_at" | "updated_at">, unitId: string | null): Promise<void> {
+    if (!unitId) throw new Error('unitId obrigatório em chargeTypesService.create');
     const sharedTenantId = await resolveTenantIdViaTenantUsers();
     const { error } = await supabase
       .from("tipos_cobranca")
       .insert({
         ...charge,
-        ...(unitId ? { unit_id: unitId } : {}),
+        unit_id: unitId,
         ...(sharedTenantId ? { tenant_id: sharedTenantId } : {}),
       });
 
