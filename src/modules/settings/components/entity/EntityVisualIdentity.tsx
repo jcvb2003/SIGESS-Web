@@ -275,18 +275,18 @@ export function EntityVisualIdentity() {
           />
 
           <div>
-            <Button
+            <button
               type="button"
-              variant="ghost"
-              size="sm"
-              className="h-auto px-0 py-1 text-xs text-muted-foreground hover:text-foreground"
+              className="group flex items-center gap-1.5 text-xs text-muted-foreground/70 hover:text-primary transition-colors duration-200 py-0.5 mt-1"
               onClick={() => setShowAdvanced((prev) => !prev)}
             >
               <ChevronDown
-                className={`mr-1 h-3 w-3 transition-transform ${showAdvanced ? "rotate-180" : ""}`}
+                className={`h-3 w-3 shrink-0 transition-transform duration-200 ${showAdvanced ? "rotate-180" : ""}`}
               />
-              Opções avançadas
-            </Button>
+              <span className="group-hover:underline underline-offset-2 decoration-dashed">
+                Opções avançadas
+              </span>
+            </button>
 
             {showAdvanced && (
               <div className="mt-3">
