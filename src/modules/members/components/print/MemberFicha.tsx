@@ -10,7 +10,7 @@ interface MemberFichaProps {
 
 const InfoGroup = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div className="mb-4">
-    <h3 className="text-[11px] font-black text-emerald-800 uppercase border-b border-emerald-100 pb-0.5 mb-2 tracking-wider">
+    <h3 className="text-[11px] font-black text-primary uppercase border-b border-primary/20 pb-0.5 mb-2 tracking-wider">
       {title}
     </h3>
     <div className="grid grid-cols-3 gap-y-3 gap-x-4">
@@ -47,7 +47,7 @@ export function MemberFicha({ member }: MemberFichaProps) {
 
       <div className="relative z-10 flex-1 flex flex-col">
         {/* Header Compacto */}
-        <div className="flex items-start justify-between border-b-2 border-emerald-600 pb-4 mb-6">
+        <div className="flex items-start justify-between border-b-2 border-primary pb-4 mb-6">
           <div className="flex items-center gap-4">
             <div className="h-16 w-16 bg-white rounded-lg flex items-center justify-center p-1 border border-slate-100 shadow-sm">
               <img src={entity?.logoUrl || "/logo.svg"} alt="Logo" className="max-h-full max-w-full object-contain" />
@@ -56,7 +56,7 @@ export function MemberFicha({ member }: MemberFichaProps) {
               <h1 className="text-lg font-black text-slate-900 leading-none uppercase">
                 {entity?.name || "FICHA DE REGISTRO DO SÓCIO"}
               </h1>
-              <p className="text-[10px] text-emerald-700 font-bold uppercase tracking-widest mt-1">
+              <p className="text-[10px] text-primary font-bold uppercase tracking-widest mt-1">
                 CNPJ: {entity?.cnpj || "00.000.000/0001-00"}
               </p>
               <p className="text-[9px] text-slate-400 mt-0.5 uppercase font-medium">
@@ -68,7 +68,7 @@ export function MemberFicha({ member }: MemberFichaProps) {
           <div className="flex gap-4">
             <div className="flex flex-col items-end justify-center">
               <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Matrícula</span>
-              <span className="text-lg font-black text-emerald-600 leading-none">#{member.codigoDoSocio || "0000"}</span>
+              <span className="text-lg font-black text-primary leading-none">#{member.codigoDoSocio || "0000"}</span>
             </div>
             <div className="h-24 w-20 border-2 border-slate-100 rounded-lg flex items-center justify-center bg-slate-50/50 overflow-hidden shadow-inner">
               {member.fotos?.[0]?.foto_url ? (
@@ -136,7 +136,7 @@ export function MemberFicha({ member }: MemberFichaProps) {
           {/* Observações - Reduzida */}
           {member.observacoes && (
             <div className="mb-4">
-              <h3 className="text-[10px] font-black text-emerald-800 uppercase border-b border-emerald-100 pb-0.5 mb-1.5 tracking-wider">
+              <h3 className="text-[10px] font-black text-primary uppercase border-b border-primary/20 pb-0.5 mb-1.5 tracking-wider">
                 Observações
               </h3>
               <p className="text-[10px] text-slate-600 leading-tight italic line-clamp-3">
