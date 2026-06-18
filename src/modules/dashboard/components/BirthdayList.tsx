@@ -34,7 +34,7 @@ export function BirthdayList({ members = [], loading }: BirthdayListProps) {
     <Card className="col-span-1 h-full shadow-sm hover:shadow-md transition-all duration-300 border-none bg-card/50 backdrop-blur-sm overflow-hidden">
       <CardHeader className="pb-3 border-b border-border/40">
         <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground break-words">
-          <div className="p-1.5 rounded-lg bg-accent/10 text-accent shrink-0">
+          <div className="p-1.5 rounded-lg bg-primary/10 text-primary shrink-0">
             <Calendar className="h-4 w-4" />
           </div>
           <span className="truncate">
@@ -67,24 +67,24 @@ export function BirthdayList({ members = [], loading }: BirthdayListProps) {
             {members.map((member) => (
               <div
                 key={member.id}
-                className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-accent/5 to-transparent hover:from-accent/10 border border-accent/10 hover:border-accent/20 transition-all duration-200 group cursor-pointer"
+                className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-primary/5 to-transparent hover:from-primary/10 border border-primary/10 hover:border-primary/20 transition-all duration-200 group cursor-pointer"
               >
-                <Avatar className="h-10 w-10 border-2 border-accent/20 group-hover:border-accent/40 transition-colors shadow-sm">
+                <Avatar className="h-10 w-10 border-2 border-primary/20 group-hover:border-primary/40 transition-colors shadow-sm">
                   <AvatarImage
                     src={member.fotos?.[0]?.foto_url}
                     alt={member.nome}
                     className="object-cover"
                   />
-                  <AvatarFallback className="bg-accent/10 text-accent font-bold text-xs">
+                  <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
                     {member.nome.substring(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold leading-none truncate text-foreground group-hover:text-accent transition-colors">
+                  <p className="text-sm font-semibold leading-none truncate text-foreground group-hover:text-primary transition-colors">
                     {member.nome}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
-                    <span className="text-accent font-bold animate-pulse flex items-center gap-1">
+                    <span className="text-primary font-bold animate-pulse flex items-center gap-1">
                       <PartyPopper className="h-3 w-3" />
                       Parabéns!
                     </span>
