@@ -206,7 +206,7 @@ export function DAESection({
     return `Excluir Repasse DAE: ${MONTH_LABELS[selectedItem.competencia_mes || 0]}/${selectedItem.competencia_ano}`;
   }, [selectedItem]);
 
-  const statusDialogHeaderClass = selectedItem?.boleto_pago ? "bg-amber-50" : "bg-emerald-50";
+  const statusDialogHeaderClass = selectedItem?.boleto_pago ? "bg-amber-50" : "bg-success/5";
   
   const statusDialogDescription = useMemo(() => {
     if (selectedItem?.boleto_pago) return "Deseja reverter o status deste boleto para pendente?";
@@ -223,7 +223,7 @@ export function DAESection({
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <div className="flex items-center justify-between px-1">
         <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+          <div className="h-2 w-2 rounded-full bg-success shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
           Boletos eSocial (DAE)
         </h3>
         <span className="text-[10px] font-medium text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">
@@ -258,7 +258,7 @@ export function DAESection({
               {selectedItem?.boleto_pago ? (
                 <AlertCircle className="h-8 w-8 text-amber-600" />
               ) : (
-                <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+                <CheckCircle2 className="h-8 w-8 text-success" />
               )}
             </div>
             <DialogTitle className="text-xl font-bold tracking-tight">

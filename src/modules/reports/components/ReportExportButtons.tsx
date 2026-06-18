@@ -61,7 +61,7 @@ export function ReportExportButtons({
             onClick={() => void handleExport(onExportExcel)}
             disabled={isExporting}
           >
-            <FileSpreadsheet className="mr-4 h-6 w-6 text-green-600" />
+            <FileSpreadsheet className="mr-4 h-6 w-6 text-success" />
             <div className="flex flex-col items-start gap-1">
               <span className="font-semibold">Excel</span>
               <span className="text-xs text-muted-foreground">

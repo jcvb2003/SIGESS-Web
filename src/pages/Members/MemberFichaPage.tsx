@@ -19,7 +19,7 @@ export default function MemberFichaPage() {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-10 w-10 animate-spin text-emerald-600" />
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
           <p className="text-sm font-medium text-slate-600 animate-pulse">Carregando ficha do sócio...</p>
         </div>
       </div>

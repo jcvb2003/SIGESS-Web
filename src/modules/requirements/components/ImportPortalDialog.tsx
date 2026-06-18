@@ -241,7 +241,7 @@ export function ImportPortalDialog({
             variant={isDia ? "outline" : "destructive"} 
             className={cn(
               "text-[10px]",
-              isDia ? "border-green-500/50 text-green-600 dark:text-green-400 bg-green-50/50 dark:bg-green-950/20" : "bg-red-600"
+              isDia ? "border-success/50 text-success bg-success/5" : "bg-red-600"
             )}
           >
             {res.finance?.replace('_', ' ') || 'NÃO INFORMADO'}
@@ -349,7 +349,7 @@ export function ImportPortalDialog({
 
               <div className="grid grid-cols-3 gap-4">
                 <div className="bg-muted/30 p-3 rounded-lg flex items-center gap-3">
-                  <div className="h-8 w-8 bg-green-600/10 rounded-full flex items-center justify-center text-green-600">
+                  <div className="h-8 w-8 bg-success/10 rounded-full flex items-center justify-center text-success">
                     <CheckCircle2 className="h-5 w-5" />
                   </div>
                   <div className="flex flex-col">

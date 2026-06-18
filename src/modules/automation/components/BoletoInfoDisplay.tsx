@@ -64,7 +64,7 @@ export function BoletoInfoDisplay({
             : null;
 
     return (
-      <div className="mt-2 rounded-sm bg-emerald-50 p-2 text-xs text-emerald-900">
+      <div className="mt-2 rounded-sm bg-primary/5 p-2 text-xs text-primary">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <p className="font-medium">Boleto salvo com sucesso - {tipo}</p>

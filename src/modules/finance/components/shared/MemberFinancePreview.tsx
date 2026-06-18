@@ -33,7 +33,7 @@ export function MemberFinancePreview({
   }, [name]);
 
   return (
-    <div className="flex items-center gap-3 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 p-3">
+    <div className="flex items-center gap-3 rounded-xl bg-primary/5 border border-primary/10 p-3">
       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold shadow-sm ring-2 ring-primary/10 dark:ring-primary/10 ring-offset-1 dark:ring-offset-background">
         {initials ?? "?"}
       </div>
@@ -42,20 +42,20 @@ export function MemberFinancePreview({
           {name ?? "—"}
         </p>
         <div className="mt-0.5 flex items-center gap-1.5 flex-wrap">
-          <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium truncate">
+          <span className="text-xs text-primary font-medium truncate">
             CPF: {cpf}
           </span>
           {regime && (
             <>
-              <span className="text-[10px] text-emerald-300 dark:text-emerald-800">|</span>
-              <span className="text-xs text-emerald-700/90 dark:text-emerald-400/90 font-medium">
+              <span className="text-[10px] text-border">|</span>
+              <span className="text-xs text-primary/80 font-medium">
                 {regime}
               </span>
             </>
           )}
           {status && (
             <>
-              <span className="text-[10px] text-emerald-300 dark:text-emerald-800">|</span>
+              <span className="text-[10px] text-border">|</span>
               <FinancialStatusBadge
                 status={status}
                 className="h-4.5 px-1.5 text-[9px] uppercase tracking-wider"

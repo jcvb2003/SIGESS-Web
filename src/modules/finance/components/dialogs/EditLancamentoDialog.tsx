@@ -81,7 +81,7 @@ export function EditLancamentoDialog({
       <DialogContent className="max-w-md p-0 outline-none [&>button]:hidden overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-2 border-b flex-shrink-0">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-emerald-600 mb-1">
+            <div className="flex items-center gap-2 text-primary mb-1">
               <Pencil className="h-5 w-5" />
               <DialogTitle className="text-xl">Editar Lançamento</DialogTitle>
             </div>

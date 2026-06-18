@@ -223,7 +223,7 @@ export function DAEDialog({
         <div className="flex flex-col h-full max-h-[90vh] sm:max-h-[85vh] overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-2 border-b flex-shrink-0 bg-card">
             <div className="flex items-center justify-between pr-12">
-              <div className="flex items-center gap-2 text-emerald-600">
+              <div className="flex items-center gap-2 text-primary">
                 <PlusCircle className="h-5 w-5" />
                 <DialogTitle className="text-xl font-bold tracking-tight">
                   DAE (Documento de Arrecadação eSocial)
@@ -270,7 +270,7 @@ export function DAEDialog({
                     <div className="flex flex-col gap-1">
                       <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">VALOR DO REPASSE</Label>
                       <div className="relative">
-                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-emerald-600">R$</span>
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">R$</span>
                         <Input
                           type="text"
                           inputMode="numeric"
@@ -297,7 +297,7 @@ export function DAEDialog({
                       isPaid && "bg-muted/50 border-border/50 opacity-60 cursor-not-allowed",
                       isDefeso && "bg-amber-50 dark:bg-amber-950/30 border-amber-100 dark:border-amber-900/50 text-amber-900 dark:text-amber-500 cursor-not-allowed",
                       !isPaid && !isDefeso && isSelected && "bg-primary border-primary text-primary-foreground shadow-md scale-[1.02]",
-                      !isPaid && !isDefeso && !isSelected && "bg-card border-border/50 hover:border-emerald-200 dark:hover:border-emerald-800 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/30"
+                      !isPaid && !isDefeso && !isSelected && "bg-card border-border/50 hover:border-primary/30 hover:bg-primary/5"
                     );
 
                     return (
@@ -313,8 +313,8 @@ export function DAEDialog({
                           {MONTH_LABELS[m]}
                         </span>
                         {isPaid && (
-                          <div className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-100/80 dark:bg-emerald-900/50">
-                            <Check className="h-2.5 w-2.5 text-emerald-600 dark:text-emerald-400" />
+                          <div className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-success/10">
+                            <Check className="h-2.5 w-2.5 text-success" />
                           </div>
                         )}
                         {isDefeso && (
@@ -323,7 +323,7 @@ export function DAEDialog({
                           </div>
                         )}
                         {isSelected && !isDefeso && (
-                          <span className="text-[8px] font-bold text-emerald-100 mt-0.5 animate-in zoom-in-50">OK</span>
+                          <span className="text-[8px] font-bold text-primary-foreground mt-0.5 animate-in zoom-in-50">OK</span>
                         )}
                       </button>
                     );
@@ -371,7 +371,7 @@ export function DAEDialog({
                         type="date"
                         value={dataPagamentoBoleto}
                         onChange={(e) => setDataPagamentoBoleto(e.target.value)}
-                        className="h-9 pl-9 text-xs font-bold border-border bg-card focus-visible:ring-emerald-500 shadow-sm rounded-md"
+                        className="h-9 pl-9 text-xs font-bold border-border bg-card focus-visible:ring-primary shadow-sm rounded-md"
                       />
                     </div>
                   </div>

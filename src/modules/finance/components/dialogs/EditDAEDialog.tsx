@@ -95,7 +95,7 @@ export function EditDAEDialog({
       <DialogContent className="p-0 outline-none [&>button]:hidden overflow-hidden transition-all duration-300 max-w-md">
         <DialogHeader className="px-6 pt-6 pb-2 border-b flex-shrink-0 text-left">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-emerald-600 mb-1">
+            <div className="flex items-center gap-2 text-primary mb-1">
               <FileText className="h-5 w-5" />
               <DialogTitle className="text-xl font-bold tracking-tight">
                 Editar Repasse DAE

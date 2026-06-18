@@ -484,10 +484,10 @@ export function ImportDAEsDialog({
               </div>
 
               <div className={`grid gap-3 ${skippedCount > 0 ? "grid-cols-3" : "grid-cols-2"}`}>
-                <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 p-3 rounded-lg flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+                <div className="bg-success/5 border border-success/20 p-3 rounded-lg flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-success shrink-0" />
                   <div>
-                    <p className="text-xl font-bold text-emerald-700 dark:text-emerald-400">{counts.ok}</p>
+                    <p className="text-xl font-bold text-success">{counts.ok}</p>
                     <p className="text-xs text-muted-foreground">Para importar</p>
                   </div>
                 </div>
