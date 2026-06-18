@@ -42,7 +42,7 @@ export interface MemberUnitContext {
 }
 
 export const memberService = {
-  async create(input: MemberRegistrationForm, context?: MemberUnitContext): Promise<void> {
+  async create(input: MemberRegistrationForm, context: MemberUnitContext): Promise<void> {
     const payload = {
       ...toMemberInsertPayload(input),
       ...(context?.tenantId ? { tenant_id: context.tenantId } : {}),
