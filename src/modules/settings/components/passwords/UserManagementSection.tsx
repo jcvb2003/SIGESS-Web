@@ -344,7 +344,7 @@ export function UserManagementSection() {
                   if (isSelf) return "opacity-40 cursor-not-allowed";
                   return u.ativo
                     ? "text-slate-700 hover:bg-red-600 hover:text-white hover:border-red-600 hover:scale-105 active:scale-95"
-                    : "text-slate-700 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 hover:scale-105 active:scale-95";
+                    : "text-slate-700 hover:bg-primary hover:text-primary-foreground hover:border-primary hover:scale-105 active:scale-95";
                 })();
 
                 return (

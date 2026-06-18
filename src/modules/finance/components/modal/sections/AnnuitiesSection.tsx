@@ -161,7 +161,7 @@ export function AnnuitiesSection({
                          size="icon" 
                          className={cn(
                            "h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95",
-                           isAdmin ? "hover:bg-emerald-600 dark:hover:bg-emerald-900/50 hover:text-white dark:hover:text-emerald-400 hover:border-emerald-600 dark:hover:border-emerald-800/50" : "opacity-50 cursor-not-allowed"
+                           isAdmin ? "hover:bg-primary dark:hover:bg-primary/90 hover:text-primary-foreground hover:border-primary" : "opacity-50 cursor-not-allowed"
                          )}
                          onClick={() => isAdmin && handleEdit(a)}
                          disabled={!isAdmin}

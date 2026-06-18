@@ -197,7 +197,7 @@ export function LocalityManagementDialog({
                               <Button
                                 variant="outline"
                                 size="icon"
-                                className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-emerald-600 hover:text-white hover:border-emerald-600"
+                                className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-primary hover:text-primary-foreground hover:border-primary"
                                 onClick={() => handleEdit(locality)}
                               >
                                 <Edit className="w-3.5 h-3.5" />

@@ -116,7 +116,7 @@ export function MemberStatementModal({
                     "h-9 text-xs gap-1.5 font-bold px-4 transition-all",
                     isSelectionMode && selectedIds.length > 0
                       ? "bg-primary hover:bg-primary/90 text-white shadow-sm"
-                      : "border-emerald-200 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-600 dark:hover:bg-emerald-900/50 hover:text-white dark:hover:text-emerald-400 hover:border-emerald-600 dark:hover:border-emerald-800/50"
+                      : "border-primary/20 dark:border-primary/20 text-primary hover:bg-primary dark:hover:bg-primary/90 hover:text-primary-foreground hover:border-primary"
                   )}
                 >
                   <Printer className="h-4 w-4" />
