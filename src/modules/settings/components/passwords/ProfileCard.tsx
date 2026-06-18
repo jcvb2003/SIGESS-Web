@@ -86,11 +86,15 @@ export function ProfileCard() {
                   <div className="flex h-full w-full items-center justify-center bg-primary/10">
                     <Loader2 className="h-5 w-5 animate-spin text-primary" />
                   </div>
-                ) : avatarUrl ? (
-                  <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-primary/10 text-primary font-bold text-sm">
-                    {initial}
+                  <div
+                    className="flex h-full w-full items-center justify-center text-primary font-bold text-sm"
+                    style={avatarUrl
+                      ? { backgroundImage: `url(${avatarUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
+                      : { backgroundColor: "hsl(var(--primary) / 0.1)" }
+                    }
+                  >
+                    {!avatarUrl && initial}
                   </div>
                 )}
                 {/* Overlay câmera no hover */}
