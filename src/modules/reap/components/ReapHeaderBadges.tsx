@@ -4,6 +4,7 @@ import {
   ANO_INICIAL_ANUAL,
   ANO_ATUAL,
 } from "@/modules/reap/types/reap.types";
+import { calculateReapStatus, type ReapStatus } from "@/modules/reap/domain/reapDomain";
 import { CheckCircle2, AlertTriangle, Clock } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 import {
@@ -12,8 +13,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/shared/components/ui/tooltip";
-
-type ReapStatus = "ok" | "parcial" | "pendente" | "problema";
 
 function ReapBadge({
   label,
@@ -88,14 +87,11 @@ export function ReapHeaderBadges({
     (a) => reap?.simplificado?.[String(a)]?.tem_problema
   );
 
-  let simplificadoStatus: ReapStatus = "pendente";
-  if (simplificadoProblema) simplificadoStatus = "problema";
-  else if (
-    anosSimplificado.length > 0 &&
-    simplificadoEnviados === anosSimplificado.length
-  )
-    simplificadoStatus = "ok";
-  else if (simplificadoEnviados > 0) simplificadoStatus = "parcial";
+  const simplificadoStatus = calculateReapStatus(
+    simplificadoEnviados,
+    anosSimplificado.length,
+    simplificadoProblema,
+  );
 
   // --- Anual (2025+) ---
   const anoInicioAnual = anoRgp
@@ -111,11 +107,11 @@ export function ReapHeaderBadges({
     (a) => reap?.anual?.[String(a)]?.tem_problema
   );
 
-  let anualStatus: ReapStatus = "pendente";
-  if (anualProblema) anualStatus = "problema";
-  else if (anosAnual.length > 0 && anualEnviados === anosAnual.length)
-    anualStatus = "ok";
-  else if (anualEnviados > 0) anualStatus = "parcial";
+  const anualStatus = calculateReapStatus(
+    anualEnviados,
+    anosAnual.length,
+    anualProblema,
+  );
 
   return (
     <>
