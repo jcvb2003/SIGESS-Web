@@ -7,6 +7,7 @@ interface UserMetadata {
   acesso_expira_em: string | null;
   isExpired: boolean;
   profileName: string | null;
+  avatarPath: string | null;
 }
 
 export function useUserMetadata() {
@@ -34,7 +35,7 @@ export function useUserMetadata() {
             .maybeSingle(),
           supabase
             .from("tenant_users" as never)
-            .select("user_profiles(nome)")
+            .select("user_profiles(nome, avatar_path)")
             .eq("user_id", user.id)
             .limit(1)
             .maybeSingle(),
@@ -58,6 +59,7 @@ export function useUserMetadata() {
           acesso_expira_em: configData?.acesso_expira_em || null,
           isExpired,
           profileName: ((profileData as Record<string, unknown>)?.user_profiles as Record<string, unknown> | null)?.nome as string | null || null,
+          avatarPath: ((profileData as Record<string, unknown>)?.user_profiles as Record<string, unknown> | null)?.avatar_path as string | null || null,
         });
       } catch (err) {
         console.error("Unexpected error fetching user metadata:", err);
