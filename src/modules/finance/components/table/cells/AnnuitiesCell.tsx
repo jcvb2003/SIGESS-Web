@@ -1,4 +1,5 @@
 import type { MemberFinancialSummary } from "../../../types/finance.types";
+import { getRequiredYears } from "../../../services/financeService";
 import { cn } from "@/shared/lib/utils";
 import {
   Tooltip,
@@ -49,11 +50,10 @@ export function AnnuitiesCell({ member, currentYear, anoBase }: AnnuitiesCellPro
   }
 
   const paid = member.anuidadesPagas ?? [];
-  const years: { year: number; isPaid: boolean }[] = [];
-
-  for (let y = anoBase; y <= currentYear; y++) {
-    years.push({ year: y, isPaid: paid.includes(y) });
-  }
+  const years = getRequiredYears(anoBase, currentYear).map((y) => ({
+    year: y,
+    isPaid: paid.includes(y),
+  }));
 
   // Show only the last 3 years for compact display
   const displayYears = years.slice(-3);

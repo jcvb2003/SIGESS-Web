@@ -49,6 +49,13 @@ const createDashboardCountQuery = (unitId?: string | null) => {
 
 type DashboardCountQuery = ReturnType<typeof createDashboardCountQuery>;
 
+/** Retorna o array de anos obrigatórios entre anoBase e currentYear (inclusive). */
+export function getRequiredYears(anoBase: number, currentYear: number): number[] {
+  const years: number[] = [];
+  for (let y = anoBase; y <= currentYear; y++) years.push(y);
+  return years;
+}
+
 export const financeService = {
   async getDashboard(
     params: FinanceDashboardParams,
@@ -66,8 +73,7 @@ export const financeService = {
 
     const anoBase = params.anoBase ?? 2024;
 
-    const requiredYears: number[] = [];
-    for (let y = anoBase; y <= year; y++) requiredYears.push(y);
+    const requiredYears = getRequiredYears(anoBase, year);
 
     if (tab === "inadimplentes" && requiredYears.length === 0) {
       return { items: [], total: 0 };
@@ -209,8 +215,7 @@ export const financeService = {
     anoBase: number,
     unitId?: string | null,
   ): Promise<Record<string, number>> {
-    const requiredYears: number[] = [];
-    for (let y = anoBase; y <= year; y++) requiredYears.push(y);
+    const requiredYears = getRequiredYears(anoBase, year);
 
     const tabs: FinanceDashboardParams["tab"][] = [
       "todos",
