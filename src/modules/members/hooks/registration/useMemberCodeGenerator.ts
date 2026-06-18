@@ -3,33 +3,26 @@ import { UseFormReturn, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { MemberRegistrationSchemaType } from "../../schemas/memberRegistration.schema";
 import { memberService } from "../../services/memberService";
+import {
+  isSuggestedMemberCode,
+  extractBirthMonth,
+  buildSuggestedCode,
+} from "../../domain/memberCode";
 
-export const REGISTRATION_CODE_PATTERN = /^\d{2}0\d{3}$/;
+export { REGISTRATION_CODE_PATTERN } from "../../domain/memberCode";
 
 export function useMemberCodeGenerator(
   form: UseFormReturn<MemberRegistrationSchemaType>,
   isEditing: boolean,
 ) {
-  const generateRegistrationNumber = async (
-    birthdate: string,
-  ): Promise<string> => {
+  const suggestCode = async (birthdate: string): Promise<string> => {
     if (birthdate?.length !== 10) return "";
     try {
-      const month = birthdate.substring(5, 7);
-      const prefix = `${month}0`;
-      const latestNumberStr =
-        await memberService.getLastRegistrationNumber(prefix);
-      let sequenceNumber = 1;
-      if (latestNumberStr?.startsWith(prefix)) {
-        const sequencePart = latestNumberStr.substring(3);
-        sequenceNumber = Number.parseInt(sequencePart ?? "0", 10) + 1;
-      }
-      const formattedSequence = sequenceNumber.toString().padStart(3, "0");
-      return `${prefix}${formattedSequence}`;
+      const prefix = `${extractBirthMonth(birthdate)}0`;
+      const lastCode = await memberService.getLastRegistrationNumber(prefix);
+      return buildSuggestedCode(prefix, lastCode);
     } catch (error) {
-      toast.error(
-        "Ocorreu um erro ao gerar o código do sócio. Por favor, tente novamente.",
-      );
+      toast.error("Ocorreu um erro ao gerar o código do sócio. Por favor, tente novamente.");
       console.error("Error generating member code:", error);
       return "";
     }
@@ -37,11 +30,7 @@ export function useMemberCodeGenerator(
 
   const handleGenerateCode = useCallback(async () => {
     const currentCode = form.getValues("codigoDoSocio");
-    
-    // Se já estiver no formato padrão, não faz nada para evitar lacunas
-    if (currentCode && REGISTRATION_CODE_PATTERN.test(String(currentCode))) {
-      return;
-    }
+    if (isSuggestedMemberCode(currentCode)) return;
 
     const birthdate = form.getValues("dataDeNascimento");
     if (birthdate?.length !== 10) {
@@ -49,42 +38,34 @@ export function useMemberCodeGenerator(
       return;
     }
 
-    const generatedCode = await generateRegistrationNumber(birthdate);
-    if (generatedCode) {
-      form.setValue("codigoDoSocio", generatedCode, {
-        shouldValidate: true,
-      });
+    const suggested = await suggestCode(birthdate);
+    if (suggested) {
+      form.setValue("codigoDoSocio", suggested, { shouldValidate: true });
       toast.success("Código de registro gerado com sucesso!");
     }
   }, [form]);
 
-  // Observa apenas o campo necessário de forma granular
   const dataDeNascimento = useWatch({
     control: form.control,
     name: "dataDeNascimento",
   });
 
   useEffect(() => {
-    // Permitimos a geração automática apenas em modo de criação
-    if (isEditing || dataDeNascimento?.length !== 10) return;
+    // Geração automática apenas em criação (não edição)
+    if (isEditing) return;
+    if (dataDeNascimento?.length !== 10) return;
 
-    const autoGenerate = async () => {
+    const autoSuggest = async () => {
       const currentCode = form.getValues("codigoDoSocio");
-      
-      // Se já tiver um código válido no formato padrão, não sobrescrevemos automaticamente
-      if (currentCode && REGISTRATION_CODE_PATTERN.test(String(currentCode))) {
-        return;
-      }
+      if (isSuggestedMemberCode(currentCode)) return; // preserva código já gerado
 
-      const generatedCode = await generateRegistrationNumber(dataDeNascimento);
-      if (generatedCode) {
-        form.setValue("codigoDoSocio", generatedCode, {
-          shouldValidate: true,
-        });
+      const suggested = await suggestCode(dataDeNascimento);
+      if (suggested) {
+        form.setValue("codigoDoSocio", suggested, { shouldValidate: true });
       }
     };
 
-    autoGenerate();
+    autoSuggest();
   }, [dataDeNascimento, isEditing, form]);
 
   return { handleGenerateCode };
