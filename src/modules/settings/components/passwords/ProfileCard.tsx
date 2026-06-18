@@ -36,7 +36,7 @@ export function ProfileCard() {
     setSaving(true);
     try {
       const { error } = await supabase
-        .from("User")
+        .from("user_profiles" as never)
         .update({ nome: name.trim() })
         .eq("id", user.id);
       if (error) throw error;
