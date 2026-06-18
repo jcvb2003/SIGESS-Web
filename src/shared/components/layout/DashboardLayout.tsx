@@ -116,20 +116,21 @@ export function DashboardLayout() {
               <GlobalPortariaSelect />
               <div className="h-6 w-px bg-border shrink-0" />
               <div className="flex items-center gap-2.5 min-w-0">
-                <div
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-primary text-xs font-bold ring-2 ring-primary/25"
-                  style={avatarUrl
-                    ? { backgroundImage: `url(${avatarUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
-                    : { backgroundColor: "hsl(var(--primary) / 0.1)" }
-                  }
-                >
+                <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full ring-2 ring-primary/25 overflow-hidden">
+                  <span
+                    className="absolute inset-0"
+                    style={avatarUrl
+                      ? { backgroundImage: `url(${avatarUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
+                      : { backgroundColor: "hsl(var(--primary) / 0.1)" }
+                    }
+                  />
                   {!avatarUrl && (
-                    <>
+                    <span className="relative z-10 text-primary text-xs font-bold">
                       {metadata?.profileName?.charAt(0)?.toUpperCase()
                         ?? (user?.user_metadata?.full_name as string | undefined)?.charAt(0)?.toUpperCase()
                         ?? user?.email?.charAt(0)?.toUpperCase()
                         ?? "?"}
-                    </>
+                    </span>
                   )}
                 </div>
                 <div className="flex flex-col min-w-0 leading-tight">
