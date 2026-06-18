@@ -296,7 +296,7 @@ export function DAEDialog({
                       "relative flex flex-col items-center justify-center h-14 rounded-xl border-2 transition-all p-1 font-medium select-none text-muted-foreground",
                       isPaid && "bg-muted/50 border-border/50 opacity-60 cursor-not-allowed",
                       isDefeso && "bg-amber-50 dark:bg-amber-950/30 border-amber-100 dark:border-amber-900/50 text-amber-900 dark:text-amber-500 cursor-not-allowed",
-                      !isPaid && !isDefeso && isSelected && "bg-emerald-600 border-emerald-600 text-white shadow-md scale-[1.02]",
+                      !isPaid && !isDefeso && isSelected && "bg-primary border-primary text-primary-foreground shadow-md scale-[1.02]",
                       !isPaid && !isDefeso && !isSelected && "bg-card border-border/50 hover:border-emerald-200 dark:hover:border-emerald-800 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/30"
                     );
 
@@ -355,7 +355,7 @@ export function DAEDialog({
                     id="boletoPago"
                     checked={boletoPago}
                     onCheckedChange={(checked) => setBoletoPago(!!checked)}
-                    className="border-border data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+                    className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                   />
                   <Label htmlFor="boletoPago" className="text-xs font-semibold text-muted-foreground cursor-pointer">
                     Marcar boleto DAE como pago.

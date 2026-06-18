@@ -206,8 +206,8 @@ function ImageUploadField({ label, description, aspectRatio = "auto" }: ImageUpl
             />
           </Button>
           {imageUrl && (
-            <span className="text-[10px] text-emerald-600 font-medium flex items-center gap-1">
-              <span className="w-1 h-1 rounded-full bg-emerald-600" />
+            <span className="text-[10px] text-success font-medium flex items-center gap-1">
+              <span className="w-1 h-1 rounded-full bg-success" />
               Imagem pronta
             </span>
           )}

@@ -12,10 +12,10 @@ export function useFieldBackgroundColors() {
     }
 
     if (fieldValue && fieldValue.toString().trim() !== "") {
-      return "bg-success/5 border-success/20 focus:bg-success/5 focus:border-success/40 dark:bg-success/10 dark:border-success/30 dark:focus:bg-success/10 dark:focus:border-success/50 transition-colors duration-200";
+      return "bg-success/15 border-success/35 focus:bg-success/15 focus:border-success/55 dark:bg-success/15 dark:border-success/35 dark:focus:bg-success/15 dark:focus:border-success/55 transition-colors duration-200";
     }
 
-    return "bg-empty/10 border-empty/20 focus:bg-empty/10 focus:border-empty/40 dark:bg-empty/10 dark:border-empty/20 dark:focus:bg-empty/10 dark:focus:border-empty/40 transition-colors duration-200";
+    return "bg-empty/20 border-empty/40 focus:bg-empty/20 focus:border-empty/60 dark:bg-empty/20 dark:border-empty/40 dark:focus:bg-empty/20 dark:focus:border-empty/60 transition-colors duration-200";
   };
 
   return { getFieldBackgroundColor };

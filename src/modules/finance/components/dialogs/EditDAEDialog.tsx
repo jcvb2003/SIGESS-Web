@@ -160,7 +160,7 @@ export function EditDAEDialog({
                         setValue("data_pagamento_boleto", null);
                       }
                     }}
-                    className="border-border data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+                    className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                   />
                 )}
               />

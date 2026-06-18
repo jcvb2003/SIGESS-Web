@@ -34,7 +34,7 @@ export function MemberFinancePreview({
 
   return (
     <div className="flex items-center gap-3 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 p-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 dark:bg-emerald-700 text-sm font-bold text-white shadow-sm ring-2 ring-emerald-100 dark:ring-emerald-900/50 ring-offset-1 dark:ring-offset-background">
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold shadow-sm ring-2 ring-primary/10 dark:ring-primary/10 ring-offset-1 dark:ring-offset-background">
         {initials ?? "?"}
       </div>
       <div className="flex-1 min-w-0">
