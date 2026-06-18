@@ -10,6 +10,11 @@ import { Button } from "@/shared/components/ui/button";
 import { DataTable } from "@/shared/components/layout/DataTable";
 import { Badge } from "@/shared/components/ui/badge";
 import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/shared/components/ui/avatar";
+import {
   UserPlus,
   ShieldCheck,
   ShieldAlert,
@@ -23,6 +28,10 @@ import {
   Trash2,
   RefreshCw,
   KeyRound,
+  Pencil,
+  Check,
+  X,
+  Camera,
 } from "lucide-react";
 import { useUserManagement } from "../../hooks/useUserManagement";
 import { PasswordChangeForm } from "./PasswordChangeForm";
@@ -58,11 +67,17 @@ import { cn } from "@/shared/lib/utils";
 import { formatDate } from "@/shared/utils/formatters/dateFormatters";
 import { usePermissions } from "@/shared/hooks/usePermissions";
 import { useAuth } from "@/modules/auth/context/authContextStore";
+import { useUserMetadata } from "@/modules/auth/hooks/useUserMetadata";
+import { useProfileAvatar } from "../../hooks/useProfileAvatar";
+import { supabase } from "@/shared/lib/supabase/client";
+import { toast } from "sonner";
 
 export function UserManagementSection() {
   const { users, loading, fetchUsers, toggleUserStatus, createUser, inviteUser, deleteUser, resendConfirmation } = useUserManagement();
   const { isAdmin } = usePermissions();
   const { user: currentUser } = useAuth();
+  const { metadata } = useUserMetadata();
+  const { avatarUrl: currentAvatarUrl, isLoading: loadingAvatar, uploading, uploadAvatar } = useProfileAvatar(currentUser?.id);
   const currentUserId = currentUser?.id;
   const canManageScopedUsers = isAdmin;
 
@@ -72,6 +87,9 @@ export function UserManagementSection() {
   const [showPassword, setShowPassword] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ userId: string; nome: string } | null>(null);
   const [isPasswordChangeOpen, setIsPasswordChangeOpen] = useState(false);
+  const [isProfileEditOpen, setIsProfileEditOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [savingName, setSavingName] = useState(false);
 
   const isProcessing = loading;
   const isLoading = loading;
@@ -98,6 +116,28 @@ export function UserManagementSection() {
     if (result && !result.error) {
       setIsInviteOpen(false);
       setForm({ email: "", nome: "", role: "operador_administrativo", password: "", autoConfirm: true });
+    }
+  };
+
+  const handleSaveOwnName = async () => {
+    if (!currentUser?.id || !name.trim()) return;
+
+    setSavingName(true);
+    try {
+      const { error } = await supabase
+        .from("user_profiles" as never)
+        .update({ nome: name.trim() } as never)
+        .eq("id", currentUser.id);
+
+      if (error) throw error;
+
+      toast.success("Nome atualizado com sucesso.");
+      setIsProfileEditOpen(false);
+      await fetchUsers();
+    } catch {
+      toast.error("Erro ao salvar o nome.");
+    } finally {
+      setSavingName(false);
     }
   };
 
@@ -274,17 +314,32 @@ export function UserManagementSection() {
               header: "Nome / Usuário",
               className: "w-[30%]",
               cell: (u) => (
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium">{u.nome || "Sem nome"}</span>
-                  <span className="text-[10px] text-muted-foreground flex items-center gap-1 font-normal">
-                    <Mail className="h-2.5 w-2.5" />
-                    {u.email}
-                  </span>
-                  {!u.tenantRole && !u.emailConfirmedAt && (
-                    <span className="text-[9px] text-amber-600 font-bold uppercase tracking-wider mt-0.5">
-                      ● E-mail não confirmado
+                <div className="flex items-center gap-3 min-w-0">
+                  <Avatar className="h-9 w-9 border border-border/50 shrink-0">
+                    {u.avatarUrl && (
+                      <AvatarImage
+                        src={u.avatarUrl}
+                        alt={u.nome || u.email}
+                        className="object-cover"
+                      />
+                    )}
+                    <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
+                      {(u.nome || u.email).substring(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-medium truncate">{u.nome || "Sem nome"}</span>
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-1 font-normal truncate">
+                      <Mail className="h-2.5 w-2.5 shrink-0" />
+                      {u.email}
                     </span>
-                  )}
+                    {!u.tenantRole && !u.emailConfirmedAt && (
+                      <span className="text-[9px] text-amber-600 font-bold uppercase tracking-wider mt-0.5">
+                        ● E-mail não confirmado
+                      </span>
+                    )}
+                  </div>
                 </div>
               )
             },
@@ -369,6 +424,108 @@ export function UserManagementSection() {
                       </Dialog>
                     )}
 
+                    {isSelf && (
+                      <Dialog
+                        open={isProfileEditOpen}
+                        onOpenChange={(open) => {
+                          setIsProfileEditOpen(open);
+                          if (open) setName(metadata?.profileName ?? u.nome ?? "");
+                        }}
+                      >
+                        <DialogTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            title="Editar meu perfil"
+                            className="h-8 gap-1.5 font-bold text-primary border-primary/20 hover:bg-primary hover:text-white hover:border-primary transition-all duration-200 shadow-sm hover:scale-105 active:scale-95"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">Editar</span>
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>Editar perfil</DialogTitle>
+                            <DialogDescription>
+                              Atualize sua foto e seu nome de exibição.
+                            </DialogDescription>
+                          </DialogHeader>
+
+                          <div className="space-y-5">
+                            <div className="flex items-center gap-4">
+                              <label className="relative cursor-pointer">
+                                <Avatar className="h-16 w-16 border border-border/50">
+                                  {currentAvatarUrl && (
+                                    <AvatarImage
+                                      src={currentAvatarUrl}
+                                      alt={metadata?.profileName || currentUser?.email || "Perfil"}
+                                      className="object-cover"
+                                    />
+                                  )}
+                                  <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                                    {(metadata?.profileName || currentUser?.email || "?").substring(0, 2).toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                                  <Camera className="h-4 w-4 text-white" />
+                                </div>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) void uploadAvatar(file);
+                                    e.target.value = "";
+                                  }}
+                                  disabled={uploading}
+                                />
+                              </label>
+
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium">
+                                  {loadingAvatar ? "Carregando foto..." : "Foto de perfil"}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  Clique para alterar.
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="profile-name">Nome</Label>
+                              <Input
+                                id="profile-name"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                placeholder="Seu nome"
+                              />
+                            </div>
+
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setIsProfileEditOpen(false)}
+                                disabled={savingName}
+                              >
+                                <X className="h-4 w-4" />
+                                Cancelar
+                              </Button>
+                              <Button
+                                type="button"
+                                onClick={() => void handleSaveOwnName()}
+                                disabled={savingName || !name.trim()}
+                              >
+                                <Check className="h-4 w-4" />
+                                Salvar
+                              </Button>
+                            </div>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    )}
+
                     {/* Reenviar confirmação — só se não confirmado e admin */}
                     {canResendConfirmation && (
                       <Button
@@ -385,17 +542,17 @@ export function UserManagementSection() {
                     )}
 
                     {/* Ativar / Desativar — só admin */}
-                    {canManageScopedUsers && (
+                    {canManageScopedUsers && !isSelf && (
                       <Button
                         size="sm"
                         variant="outline"
-                        disabled={isProcessing || isSelf}
-                        title={isSelf ? "Não é possível alterar o próprio status" : undefined}
+                        disabled={isProcessing}
+                        title={undefined}
                         className={cn(
                           "h-8 gap-1.5 font-bold transition-all duration-200 shadow-sm",
                           toggleButtonClass
                         )}
-                        onClick={() => { if (!isSelf) toggleUserStatus(u.id, u.ativo); }}
+                        onClick={() => { toggleUserStatus(u.id, u.ativo); }}
                       >
                         {u.ativo ? (
                           <><UserX className="h-4 w-4" /><span className="hidden sm:inline">Desativar</span></>
@@ -406,19 +563,17 @@ export function UserManagementSection() {
                     )}
 
                     {/* Excluir — só admin, nunca o próprio usuário */}
-                    {canManageScopedUsers && (
+                    {canManageScopedUsers && !isSelf && (
                       <Button
                         size="sm"
                         variant="outline"
-                        disabled={isProcessing || isSelf}
-                        title={isSelf ? "Não é possível excluir o próprio usuário" : "Excluir usuário permanentemente"}
+                        disabled={isProcessing}
+                        title="Excluir usuário permanentemente"
                         className={cn(
                           "h-8 gap-1.5 font-bold transition-all duration-200 shadow-sm",
-                          isSelf
-                            ? "opacity-40 cursor-not-allowed"
-                            : "text-red-700 border-red-200 hover:bg-red-600 hover:text-white hover:border-red-600 hover:scale-105 active:scale-95"
+                          "text-red-700 border-red-200 hover:bg-red-600 hover:text-white hover:border-red-600 hover:scale-105 active:scale-95"
                         )}
-                        onClick={() => { if (!isSelf) setDeleteConfirm({ userId: u.id, nome: u.nome || u.email }); }}
+                        onClick={() => { setDeleteConfirm({ userId: u.id, nome: u.nome || u.email }); }}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                         <span className="hidden sm:inline">Excluir</span>

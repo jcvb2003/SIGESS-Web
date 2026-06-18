@@ -3,6 +3,7 @@ import { supabase } from '@/shared/lib/supabase/client';
 import { toast } from 'sonner';
 import { UserRole } from '@/shared/types/auth.types';
 import { useActiveScope } from '@/shared/hooks/useActiveScope';
+import { useAuth } from '@/modules/auth/context/authContextStore';
 
 export interface User {
   id: string;
@@ -15,12 +16,18 @@ export interface User {
   emailConfirmedAt?: string | null;
   tenantRole?: "owner" | "member" | null;
   operatorType?: "presidente" | "auxiliar" | null;
+  avatarPath?: string | null;
+  avatarUrl?: string | null;
 }
+
+const AVATAR_BUCKET = "avatars";
+const AVATAR_URL_TTL_SECONDS = 60 * 30;
 
 export function useUserManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const { unitId: activeUnitId, bootstrapped } = useActiveScope();
+  const { user: currentUser } = useAuth();
   const tenantCode =
     typeof globalThis === "undefined" ? null : globalThis.localStorage.getItem("sigess_tenant");
 
@@ -33,8 +40,12 @@ export function useUserManagement() {
   );
 
   const sortUsers = useCallback((items: User[]) => (
-    items.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''))
-  ), []);
+    items.sort((a, b) => {
+      if (a.id === currentUser?.id && b.id !== currentUser?.id) return -1;
+      if (b.id === currentUser?.id && a.id !== currentUser?.id) return 1;
+      return (a.nome || '').localeCompare(b.nome || '');
+    })
+  ), [currentUser?.id]);
 
   const invokeManageUser = useCallback(
     async (action: string, payload: Record<string, unknown>) => {
@@ -61,7 +72,57 @@ export function useUserManagement() {
     try {
       const { data, error } = await invokeManageUser('list', scopedPayload);
       if (error) throw error;
-      setUsers(sortUsers((data as User[]) || []));
+      const baseUsers = (data as User[]) || [];
+
+      const { data: tenantProfiles, error: profileError } = await supabase
+        .from("tenant_users" as never)
+        .select("user_id, user_profiles(avatar_path)")
+        .eq("is_active", true);
+
+      if (profileError) throw profileError;
+
+      const avatarPathByUserId = new Map(
+        ((tenantProfiles ?? []) as {
+          user_id: string;
+          user_profiles?: { avatar_path?: string | null } | null;
+        }[]).map((row) => [
+          row.user_id,
+          row.user_profiles?.avatar_path ?? null,
+        ]),
+      );
+
+      const usersWithAvatarPath = baseUsers.map((user) => ({
+        ...user,
+        avatarPath: avatarPathByUserId.get(user.id) ?? null,
+      }));
+
+      const signedUrlEntries = await Promise.all(
+        usersWithAvatarPath.map(async (user) => {
+          if (!user.avatarPath) return [user.id, null] as const;
+
+          const { data: signed, error: signedError } = await supabase.storage
+            .from(AVATAR_BUCKET)
+            .createSignedUrl(user.avatarPath, AVATAR_URL_TTL_SECONDS);
+
+          if (signedError) {
+            console.error("Erro ao resolver avatar do usuário:", signedError);
+            return [user.id, null] as const;
+          }
+
+          return [user.id, signed?.signedUrl ?? null] as const;
+        }),
+      );
+
+      const avatarUrlByUserId = new Map(signedUrlEntries);
+
+      setUsers(
+        sortUsers(
+          usersWithAvatarPath.map((user) => ({
+            ...user,
+            avatarUrl: avatarUrlByUserId.get(user.id) ?? null,
+          })),
+        ),
+      );
     } catch (err: unknown) {
       console.error('Erro ao buscar usuários:', err);
       toast.error('Ocorreu um erro ao carregar os usuários');
