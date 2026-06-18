@@ -43,7 +43,7 @@ export function LocalityManagementDialog({
   onCreated,
 }: Readonly<LocalityManagementDialogProps>) {
   const queryClient = useQueryClient();
-  const { unitId } = useActiveScope();
+  const { unitId, tenantId } = useActiveScope();
   const [editingLocality, setEditingLocality] = useState<Locality | null>(null);
   const [name, setName] = useState("");
 
@@ -58,11 +58,12 @@ export function LocalityManagementDialog({
 
   const saveMutation = useMutation({
     mutationFn: async (values: { id?: string; name: string }) => {
+      if (!unitId || !tenantId) throw new Error("Escopo inválido para salvar localidade.");
       const { data, error } = await settingsService.saveLocality({
         id: values.id,
         name: values.name,
         code: "", // O código é gerado pelo banco
-      }, unitId);
+      }, { unitId, tenantId });
       if (error) throw error;
       return data;
     },

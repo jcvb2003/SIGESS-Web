@@ -41,7 +41,7 @@ export function PortariaManagementDialog({
   onOpenChange,
 }: Readonly<PortariaManagementDialogProps>) {
   const queryClient = useQueryClient();
-  const { unitId } = useActiveScope();
+  const { unitId, tenantId } = useActiveScope();
   const [editingPortaria, setEditingPortaria] = useState<Portaria | null>(null);
   const [codigo, setCodigo] = useState("");
   const [nome, setNome] = useState("");
@@ -57,9 +57,10 @@ export function PortariaManagementDialog({
 
   const saveMutation = useMutation({
     mutationFn: async (values: { id?: string; codigoPortaria: string; nome: string }) => {
+      if (!unitId || !tenantId) throw new Error("Escopo inválido para salvar portaria.");
       const { data, error } = await settingsService.savePortaria(
         { id: values.id, codigoPortaria: values.codigoPortaria, nome: values.nome },
-        unitId,
+        { unitId, tenantId },
       );
       if (error) throw error;
       return data;

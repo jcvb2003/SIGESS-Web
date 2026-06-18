@@ -7,12 +7,12 @@ import { useActiveScope } from "@/shared/hooks/useActiveScope";
 
 export function useEntityData() {
   const queryClient = useQueryClient();
-  const { unitId } = useActiveScope();
+  const { unitId, tenantId } = useActiveScope();
 
   const entityQuery = useQuery({
     queryKey: ["settings", "entity", unitId],
     queryFn: async () => {
-      const { data, error } = await settingsService.getEntity(unitId);
+      const { data, error } = await settingsService.getEntity({ unitId, tenantId });
       if (error) throw error;
       return data;
     },
@@ -35,7 +35,8 @@ export function useEntityData() {
 
   const saveMutation = useMutation({
     mutationFn: async (values: EntitySettings) => {
-      const { data, error } = await settingsService.updateEntitySettings(values);
+      if (!unitId || !tenantId) throw new Error("Escopo inválido para salvar entidade.");
+      const { data, error } = await settingsService.updateEntitySettings(values, { unitId, tenantId });
       if (error) throw error;
       return data;
     },

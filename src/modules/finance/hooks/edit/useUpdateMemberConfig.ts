@@ -61,14 +61,16 @@ export function useUpdateFinanceSettings() {
 }
 
 export function useChargeTypeMutations() {
-  const { unitId } = useActiveScope();
+  const { unitId, tenantId } = useActiveScope();
   const queryClient = useQueryClient();
   const invalidateChargeTypes = () =>
     queryClient.invalidateQueries({ queryKey: financeQueryKeys.chargeTypes(unitId) });
 
   const createChargeType = useMutation({
-    mutationFn: (charge: Omit<ChargeType, "id" | "created_at" | "updated_at">) =>
-      chargeTypesService.create(charge, unitId),
+    mutationFn: (charge: Omit<ChargeType, "id" | "created_at" | "updated_at">) => {
+      if (!unitId || !tenantId) throw new Error("Escopo inválido para criar tipo de cobrança.");
+      return chargeTypesService.create(charge, { unitId, tenantId });
+    },
     onSuccess: () => {
       toast.success("Tipo de cobrança criado.");
       void invalidateChargeTypes();

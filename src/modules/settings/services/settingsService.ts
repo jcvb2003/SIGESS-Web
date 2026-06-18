@@ -2,7 +2,7 @@ import { supabase } from "@/shared/lib/supabase/client";
 import { BRANDING_COLORS } from "../constants/brandingDefaults";
 import { getAdminClient } from "@/shared/lib/supabase/admin-client";
 import { ServiceResponse } from "@/shared/services/base/serviceResponse";
-import { resolveTenantIdViaTenantUsers } from "@/shared/utils/tenant";
+import type { UnitReadScope, UnitWriteScope } from "@/shared/types/scope";
 import { TENANT_CONFIG_CACHE_KEY } from "@/config/tenants";
 import {
   EntitySettings,
@@ -75,15 +75,14 @@ export const settingsService = {
     };
   },
 
-  async getEntity(unitId?: string | null): Promise<ServiceResponse<EntitySettings>> {
-    const sharedTenantId = await resolveTenantIdViaTenantUsers();
+  async getEntity(scope: UnitReadScope): Promise<ServiceResponse<EntitySettings>> {
     // 1. Buscar dados institucionais
-    const entityQuery = supabase
+    let entityQuery = supabase
       .from(ENTITY_TABLE)
       .select("*")
       .limit(1);
-    if (sharedTenantId) entityQuery.eq("tenant_id", sharedTenantId);
-    if (unitId) entityQuery.eq("unit_id", unitId);
+    if (scope.tenantId) entityQuery = entityQuery.eq("tenant_id", scope.tenantId);
+    if (scope.unitId) entityQuery = entityQuery.eq("unit_id", scope.unitId);
     const { data: entityData, error: entityError } = await entityQuery.maybeSingle();
 
     if (entityError) {
@@ -92,9 +91,9 @@ export const settingsService = {
     }
 
     // 2. Buscar dados de configuração/aparência
-    const configQuery = supabase.from(CONFIG_TABLE).select("*").limit(1);
-    if (sharedTenantId) configQuery.eq("tenant_id", sharedTenantId);
-    if (unitId) configQuery.eq("unit_id", unitId);
+    let configQuery = supabase.from(CONFIG_TABLE).select("*").limit(1);
+    if (scope.tenantId) configQuery = configQuery.eq("tenant_id", scope.tenantId);
+    if (scope.unitId) configQuery = configQuery.eq("unit_id", scope.unitId);
     const { data: configData, error: configError } = await configQuery.maybeSingle();
 
     if (configError) {
@@ -154,14 +153,14 @@ export const settingsService = {
   },
   async updateEntitySettings(
     settings: EntitySettings,
+    scope: UnitWriteScope,
   ): Promise<ServiceResponse<EntitySettings>> {
     // 1. Atualizar dados institucionais
-    const sharedTenantId = await resolveTenantIdViaTenantUsers();
     let entityId = settings.id;
     if (!entityId) {
-      const currentEntityQuery = supabase.from(ENTITY_TABLE).select("id").limit(1);
-      if (sharedTenantId) currentEntityQuery.eq("tenant_id", sharedTenantId);
-      if (settings.unitId) currentEntityQuery.eq("unit_id", settings.unitId);
+      let currentEntityQuery = supabase.from(ENTITY_TABLE).select("id").limit(1);
+      currentEntityQuery = currentEntityQuery.eq("tenant_id", scope.tenantId);
+      if (scope.unitId) currentEntityQuery = currentEntityQuery.eq("unit_id", scope.unitId);
       const { data: currentEntity } = await currentEntityQuery.maybeSingle();
       entityId = currentEntity?.id ? String(currentEntity.id) : undefined;
     }
@@ -169,8 +168,8 @@ export const settingsService = {
       .from(ENTITY_TABLE)
       .upsert({
         id: entityId,
-        ...(settings.unitId ? { unit_id: settings.unitId } : {}),
-        ...(sharedTenantId ? { tenant_id: sharedTenantId } : {}),
+        unit_id: scope.unitId,
+        tenant_id: scope.tenantId,
         nome_entidade: toNullable(settings.name),
         nome_abreviado: toNullable(settings.shortName),
         cnpj: toNullable(settings.cnpj),
@@ -201,17 +200,17 @@ export const settingsService = {
     // Nota: Como é multi-tenant e só tem uma linha, buscamos o ID da config se necessário 
     // ou usamos o fato de que o upsert lidará com isso se tivermos o ID da config.
     // Para simplificar, buscamos o primeiro registro da config.
-    const currentConfigQuery = supabase.from(CONFIG_TABLE).select("id").limit(1);
-    if (sharedTenantId) currentConfigQuery.eq("tenant_id", sharedTenantId);
-    if (settings.unitId) currentConfigQuery.eq("unit_id", settings.unitId);
+    let currentConfigQuery = supabase.from(CONFIG_TABLE).select("id").limit(1);
+    currentConfigQuery = currentConfigQuery.eq("tenant_id", scope.tenantId);
+    if (scope.unitId) currentConfigQuery = currentConfigQuery.eq("unit_id", scope.unitId);
     const { data: currentConfig } = await currentConfigQuery.maybeSingle();
 
     const { error: configError } = await supabase
       .from(CONFIG_TABLE)
       .upsert({
         id: currentConfig?.id,
-        ...(settings.unitId ? { unit_id: settings.unitId } : {}),
-        ...(sharedTenantId ? { tenant_id: sharedTenantId } : {}),
+        unit_id: scope.unitId,
+        tenant_id: scope.tenantId,
         cor_primaria: toOptional(settings.corPrimaria),
         cor_secundaria: toOptional(settings.corSecundaria),
         cor_sidebar: toOptional(settings.corSidebar),
@@ -223,15 +222,15 @@ export const settingsService = {
       return { data: null, error: configError };
     }
 
-    return this.getEntity(settings.unitId);
+    return this.getEntity(scope);
   },
   async getParameters(unitId?: string | null): Promise<ServiceResponse<SystemParameters>> {
-    const query = supabase
+    let query = supabase
       .from(PARAMETERS_TABLE)
       .select("*")
       .order("id", { ascending: false })
       .limit(1);
-    if (unitId) query.eq("unit_id", unitId);
+    if (unitId) query = query.eq("unit_id", unitId);
     const { data, error } = await query.maybeSingle();
     if (error) {
       console.error("Erro ao buscar parâmetros:", error);
@@ -279,16 +278,16 @@ export const settingsService = {
   },
   async saveParameters(
     input: SystemParameters,
-    unitId?: string | null,
+    scope: UnitWriteScope,
   ): Promise<ServiceResponse<SystemParameters>> {
     let parameterId = input.id;
     if (!parameterId) {
-      const idQuery = supabase
+      let idQuery = supabase
         .from(PARAMETERS_TABLE)
         .select("id")
         .order("id", { ascending: false })
         .limit(1);
-      if (unitId) idQuery.eq("unit_id", unitId);
+      if (scope.unitId) idQuery = idQuery.eq("unit_id", scope.unitId);
       const { data: latest, error: latestError } = await idQuery.maybeSingle();
       if (latestError) {
         console.error("Erro ao identificar parâmetro existente:", latestError);
@@ -296,11 +295,10 @@ export const settingsService = {
       }
       parameterId = latest?.id ? String(latest.id) : undefined;
     }
-    const sharedTenantId = await resolveTenantIdViaTenantUsers();
     const payload = {
       ...(parameterId ? { id: parameterId } : {}),
-      ...(sharedTenantId ? { tenant_id: sharedTenantId } : {}),
-      ...(unitId ? { unit_id: unitId } : {}),
+      tenant_id: scope.tenantId,
+      unit_id: scope.unitId,
       inicio_pesca1: toNullable(input.defeso1Start),
       final_pesca1: toNullable(input.defeso1End),
       inicio_pesca2: toNullable(input.defeso2Start),
@@ -324,14 +322,14 @@ export const settingsService = {
       }
       return { data: null, error: new Error(errorMessage) };
     }
-    return this.getParameters(unitId);
+    return this.getParameters(scope.unitId);
   },
   async getLocalities(unitId?: string | null): Promise<ServiceResponse<Locality[]>> {
-    const query = supabase
+    let query = supabase
       .from(LOCALITIES_TABLE)
       .select("id, nome, codigo_localidade")
       .order("nome", { ascending: true });
-    if (unitId) query.eq("unit_id", unitId);
+    if (unitId) query = query.eq("unit_id", unitId);
     const { data, error } = await query;
     if (error) {
       console.error("Erro ao buscar localidades:", error);
@@ -344,7 +342,7 @@ export const settingsService = {
     }));
     return { data: localities, error: null };
   },
-  async saveLocality(locality: Locality, unitId?: string | null): Promise<ServiceResponse<Locality>> {
+  async saveLocality(locality: Locality, scope: UnitWriteScope): Promise<ServiceResponse<Locality>> {
     const normalizedName = locality.name.trim().toUpperCase();
 
     if (locality.id) {
@@ -372,13 +370,12 @@ export const settingsService = {
       };
     }
 
-    const sharedTenantId = await resolveTenantIdViaTenantUsers();
     const { data, error } = await supabase
       .from(LOCALITIES_TABLE)
       .insert({
         nome: normalizedName || null,
-        ...(unitId ? { unit_id: unitId } : {}),
-        ...(sharedTenantId ? { tenant_id: sharedTenantId } : {}),
+        unit_id: scope.unitId,
+        tenant_id: scope.tenantId,
       })
       .select("id, nome, codigo_localidade")
       .single();
@@ -416,12 +413,12 @@ export const settingsService = {
     return { data: null, error: null };
   },
   async getPortarias(unitId?: string | null): Promise<ServiceResponse<Portaria[]>> {
-    const query = supabase
+    let query = supabase
       .from(PORTARIAS_TABLE)
       .select("id, codigo_portaria, nome, is_active")
       .eq("is_active", true)
       .order("codigo_portaria", { ascending: true });
-    if (unitId) query.eq("unit_id", unitId);
+    if (unitId) query = query.eq("unit_id", unitId);
     const { data, error } = await query;
     if (error) {
       console.error("Erro ao buscar portarias:", error);
@@ -435,7 +432,7 @@ export const settingsService = {
     }));
     return { data: portarias, error: null };
   },
-  async savePortaria(portaria: Portaria, unitId?: string | null): Promise<ServiceResponse<Portaria>> {
+  async savePortaria(portaria: Portaria, scope: UnitWriteScope): Promise<ServiceResponse<Portaria>> {
     const normalizedCodigo = portaria.codigoPortaria.trim().toUpperCase();
     const normalizedNome = portaria.nome.trim().toUpperCase();
 
@@ -467,20 +464,13 @@ export const settingsService = {
       };
     }
 
-    const sharedTenantId = await resolveTenantIdViaTenantUsers();
-    if (!sharedTenantId) {
-      return {
-        data: null,
-        error: new Error("Tenant atual nao identificado para salvar portaria."),
-      };
-    }
     const { data, error } = await supabase
       .from(PORTARIAS_TABLE)
       .insert({
         codigo_portaria: normalizedCodigo,
         nome: normalizedNome,
-        ...(unitId ? { unit_id: unitId } : {}),
-        tenant_id: sharedTenantId,
+        unit_id: scope.unitId,
+        tenant_id: scope.tenantId,
       })
       .select("id, codigo_portaria, nome, is_active")
       .single();
@@ -562,7 +552,7 @@ export const settingsService = {
     file: File;
     name: string;
     documentType: string;
-  }): Promise<ServiceResponse<DocumentTemplate>> {
+  }, scope: UnitWriteScope): Promise<ServiceResponse<DocumentTemplate>> {
     const file = params.file;
     const name = params.name.trim() || file.name;
     const documentType = params.documentType.trim();
@@ -636,7 +626,6 @@ export const settingsService = {
     }
     const { data: publicUrlData } = storage.getPublicUrl(uploadData.path);
     const fileUrl = publicUrlData.publicUrl;
-    const sharedTenantId = await resolveTenantIdViaTenantUsers();
     const { data, error } = await supabase
       .from(DOCUMENT_TEMPLATES_TABLE)
       .insert({
@@ -647,7 +636,7 @@ export const settingsService = {
         file_size: file.size,
         content_type: file.type || "application/pdf",
         font_configurations: fontConfigurationsJSON,
-        ...(sharedTenantId ? { tenant_id: sharedTenantId } : {}),
+        tenant_id: scope.tenantId,
       })
       .select(
         "id, name, document_type, file_path, file_url, file_size, content_type, created_at, font_configurations",

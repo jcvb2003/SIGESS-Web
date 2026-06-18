@@ -45,8 +45,10 @@ import {
 } from "lucide-react";
 import { settingsService } from "../../services/settingsService";
 import type { DocumentTemplate } from "../../types/settings.types";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 export function DocumentsCard({ canWrite = true }: { canWrite?: boolean }) {
   const queryClient = useQueryClient();
+  const { unitId, tenantId } = useActiveScope();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [name, setName] = useState("");
@@ -66,8 +68,9 @@ export function DocumentsCard({ canWrite = true }: { canWrite?: boolean }) {
       name: string;
       documentType: string;
     }) => {
+      if (!unitId || !tenantId) throw new Error("Escopo inválido para enviar template.");
       const { data, error } =
-        await settingsService.uploadDocumentTemplate(params);
+        await settingsService.uploadDocumentTemplate(params, { unitId, tenantId });
       if (error) throw error;
       return data;
     },

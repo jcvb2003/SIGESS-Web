@@ -5,7 +5,7 @@ import { SystemParameters } from "../types/settings.types";
 import { useActiveScope } from "@/shared/hooks/useActiveScope";
 
 export function useParametersData() {
-  const { unitId, bootstrapped } = useActiveScope();
+  const { unitId, tenantId, bootstrapped } = useActiveScope();
   const queryClient = useQueryClient();
 
   const parametersQuery = useQuery({
@@ -21,7 +21,8 @@ export function useParametersData() {
 
   const saveMutation = useMutation({
     mutationFn: async (values: SystemParameters) => {
-      const { data, error } = await settingsService.saveParameters(values, unitId);
+      if (!unitId || !tenantId) throw new Error("Escopo inválido para salvar parâmetros.");
+      const { data, error } = await settingsService.saveParameters(values, { unitId, tenantId });
       if (error) throw error;
       return data;
     },

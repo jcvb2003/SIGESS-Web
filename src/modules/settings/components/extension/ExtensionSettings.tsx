@@ -75,6 +75,11 @@ export function ExtensionSettings() {
       return;
     }
 
+    if (!unitId) {
+      toast.error("Unidade ativa não identificada.");
+      return;
+    }
+
     setIsSaving(true);
     try {
       const { error } = await extensionService.saveLicenseKey(licenseKey, unitId);
