@@ -2,12 +2,14 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { memberService } from "@/modules/members/services/memberService";
 import { memberQueryKeys } from "@/modules/members/queryKeys";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 import { RegistrationForm } from "@/modules/members/components/registration/RegistrationForm";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 export default function MemberDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { bootstrapped } = useActiveScope();
   const {
     data: member,
     isLoading,
@@ -15,7 +17,7 @@ export default function MemberDetailsPage() {
   } = useQuery({
     queryKey: id ? memberQueryKeys.detail(id) : ["member", null],
     queryFn: () => (id ? memberService.getMemberById(id) : null),
-    enabled: !!id,
+    enabled: bootstrapped && !!id,
   });
   if (isLoading) {
     return (

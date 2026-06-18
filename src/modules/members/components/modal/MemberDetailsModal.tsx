@@ -10,6 +10,7 @@ import {
 import { EntityTabs } from "@/shared/components/layout/EntityTabs";
 import { memberService } from "../../services/memberService";
 import { memberQueryKeys } from "../../queryKeys";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 import { MemberRegistrationForm } from "../../types/member.types";
 import { MemberModalHeader } from "./MemberModalHeader";
 import { MemberModalActions } from "./MemberModalActions";
@@ -39,6 +40,7 @@ export function MemberDetailsModal({
   onDocuments,
 }: Readonly<MemberDetailsModalProps>) {
   const navigate = useNavigate();
+  const { bootstrapped } = useActiveScope();
   const {
     data: member,
     isLoading,
@@ -46,7 +48,7 @@ export function MemberDetailsModal({
   } = useQuery({
     queryKey: memberUuid ? memberQueryKeys.detail(memberUuid) : ["member", null],
     queryFn: () => (memberUuid ? memberService.getMemberById(memberUuid) : null),
-    enabled: !!memberUuid && open,
+    enabled: bootstrapped && !!memberUuid && open,
   });
 
   const handleEdit = () => {
