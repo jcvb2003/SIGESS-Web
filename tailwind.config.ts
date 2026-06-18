@@ -26,7 +26,7 @@ const config = {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			primary: {
-  				DEFAULT: 'hsl(var(--primary))',
+  				DEFAULT: 'hsl(var(--primary) / <alpha-value>)',
   				foreground: 'hsl(var(--primary-foreground))'
   			},
   			secondary: {
@@ -57,19 +57,19 @@ const config = {
   			bangladeshGreen: '#03624C',
   			caribbeanGreen: '#00DF81',
   			success: {
-  				DEFAULT: 'hsl(var(--success))',
+  				DEFAULT: 'hsl(var(--success) / <alpha-value>)',
   				foreground: 'hsl(var(--success-foreground))'
   			},
   			warning: {
-  				DEFAULT: 'hsl(var(--warning))',
+  				DEFAULT: 'hsl(var(--warning) / <alpha-value>)',
   				foreground: 'hsl(var(--warning-foreground))'
   			},
   			info: {
-  				DEFAULT: 'hsl(var(--info))',
+  				DEFAULT: 'hsl(var(--info) / <alpha-value>)',
   				foreground: 'hsl(var(--info-foreground))'
   			},
   			empty: {
-  				DEFAULT: 'hsl(var(--empty))',
+  				DEFAULT: 'hsl(var(--empty) / <alpha-value>)',
   				foreground: 'hsl(var(--empty-foreground))'
   			},
   			sidebar: {
