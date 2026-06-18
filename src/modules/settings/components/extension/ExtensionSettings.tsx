@@ -123,7 +123,7 @@ export function ExtensionSettings() {
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="space-y-6">
       <Card>
         <CardHeader className="flex flex-row items-center space-x-4">
           <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
