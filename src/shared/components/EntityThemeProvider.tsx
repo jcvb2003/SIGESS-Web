@@ -56,6 +56,9 @@ export function EntityThemeProvider({
            root.style.removeProperty(cssVar);
          }
       }
+      root.style.removeProperty("--field-filled-bg");
+      root.style.removeProperty("--field-filled-border");
+      root.style.removeProperty("--field-filled-border-focus");
       return;
     }
 
@@ -129,6 +132,20 @@ function applyEntityColors(
           if (root.style.getPropertyValue(fgVar) !== contrastColor) {
             root.style.setProperty(fgVar, contrastColor);
           }
+        }
+      }
+
+      // Derivar field-filled a partir do hue de corPrimaria
+      if (field === "corPrimaria") {
+        const [hue] = value.trim().split(/\s+/);
+        if (theme === "dark") {
+          root.style.setProperty("--field-filled-bg",          `${hue} 40% 18%`);
+          root.style.setProperty("--field-filled-border",       `${hue} 40% 32%`);
+          root.style.setProperty("--field-filled-border-focus", `${hue} 50% 45%`);
+        } else {
+          root.style.setProperty("--field-filled-bg",          `${hue} 81% 96%`);
+          root.style.setProperty("--field-filled-border",       `${hue} 55% 82%`);
+          root.style.setProperty("--field-filled-border-focus", `${hue} 55% 68%`);
         }
       }
     }

@@ -44,7 +44,7 @@ export function statusLabel(status: GovBatchStatus): string {
 export function statusTextClassName(status: GovBatchStatus): string {
   switch (status) {
     case "concluido":
-      return "text-emerald-700";
+      return "text-primary";
     case "erro":
       return "text-red-700";
     case "fazendo_login":
