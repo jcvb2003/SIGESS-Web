@@ -2,6 +2,7 @@ import { MemberRegistrationForm } from "../../types/member.types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useEntityData } from "@/modules/settings/hooks/useEntityData";
+import { SITUACAO_PRINT, SITUACAO_PRINT_FALLBACK } from "../../constants/memberStatus";
 
 interface MemberFichaProps {
   readonly member: MemberRegistrationForm;
@@ -127,11 +128,7 @@ export function MemberFicha({ member }: MemberFichaProps) {
               label="Situação Cadastral"
               value={member.situacao}
               className={`col-span-3 ${
-                member.situacao === "ATIVO"
-                  ? "text-emerald-600"
-                  : member.situacao === "INATIVO"
-                    ? "text-slate-600"
-                    : "text-foreground"
+                (SITUACAO_PRINT[member.situacao ?? ""] ?? SITUACAO_PRINT_FALLBACK).text
               }`}
             />
           </InfoGroup>

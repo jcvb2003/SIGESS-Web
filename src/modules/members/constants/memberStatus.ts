@@ -45,3 +45,19 @@ export const SITUACAO_FALLBACK: SituacaoDisplayConfig = {
   icon: XCircle,
   label: "Desconhecido",
 };
+
+/**
+ * Classes Tailwind para contexto de impressão — usa cores fixas em vez de
+ * CSS variables porque variáveis não são confiáveis em print media.
+ */
+export const SITUACAO_PRINT: Record<string, { bg: string; text: string }> = {
+  ATIVO: { bg: "bg-green-600 text-white", text: "text-green-700" },
+  INATIVO: { bg: "bg-slate-500 text-white", text: "text-slate-600" },
+  APOSENTADO: { bg: "bg-sky-500 text-white", text: "text-sky-700" },
+  FALECIDO: { bg: "bg-slate-400 text-white", text: "text-slate-500" },
+  TRANSFERIDO: { bg: "bg-amber-500 text-white", text: "text-amber-700" },
+  CANCELADO: { bg: "bg-red-500 text-white", text: "text-red-700" },
+  SUSPENSO: { bg: "bg-amber-500 text-white", text: "text-amber-700" },
+};
+
+export const SITUACAO_PRINT_FALLBACK = { bg: "bg-slate-400 text-white", text: "text-foreground" };

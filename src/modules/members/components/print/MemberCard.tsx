@@ -3,6 +3,7 @@ import { format, addYears } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { QRCodeSVG } from "qrcode.react";
 import { EntitySettings } from "@/shared/types/entity.types";
+import { SITUACAO_PRINT, SITUACAO_PRINT_FALLBACK } from "../../constants/memberStatus";
 
 interface MemberCardProps {
   readonly member: MemberRegistrationForm;
@@ -89,11 +90,7 @@ export function MemberCard({ member, entity }: MemberCardProps) {
                 )}
               </div>
               <div className={`w-full py-0.5 rounded text-[5px] font-black text-center uppercase tracking-wider shadow-sm ${
-                member.situacao === "ATIVO"
-                  ? "bg-emerald-500 text-white"
-                  : member.situacao === "INATIVO"
-                    ? "bg-slate-500 text-white"
-                    : "bg-red-500 text-white"
+                (SITUACAO_PRINT[member.situacao ?? ""] ?? SITUACAO_PRINT_FALLBACK).bg
               }`}>
                 {member.situacao || "PENDENTE"}
               </div>
