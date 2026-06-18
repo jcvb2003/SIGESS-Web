@@ -454,7 +454,7 @@ export function ImportDAEsDialog({
                         </span>
                       </div>
                       {entry.status === "ok" && (
-                        <Badge className="bg-emerald-600 hover:bg-emerald-700 shrink-0">Pronto</Badge>
+                        <Badge className="bg-primary hover:bg-primary/90 shrink-0">Pronto</Badge>
                       )}
                       {entry.status === "nao_encontrado" && (
                         <Badge variant="destructive" className="shrink-0">CPF não encontrado</Badge>

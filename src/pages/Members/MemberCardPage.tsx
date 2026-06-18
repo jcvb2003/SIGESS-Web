@@ -44,7 +44,7 @@ export default function MemberCardPage() {
         <Button 
           onClick={() => window.print()} 
           size="lg"
-          className="rounded-full shadow-2xl bg-emerald-600 hover:bg-emerald-700 text-white gap-2 h-14 px-6 scale-110 active:scale-95 transition-all"
+          className="rounded-full shadow-2xl bg-primary hover:bg-primary/90 text-white gap-2 h-14 px-6 scale-110 active:scale-95 transition-all"
         >
           <Printer className="h-5 w-5" />
           <span className="font-bold">Imprimir Carteirinha</span>

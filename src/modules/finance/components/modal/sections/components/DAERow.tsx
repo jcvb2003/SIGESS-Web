@@ -247,7 +247,7 @@ export function DAERow({
         "group flex items-center justify-between p-3 rounded-xl border transition-all duration-300",
         isGroup 
           ? "bg-muted/50 border-border hover:border-blue-200 dark:hover:border-blue-800/50 hover:shadow-blue-500/5 hover:bg-blue-50/30 dark:hover:bg-blue-900/20" 
-          : "bg-card border-border/60 hover:border-emerald-200 dark:hover:border-emerald-800/50 hover:shadow-emerald-500/5",
+          : "bg-card border-border/60 hover:border-emerald-200 dark:hover:border-emerald-800/50 hover:shadow-sm",
         isSelectionMode && "cursor-pointer"
       )}
       onClick={() => isSelectionMode && onToggleSelection?.(group.id, items)}

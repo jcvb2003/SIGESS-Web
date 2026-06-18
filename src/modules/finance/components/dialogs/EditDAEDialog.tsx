@@ -208,7 +208,7 @@ export function EditDAEDialog({
             </Button>
             <Button
               type="submit"
-              className="flex-[2] h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-600/20"
+              className="flex-[2] h-11 bg-primary hover:bg-primary/90 text-white font-bold shadow-lg"
               disabled={isPending}
             >
               {isPending ? (

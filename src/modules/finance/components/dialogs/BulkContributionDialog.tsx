@@ -57,7 +57,7 @@ export function BulkContributionDialog({
           <AlertDialogAction
             onClick={handleConfirm}
             disabled={bulkMutation.isPending || !bulkMutation.isReady}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            className="bg-primary hover:bg-primary/90 text-white"
           >
             {bulkMutation.isPending ? (
               <>

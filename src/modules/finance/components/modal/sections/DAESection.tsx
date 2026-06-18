@@ -301,7 +301,7 @@ export function DAESection({
                   "flex-1 h-10 text-xs font-bold",
                   selectedItem?.boleto_pago 
                     ? "bg-amber-600 hover:bg-amber-700 text-white" 
-                    : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                    : "bg-primary hover:bg-primary/90 text-white"
                 )}
               >
                 {toggleBoletoStatus.isPending ? (

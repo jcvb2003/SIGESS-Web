@@ -396,7 +396,7 @@ export function DAEDialog({
                     <Button
                       onClick={handleSubmit}
                       disabled={paymentMutation.isPending || !canConfirm}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs gap-2 h-10 px-6 shadow-md shadow-emerald-200 dark:shadow-none transition-all hover:-translate-y-0.5 rounded-lg"
+                      className="bg-primary hover:bg-primary/90 text-white font-bold text-xs gap-2 h-10 px-6 shadow-md dark:shadow-none transition-all hover:-translate-y-0.5 rounded-lg"
                     >
                       {paymentMutation.isPending ? (
                         <Loader2 className="h-4 w-4 animate-spin" />

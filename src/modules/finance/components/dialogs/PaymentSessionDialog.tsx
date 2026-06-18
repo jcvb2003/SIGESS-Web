@@ -414,7 +414,7 @@ export function PaymentSessionDialog({
                   <Button
                     onClick={handleSubmit}
                     disabled={paymentMutation.isPending || !canConfirm}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[11px] gap-2 h-10 px-6 shadow-xl shadow-emerald-100 dark:shadow-none transition-all hover:-translate-y-0.5"
+                    className="bg-primary hover:bg-primary/90 text-white font-black text-[11px] gap-2 h-10 px-6 shadow-md dark:shadow-none transition-all hover:-translate-y-0.5"
                   >
                     {paymentMutation.isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
