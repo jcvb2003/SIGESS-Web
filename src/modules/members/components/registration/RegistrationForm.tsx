@@ -142,7 +142,7 @@ export function RegistrationForm({
       const payload = data as MemberRegistrationForm;
 
       if (isEditMode && memberUuid) {
-        await memberService.updateMember(memberUuid, payload);
+        await memberService.updateMember(memberUuid, payload, { tenantId, unitId });
         await handlePhotoActions(data, memberUuid);
         toast.success("Sócio atualizado com sucesso.");
       } else {

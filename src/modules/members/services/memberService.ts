@@ -239,12 +239,12 @@ export const memberService = {
   async updateMember(
     id: string,
     member: MemberRegistrationForm,
+    context: MemberUnitContext,
   ): Promise<void> {
     const payload = toMemberInsertPayload(member);
-    const { error } = await supabase
-      .from("socios")
-      .update(payload)
-      .eq("id", id);
+    let query = supabase.from("socios").update(payload).eq("id", id);
+    if (context.unitId) query = query.eq("unit_id", context.unitId);
+    const { error } = await query;
     if (error) {
       throw error;
     }
