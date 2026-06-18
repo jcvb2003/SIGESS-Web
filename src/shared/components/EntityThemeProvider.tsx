@@ -49,10 +49,14 @@ export function EntityThemeProvider({
       return;
     }
 
-    const cached = queryClient.getQueryData<EntitySettings>(["settings", "entity"]);
-    if (cached) {
-      applyEntityColors(cached, currentTheme);
-    }
+    // getQueriesData com chave parcial encontra ["settings","entity",unitId]
+    // sem precisar saber o unitId exato (getQueryData exigiria exact match).
+    const queries = queryClient.getQueriesData<EntitySettings>({ queryKey: ["settings", "entity"] });
+    const cached = queries.find(([, data]) => data != null)?.[1];
+
+    // Sempre chama applyEntityColors — mesmo sem entity, limpa vars obsoletas
+    // para que o CSS do globals.css (ex: sidebar charcoal no dark mode) assuma.
+    applyEntityColors(cached, currentTheme);
   }, [session, queryClient, currentTheme]);
 
   // useEffect para subscrever mudanças futuras (save, reset)
