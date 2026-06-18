@@ -67,8 +67,8 @@ export function AnnuitiesCell({ member, currentYear, anoBase }: AnnuitiesCellPro
               <div
                 className={cn(
                   "flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold border transition-all cursor-default shadow-sm",
-                  y.isPaid 
-                    ? "bg-primary/20 dark:bg-primary/30 border-primary/30 dark:border-primary/50 text-primary dark:text-primary-foreground font-bold shadow-sm" 
+                  y.isPaid
+                    ? "bg-success/20 border-success/30 text-success font-bold shadow-sm"
                     : "bg-red-50 dark:bg-red-900/30 border-red-100 dark:border-red-800 text-red-600 dark:text-red-400 opacity-60 hover:opacity-100"
                 )}
               >
