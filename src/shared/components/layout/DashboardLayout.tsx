@@ -101,7 +101,7 @@ export function DashboardLayout() {
             className="hidden lg:flex h-14 shrink-0 items-center px-5 bg-background"
             style={{
               borderBottom: "1px solid transparent",
-              backgroundImage: "linear-gradient(hsl(var(--background)), hsl(var(--background))), linear-gradient(to right, transparent 5%, #00DF81 50%, transparent 95%)",
+              backgroundImage: "linear-gradient(hsl(var(--background)), hsl(var(--background))), linear-gradient(to right, transparent 5%, hsl(var(--sidebar-background)) 50%, transparent 95%)",
               backgroundOrigin: "border-box",
               backgroundClip: "padding-box, border-box",
             }}
