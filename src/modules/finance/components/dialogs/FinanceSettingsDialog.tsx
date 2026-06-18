@@ -12,8 +12,7 @@ import { Loader2, Settings, CreditCard, Wrench } from "lucide-react";
 
 import { useFinanceSettings } from "../../hooks/data/useFinanceSettings";
 import { useChargeTypes } from "../../hooks/data/useChargeTypes";
-import { useActiveScope } from "@/shared/hooks/useActiveScope";
-import { 
+import {
   useUpdateFinanceSettings, 
   useChargeTypeMutations 
 } from "../../hooks/edit/useUpdateMemberConfig";
@@ -43,7 +42,6 @@ export function FinanceSettingsDialog({
   onOpenChange 
 }: FinanceSettingsDialogProps) {
   const { isAdmin } = usePermissions();
-  const { unitId } = useActiveScope();
   // Data Fetching
   const { settings, isLoading: loadingSettings } = useFinanceSettings();
   const { chargeTypes, isLoading: loadingChargeTypes } = useChargeTypes(false);
