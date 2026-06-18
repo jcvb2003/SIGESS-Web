@@ -38,3 +38,19 @@ describe('financeSettingsService.getSettings', () => {
     expect(eqCalls).not.toContain('unit_id');
   });
 });
+
+// ─── updateSettings ──────────────────────────────────────────────────────────
+
+describe('financeSettingsService.updateSettings', () => {
+  afterEach(() => { vi.clearAllMocks(); });
+
+  it('chama .update(updates).eq("id", id) na tabela parametros_financeiros', async () => {
+    const eqMock = vi.fn().mockResolvedValue({ error: null });
+    const updateMock = vi.fn().mockReturnValue({ eq: eqMock });
+    vi.mocked(supabase.from).mockReturnValue({ update: updateMock } as never);
+
+    await financeSettingsService.updateSettings('param-1', { juros: 2 } as never);
+    expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({ juros: 2 }));
+    expect(eqMock).toHaveBeenCalledWith('id', 'param-1');
+  });
+});
