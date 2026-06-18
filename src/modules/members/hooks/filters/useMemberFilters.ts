@@ -2,9 +2,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { memberService } from "../../services/memberService";
 import { settingsQueryKeys } from "@/modules/settings/queryKeys";
-import { settingsService } from "@/modules/settings/services/settingsService";
 import { usePortariaScope } from "@/shared/context/PortariaContext";
-import { useActiveScope } from "@/shared/hooks/useActiveScope";
+import { usePortariasData } from "../../hooks/data/usePortariasData";
 import type {
   LocalityOption,
   StatusFilter,
@@ -20,23 +19,14 @@ export function useMemberFilters() {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   const { activePortariaId, setActivePortariaId } = usePortariaScope();
-  const { unitId, bootstrapped } = useActiveScope();
 
+  // Tenant-wide por design: exibe localidades de todos os polos para filtrar sócios cross-unit
   const localitiesQuery = useQuery<LocalityOption[]>({
     queryKey: settingsQueryKeys.localities(),
     queryFn: () => memberService.getLocalities(),
   });
 
-  const portariasQuery = useQuery({
-    queryKey: settingsQueryKeys.portarias(unitId),
-    queryFn: async () => {
-      const response = await settingsService.getPortarias(unitId);
-      if (response.error) throw response.error;
-      return response.data || [];
-    },
-    staleTime: 30 * 60 * 1000,
-    enabled: bootstrapped && !!unitId,
-  });
+  const { portarias } = usePortariasData();
 
   // portariaFilter é derivado do contexto global para manter sincronia com o header
   const portariaFilter = activePortariaId ?? "all";
@@ -71,6 +61,6 @@ export function useMemberFilters() {
     clearFilters,
     localities: localitiesQuery.data ?? [],
     isLoadingLocalities: localitiesQuery.isLoading || localitiesQuery.isFetching,
-    portarias: portariasQuery.data ?? [],
+    portarias,
   };
 }
