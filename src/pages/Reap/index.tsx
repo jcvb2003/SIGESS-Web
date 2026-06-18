@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { Button } from "@/shared/components/ui/button";
-import { FileUp, Search, AlertTriangle, Settings2 } from "lucide-react";
+import { FileUp, Search, AlertTriangle, Settings2, ExternalLink } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useReapListController } from "../../modules/reap/hooks/data/useReapData";
 import { DataTable } from "@/shared/components/layout/DataTable";
@@ -12,7 +12,7 @@ import { ConsultarPendenciasDialog } from "../../modules/reap/components/Consult
 import { DataTableSearch } from "@/shared/components/layout/DataTableSearch";
 import { ReapStatusBadge } from "../../modules/reap/components/ReapStatusBadge";
 import { ManageReapDialog } from "../../modules/reap/components/ManageReapDialog";
-import { ReapWithMember } from "../../modules/reap/types/reap.types";
+import { ReapWithMember, ANOS_SIMPLIFICADO } from "../../modules/reap/types/reap.types";
 import { getApplicableYears } from "../../modules/reap/domain/reapDomain";
 import { Badge } from "@/shared/components/ui/badge";
 import { MemberCpfCell } from "../../modules/members/components/table/cells/MemberCpfCell";
@@ -134,18 +134,36 @@ export default function ReapPage() {
       headerClassName: "text-right px-14",
       className: "text-right px-6",
       cell: (m: ReapWithMember) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10 hover:text-primary"
-          onClick={(e) => {
-            e.stopPropagation();
-            setSelectedMember(m);
-          }}
-        >
-          <Settings2 className="h-4 w-4 mr-2" />
-          Gerenciar
-        </Button>
+        <div className="flex items-center justify-end gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="hover:bg-primary/10 hover:text-primary"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedMember(m);
+            }}
+          >
+            <Settings2 className="h-4 w-4 mr-2" />
+            Gerenciar
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="hover:bg-primary/10 hover:text-primary"
+            onClick={(e) => e.stopPropagation()}
+            asChild
+          >
+            <a
+              href="https://www.gov.br/mpa/pt-br/assuntos/cadastro-registro-e-monitoramento/pescador-e-pescadora-profissional"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              PesqBrasil
+            </a>
+          </Button>
+        </div>
       )
     }
   ], []);
