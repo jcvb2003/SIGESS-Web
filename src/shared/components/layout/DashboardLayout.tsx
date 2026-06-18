@@ -117,13 +117,15 @@ export function DashboardLayout() {
               <div className="h-6 w-px bg-border shrink-0" />
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full ring-2 ring-primary/25 overflow-hidden">
-                  <div
-                    className="absolute inset-0"
-                    style={avatarUrl
-                      ? { backgroundImage: `url(${avatarUrl})`, backgroundSize: "cover", backgroundPosition: "center", backgroundRepeat: "no-repeat" }
-                      : { backgroundColor: "hsl(var(--primary) / 0.1)" }
-                    }
-                  />
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt=""
+                      style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
+                    />
+                  ) : (
+                    <div className="absolute inset-0" style={{ backgroundColor: "hsl(var(--primary) / 0.1)" }} />
+                  )}
                   {!avatarUrl && (
                     <div className="relative z-10 text-primary text-xs font-bold">
                       {metadata?.profileName?.charAt(0)?.toUpperCase()

@@ -82,14 +82,18 @@ export function ProfileCard() {
                 disabled={uploading}
                 title="Alterar foto de perfil"
               >
-                {/* Camada de fundo: foto ou cor */}
-                <div
-                  className="absolute inset-0 rounded-full"
-                  style={avatarUrl
-                    ? { backgroundImage: `url(${avatarUrl})`, backgroundSize: "cover", backgroundPosition: "center", backgroundRepeat: "no-repeat" }
-                    : { backgroundColor: "hsl(var(--primary) / 0.1)" }
-                  }
-                />
+                {/* Foto de perfil */}
+                {avatarUrl && (
+                  <img
+                    src={avatarUrl}
+                    alt=""
+                    style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
+                  />
+                )}
+                {/* Cor de fundo (sem foto) */}
+                {!avatarUrl && (
+                  <div className="absolute inset-0" style={{ backgroundColor: "hsl(var(--primary) / 0.1)" }} />
+                )}
                 {/* Inicial (sem foto) */}
                 {!avatarUrl && !loadingAvatar && !uploading && (
                   <div className="relative z-10 text-primary font-bold text-sm">{initial}</div>
