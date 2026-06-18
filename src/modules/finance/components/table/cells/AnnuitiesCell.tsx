@@ -37,11 +37,11 @@ export function AnnuitiesCell({ member, currentYear, anoBase }: AnnuitiesCellPro
         <div className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
           <span>{currentYear}</span>
           {isFullySettled ? (
-            <span className="rounded-full bg-emerald-50 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+            <span className="rounded-full bg-success/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-success">
               Quitado
             </span>
           ) : paidCurrentCount >= dueMonthCount ? (
-            <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
+            <span className="inline-flex h-2 w-2 rounded-full bg-success" aria-hidden="true" />
           ) : null}
         </div>
       </div>

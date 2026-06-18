@@ -259,12 +259,12 @@ export function MembershipInfoForm({
         >
           <div className="flex items-center gap-0.5">
             {caepfCaptured ? (
-              <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+              <CheckCircle2 className="h-3 w-3 text-success" />
             ) : (
               <CircleDashed className="h-3 w-3 text-muted-foreground" />
             )}
             {cadastroCaptured ? (
-              <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+              <CheckCircle2 className="h-3 w-3 text-success" />
             ) : (
               <CircleDashed className="h-3 w-3 text-muted-foreground" />
             )}
@@ -292,7 +292,7 @@ export function MembershipInfoForm({
         className="flex items-center gap-1.5 text-[10px] text-muted-foreground"
       >
         {captured ? (
-          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+          <CheckCircle2 className="h-3.5 w-3.5 text-success" />
         ) : (
           <CircleDashed className="h-3.5 w-3.5 text-muted-foreground" />
         )}

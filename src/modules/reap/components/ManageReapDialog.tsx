@@ -148,7 +148,7 @@ export function ManageReapDialog({
                     <span className="font-bold text-xs">{ano}</span>
                     <span className={cn(
                       "text-[10px] font-medium",
-                      simplificadoState[String(ano)]?.enviado ? "text-emerald-600" : "text-amber-600"
+                      simplificadoState[String(ano)]?.enviado ? "text-success" : "text-warning"
                     )}>
                       {simplificadoState[String(ano)]?.enviado ? "Concluído" : "Pendente"}
                     </span>
@@ -197,7 +197,7 @@ export function ManageReapDialog({
                     <span className="font-bold text-xs">{ano}</span>
                     <span className={cn(
                       "text-[10px] font-medium",
-                      anualState[String(ano)]?.enviado ? "text-emerald-600" : "text-amber-600"
+                      anualState[String(ano)]?.enviado ? "text-success" : "text-warning"
                     )}>
                       {anualState[String(ano)]?.enviado ? "Concluído" : "Pendente"}
                     </span>

@@ -86,7 +86,7 @@ export function ChargeTypesTab({
                   onClick={() => onToggleActive(ct.id, !ct.ativo)}
                   className={cn(
                     "p-1 transition-all duration-200 hover:scale-110",
-                    ct.ativo ? "text-emerald-500" : "text-amber-500"
+                    ct.ativo ? "text-success" : "text-warning"
                   )}
                 >
                   {ct.ativo ? (

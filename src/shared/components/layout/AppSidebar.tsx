@@ -248,7 +248,7 @@ function SidebarContent({
                       {unit.name}
                     </span>
                     {isActive && (
-                      <Check className="h-3.5 w-3.5 shrink-0 text-emerald-500 group-data-[highlighted]:text-inherit" />
+                      <Check className="h-3.5 w-3.5 shrink-0 text-success group-data-[highlighted]:text-inherit" />
                     )}
                   </DropdownMenuItem>
                 );

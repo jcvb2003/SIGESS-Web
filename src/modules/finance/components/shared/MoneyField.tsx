@@ -43,7 +43,7 @@ export function MoneyField({
         <Input
           type="text"
           inputMode="numeric"
-          className="h-9 pl-8 text-xs focus-visible:ring-emerald-500"
+          className="h-9 pl-8 text-xs focus-visible:ring-primary"
           value={displayValue}
           onChange={handleChange}
           onFocus={(e) => e.target.select()}
