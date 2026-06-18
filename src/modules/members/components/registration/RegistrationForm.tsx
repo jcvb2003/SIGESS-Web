@@ -62,7 +62,7 @@ export function RegistrationForm({
     queryFn: () => memberService.countMembers(unitContext),
     enabled: !isEditMode,
   });
-  const memberCount = countData?.count ?? null;
+  const memberCount = countData?.total ?? null;
 
   const form = useForm<MemberRegistrationSchemaType, undefined, MemberRegistrationSchemaType>({
     resolver: zodResolver(memberRegistrationSchema) as import("react-hook-form").Resolver<MemberRegistrationSchemaType>,

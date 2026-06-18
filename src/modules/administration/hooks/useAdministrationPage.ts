@@ -238,7 +238,7 @@ export function useAdministrationPage(enabled: boolean) {
     memberships,
     membershipRows,
     unitStats: unitStatsQuery.data,
-    totalMembers: totalMembersQuery.data?.count,
+    totalMembers: totalMembersQuery.data?.total,
 
     // Counts
     counts: { activeUnits: activeUnitsCount, totalUnits: units.length, activeUsers: activeUsersCount, memberships: membershipsCount },
