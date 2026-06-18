@@ -59,11 +59,11 @@ function DAEIcon({ isGroup, lead }: { readonly isGroup: boolean; readonly lead: 
   }
 
   return (
-    <div className="h-10 w-10 rounded-xl flex flex-col items-center justify-center border bg-muted border-border/50 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-900/30 group-hover:border-emerald-100 dark:group-hover:border-emerald-800/50 transition-colors">
-      <span className="text-[10px] font-bold text-muted-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-400 leading-none uppercase">
+    <div className="h-10 w-10 rounded-xl flex flex-col items-center justify-center border bg-muted border-border/50 group-hover:bg-primary/5 dark:group-hover:bg-primary/10 group-hover:border-primary/10 dark:group-hover:border-primary/20 transition-colors">
+      <span className="text-[10px] font-bold text-muted-foreground group-hover:text-primary leading-none uppercase">
         {MONTH_LABELS[lead.competencia_mes || 0]}
       </span>
-      <span className="text-[11px] font-black text-muted-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-500">
+      <span className="text-[11px] font-black text-muted-foreground group-hover:text-primary">
         {String(lead.competencia_ano || "").slice(-2)}
       </span>
     </div>
@@ -247,7 +247,7 @@ export function DAERow({
         "group flex items-center justify-between p-3 rounded-xl border transition-all duration-300",
         isGroup 
           ? "bg-muted/50 border-border hover:border-blue-200 dark:hover:border-blue-800/50 hover:shadow-blue-500/5 hover:bg-blue-50/30 dark:hover:bg-blue-900/20" 
-          : "bg-card border-border/60 hover:border-emerald-200 dark:hover:border-emerald-800/50 hover:shadow-sm",
+          : "bg-card border-border/60 hover:border-primary/20 hover:shadow-sm",
         isSelectionMode && "cursor-pointer"
       )}
       onClick={() => isSelectionMode && onToggleSelection?.(group.id, items)}

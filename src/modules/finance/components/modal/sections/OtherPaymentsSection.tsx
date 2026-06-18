@@ -133,7 +133,7 @@ export function OtherPaymentsSection({
             <div
               key={l.id}
               className={cn(
-                "flex items-center gap-3 rounded-lg py-2 px-2 hover:bg-emerald-50/40 dark:hover:bg-emerald-900/30 border border-transparent hover:border-emerald-100/50 dark:hover:border-emerald-800/50 transition-colors",
+                "flex items-center gap-3 rounded-lg py-2 px-2 hover:bg-primary/5 dark:hover:bg-primary/10 border border-transparent hover:border-primary/10 transition-colors",
                 isSelectionMode && "cursor-pointer"
               )}
               onClick={() => isSelectionMode && onToggleSelection?.(l.id, 'lancamento')}
@@ -143,7 +143,7 @@ export function OtherPaymentsSection({
                 <div className={cn(
                   "h-4 w-4 rounded-sm border flex items-center justify-center transition-colors",
                   selectedIds?.includes(l.id) 
-                    ? "bg-emerald-600 border-emerald-600 text-white" 
+                    ? "bg-primary border-primary text-primary-foreground" 
                     : "border-input bg-background"
                 )}>
                   {selectedIds?.includes(l.id) && <Check className="h-3 w-3 stroke-[3]" />}

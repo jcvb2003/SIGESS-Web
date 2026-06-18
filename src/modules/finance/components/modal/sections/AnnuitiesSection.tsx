@@ -97,7 +97,7 @@ export function AnnuitiesSection({
             <div
               key={a.id}
               className={cn(
-                "flex items-center gap-3 rounded-lg py-2 px-2 hover:bg-emerald-50/40 dark:hover:bg-emerald-900/30 border border-transparent hover:border-emerald-100/50 dark:hover:border-emerald-800/50 transition-colors",
+                "flex items-center gap-3 rounded-lg py-2 px-2 hover:bg-primary/5 dark:hover:bg-primary/10 border border-transparent hover:border-primary/10 transition-colors",
                 isSelectionMode && "cursor-pointer"
               )}
               onClick={() => isSelectionMode && onToggleSelection?.(a.id, 'lancamento')}
@@ -107,21 +107,21 @@ export function AnnuitiesSection({
                   <div className={cn(
                     "h-4 w-4 rounded-sm border flex items-center justify-center transition-colors",
                     selectedIds?.includes(a.id) 
-                      ? "bg-emerald-600 border-emerald-600 text-white" 
+                      ? "bg-primary border-primary text-primary-foreground" 
                       : "border-input bg-background"
                   )}>
                     {selectedIds?.includes(a.id) && <Check className="h-3 w-3 stroke-[3]" />}
                   </div>
                 </div>
               )}
-              <div className="w-10 text-sm font-bold text-emerald-700 dark:text-emerald-500">
+              <div className="w-10 text-sm font-bold text-primary">
                 {a.competencia_ano}
               </div>
               <div className="flex-1 min-w-0">
                 <FinancialStatusBadge
                   status="ok"
                   detail={`Pago em ${formatDate(a.data_pagamento)}`}
-                  className="h-5 text-[10px] bg-emerald-100/50 dark:bg-emerald-900/30 border-emerald-200/50 dark:border-emerald-800/50 text-emerald-700 dark:text-emerald-500"
+                  className="h-5 text-[10px] bg-success/10 border-success/20 text-success"
                 />
               </div>
               <div className="text-right">
