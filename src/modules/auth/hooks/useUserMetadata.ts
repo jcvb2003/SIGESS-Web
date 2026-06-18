@@ -33,9 +33,10 @@ export function useUserMetadata() {
             .limit(1)
             .maybeSingle(),
           supabase
-            .from("user_profiles" as never)
-            .select("nome")
-            .eq("id", user.id)
+            .from("tenant_users" as never)
+            .select("user_profiles(nome)")
+            .eq("user_id", user.id)
+            .limit(1)
             .maybeSingle(),
         ]);
 
@@ -56,7 +57,7 @@ export function useUserMetadata() {
           max_socios: configData?.max_socios ?? 0,
           acesso_expira_em: configData?.acesso_expira_em || null,
           isExpired,
-          profileName: profileData?.nome?.trim() || null,
+          profileName: ((profileData as Record<string, unknown>)?.user_profiles as Record<string, unknown> | null)?.nome as string | null || null,
         });
       } catch (err) {
         console.error("Unexpected error fetching user metadata:", err);
