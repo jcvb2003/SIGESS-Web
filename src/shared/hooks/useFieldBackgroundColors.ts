@@ -4,7 +4,6 @@ export function useFieldBackgroundColors() {
   const { watch, formState: { errors } } = useFormContext();
 
   const getFieldBackgroundColor = (fieldName: string): string => {
-    // Inscrição granular para o campo específico
     const fieldValue = watch(fieldName);
     const hasError = !!errors[fieldName];
 
@@ -13,10 +12,10 @@ export function useFieldBackgroundColors() {
     }
 
     if (fieldValue && fieldValue.toString().trim() !== "") {
-      return "bg-emerald-50 border-emerald-200 focus:bg-emerald-50 focus:border-emerald-400 dark:bg-emerald-950/30 dark:border-emerald-800 dark:focus:bg-emerald-950/40 dark:focus:border-emerald-600 transition-colors duration-200";
+      return "bg-success/5 border-success/20 focus:bg-success/5 focus:border-success/40 dark:bg-success/10 dark:border-success/30 dark:focus:bg-success/10 dark:focus:border-success/50 transition-colors duration-200";
     }
 
-    return "bg-sky-50 border-sky-200 focus:bg-sky-50 focus:border-sky-400 dark:bg-sky-950/30 dark:border-sky-800 dark:focus:bg-sky-950/40 dark:focus:border-sky-600 transition-colors duration-200";
+    return "bg-empty/10 border-empty/20 focus:bg-empty/10 focus:border-empty/40 dark:bg-empty/10 dark:border-empty/20 dark:focus:bg-empty/10 dark:focus:border-empty/40 transition-colors duration-200";
   };
 
   return { getFieldBackgroundColor };
