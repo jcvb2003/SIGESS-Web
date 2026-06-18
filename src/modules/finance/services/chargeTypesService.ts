@@ -4,8 +4,8 @@ import type { ChargeType } from "../types/finance.types";
 
 export const chargeTypesService = {
   async getAll(unitId?: string | null): Promise<ChargeType[]> {
-    const query = supabase.from("tipos_cobranca").select("*").order("nome");
-    if (unitId) query.eq("unit_id", unitId);
+    let query = supabase.from("tipos_cobranca").select("*").order("nome");
+    if (unitId) query = query.eq("unit_id", unitId);
     const { data, error } = await query;
 
     if (error) throw error;
@@ -13,12 +13,12 @@ export const chargeTypesService = {
   },
 
   async getActive(unitId?: string | null): Promise<ChargeType[]> {
-    const query = supabase
+    let query = supabase
       .from("tipos_cobranca")
       .select("*")
       .eq("ativo", true)
       .order("nome");
-    if (unitId) query.eq("unit_id", unitId);
+    if (unitId) query = query.eq("unit_id", unitId);
     const { data, error } = await query;
 
     if (error) throw error;
