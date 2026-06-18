@@ -45,7 +45,7 @@ export function MemberCard({ member, entity }: MemberCardProps) {
         <div className="relative w-[85.6mm] h-[53.98mm] bg-white overflow-hidden flex flex-col shrink-0 border border-slate-200 rounded-xl shadow-lg print:shadow-none">
           
           {/* Cabeçalho Frente - Emerald Pattern */}
-          <div className="bg-emerald-600 px-4 py-2 flex items-center justify-between shrink-0 relative overflow-hidden">
+          <div className="bg-primary px-4 py-2 flex items-center justify-between shrink-0 relative overflow-hidden">
              {/* Background Decoration */}
              <div className="absolute inset-0 opacity-10 pointer-events-none">
                 <svg className="h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -54,12 +54,12 @@ export function MemberCard({ member, entity }: MemberCardProps) {
              </div>
 
              <div className="flex items-center gap-2.5 relative z-10">
-                <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center p-1 shadow-sm border border-emerald-500/20">
+                <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center p-1 shadow-sm border border-primary/20">
                   <img src={logoUrl} alt="Logo" className="max-h-full max-w-full object-contain" />
                 </div>
                 <div className="flex flex-col">
                   <h1 className="font-black text-white text-[11px] leading-tight tracking-tight uppercase">{entityShortName}</h1>
-                  <p className="text-[5px] font-bold text-emerald-50 uppercase tracking-widest opacity-90">
+                  <p className="text-[5px] font-bold text-primary-foreground uppercase tracking-widest opacity-90">
                     CNPJ: {entityCnpj}
                   </p>
                 </div>
@@ -71,7 +71,7 @@ export function MemberCard({ member, entity }: MemberCardProps) {
           </div>
 
           {/* Subtarja Escura */}
-          <div className="bg-emerald-800 py-1 flex justify-center items-center shrink-0">
+          <div className="bg-primary py-1 flex justify-center items-center shrink-0">
             <h2 className="text-white font-black text-[8px] tracking-[0.2em] uppercase">Carteirinha de Sócio</h2>
           </div>
 
@@ -80,7 +80,7 @@ export function MemberCard({ member, entity }: MemberCardProps) {
             
             {/* Foto Section */}
             <div className="flex flex-col items-center gap-1.5 shrink-0">
-              <div className="w-[18mm] h-[24mm] rounded-lg border-2 border-emerald-600/20 p-0.5 bg-slate-50 shadow-inner overflow-hidden relative">
+              <div className="w-[18mm] h-[24mm] rounded-lg border-2 border-primary/20 p-0.5 bg-slate-50 shadow-inner overflow-hidden relative">
                 {member.fotos?.[0]?.foto_url ? (
                   <img src={member.fotos[0].foto_url} alt="Sócio" className="w-full h-full object-cover rounded-md" />
                 ) : (
@@ -100,7 +100,7 @@ export function MemberCard({ member, entity }: MemberCardProps) {
             <div className="flex-1 flex flex-col justify-between pt-0.5">
               <div className="space-y-2">
                 <div className="border-b border-slate-100 pb-1">
-                  <span className="block text-[5px] text-emerald-700 font-black uppercase tracking-wider mb-0.5 tracking-widest">Nome do Associado</span>
+                  <span className="block text-[5px] text-primary font-black uppercase tracking-wider mb-0.5 tracking-widest">Nome do Associado</span>
                   <div className="text-[10px] font-black text-slate-800 leading-tight uppercase truncate">
                     {member.nome}
                   </div>
@@ -108,20 +108,20 @@ export function MemberCard({ member, entity }: MemberCardProps) {
 
                 <div className="grid grid-cols-2 gap-x-2 gap-y-2">
                   <div>
-                    <span className="block text-[5px] text-emerald-700 font-black uppercase tracking-wider tracking-widest">CPF</span>
+                    <span className="block text-[5px] text-primary font-black uppercase tracking-wider tracking-widest">CPF</span>
                     <div className="text-[8px] font-bold text-slate-700 leading-none mt-0.5">{member.cpf || "---"}</div>
                   </div>
                   <div>
-                    <span className="block text-[5px] text-emerald-700 font-black uppercase tracking-wider tracking-widest">Matrícula</span>
+                    <span className="block text-[5px] text-primary font-black uppercase tracking-wider tracking-widest">Matrícula</span>
                     <div className="text-[8px] font-bold text-slate-700 leading-none mt-0.5">{member.codigoDoSocio || "---"}</div>
                   </div>
                   <div>
-                    <span className="block text-[5px] text-emerald-700 font-black uppercase tracking-wider tracking-widest">Admissão</span>
+                    <span className="block text-[5px] text-primary font-black uppercase tracking-wider tracking-widest">Admissão</span>
                     <div className="text-[8px] font-bold text-slate-700 leading-none mt-0.5">{formattedAdmission}</div>
                   </div>
                   <div>
-                    <span className="block text-[5px] text-emerald-700 font-black uppercase tracking-wider tracking-widest">Validade</span>
-                    <div className="text-[8px] font-black text-emerald-600 leading-none mt-0.5">{formattedValidity}</div>
+                    <span className="block text-[5px] text-primary font-black uppercase tracking-wider tracking-widest">Validade</span>
+                    <div className="text-[8px] font-black text-primary leading-none mt-0.5">{formattedValidity}</div>
                   </div>
                 </div>
               </div>
@@ -150,7 +150,7 @@ export function MemberCard({ member, entity }: MemberCardProps) {
         <div className="relative w-[85.6mm] h-[53.98mm] bg-white overflow-hidden flex flex-col shrink-0 border border-slate-200 rounded-xl shadow-lg print:shadow-none">
           
           {/* Header Verso */}
-          <div className="bg-emerald-600 h-8 w-full flex items-center justify-center px-4 shrink-0 relative overflow-hidden">
+          <div className="bg-primary h-8 w-full flex items-center justify-center px-4 shrink-0 relative overflow-hidden">
              <div className="absolute inset-0 opacity-10 pointer-events-none scale-x-[-1]">
                 <svg className="h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                   <path d="M0 100 C 20 0 50 0 100 100 Z" fill="white" />
@@ -167,7 +167,7 @@ export function MemberCard({ member, entity }: MemberCardProps) {
             <div className="flex gap-5 relative z-10">
               {/* QR Code Column */}
               <div className="flex flex-col items-center gap-1.5 shrink-0">
-                <div className="w-[18mm] aspect-square border-2 border-emerald-600 rounded-lg p-1 bg-white shadow-sm">
+                <div className="w-[18mm] aspect-square border-2 border-primary rounded-lg p-1 bg-white shadow-sm">
                    <QRCodeSVG 
                     value={qrData}
                     size={64}
@@ -182,22 +182,22 @@ export function MemberCard({ member, entity }: MemberCardProps) {
               {/* Informações Secundárias */}
               <div className="flex-1 flex flex-col gap-2.5 py-0.5">
                 <div>
-                  <span className="block text-[5px] text-emerald-700 font-black uppercase tracking-wider mb-0.5 tracking-widest">RGP - Registro Geral de Pesca</span>
+                  <span className="block text-[5px] text-primary font-black uppercase tracking-wider mb-0.5 tracking-widest">RGP - Registro Geral de Pesca</span>
                   <div className="text-[10px] font-black text-slate-800 leading-none">{member.rgp || "NÃO INFORMADO"}</div>
                 </div>
                 
                 <div>
-                  <span className="block text-[5px] text-emerald-700 font-black uppercase tracking-wider mb-0.5 tracking-widest">NIT / PIS / PASEP</span>
+                  <span className="block text-[5px] text-primary font-black uppercase tracking-wider mb-0.5 tracking-widest">NIT / PIS / PASEP</span>
                   <div className="text-[10px] font-black text-slate-800 leading-none">{member.nit || "---"}</div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-2 mt-0.5">
                   <div>
-                    <span className="block text-[5px] text-emerald-700 font-black uppercase tracking-wider mb-0.5 tracking-widest">Nascimento</span>
+                    <span className="block text-[5px] text-primary font-black uppercase tracking-wider mb-0.5 tracking-widest">Nascimento</span>
                     <div className="text-[7px] font-bold text-slate-800 uppercase leading-none truncate">{formattedBirth}</div>
                   </div>
                   <div>
-                    <span className="block text-[5px] text-emerald-700 font-black uppercase tracking-wider mb-0.5 tracking-widest">Estado Civil</span>
+                    <span className="block text-[5px] text-primary font-black uppercase tracking-wider mb-0.5 tracking-widest">Estado Civil</span>
                     <div className="text-[7px] font-bold text-slate-800 uppercase leading-none truncate">{member.estadoCivil || "---"}</div>
                   </div>
                 </div>
