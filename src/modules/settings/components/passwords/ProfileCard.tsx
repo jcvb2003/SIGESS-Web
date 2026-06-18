@@ -83,22 +83,22 @@ export function ProfileCard() {
                 title="Alterar foto de perfil"
               >
                 {/* Camada de fundo: foto ou cor */}
-                <span
+                <div
                   className="absolute inset-0 rounded-full"
                   style={avatarUrl
-                    ? { backgroundImage: `url(${avatarUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
+                    ? { backgroundImage: `url(${avatarUrl})`, backgroundSize: "cover", backgroundPosition: "center", backgroundRepeat: "no-repeat" }
                     : { backgroundColor: "hsl(var(--primary) / 0.1)" }
                   }
                 />
                 {/* Inicial (sem foto) */}
                 {!avatarUrl && !loadingAvatar && !uploading && (
-                  <span className="relative z-10 text-primary font-bold text-sm">{initial}</span>
+                  <div className="relative z-10 text-primary font-bold text-sm">{initial}</div>
                 )}
                 {/* Spinner (carregando/uploading) */}
                 {(loadingAvatar || uploading) && (
-                  <span className="absolute inset-0 flex items-center justify-center rounded-full bg-primary/10 z-10">
+                  <div className="absolute inset-0 flex items-center justify-center rounded-full bg-primary/10 z-10">
                     <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                  </span>
+                  </div>
                 )}
                 {/* Overlay câmera no hover */}
                 {!uploading && (
