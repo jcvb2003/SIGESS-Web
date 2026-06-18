@@ -342,7 +342,7 @@ export function ConsultarPendenciasDialog({
       className: "text-center",
       headerClassName: "text-center",
       cell: (res) => res.matchType === "FULL" ? (
-        <Badge variant="secondary" className="bg-emerald-600/10 text-emerald-600 hover:bg-emerald-600/20 border-emerald-600/20 text-[10px]">
+        <Badge variant="secondary" className="bg-success/10 text-success hover:bg-success/20 border-success/20 text-[10px]">
           CPF + NOME
         </Badge>
       ) : (
@@ -468,7 +468,7 @@ export function ConsultarPendenciasDialog({
               {/* Resumo */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-muted/30 p-3 rounded-lg flex items-center gap-3">
-                  <div className="h-8 w-8 bg-emerald-600/10 rounded-full flex items-center justify-center text-emerald-600">
+                  <div className="h-8 w-8 bg-success/10 rounded-full flex items-center justify-center text-success">
                     <CheckCircle2 className="h-5 w-5" />
                   </div>
                   <div className="flex flex-col">

@@ -110,7 +110,7 @@ function DAEStatus({
               className={cn(
                 "h-5 text-[10px] cursor-pointer shadow-sm group-hover/status:shadow-md transition-all",
                 isPaid 
-                  ? "bg-emerald-500 text-white border-emerald-600 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700 dark:border-emerald-700" 
+                  ? "bg-success text-success-foreground border-success/80 hover:bg-success/90 dark:bg-success dark:hover:bg-success/90 dark:border-success/70" 
                   : "bg-amber-100/50 dark:bg-amber-900/30 border-amber-200/50 dark:border-amber-800/50 text-amber-700 dark:text-amber-500 hover:bg-amber-200/50 dark:hover:bg-amber-900/50"
               )}
             />
@@ -258,7 +258,7 @@ export function DAERow({
             <div className={cn(
               "h-4 w-4 rounded-sm border flex items-center justify-center transition-colors",
               isSelected 
-                ? "bg-emerald-600 border-emerald-600 text-white" 
+                ? "bg-success border-success text-success-foreground" 
                 : "border-input bg-background"
             )}>
               {isSelected && <Check className="h-3 w-3 stroke-[3]" />}

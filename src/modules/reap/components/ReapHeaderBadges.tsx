@@ -32,9 +32,9 @@ function ReapBadge({
             className={cn(
               "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold border cursor-default select-none",
               status === "ok" &&
-                "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800",
+                "bg-success/10 text-success border-success/20 dark:bg-success/10 dark:text-success dark:border-success/20",
               status === "problema" &&
-                "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800",
+                "bg-warning/10 text-warning border-warning/20 dark:bg-warning/10 dark:text-warning dark:border-warning/20",
               status === "parcial" &&
                 "bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-950/30 dark:text-sky-400 dark:border-sky-800",
               status === "pendente" &&

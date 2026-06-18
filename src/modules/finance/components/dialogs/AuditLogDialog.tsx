@@ -129,7 +129,7 @@ export function AuditLogDialog({ open, onOpenChange }: AuditLogDialogProps) {
                                 log.operation === "DELETE" && "bg-destructive/10 text-destructive hover:bg-destructive/20",
                                 log.operation === "CANCEL_PAYMENT" && "bg-orange-500/10 text-orange-600 hover:bg-orange-500/20",
                                 log.operation === "UPDATE" && "bg-blue-500/10 text-blue-600 hover:bg-blue-500/20",
-                                log.operation === "INSERT" && "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20"
+                                log.operation === "INSERT" && "bg-success/10 text-success hover:bg-success/20"
                               )}
                             >
                               {log.operation}
