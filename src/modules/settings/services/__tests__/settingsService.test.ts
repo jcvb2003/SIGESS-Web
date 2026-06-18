@@ -42,6 +42,98 @@ describe('settingsService.getEntity', () => {
   });
 });
 
+// ─── savePortaria (INSERT e UPDATE paths) ────────────────────────────────────
+
+describe('settingsService.savePortaria', () => {
+  const scope = { unitId: 'unit-1', tenantId: 'tenant-1' };
+  const portariaBase = { codigoPortaria: 'MMA43', nome: 'SALGADO', isActive: true };
+
+  afterEach(() => { vi.clearAllMocks(); });
+
+  it('INSERT: insere unit_id e tenant_id do scope quando portaria.id é vazio', async () => {
+    const insertMock = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({
+          data: { id: '1', codigo_portaria: 'MMA43', nome: 'SALGADO', is_active: true },
+          error: null,
+        }),
+      }),
+    });
+    vi.mocked(supabase.from).mockReturnValue({ insert: insertMock } as never);
+
+    await settingsService.savePortaria({ id: '', ...portariaBase }, scope);
+    expect(insertMock).toHaveBeenCalledWith(
+      expect.objectContaining({ unit_id: 'unit-1', tenant_id: 'tenant-1' })
+    );
+  });
+
+  it('UPDATE: não chama insert quando portaria.id existe', async () => {
+    const insertMock = vi.fn();
+    const updateMock = vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: { id: 'p-1', codigo_portaria: 'MMA43', nome: 'SALGADO', is_active: true },
+            error: null,
+          }),
+        }),
+      }),
+    });
+    vi.mocked(supabase.from).mockReturnValue({ update: updateMock, insert: insertMock } as never);
+
+    await settingsService.savePortaria({ id: 'p-1', ...portariaBase }, scope);
+    expect(insertMock).not.toHaveBeenCalled();
+    expect(updateMock).toHaveBeenCalled();
+  });
+});
+
+// ─── saveParameters (escrita com UnitWriteScope) ──────────────────────────────
+
+describe('settingsService.saveParameters', () => {
+  afterEach(() => { vi.clearAllMocks(); vi.restoreAllMocks(); });
+
+  it('inclui tenant_id e unit_id do scope no payload do upsert', async () => {
+    const upsertMock = vi.fn().mockResolvedValue({ error: null });
+    const queryMock = buildQueryMock({ data: null, error: null });
+    vi.mocked(supabase.from).mockReturnValue({
+      upsert: upsertMock,
+      select: vi.fn().mockReturnValue({ order: vi.fn().mockReturnValue({ limit: vi.fn().mockReturnValue(queryMock) }) }),
+    } as never);
+    vi.spyOn(settingsService, 'getParameters').mockResolvedValue({ data: null, error: null });
+
+    const scope = { unitId: 'unit-1', tenantId: 'tenant-1' };
+    const input = { id: 'param-1', maintenanceMode: false, maxUploadSize: 5, allowedFileTypes: [], sessionTimeout: 30 } as never;
+    await settingsService.saveParameters(input, scope);
+    expect(upsertMock).toHaveBeenCalledWith(
+      expect.objectContaining({ tenant_id: 'tenant-1', unit_id: 'unit-1' }),
+      expect.anything()
+    );
+  });
+});
+
+// ─── updateEntitySettings (escrita com UnitWriteScope) ───────────────────────
+
+describe('settingsService.updateEntitySettings', () => {
+  afterEach(() => { vi.clearAllMocks(); vi.restoreAllMocks(); });
+
+  it('inclui unit_id e tenant_id do scope no upsert de entidade', async () => {
+    const upsertMock = vi.fn().mockResolvedValue({ error: null });
+    const configQueryMock = buildQueryMock({ data: null, error: null });
+    vi.mocked(supabase.from).mockReturnValue({
+      upsert: upsertMock,
+      select: vi.fn().mockReturnValue({ limit: vi.fn().mockReturnValue(configQueryMock) }),
+    } as never);
+    vi.spyOn(settingsService, 'getEntity').mockResolvedValue({ data: null, error: null });
+
+    const scope = { unitId: 'unit-1', tenantId: 'tenant-1' };
+    const settings = { id: 'entity-1', name: 'Teste' } as never;
+    await settingsService.updateEntitySettings(settings, scope);
+    expect(upsertMock).toHaveBeenCalledWith(
+      expect.objectContaining({ unit_id: 'unit-1', tenant_id: 'tenant-1' })
+    );
+  });
+});
+
 // ─── saveLocality (escrita com UnitWriteScope) ────────────────────────────────
 
 describe('settingsService.saveLocality', () => {
