@@ -28,7 +28,9 @@ export function getApplicableYears(
   emissaoRgp: string | null,
   type: "simplificado" | "anual",
 ): number[] {
-  const anoRgp = emissaoRgp ? new Date(emissaoRgp).getFullYear() : null;
+  // parseInt do prefixo YYYY evita o bug de timezone do Date constructor:
+  // new Date('2023-01-01') é UTC midnight; em UTC-3 vira 2022-12-31 localmente.
+  const anoRgp = emissaoRgp ? parseInt(emissaoRgp.substring(0, 4), 10) : null;
 
   if (type === "simplificado") {
     return ANOS_SIMPLIFICADO.filter((a) => !anoRgp || a >= anoRgp);

@@ -42,6 +42,15 @@ describe('getApplicableYears', () => {
       expect(anos).toContain(2023);
       expect(anos).toContain(2024);
     });
+
+    it('parse correto em datas de janeiro (evita bug timezone UTC-3)', () => {
+      // new Date('2023-01-01') em UTC-3 retornaria getFullYear() = 2022 — bug corrigido
+      const anos = getApplicableYears('2023-01-01', 'simplificado');
+      expect(anos).not.toContain(2021);
+      expect(anos).not.toContain(2022);
+      expect(anos).toContain(2023);
+      expect(anos).toContain(2024);
+    });
   });
 
   describe('anual', () => {
