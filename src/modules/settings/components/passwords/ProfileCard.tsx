@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { Label } from "@/shared/components/ui/label";
 import { Dialog, DialogContent } from "@/shared/components/ui/dialog";
 import { PasswordChangeForm } from "./PasswordChangeForm";
 import { useUserMetadata } from "@/modules/auth/hooks/useUserMetadata";
@@ -18,8 +17,9 @@ export function ProfileCard() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
+  const [localName, setLocalName] = useState<string | null>(null);
 
-  const displayName = metadata?.profileName || user?.email || "—";
+  const displayName = localName ?? metadata?.profileName ?? user?.email ?? "—";
 
   const startEdit = () => {
     setName(metadata?.profileName || "");
@@ -40,6 +40,7 @@ export function ProfileCard() {
         .update({ nome: name.trim() })
         .eq("id", user.id);
       if (error) throw error;
+      setLocalName(name.trim());
       toast.success("Nome atualizado com sucesso.");
       setIsEditingName(false);
     } catch {
@@ -106,10 +107,6 @@ export function ProfileCard() {
             </Button>
           </div>
 
-          {/* Label de campo para acessibilidade no modo de edição inline */}
-          {isEditingName && (
-            <Label className="sr-only" htmlFor="profile-name">Nome</Label>
-          )}
         </CardContent>
       </Card>
 
