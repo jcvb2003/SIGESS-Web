@@ -8,6 +8,7 @@ import { useAuth } from "@/modules/auth/context/authContextStore";
 import { useIdleTimeout } from "@/modules/auth/hooks/useIdleTimeout";
 import { useUserMetadata } from "@/modules/auth/hooks/useUserMetadata";
 import { useProfileAvatarUrl } from "@/modules/settings/hooks/useProfileAvatarUrl";
+import { usePresenceHeartbeat } from "@/shared/hooks/usePresenceHeartbeat";
 import { AccessExpiredModal } from "./AccessExpiredModal";
 import { Loader2 } from "lucide-react";
 import { useNetworkStatus } from "@/shared/hooks/useNetworkStatus";
@@ -24,6 +25,7 @@ export function DashboardLayout() {
   const { activeUnit, hasMultipleUnits, hydrated } = useTenantUnits();
   const { metadata, loading: metadataLoading } = useUserMetadata();
   const avatarUrl = useProfileAvatarUrl(metadata?.avatarPath);
+  usePresenceHeartbeat();
   const { isPortalContextLoading, isStatePortal } = usePortalContext();
   const loading = authLoading || metadataLoading;
   const isMobile = useMobile();

@@ -8,7 +8,10 @@ import { BirthdayList } from "@/modules/dashboard/components/BirthdayList";
 import { ActiveUnitBadge } from "@/modules/tenant-units/components/ActiveUnitBadge";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { StatCard } from "@/shared/components/ui/StatCard";
-import { FileStack, User, Users } from "lucide-react";
+import { FileStack, User, Users, Bell } from "lucide-react";
+import { OnlineUsersCard } from "@/modules/dashboard/components/OnlineUsersCard";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { Badge } from "@/shared/components/ui/badge";
 
 export default function Dashboard() {
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
@@ -62,6 +65,28 @@ export default function Dashboard() {
       <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
         <RecentMembersList members={recentMembers} loading={recentLoading} />
         <BirthdayList members={birthdayMembers} loading={birthdayLoading} />
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
+        <OnlineUsersCard />
+
+        {/* Lembretes e anotações — Em breve */}
+        <Card className="border-border/50 shadow-sm border-dashed opacity-60">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-bold flex items-center gap-2">
+              <Bell className="h-4 w-4 text-muted-foreground" />
+              Lembretes e anotações
+              <Badge variant="outline" className="ml-auto text-[10px] font-normal text-muted-foreground">
+                Em breve
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <p className="text-xs text-muted-foreground">
+              Lembretes pessoais e anotações rápidas aparecerão aqui.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
