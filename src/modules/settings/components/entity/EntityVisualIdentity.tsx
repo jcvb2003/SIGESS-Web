@@ -12,6 +12,8 @@ import { hexToHsl, hslToHex } from "@/shared/utils/colorConversion";
 import { useColorPreview } from "../../hooks/useColorPreview";
 import type { EntityFormData } from "../../hooks/useEntityValidation";
 import { supabase } from "@/shared/lib/supabase/client";
+import { BRANDING_COLORS, BRANDING_MAX_UPLOAD_BYTES } from "../../constants/brandingDefaults";
+import { BRANDING_BUCKET } from "../../services/settingsService";
 import { toast } from "sonner";
 import { ImagePlus, Trash2, Loader2, ImageIcon, ChevronDown } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
@@ -59,7 +61,7 @@ function ColorPickerField({ name, label, description }: ColorPickerFieldProps) {
       </div>
       <div
         className="ml-auto h-8 w-8 rounded-full border border-border/30 shadow-inner"
-        style={{ backgroundColor: `hsl(${hslValue ?? "160 84% 39%"})` }}
+        style={{ backgroundColor: `hsl(${hslValue ?? BRANDING_COLORS.primary})` }}
         aria-hidden="true"
       />
     </div>
@@ -86,7 +88,7 @@ function ImageUploadField({ label, description, aspectRatio = "auto" }: ImageUpl
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
+    if (file.size > BRANDING_MAX_UPLOAD_BYTES) {
       toast.error("A imagem deve ter no máximo 2MB.");
       return;
     }
@@ -98,7 +100,7 @@ function ImageUploadField({ label, description, aspectRatio = "auto" }: ImageUpl
 
       // Cleanup do arquivo anterior se existir
       if (oldPath) {
-        await supabase.storage.from("branding").remove([oldPath]);
+        await supabase.storage.from(BRANDING_BUCKET).remove([oldPath]);
       }
 
       const fileExt = file.name.split(".").pop();
@@ -106,13 +108,13 @@ function ImageUploadField({ label, description, aspectRatio = "auto" }: ImageUpl
       const filePath = `${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from("branding")
+        .from(BRANDING_BUCKET)
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from("branding")
+        .from(BRANDING_BUCKET)
         .getPublicUrl(filePath);
 
       setValue("logoPath", filePath, { shouldDirty: true });
@@ -130,7 +132,7 @@ function ImageUploadField({ label, description, aspectRatio = "auto" }: ImageUpl
     const oldPath = watch("logoPath");
     if (oldPath) {
       try {
-        await supabase.storage.from("branding").remove([oldPath]);
+        await supabase.storage.from(BRANDING_BUCKET).remove([oldPath]);
       } catch (error) {
         console.error("Erro ao remover arquivo do storage:", error);
       }
@@ -223,9 +225,9 @@ export function EntityVisualIdentity() {
   useColorPreview();
 
   const handleResetColors = () => {
-    setValue("corPrimaria", "160 84% 39%", { shouldDirty: true });
-    setValue("corSecundaria", "152 69% 41%", { shouldDirty: true });
-    setValue("corSidebar", "160 84% 39%", { shouldDirty: true });
+    setValue("corPrimaria", BRANDING_COLORS.primary, { shouldDirty: true });
+    setValue("corSecundaria", BRANDING_COLORS.secondary, { shouldDirty: true });
+    setValue("corSidebar", BRANDING_COLORS.primary, { shouldDirty: true });
   };
 
   return (

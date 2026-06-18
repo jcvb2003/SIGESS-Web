@@ -5,6 +5,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Loader2, Save } from "lucide-react";
 import { EntityVisualIdentity } from "./EntityVisualIdentity";
 import { useEntityData } from "@/shared/hooks/useEntityData";
+import { BRANDING_COLORS } from "../../constants/brandingDefaults";
 import type { EntitySettings } from "../../types/settings.types";
 import { entitySchema, EntityFormData } from "../../hooks/useEntityValidation";
 
@@ -14,9 +15,9 @@ export function CustomizationForm() {
     resolver: zodResolver(entitySchema),
     defaultValues: {
       name: "",
-      corPrimaria: "160 84% 39%",
-      corSecundaria: "152 69% 41%",
-      corSidebar: "160 84% 39%",
+      corPrimaria: BRANDING_COLORS.primary,
+      corSecundaria: BRANDING_COLORS.secondary,
+      corSidebar: BRANDING_COLORS.primary,
       logoUrl: "",
       logoPath: "",
     },
@@ -26,9 +27,9 @@ export function CustomizationForm() {
     if (entity) {
       methods.reset({
         name: entity.name || "",
-        corPrimaria: entity.corPrimaria || "160 84% 39%",
-        corSecundaria: entity.corSecundaria || "152 69% 41%",
-        corSidebar: entity.corSidebar || "160 84% 39%",
+        corPrimaria: entity.corPrimaria || BRANDING_COLORS.primary,
+        corSecundaria: entity.corSecundaria || BRANDING_COLORS.secondary,
+        corSidebar: entity.corSidebar || BRANDING_COLORS.primary,
         logoUrl: entity.logoUrl || "",
         logoPath: entity.logoPath || "",
       });
@@ -41,9 +42,9 @@ export function CustomizationForm() {
 
     const values: EntitySettings = {
       ...entity,
-      corPrimaria: data.corPrimaria ?? "160 84% 39%",
-      corSecundaria: data.corSecundaria ?? "152 69% 41%",
-      corSidebar: data.corSidebar ?? "160 84% 39%",
+      corPrimaria: data.corPrimaria ?? BRANDING_COLORS.primary,
+      corSecundaria: data.corSecundaria ?? BRANDING_COLORS.secondary,
+      corSidebar: data.corSidebar ?? BRANDING_COLORS.primary,
       logoUrl: data.logoUrl || undefined,
       logoPath: data.logoPath || undefined,
     };

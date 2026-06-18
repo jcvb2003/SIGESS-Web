@@ -1,4 +1,5 @@
 import { supabase } from "@/shared/lib/supabase/client";
+import { BRANDING_COLORS } from "../constants/brandingDefaults";
 import { getAdminClient } from "@/shared/lib/supabase/admin-client";
 import { ServiceResponse } from "@/shared/services/base/serviceResponse";
 import { resolveTenantIdViaTenantUsers } from "@/shared/utils/tenant";
@@ -17,7 +18,7 @@ const CONFIG_TABLE = "configuracao_entidade";
 const PARAMETERS_TABLE = "parametros";
 const DOCUMENT_TEMPLATES_TABLE = "templates";
 const DOCUMENT_TEMPLATES_BUCKET = "documentos";
-const BRANDING_BUCKET = "branding";
+export const BRANDING_BUCKET = "branding";
 const LOCALITIES_TABLE = "localidades";
 const PORTARIAS_TABLE = "portarias";
 const toStringValue = (value: unknown, fallback = ""): string => {
@@ -142,9 +143,9 @@ export const settingsService = {
         presidentCpf: toStringValue(entityData.cpf_do_presidente),
 
         // Dados de Aparência (vindos de configuracao_entidade)
-        corPrimaria: toStringValue(configData?.cor_primaria, "160 84% 39%"),
-        corSecundaria: toStringValue(configData?.cor_secundaria, "152 69% 41%"),
-        corSidebar: toStringValue(configData?.cor_sidebar, "160 84% 39%"),
+        corPrimaria: toStringValue(configData?.cor_primaria, BRANDING_COLORS.primary),
+        corSecundaria: toStringValue(configData?.cor_secundaria, BRANDING_COLORS.secondary),
+        corSidebar: toStringValue(configData?.cor_sidebar, BRANDING_COLORS.primary),
         logoPath: configData?.logo_path ? String(configData.logo_path) : undefined,
         logoUrl: logoUrl,
       },

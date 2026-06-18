@@ -8,6 +8,7 @@ import { EntityAddress } from "./EntityAddress";
 import { EntityContact } from "./EntityContact";
 import { EntityInstitutional } from "./EntityInstitutional";
 import { useEntityData } from "@/shared/hooks/useEntityData";
+import { BRANDING_COLORS } from "../../constants/brandingDefaults";
 import type { EntitySettings } from "../../types/settings.types";
 import { entitySchema, EntityFormData } from "../../hooks/useEntityValidation";
 interface EntityFormProps {
@@ -38,8 +39,8 @@ export function EntityForm({ readOnly = false }: EntityFormProps = {}) {
       county: "",
       presidentName: "",
       presidentCpf: "",
-      corPrimaria: "160 84% 39%",
-      corSecundaria: "152 69% 41%",
+      corPrimaria: BRANDING_COLORS.primary,
+      corSecundaria: BRANDING_COLORS.secondary,
       corSidebar: "0 0% 98%",
     },
   });
@@ -65,8 +66,8 @@ export function EntityForm({ readOnly = false }: EntityFormProps = {}) {
         county: entity.county || "",
         presidentName: entity.presidentName || "",
         presidentCpf: entity.presidentCpf || "",
-        corPrimaria: entity.corPrimaria || "160 84% 39%",
-        corSecundaria: entity.corSecundaria || "152 69% 41%",
+        corPrimaria: entity.corPrimaria || BRANDING_COLORS.primary,
+        corSecundaria: entity.corSecundaria || BRANDING_COLORS.secondary,
         corSidebar: entity.corSidebar || "0 0% 98%",
       });
 
@@ -100,8 +101,8 @@ export function EntityForm({ readOnly = false }: EntityFormProps = {}) {
       county: data.county ?? "",
       presidentName: data.presidentName ?? "",
       presidentCpf: data.presidentCpf ?? "",
-      corPrimaria: data.corPrimaria ?? "160 84% 39%",
-      corSecundaria: data.corSecundaria ?? "152 69% 41%",
+      corPrimaria: data.corPrimaria ?? BRANDING_COLORS.primary,
+      corSecundaria: data.corSecundaria ?? BRANDING_COLORS.secondary,
       corSidebar: data.corSidebar ?? "0 0% 98%",
     };
     await saveEntity(values);
