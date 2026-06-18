@@ -3,7 +3,6 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Button } from "@/shared/components/ui/button";
 import { Card } from "@/shared/components/ui/card";
-import { Progress } from "@/shared/components/ui/progress";
 import { StatusBadge, type StatusBadgeVariant } from "@/shared/components/ui/StatusBadge";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { useBillingSummary } from "../hooks/data/useBillingSummary";
@@ -168,16 +167,12 @@ export function BillingTab() {
 
         {maxSocios !== null ? (
           <>
-            <Progress
-              value={progress}
-              className={
-                isAtLimit
-                  ? "[&>div]:bg-destructive"
-                  : isNearLimit
-                  ? "[&>div]:bg-amber-500"
-                  : ""
-              }
-            />
+            <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
+              <div
+                className={`h-full rounded-full transition-all ${isAtLimit ? "bg-destructive" : isNearLimit ? "bg-amber-500" : "bg-primary"}`}
+                style={{ width: `${progress}%` }}
+              />
+            </div>
             {isAtLimit && (
               <p className="text-xs text-destructive">
                 Limite atingido. Novos cadastros estão bloqueados.
