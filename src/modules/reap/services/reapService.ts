@@ -11,6 +11,16 @@ function firstReapRecord(value: unknown): ReapRecordShape | null {
   return (record ?? null) as ReapRecordShape | null;
 }
 
+function hasProblems(
+  simplificado: Reap["simplificado"],
+  anual: Reap["anual"],
+): boolean {
+  return (
+    Object.values(simplificado).some((v) => v.tem_problema) ||
+    Object.values(anual).some((v) => v.tem_problema)
+  );
+}
+
 interface ReapListViewRow {
   cpf: string;
   nome: string | null;
@@ -68,9 +78,7 @@ export const reapService = {
       const simplificado = (row.simplificado as unknown as Reap["simplificado"]) ?? {};
       const anual = (row.anual as unknown as Reap["anual"]) ?? {};
       
-      const tem_problema = 
-        Object.values(simplificado).some(v => v.tem_problema) || 
-        Object.values(anual).some(v => v.tem_problema);
+      const tem_problema = hasProblems(simplificado, anual);
 
       return {
         cpf: row.cpf,
@@ -114,9 +122,7 @@ export const reapService = {
     const simplificado = (reapRecord?.simplificado as Reap["simplificado"]) ?? {};
     const anual = (reapRecord?.anual as Reap["anual"]) ?? {};
 
-    const tem_problema = 
-      Object.values(simplificado).some(v => v.tem_problema) || 
-      Object.values(anual).some(v => v.tem_problema);
+    const tem_problema = hasProblems(simplificado, anual);
 
     return {
       cpf: data.cpf!,
@@ -487,9 +493,10 @@ export const reapService = {
                 anual: r.anual ?? {},
                 updated_at: r.updated_at,
                 observacoes: r.observacoes ?? null,
-                tem_problema: 
-                  Object.values(r.simplificado ?? {}).some((v: any) => (v as { tem_problema?: boolean }).tem_problema) || 
-                  Object.values(r.anual ?? {}).some((v: any) => (v as { tem_problema?: boolean }).tem_problema),
+                tem_problema: hasProblems(
+                  (r.simplificado ?? {}) as Reap["simplificado"],
+                  (r.anual ?? {}) as Reap["anual"],
+                ),
               }
             : null,
         };

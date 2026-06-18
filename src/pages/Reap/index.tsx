@@ -12,39 +12,12 @@ import { ConsultarPendenciasDialog } from "../../modules/reap/components/Consult
 import { DataTableSearch } from "@/shared/components/layout/DataTableSearch";
 import { ReapStatusBadge } from "../../modules/reap/components/ReapStatusBadge";
 import { ManageReapDialog } from "../../modules/reap/components/ManageReapDialog";
-import {
-  ReapWithMember,
-  ANOS_SIMPLIFICADO,
-  ANO_INICIAL_ANUAL,
-  ANO_ATUAL,
-} from "../../modules/reap/types/reap.types";
+import { ReapWithMember } from "../../modules/reap/types/reap.types";
+import { getApplicableYears } from "../../modules/reap/domain/reapDomain";
 import { Badge } from "@/shared/components/ui/badge";
 import { MemberCpfCell } from "../../modules/members/components/table/cells/MemberCpfCell";
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 
-/**
- * Calcula os anos obrigatórios de Simplificado para um sócio,
- * com base na data de emissão do RGP.
- */
-function getAnosObrigatoriosSimplificado(emissaoRgp: string | null): number[] {
-  if (!emissaoRgp) return [...ANOS_SIMPLIFICADO];
-  const anoRgp = new Date(emissaoRgp).getFullYear();
-  return ANOS_SIMPLIFICADO.filter((ano) => ano >= anoRgp);
-}
-
-/**
- * Calcula os anos obrigatórios de REAP Anual para um sócio.
- */
-function getAnosObrigatoriosAnual(emissaoRgp: string | null): number[] {
-  const anoInicio = emissaoRgp
-    ? Math.max(new Date(emissaoRgp).getFullYear(), ANO_INICIAL_ANUAL)
-    : ANO_INICIAL_ANUAL;
-  const anos: number[] = [];
-  for (let a = anoInicio; a <= ANO_ATUAL - 1; a++) {
-    anos.push(a);
-  }
-  return anos;
-}
 
 export default function ReapPage() {
   const { search, table, pagination, filterPanel } = useReapListController();
@@ -118,7 +91,7 @@ export default function ReapPage() {
       headerClassName: "text-center",
       className: "text-center",
       cell: (m: ReapWithMember) => {
-        const obrigatorio = getAnosObrigatoriosSimplificado(m.emissao_rgp).includes(ano);
+        const obrigatorio = getApplicableYears(m.emissao_rgp, "simplificado").includes(ano);
         const anoData = m.simplificado[String(ano)];
         if (!obrigatorio) return <span className="text-muted-foreground/30 text-xs">—</span>;
         return (
@@ -136,7 +109,7 @@ export default function ReapPage() {
       headerClassName: "text-center",
       className: "text-center",
       cell: (m: ReapWithMember) => {
-        const anosAnualObrigatorios = getAnosObrigatoriosAnual(m.emissao_rgp);
+        const anosAnualObrigatorios = getApplicableYears(m.emissao_rgp, "anual");
         if (anosAnualObrigatorios.length === 0) return <span className="text-muted-foreground/30 text-xs">—</span>;
         return (
           <div className="flex flex-wrap gap-1 justify-center">

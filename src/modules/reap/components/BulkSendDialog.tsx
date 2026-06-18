@@ -18,7 +18,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/shared/lib/supabase/client";
 import { reapService } from "../services/reapService";
 import { reapQueryKeys } from "../queryKeys";
-import { ANOS_SIMPLIFICADO, ANO_INICIAL_ANUAL, ANO_ATUAL } from "../types/reap.types";
+import { getApplicableYears } from "../domain/reapDomain";
 import { handleExternalLogin } from "@/shared/utils/browserDetection";
 import { toast } from "sonner";
 import { cn } from "@/shared/lib/utils";
@@ -80,17 +80,11 @@ export function BulkSendDialog({ open, onOpenChange }: Readonly<BulkSendDialogPr
       const simplificadoRegistrado = (reap?.simplificado as Record<string, { enviado: boolean }>) ?? {};
       const anualRegistrado = (reap?.anual as Record<string, { enviado: boolean }>) ?? {};
 
-      const anoRgp = socio.emissao_rgp ? new Date(socio.emissao_rgp).getFullYear() : null;
-      const anosSimplificadoPendentes = ANOS_SIMPLIFICADO.filter((ano) => {
-        if (anoRgp && ano < anoRgp) return false;
-        return !simplificadoRegistrado[String(ano)]?.enviado;
-      });
+      const anosSimplificadoPendentes = getApplicableYears(socio.emissao_rgp, "simplificado")
+        .filter((ano) => !simplificadoRegistrado[String(ano)]?.enviado);
 
-      const anosAnualPendentes: number[] = [];
-      const anoInicioAnual = anoRgp ? Math.max(anoRgp, ANO_INICIAL_ANUAL) : ANO_INICIAL_ANUAL;
-      for (let a = anoInicioAnual; a <= ANO_ATUAL - 1; a++) {
-        if (!anualRegistrado[String(a)]?.enviado) anosAnualPendentes.push(a);
-      }
+      const anosAnualPendentes = getApplicableYears(socio.emissao_rgp, "anual")
+        .filter((a) => !anualRegistrado[String(a)]?.enviado);
 
       setSelecionados((prev) => [
         ...prev,

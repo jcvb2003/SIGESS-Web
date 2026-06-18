@@ -1,8 +1,6 @@
 import { supabase } from "@/shared/lib/supabase/client";
-
-const ANOS_SIMPLIFICADO = [2021, 2022, 2023, 2024] as const;
-const ANO_INICIAL_ANUAL = 2025;
-const ANO_ATUAL = new Date().getFullYear();
+import { ANOS_SIMPLIFICADO, ANO_INICIAL_ANUAL, ANO_ATUAL } from "@/modules/reap/types/reap.types";
+import { getApplicableYears } from "@/modules/reap/domain/reapDomain";
 
 type BatchEntry = {
   cpf: string;
@@ -94,21 +92,11 @@ export const reapBulkAutomationService = {
     const reap = Array.isArray(member.reap) ? member.reap[0] : member.reap;
     const simplificadoRegistrado = reap?.simplificado ?? {};
     const anualRegistrado = reap?.anual ?? {};
-    const anoRgp = member.emissao_rgp
-      ? new Date(member.emissao_rgp).getFullYear()
-      : null;
-
-    const anosSimplificadoPendentes = ANOS_SIMPLIFICADO.filter((ano) => {
-      if (anoRgp && ano < anoRgp) return false;
-      return !simplificadoRegistrado[String(ano)]?.enviado;
-    });
+    const anosSimplificadoPendentes = getApplicableYears(member.emissao_rgp, "simplificado")
+      .filter((ano) => !simplificadoRegistrado[String(ano)]?.enviado);
 
     const anosAnualPendentes: number[] = [];
-    const anoInicioAnual = anoRgp
-      ? Math.max(anoRgp, ANO_INICIAL_ANUAL)
-      : ANO_INICIAL_ANUAL;
-
-    for (let ano = anoInicioAnual; ano <= ANO_ATUAL - 1; ano++) {
+    for (const ano of getApplicableYears(member.emissao_rgp, "anual")) {
       if (!anualRegistrado[String(ano)]?.enviado) {
         anosAnualPendentes.push(ano);
       }

@@ -1,10 +1,5 @@
 import { useReapDetail } from "@/modules/reap/hooks/data/useReapData";
-import {
-  ANOS_SIMPLIFICADO,
-  ANO_INICIAL_ANUAL,
-  ANO_ATUAL,
-} from "@/modules/reap/types/reap.types";
-import { calculateReapStatus, type ReapStatus } from "@/modules/reap/domain/reapDomain";
+import { calculateReapStatus, getApplicableYears, type ReapStatus } from "@/modules/reap/domain/reapDomain";
 import { CheckCircle2, AlertTriangle, Clock } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 import {
@@ -74,12 +69,8 @@ export function ReapHeaderBadges({
 
   if (!cpf || isLoading) return null;
 
-  const anoRgp = emissaoRgp ? new Date(emissaoRgp).getFullYear() : null;
-
   // --- Simplificado ---
-  const anosSimplificado = ANOS_SIMPLIFICADO.filter(
-    (a) => !anoRgp || a >= anoRgp
-  );
+  const anosSimplificado = getApplicableYears(emissaoRgp, "simplificado");
   const simplificadoEnviados = anosSimplificado.filter(
     (a) => reap?.simplificado?.[String(a)]?.enviado
   ).length;
@@ -94,11 +85,7 @@ export function ReapHeaderBadges({
   );
 
   // --- Anual (2025+) ---
-  const anoInicioAnual = anoRgp
-    ? Math.max(anoRgp, ANO_INICIAL_ANUAL)
-    : ANO_INICIAL_ANUAL;
-  const anosAnual: number[] = [];
-  for (let a = anoInicioAnual; a <= ANO_ATUAL - 1; a++) anosAnual.push(a);
+  const anosAnual = getApplicableYears(emissaoRgp, "anual");
 
   const anualEnviados = anosAnual.filter(
     (a) => reap?.anual?.[String(a)]?.enviado

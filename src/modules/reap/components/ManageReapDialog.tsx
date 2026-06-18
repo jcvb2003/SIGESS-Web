@@ -18,9 +18,8 @@ import {
   ReapAnoSimplificado,
   ReapAnoAnual,
   ANOS_SIMPLIFICADO,
-  ANO_INICIAL_ANUAL,
-  ANO_ATUAL,
 } from "../types/reap.types";
+import { getApplicableYears } from "../domain/reapDomain";
 import { reapQueryKeys } from "../queryKeys";
 import { AlertTriangle, Save, Loader2 } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
@@ -67,9 +66,7 @@ export function ManageReapDialog({
       setSimplificadoState(simp);
 
       const anua: typeof anualState = {};
-      const anoRgp = member.emissao_rgp ? new Date(member.emissao_rgp).getFullYear() : ANO_INICIAL_ANUAL;
-      const startYear = Math.max(anoRgp, ANO_INICIAL_ANUAL);
-      for (let a = startYear; a <= ANO_ATUAL - 1; a++) {
+      getApplicableYears(member.emissao_rgp, "anual").forEach((a) => {
         const data = member.anual[String(a)];
         anua[String(a)] = {
           enviado: data?.enviado ?? false,
@@ -77,7 +74,7 @@ export function ManageReapDialog({
           tem_problema: data?.tem_problema ?? false,
           obs: data?.obs ?? null,
         };
-      }
+      });
       setAnualState(anua);
     }
   }, [member]);

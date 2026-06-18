@@ -1,6 +1,6 @@
 import { useReapDetail } from "@/modules/reap/hooks/data/useReapData";
 import { ReapStatusBadge } from "@/modules/reap/components/ReapStatusBadge";
-import { ANOS_SIMPLIFICADO, ANO_INICIAL_ANUAL, ANO_ATUAL } from "@/modules/reap/types/reap.types";
+import { getApplicableYears } from "@/modules/reap/domain/reapDomain";
 import { Badge } from "@/shared/components/ui/badge";
 import { Loader2, ClipboardList } from "lucide-react";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
@@ -11,22 +11,6 @@ interface ReapTabProps {
   emissaoRgp?: string | null;
 }
 
-function getAnosObrigatoriosSimplificado(emissaoRgp: string | null): number[] {
-  if (!emissaoRgp) return [...ANOS_SIMPLIFICADO];
-  const anoRgp = new Date(emissaoRgp).getFullYear();
-  return ANOS_SIMPLIFICADO.filter((ano) => ano >= anoRgp);
-}
-
-function getAnosObrigatoriosAnual(emissaoRgp: string | null): number[] {
-  const anoInicio = emissaoRgp
-    ? Math.max(new Date(emissaoRgp).getFullYear(), ANO_INICIAL_ANUAL)
-    : ANO_INICIAL_ANUAL;
-  const anos: number[] = [];
-  for (let a = anoInicio; a <= ANO_ATUAL - 1; a++) {
-    anos.push(a);
-  }
-  return anos;
-}
 
 export function ReapTab({ cpf, emissaoRgp }: Readonly<ReapTabProps>) {
   const { reap, isLoading } = useReapDetail(cpf);
@@ -48,8 +32,8 @@ export function ReapTab({ cpf, emissaoRgp }: Readonly<ReapTabProps>) {
     );
   }
 
-  const anosSimplificado = getAnosObrigatoriosSimplificado(emissaoRgp ?? null);
-  const anosAnual = getAnosObrigatoriosAnual(emissaoRgp ?? null);
+  const anosSimplificado = getApplicableYears(emissaoRgp ?? null, "simplificado");
+  const anosAnual = getApplicableYears(emissaoRgp ?? null, "anual");
   const rgpNulo = !emissaoRgp;
 
   return (
