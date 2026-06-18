@@ -82,7 +82,7 @@ export function MemberInfoBar() {
           <Badge
             variant={
               fullMemberData.situacao?.toUpperCase() === "ATIVO"
-                ? "default"
+                ? "success"
                 : "secondary"
             }
           >
