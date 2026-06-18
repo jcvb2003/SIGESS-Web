@@ -8,6 +8,10 @@ vi.mock('@/shared/lib/supabase/client', () => ({
   supabase: { from: vi.fn(), rpc: vi.fn() },
 }));
 
+vi.mock('../photoService', () => ({
+  photoService: { deletePhoto: vi.fn().mockResolvedValue({ error: null }), getPhotoUrl: vi.fn() },
+}));
+
 const BASE_PARAMS = {
   page: 1,
   pageSize: 10,
@@ -100,6 +104,117 @@ describe('memberService.updateMember', () => {
     await memberService.updateMember('uuid-1', MINIMAL_FORM, { unitId: null, tenantId: 'tenant-1' });
     const eqCalls = vi.mocked(queryMock.eq).mock.calls;
     expect(eqCalls.every(([field]) => field !== 'unit_id')).toBe(true);
+  });
+});
+
+// ─── deleteMember ─────────────────────────────────────────────────────────────
+
+describe('memberService.deleteMember', () => {
+  afterEach(() => { vi.clearAllMocks(); });
+
+  it('executa .delete().eq("id") quando não há foto associada', async () => {
+    const deleteMock = vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        select: vi.fn().mockResolvedValue({ data: [{ id: 'uuid-1' }], error: null }),
+      }),
+    });
+    vi.mocked(supabase.from)
+      .mockReturnValueOnce({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({ data: null, error: null }),
+          }),
+        }),
+      } as never)
+      .mockReturnValueOnce({ delete: deleteMock } as never);
+
+    await memberService.deleteMember('uuid-1');
+    expect(deleteMock).toHaveBeenCalled();
+  });
+
+  it('lança erro se delete retorna zero linhas (sem permissão)', async () => {
+    vi.mocked(supabase.from)
+      .mockReturnValueOnce({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({ data: null, error: null }),
+          }),
+        }),
+      } as never)
+      .mockReturnValueOnce({
+        delete: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            select: vi.fn().mockResolvedValue({ data: [], error: null }),
+          }),
+        }),
+      } as never);
+
+    await expect(memberService.deleteMember('uuid-1')).rejects.toThrow('permissao');
+  });
+
+  it('lança erro se o fetch inicial falhar', async () => {
+    vi.mocked(supabase.from).mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({ data: null, error: new Error('fetch error') }),
+        }),
+      }),
+    } as never);
+
+    await expect(memberService.deleteMember('uuid-1')).rejects.toThrow('fetch error');
+  });
+});
+
+// ─── touchUpdatedAt ───────────────────────────────────────────────────────────
+
+describe('memberService.touchUpdatedAt', () => {
+  afterEach(() => { vi.clearAllMocks(); });
+
+  it('chama .update({ updated_at }).eq("id", id)', async () => {
+    const eqMock = vi.fn().mockResolvedValue({ error: null });
+    const updateMock = vi.fn().mockReturnValue({ eq: eqMock });
+    vi.mocked(supabase.from).mockReturnValue({ update: updateMock } as never);
+
+    await memberService.touchUpdatedAt('uuid-1');
+    expect(updateMock).toHaveBeenCalledWith(
+      expect.objectContaining({ updated_at: expect.any(String) })
+    );
+    expect(eqMock).toHaveBeenCalledWith('id', 'uuid-1');
+  });
+});
+
+// ─── getMemberById ────────────────────────────────────────────────────────────
+
+describe('memberService.getMemberById', () => {
+  afterEach(() => { vi.clearAllMocks(); });
+
+  it('retorna null quando query retorna erro', async () => {
+    vi.mocked(supabase.from).mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({ data: null, error: { message: 'not found' } }),
+        }),
+      }),
+    } as never);
+
+    const result = await memberService.getMemberById('non-existent');
+    expect(result).toBeNull();
+  });
+
+  it('retorna objeto mapeado quando dado existe', async () => {
+    vi.mocked(supabase.from).mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: { id: 'uuid-1', nome: 'Teste', cpf: '000.000.000-00' },
+            error: null,
+          }),
+        }),
+      }),
+    } as never);
+
+    const result = await memberService.getMemberById('uuid-1');
+    expect(result).not.toBeNull();
   });
 });
 
