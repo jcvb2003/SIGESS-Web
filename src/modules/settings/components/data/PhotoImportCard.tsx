@@ -173,9 +173,9 @@ export function PhotoImportCard() {
                     </RadioGroup>
                   </div>
 
-                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-md p-3 flex gap-3 items-start">
-                    <ImageIcon className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
-                    <div className="text-sm text-blue-700 dark:text-blue-400">
+                  <div className="bg-primary/5 border border-primary/20 rounded-md p-3 flex gap-3 items-start">
+                    <ImageIcon className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                    <div className="text-sm text-primary">
                       <p className="font-medium mb-1">Requisitos</p>
                       <ul className="list-disc list-inside space-y-1 text-xs">
                         <li>Arquivos devem ser imagens (JPG, PNG)</li>
@@ -229,8 +229,8 @@ export function PhotoImportCard() {
               {report && !isImporting && (
                 <div className="space-y-4">
                   <div className="text-center space-y-2">
-                    <div className="flex items-center justify-center h-16 w-16 rounded-full bg-green-500/10 mx-auto">
-                      <CheckCircle className="h-8 w-8 text-green-600" />
+                    <div className="flex items-center justify-center h-16 w-16 rounded-full bg-success/10 mx-auto">
+                      <CheckCircle className="h-8 w-8 text-success" />
                     </div>
                     <h3 className="text-lg font-medium">
                       Importação Finalizada
@@ -238,11 +238,11 @@ export function PhotoImportCard() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-md text-center border border-green-100 dark:border-green-900/30">
-                      <span className="block text-2xl font-bold text-green-600 dark:text-green-400">
+                    <div className="bg-success/5 p-3 rounded-md text-center border border-success/20">
+                      <span className="block text-2xl font-bold text-success">
                         {report.success}
                       </span>
-                      <span className="text-xs text-green-700 dark:text-green-300">
+                      <span className="text-xs text-success/80">
                         Sucesso
                       </span>
                     </div>

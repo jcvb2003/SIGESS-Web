@@ -219,12 +219,12 @@ export function UserManagementSection() {
                   </div>
 
                   {activeTab === "invite" && (
-                    <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 animate-in fade-in zoom-in-95 duration-300">
+                    <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 animate-in fade-in zoom-in-95 duration-300">
                       <div className="flex gap-3">
-                        <Mail className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+                        <Mail className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                         <div className="space-y-1">
-                          <p className="text-xs font-bold text-emerald-800 uppercase tracking-tight">Fluxo de Convite</p>
-                          <p className="text-[11px] text-emerald-700 leading-relaxed">
+                          <p className="text-xs font-bold text-primary uppercase tracking-tight">Fluxo de Convite</p>
+                          <p className="text-[11px] text-primary/80 leading-relaxed">
                             O usuário receberá um e-mail oficial para configurar sua própria senha e ativar a conta de forma segura.
                           </p>
                         </div>
@@ -293,7 +293,7 @@ export function UserManagementSection() {
               cell: (u) => (
                 <div className="flex items-center gap-1.5">
                   {u.tenantRole === 'owner' || u.operatorType === 'presidente' || u.role === 'admin' ? (
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 gap-1 py-0.5 px-2 font-bold uppercase text-[9px]">
+                    <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 gap-1 py-0.5 px-2 font-bold uppercase text-[9px]">
                       <ShieldCheck className="h-3 w-3" />
                       Presidente
                     </Badge>
@@ -318,7 +318,7 @@ export function UserManagementSection() {
             {
               header: "Status",
               cell: (u) => u.ativo ? (
-                <Badge className="bg-emerald-500/10 text-emerald-700 border-emerald-500/20 shadow-none font-bold text-[10px]">
+                <Badge className="bg-success/10 text-success border-success/20 shadow-none font-bold text-[10px]">
                   Ativo
                 </Badge>
               ) : (

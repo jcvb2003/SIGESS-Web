@@ -51,7 +51,7 @@ export function ExportDialog({ trigger }: ExportDialogProps) {
             onClick={handleExportXlsx}
             disabled={isExporting}
           >
-            <FileSpreadsheet className="mr-4 h-6 w-6 text-green-600" />
+            <FileSpreadsheet className="mr-4 h-6 w-6 text-success" />
             <div className="flex flex-col items-start gap-1">
               <span className="font-semibold">Excel (XLSX)</span>
               <span className="text-xs text-muted-foreground">
@@ -66,7 +66,7 @@ export function ExportDialog({ trigger }: ExportDialogProps) {
             onClick={handleExportCsv}
             disabled={isExporting}
           >
-            <FileText className="mr-4 h-6 w-6 text-blue-600" />
+            <FileText className="mr-4 h-6 w-6 text-primary" />
             <div className="flex flex-col items-start gap-1">
               <span className="font-semibold">CSV (UTF-8)</span>
               <span className="text-xs text-muted-foreground">
