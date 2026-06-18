@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/shared/lib/supabase/client";
-import { resolveTenantIdViaTenantUsers } from "@/shared/utils/tenant";
 import { useActiveScope } from "@/shared/hooks/useActiveScope";
 
 export interface AuditLogEntry {
@@ -31,12 +30,11 @@ export function useFinanceAudit(options: UseFinanceAuditOptions = {}) {
     offset = 0
   } = options;
 
-  const { unitId, bootstrapped } = useActiveScope();
+  const { unitId, tenantId, bootstrapped } = useActiveScope();
 
   return useQuery({
-    queryKey: ["finance-audit-log", tableName, operation, limit, offset, unitId],
+    queryKey: ["finance-audit-log", tableName, operation, limit, offset, tenantId, unitId],
     queryFn: async () => {
-      const tenantId = await resolveTenantIdViaTenantUsers();
       if (!tenantId) throw new Error("Tenant não identificado para auditoria financeira.");
 
       const { data, error } = await supabase.rpc("get_finance_audit_log_v1", {
@@ -52,6 +50,6 @@ export function useFinanceAudit(options: UseFinanceAuditOptions = {}) {
       return (data as AuditLogEntry[]) || [];
     },
     staleTime: 0,
-    enabled: bootstrapped && !!unitId,
+    enabled: bootstrapped && !!unitId && !!tenantId,
   });
 }
