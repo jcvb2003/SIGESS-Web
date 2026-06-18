@@ -42,7 +42,7 @@ export function ProfileCard() {
     try {
       const { error } = await supabase
         .from("user_profiles" as never)
-        .update({ nome: name.trim() })
+        .update({ nome: name.trim() } as never)
         .eq("id", user.id);
       if (error) throw error;
       setLocalName(name.trim());
@@ -84,11 +84,25 @@ export function ProfileCard() {
               >
                 {/* Foto de perfil */}
                 {avatarUrl && (
-                  <img
-                    src={avatarUrl}
-                    alt=""
-                    style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
-                  />
+                  <>
+                    <div
+                      className="absolute inset-0 rounded-full"
+                      style={{ backgroundColor: "#fff" }}
+                    />
+                    <img
+                      src={avatarUrl}
+                      alt=""
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "contain",
+                        objectPosition: "center",
+                      }}
+                    />
+                  </>
                 )}
                 {/* Cor de fundo (sem foto) */}
                 {!avatarUrl && (

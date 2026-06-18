@@ -118,11 +118,25 @@ export function DashboardLayout() {
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full ring-2 ring-primary/25 overflow-hidden">
                   {avatarUrl ? (
-                    <img
-                      src={avatarUrl}
-                      alt=""
-                      style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
-                    />
+                    <>
+                      <div
+                        className="absolute inset-0 rounded-full"
+                        style={{ backgroundColor: "#fff" }}
+                      />
+                      <img
+                        src={avatarUrl}
+                        alt=""
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "contain",
+                          objectPosition: "center",
+                        }}
+                      />
+                    </>
                   ) : (
                     <div className="absolute inset-0" style={{ backgroundColor: "hsl(var(--primary) / 0.1)" }} />
                   )}

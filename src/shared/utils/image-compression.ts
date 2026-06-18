@@ -1,6 +1,7 @@
 const TARGET_WIDTH = 600;
 const TARGET_HEIGHT = 800;
 const QUALITY = 0.85;
+const AVATAR_TARGET_SIZE = 512;
 
 export async function compressMemberPhoto(file: File): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
@@ -59,6 +60,39 @@ export async function compressMemberPhoto(file: File): Promise<Blob> {
       (blob) => {
         if (blob) resolve(blob);
         else reject(new Error("Image compression failed"));
+      },
+      "image/jpeg",
+      QUALITY,
+    );
+  });
+}
+
+export async function compressProfileAvatar(file: File): Promise<Blob> {
+  const bitmap = await createImageBitmap(file);
+  const { width: originalWidth, height: originalHeight } = bitmap;
+
+  const scale = Math.min(
+    1,
+    AVATAR_TARGET_SIZE / Math.max(originalWidth, originalHeight),
+  );
+
+  const finalWidth = Math.max(1, Math.round(originalWidth * scale));
+  const finalHeight = Math.max(1, Math.round(originalHeight * scale));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = finalWidth;
+  canvas.height = finalHeight;
+  const ctx = canvas.getContext("2d");
+
+  if (!ctx) throw new Error("Canvas context could not be created");
+
+  ctx.drawImage(bitmap, 0, 0, finalWidth, finalHeight);
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (blob) resolve(blob);
+        else reject(new Error("Avatar compression failed"));
       },
       "image/jpeg",
       QUALITY,

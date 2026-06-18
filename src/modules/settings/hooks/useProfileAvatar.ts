@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/shared/lib/supabase/client";
-import { compressMemberPhoto } from "@/shared/utils/image-compression";
+import { compressProfileAvatar } from "@/shared/utils/image-compression";
 import { toast } from "sonner";
 
 const BUCKET = "avatars";
@@ -37,9 +37,12 @@ export function useProfileAvatar(userId: string | undefined) {
           .limit(1)
           .maybeSingle();
 
-        const path = (
-          (profile as Record<string, unknown>)?.user_profiles as Record<string, unknown> | null
-        )?.avatar_path as string | null;
+        const profileRecord =
+          ((profile as unknown as Record<string, unknown> | null)?.user_profiles as
+            | Record<string, unknown>
+            | null) ?? null;
+
+        const path = (profileRecord?.avatar_path as string | null) ?? null;
 
         if (path) {
           const url = await resolveSignedUrl(path);
@@ -57,7 +60,7 @@ export function useProfileAvatar(userId: string | undefined) {
     if (!userId || !avatarPath) return;
     setUploading(true);
     try {
-      const blob = await compressMemberPhoto(file);
+      const blob = await compressProfileAvatar(file);
       const compressed = new File([blob], "avatar.jpg", { type: "image/jpeg" });
 
       const { error: uploadError } = await supabase.storage
@@ -68,7 +71,7 @@ export function useProfileAvatar(userId: string | undefined) {
 
       const { error: updateError } = await supabase
         .from("user_profiles" as never)
-        .update({ avatar_path: avatarPath })
+        .update({ avatar_path: avatarPath } as never)
         .eq("id", userId);
 
       if (updateError) throw updateError;
