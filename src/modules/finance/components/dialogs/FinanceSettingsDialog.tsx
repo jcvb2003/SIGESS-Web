@@ -50,7 +50,7 @@ export function FinanceSettingsDialog({
 
   // Mutations
   const updateSettingsMutation = useUpdateFinanceSettings();
-  const { createChargeType, updateChargeType, toggleActive, deleteChargeType } = useChargeTypeMutations(unitId);
+  const { createChargeType, updateChargeType, toggleActive, deleteChargeType } = useChargeTypeMutations();
 
   // Form para aba de Parâmetros
   const {

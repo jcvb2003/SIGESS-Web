@@ -5,6 +5,7 @@ import { financeSettingsService } from "../../services/financeSettingsService";
 import { chargeTypesService } from "../../services/chargeTypesService";
 import type { FinanceConfig, FinanceSettings, ChargeType } from "../../types/finance.types";
 import { toast } from "sonner";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 
 export function useUpdateMemberConfig() {
   const queryClient = useQueryClient();
@@ -59,7 +60,8 @@ export function useUpdateFinanceSettings() {
   });
 }
 
-export function useChargeTypeMutations(unitId?: string | null) {
+export function useChargeTypeMutations() {
+  const { unitId } = useActiveScope();
   const queryClient = useQueryClient();
   const invalidateChargeTypes = () =>
     queryClient.invalidateQueries({ queryKey: financeQueryKeys.chargeTypes(unitId) });
