@@ -11,7 +11,9 @@
     "remove-comments": "node ./scripts/remove-comments.mjs",
     "sonar": "sonar-scanner",
     "backup:tenant": "tsx scripts/backup-tenant.ts --tenant=",
-    "backup:all": "tsx scripts/backup-tenant.ts --all"
+    "backup:all": "tsx scripts/backup-tenant.ts --all",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -62,6 +64,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@testing-library/jest-dom": "^6.9.1",
     "@types/node": "^24.10.1",
     "@types/pg": "^8.20.0",
     "@types/react": "^19.2.7",
@@ -73,6 +76,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+    "jsdom": "^29.1.1",
     "pg": "^8.20.0",
     "postcss": "^8.5.8",
     "sonarqube-scanner": "^4.3.5",
@@ -82,6 +86,7 @@
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.48.0",
     "vite": "^7.3.1",
-    "vite-plugin-pwa": "^1.2.0"
+    "vite-plugin-pwa": "^1.2.0",
+    "vitest": "^4.1.9"
   }
 }
