@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/shared/components/ui/button";
@@ -17,6 +17,7 @@ interface EntityFormProps {
 
 export function EntityForm({ readOnly = false }: EntityFormProps = {}) {
   const { entity, isLoading, isSaving, saveEntity } = useEntityData();
+  const [resetKey, setResetKey] = useState(0);
   const methods = useForm<EntityFormData>({
     resolver: zodResolver(entitySchema),
       defaultValues: {
@@ -70,7 +71,9 @@ export function EntityForm({ readOnly = false }: EntityFormProps = {}) {
         corSecundaria: entity.corSecundaria || BRANDING_COLORS.secondary,
         corSidebar: entity.corSidebar || "0 0% 98%",
       });
-
+      // Força remount de EntityAddress após reset() para que o Radix Select
+      // do campo UF monte com o valor correto (evita ciclo uncontrolled→controlled).
+      setResetKey(k => k + 1);
     }
   }, [entity]); // eslint-disable-line react-hooks/exhaustive-deps
   const onSubmit = async (data: EntityFormData) => {
@@ -125,7 +128,7 @@ export function EntityForm({ readOnly = false }: EntityFormProps = {}) {
         <fieldset disabled={readOnly} className="grid gap-4 lg:grid-cols-2">
           <div className="space-y-4">
             <EntityBasicInfo />
-            <EntityAddress key={entity?.id ?? 'loading'} />
+            <EntityAddress key={resetKey} />
           </div>
           <div className="space-y-4">
             <EntityContact />
