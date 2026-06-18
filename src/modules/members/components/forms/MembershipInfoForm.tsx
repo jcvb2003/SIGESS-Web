@@ -26,6 +26,7 @@ import {
   useMemberCodeGenerator,
   REGISTRATION_CODE_PATTERN,
 } from "../../hooks/registration/useMemberCodeGenerator";
+import { SITUACAO_OPTIONS } from "../../constants/memberStatus";
 import { MemberRegistrationSchemaType } from "../../schemas/memberRegistration.schema";
 import { getAutoRegistrationSnapshot } from "@/shared/utils/browserDetection";
 import { formatDateForInput } from "@/shared/utils/formatters/dateFormatters";
@@ -232,15 +233,7 @@ export function MembershipInfoForm({
     );
   };
 
-  const situationOptions = [
-    { label: "ATIVO", value: "ATIVO" },
-    { label: "INATIVO", value: "INATIVO" },
-    { label: "APOSENTADO", value: "APOSENTADO" },
-    { label: "FALECIDO", value: "FALECIDO" },
-    { label: "TRANSFERIDO", value: "TRANSFERIDO" },
-    { label: "CANCELADO", value: "CANCELADO" },
-    { label: "SUSPENSO", value: "SUSPENSO" },
-  ];
+  const situationOptions = SITUACAO_OPTIONS;
 
   const renderCaptureSource = (sourceId: (typeof CAPTURE_SOURCES)[number]["id"]) => {
     if (sourceId === "receita") {

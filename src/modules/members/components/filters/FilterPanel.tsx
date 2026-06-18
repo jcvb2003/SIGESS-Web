@@ -15,6 +15,7 @@ import {
 } from "@/shared/components/ui/select";
 import { FilterSection } from "./FilterSection";
 import { FilterActions } from "./FilterActions";
+import { SITUACAO_OPTIONS } from "../../constants/memberStatus";
 import type {
   LocalityOption,
   StatusFilter,
@@ -100,13 +101,9 @@ export function FilterPanel(props: Readonly<FilterPanelProps>) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas</SelectItem>
-                <SelectItem value="ATIVO">Ativo</SelectItem>
-                <SelectItem value="INATIVO">Inativo</SelectItem>
-                <SelectItem value="APOSENTADO">Aposentado</SelectItem>
-                <SelectItem value="FALECIDO">Falecido</SelectItem>
-                <SelectItem value="TRANSFERIDO">Transferido</SelectItem>
-                <SelectItem value="CANCELADO">Cancelado</SelectItem>
-                <SelectItem value="SUSPENSO">Suspenso</SelectItem>
+                {SITUACAO_OPTIONS.map(({ value, label }) => (
+                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </FilterSection>
