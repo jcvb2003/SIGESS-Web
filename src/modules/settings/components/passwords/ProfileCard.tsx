@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
@@ -7,19 +7,24 @@ import { PasswordChangeForm } from "./PasswordChangeForm";
 import { useUserMetadata } from "@/modules/auth/hooks/useUserMetadata";
 import { useAuth } from "@/modules/auth/context/authContextStore";
 import { supabase } from "@/shared/lib/supabase/client";
-import { KeyRound, User, Pencil, Check, X } from "lucide-react";
+import { useProfileAvatar } from "../../hooks/useProfileAvatar";
+import { KeyRound, User, Pencil, Check, X, Camera, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export function ProfileCard() {
-  const { metadata, loading } = useUserMetadata();
+  const { metadata, loading: loadingMeta } = useUserMetadata();
   const { user } = useAuth();
+  const { avatarUrl, isLoading: loadingAvatar, uploading, uploadAvatar } = useProfileAvatar(user?.id);
+
   const [isPasswordOpen, setIsPasswordOpen] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
   const [localName, setLocalName] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const displayName = localName ?? metadata?.profileName ?? user?.email ?? "—";
+  const initial = displayName.charAt(0).toUpperCase();
 
   const startEdit = () => {
     setName(localName ?? metadata?.profileName ?? "");
@@ -50,6 +55,12 @@ export function ProfileCard() {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) void uploadAvatar(file);
+    e.target.value = "";
+  };
+
   return (
     <>
       <Card className="border-border/50 shadow-sm">
@@ -62,11 +73,45 @@ export function ProfileCard() {
         <CardContent className="border-t border-border/10 pt-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-sm">
-                {displayName.charAt(0).toUpperCase()}
-              </div>
+
+              {/* Avatar clicável */}
+              <button
+                type="button"
+                className="relative h-12 w-12 shrink-0 rounded-full overflow-hidden group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                title="Alterar foto de perfil"
+              >
+                {loadingAvatar || uploading ? (
+                  <div className="flex h-full w-full items-center justify-center bg-primary/10">
+                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  </div>
+                ) : avatarUrl ? (
+                  <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-primary/10 text-primary font-bold text-sm">
+                    {initial}
+                  </div>
+                )}
+                {/* Overlay câmera no hover */}
+                {!uploading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Camera className="h-4 w-4 text-white" />
+                  </div>
+                )}
+              </button>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileChange}
+              />
+
+              {/* Nome + e-mail */}
               <div className="min-w-0">
-                {loading ? (
+                {loadingMeta ? (
                   <div className="h-4 w-32 animate-pulse rounded bg-muted" />
                 ) : isEditingName ? (
                   <div className="flex items-center gap-2">
