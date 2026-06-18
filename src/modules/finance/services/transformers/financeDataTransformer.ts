@@ -18,7 +18,7 @@ export function toMemberFinancialSummary(
   const anuidadesPagas = row.anuidades_pagas ?? [];
   const mesesPagosAtual = row.meses_pagos_atual ?? [];
 
-  const status = resolveStatus(row.situacao_geral, isento, liberado, row.regime, anuidadesPagas, mesesPagosAtual, currentYear, anoBase);
+  const status = resolveStatus(row.situacao_geral, isento, liberado);
 
   return {
     cpf: row.cpf ?? "",
@@ -34,34 +34,16 @@ export function toMemberFinancialSummary(
   };
 }
 
+// Gate confirmado 2026-06-18: situacao_geral nunca é null em dados reais
+// (4/4 tenants, null_count = 0). Fallback TS removido — única fonte de verdade é o DB.
 function resolveStatus(
   dbStatus: string | null,
   isento: boolean,
   liberado: boolean,
-  regime: string | null,
-  anuidadesPagas: number[],
-  mesesPagosAtual: number[],
-  currentYear: number,
-  anoBase: number,
 ): FinancialStatusType {
   if (isento) return "exempt";
   if (liberado) return "released";
-
-  // Se o banco já calculou 'EM_DIA', confiamos.
   if (dbStatus === "EM_DIA") return "ok";
   if (dbStatus === "EM_ATRASO") return "overdue";
-
-  // Fallback para lógica legada/extra se necessário
-  if (regime === "anuidade") {
-    for (let ano = anoBase; ano <= currentYear; ano++) {
-      if (!anuidadesPagas.includes(ano)) return "overdue";
-    }
-  } else if (regime === "mensalidade") {
-    const currentMonth = new Date().getMonth() + 1;
-    for (let mes = 1; mes <= currentMonth; mes++) {
-      if (!mesesPagosAtual.includes(mes)) return "overdue";
-    }
-  }
-
   return "ok";
 }
