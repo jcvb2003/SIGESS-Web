@@ -26,7 +26,7 @@ export function MemberModalActions({
             className="flex-1 h-10 border-border/50 hover:border-primary/30 transition-all"
             onClick={onDocuments}
           >
-            <FileText className="mr-2 h-4 w-4" />
+            <FileText className="mr-2 h-4 w-4 text-primary" />
             Documentos
           </Button>
           <Button
@@ -46,7 +46,7 @@ export function MemberModalActions({
             className="flex-1 h-10 border-border/50 hover:border-primary/30 transition-all"
             onClick={onEdit}
           >
-            <Pencil className="mr-2 h-4 w-4" />
+            <Pencil className="mr-2 h-4 w-4 text-primary" />
             Editar
           </Button>
           <Button
@@ -71,7 +71,7 @@ export function MemberModalActions({
         className="h-9 border-border/50 hover:border-primary/30 transition-all hover:bg-primary/10"
         onClick={onDocuments}
       >
-        <FileText className="mr-2 h-4 w-4" />
+        <FileText className="mr-2 h-4 w-4 text-primary" />
         Documentos
       </Button>
       <Button
@@ -89,7 +89,7 @@ export function MemberModalActions({
         className="h-9 border-border/50 hover:border-primary/30 transition-all hover:bg-primary/10"
         onClick={onEdit}
       >
-        <Pencil className="mr-2 h-4 w-4" />
+        <Pencil className="mr-2 h-4 w-4 text-primary" />
         Editar
       </Button>
       <Button
