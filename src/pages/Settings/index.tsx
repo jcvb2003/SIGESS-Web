@@ -4,7 +4,7 @@ import {
   Settings as SettingsIcon,
   Building,
   Database,
-  KeyRound,
+  User,
   Palette,
   Puzzle,
   CreditCard,
@@ -18,6 +18,7 @@ import { EntityForm } from "@/modules/settings/components/entity/EntityForm";
 import { CustomizationForm } from "@/modules/settings/components/entity/CustomizationForm";
 import { ParametersForm } from "@/modules/settings/components/parameters/ParametersForm";
 import { UserManagementSection } from "@/modules/settings/components/passwords/UserManagementSection";
+import { ProfileCard } from "@/modules/settings/components/passwords/ProfileCard";
 import { ExtensionSettings } from "@/modules/settings/components/extension/ExtensionSettings";
 import { BillingTab } from "@/modules/billing/components/BillingTab";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
@@ -67,10 +68,13 @@ export default function Settings() {
           },
           {
             value: "senhas",
-            label: "Senhas",
-            icon: KeyRound,
+            label: "Perfil",
+            icon: User,
             content: (
-              <UserManagementSection />
+              <div className="space-y-6">
+                <ProfileCard />
+                <UserManagementSection />
+              </div>
             )
           },
           {
