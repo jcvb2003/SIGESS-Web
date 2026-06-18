@@ -43,6 +43,12 @@
     --warning: 38 92% 50%; /* Amber 500 */
     --warning-foreground: 210 40% 98%;
 
+    /* Semânticos de estado — não personalizáveis pela entidade */
+    --success: 142 76% 36%;           /* Verde de "pago / ok" */
+    --success-foreground: 0 0% 100%;
+    --empty: 201 94% 86%;             /* Azul claro de "campo vazio" */
+    --empty-foreground: 201 94% 30%;
+
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 160 84% 39%;
@@ -100,6 +106,12 @@
 
     --warning: 38 92% 50%;
     --warning-foreground: 210 40% 98%;
+
+    /* Semânticos de estado — dark mode */
+    --success: 142 70% 45%;
+    --success-foreground: 0 0% 0%;
+    --empty: 201 80% 30%;
+    --empty-foreground: 201 80% 85%;
 
     --border: 217 33% 17%;
     --input: 217 33% 17%;

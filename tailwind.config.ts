@@ -56,6 +56,22 @@ const config = {
   			mountainMeadow: '#2CC295',
   			bangladeshGreen: '#03624C',
   			caribbeanGreen: '#00DF81',
+  			success: {
+  				DEFAULT: 'hsl(var(--success))',
+  				foreground: 'hsl(var(--success-foreground))'
+  			},
+  			warning: {
+  				DEFAULT: 'hsl(var(--warning))',
+  				foreground: 'hsl(var(--warning-foreground))'
+  			},
+  			info: {
+  				DEFAULT: 'hsl(var(--info))',
+  				foreground: 'hsl(var(--info-foreground))'
+  			},
+  			empty: {
+  				DEFAULT: 'hsl(var(--empty))',
+  				foreground: 'hsl(var(--empty-foreground))'
+  			},
   			sidebar: {
   				DEFAULT: 'hsl(var(--sidebar-background))',
   				foreground: 'hsl(var(--sidebar-foreground))',
