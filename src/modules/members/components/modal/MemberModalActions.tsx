@@ -32,10 +32,10 @@ export function MemberModalActions({
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 h-10 border-border/50 hover:bg-primary hover:text-primary-foreground transition-all group"
+            className="flex-1 h-10 border-border/50 hover:border-primary/30 transition-all hover:bg-primary/10"
             onClick={onFinance}
           >
-            <Wallet className="mr-2 h-4 w-4 text-primary group-hover:text-primary-foreground" />
+            <Wallet className="mr-2 h-4 w-4 text-primary" />
             Financeiro
           </Button>
         </div>
@@ -77,10 +77,10 @@ export function MemberModalActions({
       <Button
         variant="outline"
         size="sm"
-        className="h-9 border-border/50 hover:bg-primary hover:text-primary-foreground transition-all group"
+        className="h-9 border-border/50 hover:border-primary/30 transition-all hover:bg-primary/10"
         onClick={onFinance}
       >
-        <Wallet className="mr-2 h-4 w-4 text-primary group-hover:text-primary-foreground" />
+        <Wallet className="mr-2 h-4 w-4 text-primary" />
         Financeiro
       </Button>
       <Button
