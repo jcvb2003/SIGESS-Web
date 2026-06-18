@@ -33,7 +33,7 @@ export function useUserMetadata() {
             .limit(1)
             .maybeSingle(),
           supabase
-            .from("user_profiles")
+            .from("User")
             .select("nome")
             .eq("id", user.id)
             .maybeSingle(),

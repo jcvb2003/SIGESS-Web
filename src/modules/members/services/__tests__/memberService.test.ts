@@ -8,7 +8,15 @@ vi.mock('@/shared/lib/supabase/client', () => ({
   supabase: { from: vi.fn(), rpc: vi.fn() },
 }));
 
-const BASE_PARAMS = { page: 1, pageSize: 10, searchTerm: '' };
+const BASE_PARAMS = {
+  page: 1,
+  pageSize: 10,
+  searchTerm: '',
+  statusFilter: 'all',
+  localityCode: 'all',
+  gender: 'all',
+  rgpStatus: 'all',
+} as const;
 
 const MINIMAL_FORM = {
   nome: 'Sócio Teste',
