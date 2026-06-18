@@ -71,11 +71,6 @@ export function EntityForm({ readOnly = false }: EntityFormProps = {}) {
         corSidebar: entity.corSidebar || "0 0% 98%",
       });
 
-      methods.setValue("state", entity.state || "", {
-        shouldDirty: false,
-        shouldTouch: false,
-        shouldValidate: false,
-      });
     }
   }, [entity]); // eslint-disable-line react-hooks/exhaustive-deps
   const onSubmit = async (data: EntityFormData) => {
@@ -130,7 +125,7 @@ export function EntityForm({ readOnly = false }: EntityFormProps = {}) {
         <fieldset disabled={readOnly} className="grid gap-4 lg:grid-cols-2">
           <div className="space-y-4">
             <EntityBasicInfo />
-            <EntityAddress />
+            <EntityAddress key={entity?.id ?? 'loading'} />
           </div>
           <div className="space-y-4">
             <EntityContact />
