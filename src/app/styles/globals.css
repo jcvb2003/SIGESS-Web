@@ -29,10 +29,9 @@
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    /* Supporting Green for success states/accents */
-    --accent: 152 69% 41%;
-    /* Emerald 500 */
-    --accent-foreground: 210 40% 98%;
+    /* Hover neutro para elementos secundários (padrão shadcn) */
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222 47% 11%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
@@ -102,8 +101,7 @@
     --muted-foreground: 215 20% 65%;
     /* Slate 400 */
 
-    --accent: 152 69% 41%;
-    /* Emerald 500 */
+    --accent: 217 33% 17%;
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;

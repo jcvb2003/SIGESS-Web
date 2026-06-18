@@ -96,7 +96,7 @@ export function ExternalPortals({
               <Button
                 variant="outline"
                 size="icon"
-                className="h-9 w-9 shrink-0 overflow-hidden border-border/50 p-0 transition-all hover:border-primary/30 hover:bg-accent"
+                className="h-9 w-9 shrink-0 overflow-hidden border-border/50 p-0 transition-all hover:border-primary/30 hover:bg-primary/10"
                 onClick={() => handleOpenPortal("https://servicos.acesso.gov.br/")}
               >
                 <img
@@ -114,7 +114,7 @@ export function ExternalPortals({
               <Button
                 variant="outline"
                 size="icon"
-                className="h-9 w-9 shrink-0 overflow-hidden border-border/50 p-0 transition-all hover:border-primary/30 hover:bg-accent"
+                className="h-9 w-9 shrink-0 overflow-hidden border-border/50 p-0 transition-all hover:border-primary/30 hover:bg-primary/10"
                 onClick={() =>
                   handleOpenPortal("https://login.esocial.gov.br/login.aspx", true)
                 }
@@ -134,7 +134,7 @@ export function ExternalPortals({
               <Button
                 variant="outline"
                 size="icon"
-                className="flex h-9 w-9 shrink-0 flex-col items-center justify-center gap-0.5 border-border/50 transition-all hover:border-primary/30 hover:bg-accent"
+                className="flex h-9 w-9 shrink-0 flex-col items-center justify-center gap-0.5 border-border/50 transition-all hover:border-primary/30 hover:bg-primary/10"
                 onClick={() =>
                   handleExternalLogin(
                     "https://servicos.mte.gov.br/spme-v2/#/login",

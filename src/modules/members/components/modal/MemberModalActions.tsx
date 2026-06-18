@@ -68,7 +68,7 @@ export function MemberModalActions({
       <Button
         variant="outline"
         size="sm"
-        className="h-9 border-border/50 hover:border-primary/30 transition-all hover:bg-accent"
+        className="h-9 border-border/50 hover:border-primary/30 transition-all hover:bg-primary/10"
         onClick={onDocuments}
       >
         <FileText className="mr-2 h-4 w-4" />
@@ -86,7 +86,7 @@ export function MemberModalActions({
       <Button
         variant="outline"
         size="sm"
-        className="h-9 border-border/50 hover:border-primary/30 transition-all hover:bg-accent"
+        className="h-9 border-border/50 hover:border-primary/30 transition-all hover:bg-primary/10"
         onClick={onEdit}
       >
         <Pencil className="mr-2 h-4 w-4" />
