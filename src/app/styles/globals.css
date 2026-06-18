@@ -49,6 +49,14 @@
     --empty: 201 94% 86%;             /* Azul claro de "campo vazio" */
     --empty-foreground: 201 94% 30%;
 
+    /* Tons claros para campos de formulário — equivalentes a emerald-50 e sky-50 */
+    --field-filled-bg: 152 81% 96%;
+    --field-filled-border: 152 55% 82%;
+    --field-filled-border-focus: 152 55% 68%;
+    --field-empty-bg: 204 100% 97%;
+    --field-empty-border: 204 94% 85%;
+    --field-empty-border-focus: 204 94% 72%;
+
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 160 84% 39%;
@@ -111,6 +119,14 @@
     --success: 142 70% 45%;
     --success-foreground: 0 0% 0%;
     --empty: 201 80% 30%;
+
+    /* Tons claros para campos de formulário — dark mode */
+    --field-filled-bg: 152 40% 18%;
+    --field-filled-border: 152 40% 32%;
+    --field-filled-border-focus: 152 50% 45%;
+    --field-empty-bg: 204 50% 16%;
+    --field-empty-border: 204 50% 30%;
+    --field-empty-border-focus: 204 60% 45%;
     --empty-foreground: 201 80% 85%;
 
     --border: 217 33% 17%;

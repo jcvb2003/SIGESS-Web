@@ -72,6 +72,16 @@ const config = {
   				DEFAULT: 'hsl(var(--empty) / <alpha-value>)',
   				foreground: 'hsl(var(--empty-foreground))'
   			},
+  			'field-filled': {
+  				DEFAULT: 'hsl(var(--field-filled-bg))',
+  				border: 'hsl(var(--field-filled-border))',
+  				'border-focus': 'hsl(var(--field-filled-border-focus))'
+  			},
+  			'field-empty': {
+  				DEFAULT: 'hsl(var(--field-empty-bg))',
+  				border: 'hsl(var(--field-empty-border))',
+  				'border-focus': 'hsl(var(--field-empty-border-focus))'
+  			},
   			sidebar: {
   				DEFAULT: 'hsl(var(--sidebar-background))',
   				foreground: 'hsl(var(--sidebar-foreground))',
