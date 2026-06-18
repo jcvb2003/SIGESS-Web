@@ -53,7 +53,7 @@ export function CustomizationForm() {
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-4 max-w-4xl">
+      <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-4">
         <div className="flex justify-end gap-2">
           {methods.formState.isDirty && (
             <Button
