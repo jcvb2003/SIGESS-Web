@@ -8,82 +8,67 @@ import { generateAccessibleForeground } from "@/shared/utils/colorConversion";
 
 /**
  * Aplica preview ao vivo das cores no documento enquanto o usuário edita.
- * As variáveis CSS são setadas no onChange → a interface reflete instantaneamente.
- * Ao desmontar, restaura os valores que estavam antes.
+ * Ao desmontar, restaura o estado salvo do cache (não o estado capturado no mount,
+ * que pode estar vazio se a entidade ainda não tinha carregado).
  */
 export function useColorPreview() {
-  const corPrimaria = useWatch<EntityFormData>({
-    name: "corPrimaria",
-  }) as string | undefined;
-  const corSecundaria = useWatch<EntityFormData>({
-    name: "corSecundaria",
-  }) as string | undefined;
-  const corSidebar = useWatch<EntityFormData>({
-    name: "corSidebar",
-  }) as string | undefined;
+  const corPrimaria = useWatch<EntityFormData>({ name: "corPrimaria" }) as string | undefined;
+  const corSecundaria = useWatch<EntityFormData>({ name: "corSecundaria" }) as string | undefined;
+  const corSidebar = useWatch<EntityFormData>({ name: "corSidebar" }) as string | undefined;
 
-  const originalRef = useRef<Record<string, string>>({});
   const queryClient = useQueryClient();
   const { theme, resolvedTheme } = useTheme();
   const currentTheme = theme === "system" ? resolvedTheme : theme;
 
-  // Salva os valores originais ao montar (como fallback, se não tiver cache)
-  useEffect(() => {
-    const root = document.documentElement;
-    originalRef.current = {
-      "--primary": root.style.getPropertyValue("--primary"),
-      "--ring": root.style.getPropertyValue("--ring"),
-      "--primary-foreground": root.style.getPropertyValue("--primary-foreground"),
-      "--secondary": root.style.getPropertyValue("--secondary"),
-      "--secondary-foreground": root.style.getPropertyValue("--secondary-foreground"),
-      "--sidebar-background": root.style.getPropertyValue("--sidebar-background"),
-      "--sidebar-foreground": root.style.getPropertyValue("--sidebar-foreground"),
-    };
+  // Ref para garantir que o cleanup sempre leia o tema atual,
+  // sem capturar um valor stale do momento em que o effect foi criado.
+  const currentThemeRef = useRef(currentTheme);
+  useEffect(() => { currentThemeRef.current = currentTheme; });
 
+  // Restaura ao desmontar (navegação entre abas de Settings)
+  useEffect(() => {
     return () => {
-      // Ao desmontar (usuário saiu da aba), garantimos que o :root reflita
-      // o estado REAL do banco de dados (que está no cache).
-      // Isso conserta o bug onde a cor antiga era restaurada caso o usuário salvasse e saísse.
-      const cached = queryClient.getQueryData<EntitySettings>(["settings", "entity"]);
-      
-      const corPrimariaCache = cached?.corPrimaria || originalRef.current["--primary"];
-      const corSecundariaCache = cached?.corSecundaria || originalRef.current["--secondary"];
-      const corSidebarCache = cached?.corSidebar || originalRef.current["--sidebar-background"];
+      // Busca parcial de chave: encontra ["settings", "entity", unitId]
+      // sem precisar saber o unitId exato.
+      // Assume um único contexto de entidade ativo no runtime.
+      const queries = queryClient.getQueriesData<EntitySettings>({ queryKey: ["settings", "entity"] });
+      const cached = queries.find(([, data]) => data != null)?.[1];
 
       const root = document.documentElement;
-      
-      if (corPrimariaCache) {
-        root.style.setProperty("--primary", corPrimariaCache);
-        root.style.setProperty("--ring", corPrimariaCache);
-        root.style.setProperty("--primary-foreground", generateAccessibleForeground(corPrimariaCache));
+      const theme = currentThemeRef.current;
+
+      if (cached?.corPrimaria) {
+        root.style.setProperty("--primary", cached.corPrimaria);
+        root.style.setProperty("--ring", cached.corPrimaria);
+        root.style.setProperty("--primary-foreground", generateAccessibleForeground(cached.corPrimaria));
       } else {
         root.style.removeProperty("--primary");
         root.style.removeProperty("--ring");
         root.style.removeProperty("--primary-foreground");
       }
 
-      if (corSecundariaCache) {
-        root.style.setProperty("--secondary", corSecundariaCache);
-        root.style.setProperty("--secondary-foreground", generateAccessibleForeground(corSecundariaCache));
+      if (cached?.corSecundaria) {
+        root.style.setProperty("--secondary", cached.corSecundaria);
+        root.style.setProperty("--secondary-foreground", generateAccessibleForeground(cached.corSecundaria));
       } else {
         root.style.removeProperty("--secondary");
         root.style.removeProperty("--secondary-foreground");
       }
 
-      if (currentTheme === "dark") {
+      if (theme === "dark") {
         root.style.removeProperty("--sidebar-background");
         root.style.removeProperty("--sidebar-foreground");
-      } else if (corSidebarCache) {
-        root.style.setProperty("--sidebar-background", corSidebarCache);
-        root.style.setProperty("--sidebar-foreground", generateAccessibleForeground(corSidebarCache));
+      } else if (cached?.corSidebar) {
+        root.style.setProperty("--sidebar-background", cached.corSidebar);
+        root.style.setProperty("--sidebar-foreground", generateAccessibleForeground(cached.corSidebar));
       } else {
         root.style.removeProperty("--sidebar-background");
         root.style.removeProperty("--sidebar-foreground");
       }
     };
-  }, [currentTheme, queryClient]);
+  }, [queryClient]); // currentTheme removido das deps — usa ref para evitar closure stale
 
-  // Aplica preview em tempo real
+  // Preview em tempo real — primary
   useEffect(() => {
     const root = document.documentElement;
     if (corPrimaria) {
@@ -93,6 +78,7 @@ export function useColorPreview() {
     }
   }, [corPrimaria]);
 
+  // Preview em tempo real — secondary
   useEffect(() => {
     const root = document.documentElement;
     if (corSecundaria) {
@@ -101,6 +87,7 @@ export function useColorPreview() {
     }
   }, [corSecundaria]);
 
+  // Preview em tempo real — sidebar
   useEffect(() => {
     const root = document.documentElement;
     if (currentTheme === "dark") {
@@ -108,7 +95,6 @@ export function useColorPreview() {
       root.style.removeProperty("--sidebar-foreground");
       return;
     }
-
     if (corSidebar) {
       root.style.setProperty("--sidebar-background", corSidebar);
       root.style.setProperty("--sidebar-foreground", generateAccessibleForeground(corSidebar));
