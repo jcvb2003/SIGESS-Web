@@ -176,7 +176,7 @@ export default function RequirementsPage() {
                   <Button 
                     variant="outline" 
                     size="icon" 
-                    className="h-8 w-8 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-blue-600 hover:text-white hover:border-blue-600"
+                    className="h-8 w-8 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-primary hover:text-primary-foreground hover:border-primary"
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedReqId(req.id);

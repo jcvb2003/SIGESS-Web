@@ -52,8 +52,8 @@ interface DAERowProps {
 function DAEIcon({ isGroup, lead }: { readonly isGroup: boolean; readonly lead: FinanceDAE }) {
   if (isGroup) {
     return (
-      <div className="h-10 w-10 rounded-xl flex flex-col items-center justify-center border bg-blue-50 dark:bg-blue-900/20 border-blue-100/50 dark:border-blue-900/50">
-        <Calendar className="h-5 w-5 text-blue-500 dark:text-blue-400" />
+      <div className="h-10 w-10 rounded-xl flex flex-col items-center justify-center border bg-primary/5 border-primary/20">
+        <Calendar className="h-5 w-5 text-primary" />
       </div>
     );
   }
@@ -165,7 +165,7 @@ function DAEActions({
               <Button 
                 variant="outline" 
                 size="icon" 
-                className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-blue-600 dark:hover:bg-blue-900/50 hover:text-white dark:hover:text-blue-400 hover:border-blue-600 dark:hover:border-blue-800/50"
+                className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-primary hover:text-primary-foreground hover:border-primary"
                 onClick={() => onViewReceipt(lead.sessao_id as string)}
                 disabled={isLoadingReceipt}
               >
@@ -246,7 +246,7 @@ export function DAERow({
       className={cn(
         "group flex items-center justify-between p-3 rounded-xl border transition-all duration-300",
         isGroup 
-          ? "bg-muted/50 border-border hover:border-blue-200 dark:hover:border-blue-800/50 hover:shadow-blue-500/5 hover:bg-blue-50/30 dark:hover:bg-blue-900/20" 
+          ? "bg-muted/50 border-border hover:border-primary/30 hover:bg-primary/5"
           : "bg-card border-border/60 hover:border-primary/20 hover:shadow-sm",
         isSelectionMode && "cursor-pointer"
       )}

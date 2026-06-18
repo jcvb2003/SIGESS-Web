@@ -293,7 +293,7 @@ export function PaymentSessionDialog({
                     mode: configMode === "isencao" ? null : "isencao",
                   })
                 }
-                className="h-8 pr-3 pl-2.5 text-[10px] font-bold gap-1.5 border-blue-200 dark:border-blue-900/50 text-blue-700 dark:text-blue-400 hover:bg-blue-600 dark:hover:bg-blue-900/40 hover:text-white dark:hover:text-blue-400 hover:border-blue-600 dark:hover:border-blue-800/50 transition-all"
+                className="h-8 pr-3 pl-2.5 text-[10px] font-bold gap-1.5 border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all"
               >
                 <Pencil className="h-3 w-3" />
                 Isenção

@@ -492,10 +492,10 @@ export function ImportDAEsDialog({
                   </div>
                 </div>
                 {skippedCount > 0 && (
-                  <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-3 rounded-lg flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-blue-500 shrink-0" />
+                  <div className="bg-muted/30 border border-border p-3 rounded-lg flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-muted-foreground shrink-0" />
                     <div>
-                      <p className="text-xl font-bold text-blue-600 dark:text-blue-400">{skippedCount}</p>
+                      <p className="text-xl font-bold text-muted-foreground">{skippedCount}</p>
                       <p className="text-xs text-muted-foreground">Já registrados</p>
                     </div>
                   </div>

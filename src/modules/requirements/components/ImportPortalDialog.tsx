@@ -226,7 +226,7 @@ export function ImportPortalDialog({
       headerClassName: "text-center",
       cell: (res) => {
         if (res.matchType === 'FULL') return <Badge variant="secondary" className="bg-success/10 text-success hover:bg-success/20 border-success/20 text-[10px]">IDENTIFICADO</Badge>;
-        if (res.matchType === 'NIT_ONLY') return <Badge variant="secondary" className="bg-blue-600 text-white hover:bg-blue-700 text-[10px]">APENAS NIT</Badge>;
+        if (res.matchType === 'NIT_ONLY') return <Badge variant="secondary" className="bg-warning text-warning-foreground hover:bg-warning/90 text-[10px]">APENAS NIT</Badge>;
         return <Badge variant="secondary" className="bg-amber-600 text-white hover:bg-amber-700 text-[10px]">APENAS NOME</Badge>;
       }
     },

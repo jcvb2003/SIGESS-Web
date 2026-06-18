@@ -136,7 +136,7 @@ export default function FinancePage() {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-8 w-8 transition-all duration-200 hover:bg-blue-600 hover:text-white hover:border-blue-600 hover:scale-110 active:scale-95 shadow-sm"
+                  className="h-8 w-8 transition-all duration-200 hover:bg-primary hover:text-primary-foreground hover:border-primary hover:scale-110 active:scale-95 shadow-sm"
                   onClick={() => handleOpenStatement(m.cpf)}
                 >
                   <ClipboardList className="h-4 w-4" />

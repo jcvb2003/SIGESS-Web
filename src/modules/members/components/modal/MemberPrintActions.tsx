@@ -49,9 +49,9 @@ export function MemberPrintActions({ member }: MemberPrintActionsProps) {
         
         <DropdownMenuItem
           onClick={() => handleOpenReport("file")}
-          className="flex items-center gap-2.5 py-2.5 px-3 cursor-pointer rounded-md transition-colors focus:bg-blue-50 focus:text-blue-700 mt-1"
+          className="flex items-center gap-2.5 py-2.5 px-3 cursor-pointer rounded-md transition-colors focus:bg-primary/10 focus:text-primary mt-1"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <FileText className="h-4 w-4" />
           </div>
           <div className="flex flex-col">

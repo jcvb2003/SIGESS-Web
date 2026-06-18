@@ -47,7 +47,7 @@ export function MembersTableActions({
             <Button
               variant="outline"
               size="icon"
-              className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-blue-600 hover:text-white hover:border-blue-600"
+              className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-primary hover:text-primary-foreground hover:border-primary"
               onClick={(e) => handleAction(e, onDocuments)}
             >
               <FileText className="h-3.5 w-3.5" />

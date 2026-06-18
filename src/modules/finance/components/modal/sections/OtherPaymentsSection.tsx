@@ -177,7 +177,7 @@ export function OtherPaymentsSection({
                       <Button 
                         variant="outline" 
                         size="icon" 
-                        className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-blue-600 dark:hover:bg-blue-900/50 hover:text-white dark:hover:text-blue-400 hover:border-blue-600 dark:hover:border-blue-800/50"
+                        className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-primary hover:text-primary-foreground hover:border-primary"
                         onClick={() => handleViewReceipt(l.sessao_id!)}
                         disabled={isLoadingReceipt}
                       >

@@ -9,8 +9,8 @@ import { useTheme } from "next-themes";
  * CSS variables que o EntityThemeProvider gerencia diretamente das tabelas.
  */
 const COLOR_MAPPINGS = {
-  // corPrimaria se aplica à cor da marca de destaque e bordas ativas
-  corPrimaria: ["--primary", "--ring"],
+  // corPrimaria se aplica à cor da marca de destaque, bordas ativas e accent hover
+  corPrimaria: ["--primary", "--ring", "--accent"],
   // corSecundaria supre exclusivamente os badges secundários (bg-secondary)
   // Deixando o --accent intacto para que botões outline/ghost continuem cinza neutros.
   corSecundaria: ["--secondary"],
@@ -23,7 +23,7 @@ const COLOR_MAPPINGS = {
  * daquela cor base.
  */
 const FOREGROUND_MAPPINGS = {
-  corPrimaria: ["--primary-foreground"],
+  corPrimaria: ["--primary-foreground", "--accent-foreground"],
   corSecundaria: ["--secondary-foreground"],
   corSidebar: ["--sidebar-foreground"],
 } as const;
