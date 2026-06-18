@@ -167,11 +167,14 @@ export function BillingTab() {
 
         {maxSocios !== null ? (
           <>
-            <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
-              <div
-                className={`h-full rounded-full transition-all ${isAtLimit ? "bg-destructive" : isNearLimit ? "bg-amber-500" : "bg-primary"}`}
-                style={{ width: `${progress}%` }}
-              />
+            <div style={{ position: 'relative', height: '8px', width: '100%', borderRadius: '9999px', backgroundColor: 'hsl(var(--muted))' }}>
+              <div style={{
+                height: '100%',
+                width: `${progress}%`,
+                borderRadius: '9999px',
+                backgroundColor: isAtLimit ? 'hsl(var(--destructive))' : isNearLimit ? '#f59e0b' : 'hsl(var(--primary))',
+                transition: 'width 0.3s ease',
+              }} />
             </div>
             {isAtLimit && (
               <p className="text-xs text-destructive">
