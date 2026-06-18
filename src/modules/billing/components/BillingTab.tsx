@@ -49,11 +49,11 @@ function formatDate(iso: string | null | undefined): string {
 export function BillingTab() {
   const { data, isLoading: loadingBilling, isError, refetch } = useBillingSummary();
   const { metadata, loading: loadingMeta } = useUserMetadata();
-  const { tenantId, unitId, bootstrapped } = useActiveScope();
+  const { tenantId, bootstrapped } = useActiveScope();
 
   const { data: countData, isLoading: loadingCount } = useQuery({
-    queryKey: memberQueryKeys.count(unitId),
-    queryFn: () => memberService.countMembers({ tenantId, unitId }),
+    queryKey: [...memberQueryKeys.count(null), "tenant", tenantId],
+    queryFn: () => memberService.countMembers({ tenantId, unitId: null }),
     enabled: bootstrapped && !!tenantId,
     staleTime: 5 * 60 * 1000,
   });
