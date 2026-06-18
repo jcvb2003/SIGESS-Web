@@ -214,6 +214,19 @@ export const memberService = {
     }
     return null;
   },
+  async getGovCredentialsByCpf(cpf: string): Promise<{ senhaGovInss: string | null; nome: string | null }> {
+    const { data, error } = await supabase
+      .from("socios")
+      .select("senhagov_inss, nome")
+      .eq("cpf", cpf)
+      .maybeSingle();
+
+    if (error || !data) return { senhaGovInss: null, nome: null };
+    return {
+      senhaGovInss: (data as Record<string, unknown>).senhagov_inss as string | null,
+      nome: (data as Record<string, unknown>).nome as string | null,
+    };
+  },
   async getMemberById(id: string): Promise<MemberRegistrationForm | null> {
     const { data, error } = await supabase
       .from("socios")

@@ -1,8 +1,8 @@
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { Button } from "@/shared/components/ui/button";
-import { FileUp, Search, AlertTriangle, Settings2, ExternalLink } from "lucide-react";
-import { useMemo, useState } from "react";
+import { FileUp, Search, AlertTriangle, Settings2 } from "lucide-react";
+import { useMemo, useState, useCallback } from "react";
 import { useReapListController } from "../../modules/reap/hooks/data/useReapData";
 import { DataTable } from "@/shared/components/layout/DataTable";
 import { DataTablePagination } from "@/shared/components/layout/DataTablePagination";
@@ -17,6 +17,8 @@ import { getApplicableYears } from "../../modules/reap/domain/reapDomain";
 import { Badge } from "@/shared/components/ui/badge";
 import { MemberCpfCell } from "../../modules/members/components/table/cells/MemberCpfCell";
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
+import { memberService } from "../../modules/members/services/memberService";
+import { handleExternalLogin } from "@/shared/utils/browserDetection";
 
 
 export default function ReapPage() {
@@ -25,6 +27,12 @@ export default function ReapPage() {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isConsultarOpen, setIsConsultarOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<ReapWithMember | null>(null);
+
+  const handleOpenPesqBrasil = useCallback(async (m: ReapWithMember) => {
+    const PESQBRASIL_URL = "https://pesqbrasil-pescadorprofissional.agro.gov.br/";
+    const { senhaGovInss, nome } = await memberService.getGovCredentialsByCpf(m.cpf);
+    handleExternalLogin(PESQBRASIL_URL, m.cpf, senhaGovInss ?? undefined, nome ?? m.member_nome ?? undefined);
+  }, []);
 
   const headerActions = useMemo(() => (
     <div className="flex items-center gap-3">
@@ -151,17 +159,12 @@ export default function ReapPage() {
             variant="ghost"
             size="sm"
             className="hover:bg-primary/10 hover:text-primary"
-            onClick={(e) => e.stopPropagation()}
-            asChild
+            onClick={(e) => {
+              e.stopPropagation();
+              handleOpenPesqBrasil(m);
+            }}
           >
-            <a
-              href="https://www.gov.br/mpa/pt-br/assuntos/cadastro-registro-e-monitoramento/pescador-e-pescadora-profissional"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <ExternalLink className="h-4 w-4 mr-2" />
-              PesqBrasil
-            </a>
+            PesqBrasil
           </Button>
         </div>
       )
