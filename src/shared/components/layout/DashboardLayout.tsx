@@ -7,6 +7,7 @@ import { useCallback, useState } from "react";
 import { useAuth } from "@/modules/auth/context/authContextStore";
 import { useIdleTimeout } from "@/modules/auth/hooks/useIdleTimeout";
 import { useUserMetadata } from "@/modules/auth/hooks/useUserMetadata";
+import { useProfileAvatar } from "@/modules/settings/hooks/useProfileAvatar";
 import { AccessExpiredModal } from "./AccessExpiredModal";
 import { Loader2 } from "lucide-react";
 import { useNetworkStatus } from "@/shared/hooks/useNetworkStatus";
@@ -22,6 +23,7 @@ export function DashboardLayout() {
   const { session, user, loading: authLoading, signOut } = useAuth();
   const { activeUnit, hasMultipleUnits, hydrated } = useTenantUnits();
   const { metadata, loading: metadataLoading } = useUserMetadata();
+  const { avatarUrl } = useProfileAvatar(user?.id);
   const { isPortalContextLoading, isStatePortal } = usePortalContext();
   const loading = authLoading || metadataLoading;
   const isMobile = useMobile();
@@ -114,11 +116,17 @@ export function DashboardLayout() {
               <GlobalPortariaSelect />
               <div className="h-6 w-px bg-border shrink-0" />
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold ring-2 ring-primary/25">
-                  {metadata?.profileName?.charAt(0)?.toUpperCase()
-                    ?? (user?.user_metadata?.full_name as string | undefined)?.charAt(0)?.toUpperCase()
-                    ?? user?.email?.charAt(0)?.toUpperCase()
-                    ?? "?"}
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold ring-2 ring-primary/25 overflow-hidden">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+                  ) : (
+                    <>
+                      {metadata?.profileName?.charAt(0)?.toUpperCase()
+                        ?? (user?.user_metadata?.full_name as string | undefined)?.charAt(0)?.toUpperCase()
+                        ?? user?.email?.charAt(0)?.toUpperCase()
+                        ?? "?"}
+                    </>
+                  )}
                 </div>
                 <div className="flex flex-col min-w-0 leading-tight">
                   <span className="text-xs font-semibold text-foreground truncate">
