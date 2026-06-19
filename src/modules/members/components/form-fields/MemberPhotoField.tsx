@@ -14,7 +14,6 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { compressMemberPhoto } from "@/shared/utils/image-compression";
 import { supabase } from "@/shared/lib/supabase/client";
-import { resolveTenantIdViaTenantUsers } from "@/shared/utils/tenant";
 import { useActiveScope } from "@/shared/hooks/useActiveScope";
 import { photoService } from "../../services/photoService";
 import { QRCodeCanvas } from "qrcode.react";
@@ -142,8 +141,7 @@ export function MemberPhotoField() {
     setIsGeneratingToken(true);
     try {
       const cleanCpf = cpf.replace(/\D/g, "");
-      const tenantId =
-        scopeTenantId ?? (await resolveTenantIdViaTenantUsers());
+      const tenantId = scopeTenantId;
 
       if (!tenantId) {
         throw new Error("Escopo do tenant nao resolvido para gerar token de foto.");
