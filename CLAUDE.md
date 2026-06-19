@@ -57,3 +57,33 @@ Regra de decisão para migração:
 - Estado de dado positivo (pago, ok) → `success`
 - Estado de dado de atenção → `warning`
 - Dado neutro → `foreground` ou deixar como está
+
+## Domínio: onde vivem as regras de negócio
+
+Regras puras (sem IO, sem supabase, sem UI) pertencem a `modules/[módulo]/domain/`.
+Não exportar regras de domínio de arquivos de service, hook ou schema — se um componente
+UI precisar importar de um service só para acessar uma função pura, mover a função
+para `domain/` antes.
+
+Arquivos de domínio existentes:
+- `members/domain/memberCode.ts`, `memberErrors.ts`
+- `reap/domain/reapDomain.ts`, `reapPendencias.ts`
+- `finance/domain/paymentEligibility.ts`, `annuityRules.ts`
+- `finance/utils/membershipCompetency.ts`, `defesoUtils.ts`
+- `settings/utils/settingsHelpers.ts`
+
+## Serviços: mapa pós-split de settingsService
+
+`settingsService` não existe mais. Usar os especializados:
+- identidade/branding → `entityService`
+- parâmetros do sistema → `parametersService`
+- localidades → `localitiesService` (não `memberService`)
+- portarias → `portariasService`
+- templates de documento → `documentTemplateService`
+- troca de senha → `authService.changePassword`
+
+## CI: cobertura atual
+
+`Web/.github/workflows/web-ci.yml` executa `npx tsc --noEmit` e `npm test`
+em push/PR para main. Todo novo serviço ou domain function deve ter teste
+unitário que passe nesse pipeline.
