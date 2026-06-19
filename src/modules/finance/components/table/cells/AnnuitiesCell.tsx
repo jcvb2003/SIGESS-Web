@@ -1,5 +1,5 @@
 import type { MemberFinancialSummary } from "../../../types/finance.types";
-import { getRequiredYears } from "../../../services/financeService";
+import { getRequiredYears } from "../../../domain/annuityRules";
 import { cn } from "@/shared/lib/utils";
 import {
   Tooltip,

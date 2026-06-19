@@ -10,6 +10,7 @@ import type {
   PaymentType,
 } from "../types/finance.types";
 import { toMemberFinancialSummary } from "./transformers/financeDataTransformer";
+import { getRequiredYears } from "../domain/annuityRules";
 
 export interface FinanceDashboardResult {
   items: MemberFinancialSummary[];
@@ -49,12 +50,6 @@ const createDashboardCountQuery = (unitId?: string | null) => {
 
 type DashboardCountQuery = ReturnType<typeof createDashboardCountQuery>;
 
-/** Retorna o array de anos obrigatórios entre anoBase e currentYear (inclusive). */
-export function getRequiredYears(anoBase: number, currentYear: number): number[] {
-  const years: number[] = [];
-  for (let y = anoBase; y <= currentYear; y++) years.push(y);
-  return years;
-}
 
 export const financeService = {
   async getDashboard(
