@@ -26,7 +26,12 @@ export function usePresenceHeartbeat() {
         null;
 
       try {
-        await supabase.from("user_presence" as never).upsert(
+        await (supabase.from("user_presence" as never) as unknown as {
+          upsert: (
+            values: Record<string, unknown>,
+            options?: { onConflict?: string },
+          ) => PromiseLike<unknown>;
+        }).upsert(
           {
             user_id: user.id,
             tenant_id: tenantId,

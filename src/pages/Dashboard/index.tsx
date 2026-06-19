@@ -117,18 +117,20 @@ export default function Dashboard() {
       <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
         <OnlineUsersCard />
 
-        <Card className="border-border/50 shadow-sm border-dashed opacity-60">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-bold flex items-center gap-2">
-              <Bell className="h-4 w-4 text-muted-foreground" />
+        <Card className="col-span-1 h-full shadow-sm hover:shadow-md transition-all duration-300 border-none bg-card/50 backdrop-blur-sm overflow-hidden border-dashed opacity-60 flex flex-col">
+          <CardHeader className="pb-3 border-b border-border/40 shrink-0">
+            <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
+              <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                <Bell className="h-4 w-4" />
+              </div>
               Lembretes e anotações
-              <Badge variant="outline" className="ml-auto text-[10px] font-normal text-muted-foreground">
+              <Badge variant="outline" className="ml-auto text-xs font-normal text-muted-foreground">
                 Em breve
               </Badge>
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-0">
-            <p className="text-xs text-muted-foreground">
+          <CardContent className="pt-6 flex-1">
+            <p className="text-sm text-muted-foreground">
               Lembretes pessoais e anotações rápidas aparecerão aqui.
             </p>
           </CardContent>
