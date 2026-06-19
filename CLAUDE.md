@@ -65,11 +65,13 @@ Não exportar regras de domínio de arquivos de service, hook ou schema — se u
 UI precisar importar de um service só para acessar uma função pura, mover a função
 para `domain/` antes.
 
-Arquivos de domínio existentes:
+Arquivos em `domain/` (regras puras com nome explícito de domínio):
 - `members/domain/memberCode.ts`, `memberErrors.ts`
 - `reap/domain/reapDomain.ts`, `reapPendencias.ts`
 - `finance/domain/paymentEligibility.ts`, `annuityRules.ts`
-- `finance/utils/membershipCompetency.ts`, `defesoUtils.ts`
+
+Arquivos em `utils/` (funções puras, candidatos futuros a `domain/` quando tiverem 3+ callers):
+- `finance/utils/membershipCompetency.ts`, `defesoUtils.ts`, `paymentReportLabels.ts`
 - `settings/utils/settingsHelpers.ts`
 
 ## Serviços: mapa pós-split de settingsService
