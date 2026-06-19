@@ -12,6 +12,7 @@ import {
 } from "@/shared/components/ui/select";
 import {
   Calendar,
+  CalendarClock,
   Check,
   Plus,
   Trash2,
@@ -82,6 +83,13 @@ interface PaymentItemFormProps {
   readonly memberAdmissionDate?: string | null;
   readonly allowRetroactiveMonthly: boolean;
   readonly onAllowRetroactiveMonthlyChange: (checked: boolean) => void;
+  readonly canConfigureGracePeriod: boolean;
+  readonly gracePeriodEnabled: boolean;
+  readonly onGracePeriodToggle: () => void;
+  readonly gracePeriodMonth: number;
+  readonly onGracePeriodMonthChange: (month: number) => void;
+  readonly gracePeriodYear: number;
+  readonly onGracePeriodYearChange: (year: number) => void;
   readonly onYearForMensalidadeChange: (year: number) => void;
 
   readonly extraFees: ExtraFeeItem[];
@@ -113,6 +121,13 @@ export function PaymentItemForm({
   memberAdmissionDate,
   allowRetroactiveMonthly,
   onAllowRetroactiveMonthlyChange,
+  canConfigureGracePeriod,
+  gracePeriodEnabled,
+  onGracePeriodToggle,
+  gracePeriodMonth,
+  onGracePeriodMonthChange,
+  gracePeriodYear,
+  onGracePeriodYearChange,
   onYearForMensalidadeChange,
   extraFees,
   onAddExtraFee,
@@ -185,6 +200,7 @@ export function PaymentItemForm({
   );
   const showRetroactiveControls =
     paymentCategory === "mensalidade" && firstRequiredMonth !== 1;
+  const monthOptions = Array.from({ length: 12 }, (_, i) => i + 1);
 
   return (
     <div className="space-y-6 ring-0 border-none outline-none">
@@ -233,27 +249,91 @@ export function PaymentItemForm({
             <Calendar className="h-3 w-3 text-primary" />
             {paymentCategory === "anuidade" ? "SELECIONAR ANOS" : "SELECIONAR MESES"}
           </Label>
-          {showRetroactiveControls && (
-            <div className="flex items-center gap-2 bg-muted/50 px-2 py-1 rounded-full border border-border/50">
-              <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-tighter">
-                Retroativo
-              </span>
-              <Switch
-                checked={allowRetroactiveMonthly}
-                onCheckedChange={onAllowRetroactiveMonthlyChange}
-                className="scale-75 h-4 w-7"
-              />
+          {paymentCategory === "mensalidade" && (
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant={gracePeriodEnabled ? "default" : "outline"}
+                size="sm"
+                onClick={onGracePeriodToggle}
+                className={cn(
+                  "h-8 px-3 text-[10px] font-black uppercase tracking-wider",
+                  !canConfigureGracePeriod && "hidden",
+                )}
+              >
+                <CalendarClock className="mr-1.5 h-3.5 w-3.5" />
+                Carência
+              </Button>
+              {canConfigureGracePeriod && showRetroactiveControls && (
+                <Button
+                  type="button"
+                  variant={allowRetroactiveMonthly ? "default" : "outline"}
+                  size="sm"
+                  onClick={() =>
+                    onAllowRetroactiveMonthlyChange(!allowRetroactiveMonthly)
+                  }
+                  className="h-8 px-3 text-[10px] font-black uppercase tracking-wider"
+                >
+                  Retroativo
+                </Button>
+              )}
             </div>
           )}
         </div>
-        {showRetroactiveControls && !allowRetroactiveMonthly && firstRequiredMonth <= 12 && (
+        {paymentCategory === "mensalidade" &&
+          canConfigureGracePeriod &&
+          gracePeriodEnabled && (
+          <div className="grid grid-cols-2 gap-2 rounded-xl border border-border/50 bg-muted/20 p-3">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                Carência até
+              </Label>
+              <Select
+                value={gracePeriodMonth.toString()}
+                onValueChange={(value) => onGracePeriodMonthChange(Number(value))}
+              >
+                <SelectTrigger className="h-9 text-xs font-bold bg-card">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {monthOptions.map((month) => (
+                    <SelectItem key={month} value={month.toString()} className="text-[10px] font-bold">
+                      {MONTH_LABELS[month]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                Ano
+              </Label>
+              <Select
+                value={gracePeriodYear.toString()}
+                onValueChange={(value) => onGracePeriodYearChange(Number(value))}
+              >
+                <SelectTrigger className="h-9 text-xs font-bold bg-card">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[currentYear - 1, currentYear, currentYear + 1].map((year) => (
+                    <SelectItem key={year} value={year.toString()} className="text-[10px] font-bold">
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
+        {canConfigureGracePeriod && showRetroactiveControls && !allowRetroactiveMonthly && firstRequiredMonth <= 12 && (
           <p className="text-[11px] text-muted-foreground">
             Meses anteriores a{" "}
             <span className="font-semibold uppercase">{MONTH_LABELS[firstRequiredMonth]}</span>{" "}
             foram bloqueados pela data de filiação.
           </p>
         )}
-        {showRetroactiveControls && !allowRetroactiveMonthly && firstRequiredMonth > 12 && (
+        {canConfigureGracePeriod && showRetroactiveControls && !allowRetroactiveMonthly && firstRequiredMonth > 12 && (
           <p className="text-[11px] text-muted-foreground">
             Esse ano é anterior à filiação do sócio. Ative o retroativo se quiser lançar cobranças manuais.
           </p>

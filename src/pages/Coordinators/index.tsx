@@ -396,13 +396,14 @@ export default function CoordinatorsPage() {
             <AlertDialogTitle>Excluir coordenador?</AlertDialogTitle>
             <AlertDialogDescription>
               {coordinatorToDelete
-                ? `O coordenador ${coordinatorToDelete.name} ser? removido. S?cios vinculados ficar?o sem coordenador.`
-                : "Confirme a exclus?o do coordenador."}
+                ? `O coordenador ${coordinatorToDelete.name} será removido. Sócios vinculados ficarão sem coordenador.`
+                : "Confirme a exclusão do coordenador."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => {
                 if (coordinatorToDelete?.id) {
                   deleteMutation.mutate(coordinatorToDelete.id);

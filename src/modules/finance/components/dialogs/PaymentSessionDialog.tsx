@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -39,7 +39,12 @@ import type {
   FinanceLancamento,
 } from "../../types/finance.types";
 import { MemberFinanceConfigForm } from "../forms/MemberFinanceConfigForm";
-import { getFirstRequiredMonthForYear } from "../../utils/membershipCompetency";
+import { toast } from "sonner";
+import {
+  buildMonthStartDate,
+  getFirstRequiredMonthForYear,
+  getMonthYearFromDate,
+} from "../../utils/membershipCompetency";
 
 interface PaymentSessionDialogProps {
   readonly open: boolean;
@@ -65,6 +70,7 @@ export function PaymentSessionDialog({
   const paymentMutation = usePaymentSession();
 
   const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
   const { state: paymentForm, dispatch: dispatchPaymentForm } =
     usePaymentSessionForm(currentYear);
   const {
@@ -84,6 +90,10 @@ export function PaymentSessionDialog({
   const anoBase = settings?.ano_base_cobranca ?? 2024;
   const valorAnuidade = settings?.valor_anuidade ?? 0;
   const valorMensalidade = settings?.valor_mensalidade ?? (valorAnuidade / 12);
+  const [savedGraceStartDate, setSavedGraceStartDate] = useState<string | null>(null);
+  const [gracePeriodEnabled, setGracePeriodEnabled] = useState(false);
+  const [gracePeriodMonth, setGracePeriodMonth] = useState<number>(currentMonth);
+  const [gracePeriodYear, setGracePeriodYear] = useState<number>(currentYear);
 
   const resetPaymentForm = () => {
     dispatchPaymentForm({ type: "reset", currentYear });
@@ -113,13 +123,32 @@ export function PaymentSessionDialog({
             type: "setHistoricMember",
             checked: config?.socio_historico ?? false,
           });
+          const savedDate = config?.data_inicio_cobranca ?? null;
+          const fallbackDate =
+            savedDate ??
+            dataDeAdmissao ??
+            buildMonthStartDate(currentYear, currentMonth);
+          const { admissionMonth, admissionYear } =
+            getMonthYearFromDate(fallbackDate);
+
+          setSavedGraceStartDate(savedDate);
+          setGracePeriodEnabled(savedDate != null);
+          setGracePeriodMonth(admissionMonth ?? currentMonth);
+          setGracePeriodYear(admissionYear ?? currentYear);
         } catch (error) {
           console.error("Erro ao carregar configuração financeira:", error);
         }
       }
     }
     loadConfig();
-  }, [dispatchPaymentForm, open, socioCpf]);
+  }, [
+    currentMonth,
+    currentYear,
+    dataDeAdmissao,
+    dispatchPaymentForm,
+    open,
+    socioCpf,
+  ]);
 
   useEffect(() => {
     if (open) {
@@ -129,6 +158,13 @@ export function PaymentSessionDialog({
       });
     }
   }, [dispatchPaymentForm, open, socioCpf]);
+
+  const gracePeriodStartDate = useMemo(() => {
+    if (!gracePeriodEnabled) return null;
+    return buildMonthStartDate(gracePeriodYear, gracePeriodMonth);
+  }, [gracePeriodEnabled, gracePeriodMonth, gracePeriodYear]);
+
+  const effectiveChargeStartDate = gracePeriodStartDate ?? dataDeAdmissao ?? null;
 
   const toggleMonth = (m: number) => {
     const paidMonthsByYear = new Map<number, Set<number>>();
@@ -145,7 +181,10 @@ export function PaymentSessionDialog({
 
     const firstAllowedMonth = allowRetroactiveMonthly
       ? 1
-      : getFirstRequiredMonthForYear(selectedYearForMensalidade, dataDeAdmissao);
+      : getFirstRequiredMonthForYear(
+          selectedYearForMensalidade,
+          effectiveChargeStartDate,
+        );
 
     if (m < firstAllowedMonth) return;
 
@@ -226,6 +265,13 @@ export function PaymentSessionDialog({
     (paymentCategory === "anuidade" ? totalAnnuities : totalMonthly) +
     totalFees +
     totalCharges;
+  const hasPaidMonthlyLaunch = useMemo(
+    () =>
+      lancamentos.some(
+        (launch) => launch.tipo === "mensalidade" && launch.status === "pago",
+      ),
+    [lancamentos],
+  );
 
   const canConfirm =
     totalValue > 0 &&
@@ -236,6 +282,20 @@ export function PaymentSessionDialog({
 
   const handleSubmit = async () => {
     if (!socioCpf) return;
+
+    if (savedGraceStartDate !== gracePeriodStartDate) {
+      try {
+        await memberFinanceConfigService.upsertConfig(socioCpf, {
+          data_inicio_cobranca: gracePeriodStartDate,
+        });
+        setSavedGraceStartDate(gracePeriodStartDate);
+      } catch (error) {
+        console.error("Erro ao salvar carência financeira:", error);
+        toast.error(
+          "Não foi possível salvar a carência. O lançamento será processado normalmente.",
+        );
+      }
+    }
 
     const sessaoId = generateUUID();
     const items: PaymentSessionItem[] = [
@@ -378,7 +438,7 @@ export function PaymentSessionDialog({
               selectedMonths={selectedMonths}
               onToggleMonth={toggleMonth}
               selectedYearForMensalidade={selectedYearForMensalidade}
-              memberAdmissionDate={dataDeAdmissao}
+              memberAdmissionDate={effectiveChargeStartDate}
               allowRetroactiveMonthly={allowRetroactiveMonthly}
               onAllowRetroactiveMonthlyChange={(checked) =>
                 dispatchPaymentForm({
@@ -386,6 +446,15 @@ export function PaymentSessionDialog({
                   checked,
                 })
               }
+              canConfigureGracePeriod={!hasPaidMonthlyLaunch}
+              gracePeriodEnabled={gracePeriodEnabled}
+              onGracePeriodToggle={() =>
+                setGracePeriodEnabled((current) => !current)
+              }
+              gracePeriodMonth={gracePeriodMonth}
+              onGracePeriodMonthChange={setGracePeriodMonth}
+              gracePeriodYear={gracePeriodYear}
+              onGracePeriodYearChange={setGracePeriodYear}
               onYearForMensalidadeChange={(year) =>
                 dispatchPaymentForm({ type: "setSelectedYearForMensalidade", year })
               }

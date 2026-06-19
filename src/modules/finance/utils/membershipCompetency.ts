@@ -26,6 +26,16 @@ export function getMembershipCompetencyContext(
   return { admissionYear, admissionMonth };
 }
 
+export function buildMonthStartDate(year: number, month: number): string {
+  return `${year}-${String(month).padStart(2, "0")}-01`;
+}
+
+export function getMonthYearFromDate(
+  date?: string | null,
+): MembershipCompetencyContext {
+  return getMembershipCompetencyContext(date);
+}
+
 export function getFirstRequiredMonthForYear(
   selectedYear: number,
   admissionDate?: string | null,

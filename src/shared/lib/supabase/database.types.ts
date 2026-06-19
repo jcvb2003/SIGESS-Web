@@ -309,6 +309,7 @@ export type Database = {
         Row: {
           cpf: string
           created_at: string | null
+          data_inicio_cobranca: string | null
           dia_vencimento: number | null
           isento: boolean | null
           liberacao_data: string | null
@@ -324,6 +325,7 @@ export type Database = {
         Insert: {
           cpf: string
           created_at?: string | null
+          data_inicio_cobranca?: string | null
           dia_vencimento?: number | null
           isento?: boolean | null
           liberacao_data?: string | null
@@ -339,6 +341,7 @@ export type Database = {
         Update: {
           cpf?: string
           created_at?: string | null
+          data_inicio_cobranca?: string | null
           dia_vencimento?: number | null
           isento?: boolean | null
           liberacao_data?: string | null
@@ -1441,6 +1444,7 @@ export type Database = {
       get_socio_financial_status: {
         Args: {
           p_cpf: string
+          p_data_efetiva_inicio?: string | null
           p_isento: boolean
           p_liberado: boolean
           p_regime: string
