@@ -8,6 +8,7 @@ import type {
   PaymentType,
   SelectedAnnuity,
 } from "../../types/finance.types";
+import { isExtraFeeBlockedByHistoricMember } from "../../domain/paymentEligibility";
 
 export type PaymentCategory = "anuidade" | "mensalidade";
 export type ConfigMode = "isencao" | "liberacao" | "regime" | null;
@@ -16,10 +17,6 @@ const EXCLUSIVE_EXTRA_FEE_TYPES: Partial<Record<PaymentType, PaymentType[]>> = {
   inicial: ["transferencia"],
   transferencia: ["inicial"],
 };
-
-export function isExtraFeeBlockedByHistoricMember(paymentType: PaymentType) {
-  return paymentType === "inicial" || paymentType === "transferencia";
-}
 
 function isCompatibleExtraFee(existingType: PaymentType, nextType: PaymentType) {
   return !EXCLUSIVE_EXTRA_FEE_TYPES[nextType]?.includes(existingType);

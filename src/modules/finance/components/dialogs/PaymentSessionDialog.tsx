@@ -10,10 +10,8 @@ import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { usePaymentSession } from "../../hooks/edit/usePaymentSession";
-import {
-  isExtraFeeBlockedByHistoricMember,
-  usePaymentSessionForm,
-} from "../../hooks/edit/usePaymentSessionForm";
+import { usePaymentSessionForm } from "../../hooks/edit/usePaymentSessionForm";
+import { isExtraFeeBlockedByHistoricMember } from "../../domain/paymentEligibility";
 import { useFinanceSettings } from "../../hooks/data/useFinanceSettings";
 import { useMemberStatement } from "../../hooks/data/useMemberStatement";
 import { memberFinanceConfigService } from "../../services/memberFinanceConfigService";
