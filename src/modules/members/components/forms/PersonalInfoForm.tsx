@@ -46,8 +46,10 @@ export function PersonalInfoForm() {
     { label: "NÃO", value: "NÃO" },
   ];
   const escolaridadeOptions = [
-    { label: "FUNDAMENTAL INCOMPLETO", value: "FUNDAMENTAL INCOMPLETO" },
-    { label: "FUNDAMENTAL COMPLETO", value: "FUNDAMENTAL COMPLETO" },
+    { label: "FUNDAMENTAL I INCOMPLETO (1º AO 5º ANO)", value: "FUNDAMENTAL I INCOMPLETO" },
+    { label: "FUNDAMENTAL I COMPLETO", value: "FUNDAMENTAL I COMPLETO" },
+    { label: "FUNDAMENTAL II INCOMPLETO (6º AO 9º ANO)", value: "FUNDAMENTAL II INCOMPLETO" },
+    { label: "FUNDAMENTAL II COMPLETO", value: "FUNDAMENTAL II COMPLETO" },
     { label: "MÉDIO INCOMPLETO", value: "MÉDIO INCOMPLETO" },
     { label: "MÉDIO COMPLETO", value: "MÉDIO COMPLETO" },
     { label: "SUPERIOR INCOMPLETO", value: "SUPERIOR INCOMPLETO" },

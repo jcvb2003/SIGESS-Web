@@ -17,12 +17,14 @@ import { useLocalitiesData } from "../../hooks/data/useLocalitiesData";
 import { usePortariasData } from "../../hooks/data/usePortariasData";
 import { MapPin, Plus } from "lucide-react";
 import { LocalityManagementDialog } from "@/modules/settings/components/data/LocalityManagementDialog";
+import { useCoordinatorsData } from "@/modules/coordinators/hooks/useCoordinatorsData";
 
 export function AddressForm() {
   const { control, setValue, trigger } = useFormContext();
   const [isLocalityDialogOpen, setIsLocalityDialogOpen] = useState(false);
   const { localities, loading } = useLocalitiesData();
   const { portarias } = usePortariasData();
+  const { coordinators } = useCoordinatorsData();
   const hasMultiplePortarias = portarias.length >= 2;
 
   const localityOptions = localities
@@ -35,6 +37,11 @@ export function AddressForm() {
   const portariaOptions = portarias.map((p) => ({
     label: `${p.codigoPortaria} - ${p.nome}`,
     value: p.id!,
+  }));
+
+  const coordinatorOptions = coordinators.map((coordinator) => ({
+    label: coordinator.name,
+    value: coordinator.id ?? "",
   }));
 
   // Revalida portariaId quando o threshold muda (RHF não reage ao resolver sozinho)
@@ -140,6 +147,32 @@ export function AddressForm() {
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <SelectField
+              control={control}
+              name="coordinatorId"
+              label="Coordenador"
+              placeholder={
+                coordinators.length > 0
+                  ? "Selecione o coordenador"
+                  : "Nenhum coordenador cadastrado"
+              }
+              options={[
+                { label: "Sem coordenador", value: "__none__" },
+                ...coordinatorOptions,
+              ]}
+              onChange={(value) => {
+                if (value === "__none__") {
+                  setValue("coordinatorId", "", {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                    shouldTouch: true,
+                  });
+                }
+              }}
+            />
           </div>
 
           {hasMultiplePortarias && (

@@ -18,6 +18,8 @@ export const toMemberListItem = (
   data_de_admissao: member.dataDeAdmissao ?? null,
   situacao: member.situacao ?? null,
   codigo_localidade: member.codigoLocalidade ?? null,
+  portaria_id: member.portariaId ?? null,
+  coordinator_id: member.coordinatorId ?? null,
 });
 
 /**
@@ -39,6 +41,7 @@ export const mapRowToListItem = (
     situacao: typeof row.situacao === 'string' ? row.situacao : null,
     codigo_localidade: typeof row.codigo_localidade === 'string' ? row.codigo_localidade : null,
     portaria_id: typeof row.portaria_id === 'string' ? row.portaria_id : null,
+    coordinator_id: typeof row.coordinator_id === 'string' ? row.coordinator_id : null,
     foto_url: cpf && photoUrlBuilder ? (photoUrlBuilder(cpf, updatedAt) ?? null) : null,
   };
 };

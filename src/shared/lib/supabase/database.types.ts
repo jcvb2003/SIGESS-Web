@@ -103,6 +103,48 @@ export type Database = {
         }
         Relationships: []
       }
+      coordinators: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          notes: string | null
+          phone: string | null
+          region: string | null
+          tenant_id: string
+          unit_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          region?: string | null
+          tenant_id: string
+          unit_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          region?: string | null
+          tenant_id?: string
+          unit_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       entidade: {
         Row: {
           bairro: string | null
@@ -962,7 +1004,9 @@ export type Database = {
           codigo_do_socio: string | null
           codigo_localidade: string | null
           cpf: string | null
+          coordinator_id: string | null
           created_at: string | null
+          created_by: string | null
           data_de_admissao: string | null
           data_de_nascimento: string | null
           dt_expedicao_rg: string | null
@@ -995,6 +1039,7 @@ export type Database = {
           uf_naturalidade: string | null
           uf_rg: string | null
           updated_at: string | null
+          updated_by: string | null
           zona: string | null
         }
         Insert: {
@@ -1009,7 +1054,9 @@ export type Database = {
           codigo_do_socio?: string | null
           codigo_localidade?: string | null
           cpf?: string | null
+          coordinator_id?: string | null
           created_at?: string | null
+          created_by?: string | null
           data_de_admissao?: string | null
           data_de_nascimento?: string | null
           dt_expedicao_rg?: string | null
@@ -1042,6 +1089,7 @@ export type Database = {
           uf_naturalidade?: string | null
           uf_rg?: string | null
           updated_at?: string | null
+          updated_by?: string | null
           zona?: string | null
         }
         Update: {
@@ -1056,7 +1104,9 @@ export type Database = {
           codigo_do_socio?: string | null
           codigo_localidade?: string | null
           cpf?: string | null
+          coordinator_id?: string | null
           created_at?: string | null
+          created_by?: string | null
           data_de_admissao?: string | null
           data_de_nascimento?: string | null
           dt_expedicao_rg?: string | null
@@ -1089,6 +1139,7 @@ export type Database = {
           uf_naturalidade?: string | null
           uf_rg?: string | null
           updated_at?: string | null
+          updated_by?: string | null
           zona?: string | null
         }
         Relationships: []

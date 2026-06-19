@@ -94,6 +94,7 @@ export const memberRegistrationSchema = z
 
     codigoLocalidade: numberStringSchema,
     portariaId: optionalStringSchema,
+    coordinatorId: optionalStringSchema,
     situacao: z
       .enum([
         "ATIVO",
@@ -147,8 +148,10 @@ export const memberRegistrationSchema = z
     escolaridade: z
       .enum([
         "ANALFABETO(A)",
-        "FUNDAMENTAL INCOMPLETO",
-        "FUNDAMENTAL COMPLETO",
+        "FUNDAMENTAL I INCOMPLETO",
+        "FUNDAMENTAL I COMPLETO",
+        "FUNDAMENTAL II INCOMPLETO",
+        "FUNDAMENTAL II COMPLETO",
         "MÉDIO INCOMPLETO",
         "MÉDIO COMPLETO",
         "SUPERIOR INCOMPLETO",

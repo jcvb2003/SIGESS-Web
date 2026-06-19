@@ -23,8 +23,10 @@ export type SituacaoValue =
   | "";
 export type EscolaridadeValue =
   | "ANALFABETO(A)"
-  | "FUNDAMENTAL INCOMPLETO"
-  | "FUNDAMENTAL COMPLETO"
+  | "FUNDAMENTAL I INCOMPLETO"
+  | "FUNDAMENTAL I COMPLETO"
+  | "FUNDAMENTAL II INCOMPLETO"
+  | "FUNDAMENTAL II COMPLETO"
   | "MÉDIO INCOMPLETO"
   | "MÉDIO COMPLETO"
   | "SUPERIOR INCOMPLETO"
@@ -37,6 +39,8 @@ export interface MemberRegistrationForm {
   codigoDoSocio: string;
   codigoLocalidade: string;
   portariaId?: string;
+  coordinatorId?: string;
+  coordinatorName?: string;
   nome: string;
   apelido: string;
   cpf: string;
@@ -75,6 +79,10 @@ export interface MemberRegistrationForm {
   ufRgp: string;
   situacao: SituacaoValue;
   observacoes: string;
+  createdAt?: string;
+  updatedAt?: string;
+  createdByName?: string;
+  updatedByName?: string;
   senhaGovInss: string;
   fotos?:
     | {
@@ -96,6 +104,7 @@ export interface MemberListItem {
   situacao: string | null;
   codigo_localidade?: string | null;
   portaria_id?: string | null;
+  coordinator_id?: string | null;
   foto_url?: string | null;
 }
 export interface MembersResult {
@@ -123,6 +132,8 @@ export const initialMemberRegistrationForm: MemberRegistrationForm = {
   codigoDoSocio: "",
   codigoLocalidade: "",
   portariaId: "",
+  coordinatorId: "",
+  coordinatorName: "",
   nome: "",
   apelido: "",
   cpf: "",
@@ -161,6 +172,10 @@ export const initialMemberRegistrationForm: MemberRegistrationForm = {
   ufRgp: "PA",
   situacao: "ATIVO",
   observacoes: "",
+  createdAt: "",
+  updatedAt: "",
+  createdByName: "",
+  updatedByName: "",
   senhaGovInss: "",
   fotos: null,
   photoFile: null,

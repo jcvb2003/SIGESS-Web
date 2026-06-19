@@ -10,8 +10,8 @@ import type {
  */
 export function toMemberFinancialSummary(
   row: SituacaoFinanceiraSocio,
-  currentYear: number,
-  anoBase: number,
+  _currentYear: number,
+  _anoBase: number,
 ): MemberFinancialSummary {
   const isento = row.isento ?? false;
   const liberado = row.liberado_presidente ?? false;

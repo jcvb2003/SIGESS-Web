@@ -54,12 +54,17 @@ export function useUserMetadata() {
           ? new Date(configData.acesso_expira_em) < new Date() 
           : false;
 
+        const profile = (
+          (profileData as unknown as { user_profiles?: { nome?: string | null; avatar_path?: string | null } | null } | null)
+            ?.user_profiles ?? null
+        );
+
         setMetadata({
           max_socios: configData?.max_socios ?? 0,
           acesso_expira_em: configData?.acesso_expira_em || null,
           isExpired,
-          profileName: ((profileData as Record<string, unknown>)?.user_profiles as Record<string, unknown> | null)?.nome as string | null || null,
-          avatarPath: ((profileData as Record<string, unknown>)?.user_profiles as Record<string, unknown> | null)?.avatar_path as string | null || null,
+          profileName: profile?.nome ?? null,
+          avatarPath: profile?.avatar_path ?? null,
         });
       } catch (err) {
         console.error("Unexpected error fetching user metadata:", err);

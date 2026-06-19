@@ -38,6 +38,7 @@ export function PersonalInfoSection({ member }: PersonalInfoSectionProps) {
           <InfoItem label="Nome da Mãe" value={member.mae} />
           <InfoItem label="Alfabetizado" value={member.alfabetizado} />
           <InfoItem label="Escolaridade" value={member.escolaridade} />
+          <InfoItem label="Coordenador" value={member.coordinatorName} />
         </div>
       </CardContent>
     </Card>

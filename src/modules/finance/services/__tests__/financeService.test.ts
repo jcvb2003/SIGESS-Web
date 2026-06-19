@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { supabase } from '@/shared/lib/supabase/client';
 import { financeService } from '../financeService';
 import { buildQueryMock } from '@/test/mocks/supabaseMock';
+import type { PaymentSessionPayload } from '../../types/finance.types';
 
 vi.mock('@/shared/lib/supabase/client', () => ({
   supabase: { from: vi.fn(), rpc: vi.fn() },
@@ -39,7 +40,7 @@ describe('financeService.createPaymentSession', () => {
   it('chama rpc register_payment_session com o payload', async () => {
     vi.mocked(supabase.rpc).mockResolvedValue({ data: null, error: null } as never);
 
-    const payload = { socioCpf: '000.000.000-00', sessaoId: 'sess-1', paymentMethod: 'dinheiro', paymentDate: '2025-01-01', items: [], daes: [] };
+    const payload: PaymentSessionPayload = { socioCpf: '000.000.000-00', sessaoId: 'sess-1', paymentMethod: 'dinheiro', paymentDate: '2025-01-01', items: [], daes: [] };
     await financeService.createPaymentSession(payload);
     expect(supabase.rpc).toHaveBeenCalledWith('register_payment_session', expect.objectContaining({ p_socio_cpf: '000.000.000-00', p_sessao_id: 'sess-1' }));
   });
@@ -47,7 +48,7 @@ describe('financeService.createPaymentSession', () => {
   it('lança erro se rpc retorna erro', async () => {
     vi.mocked(supabase.rpc).mockResolvedValue({ data: null, error: new Error('rpc error') } as never);
 
-    const payload = { socioCpf: '000', sessaoId: 's', paymentMethod: 'p', paymentDate: '2025-01-01', items: [], daes: [] };
+    const payload: PaymentSessionPayload = { socioCpf: '000', sessaoId: 's', paymentMethod: 'pix', paymentDate: '2025-01-01', items: [], daes: [] };
     await expect(financeService.createPaymentSession(payload)).rejects.toThrow('rpc error');
   });
 });

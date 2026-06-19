@@ -12,6 +12,7 @@ import { MemberStatusCell } from "@/modules/members/components/table/cells/Membe
 import { MembersTableActions } from "@/modules/members/components/table/MembersTableActions";
 import { useLocalitiesData } from "@/modules/members/hooks/data/useLocalitiesData";
 import { usePortariasData } from "@/modules/members/hooks/data/usePortariasData";
+import { useCoordinatorsData } from "@/modules/coordinators/hooks/useCoordinatorsData";
 import { MemberListItem } from "@/modules/members/types/member.types";
 import { useMembersListController } from "@/modules/members/hooks/data/useMemberData";
 import { toMemberListItem } from "@/modules/members/utils/memberTransformers";
@@ -22,6 +23,7 @@ export default function Members() {
     useMembersListController();
   const { localities } = useLocalitiesData();
   const { portarias } = usePortariasData();
+  const { coordinators } = useCoordinatorsData();
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
@@ -84,6 +86,14 @@ export default function Members() {
                 cell: (m: MemberListItem) => {
                   const p = portarias.find((pt) => pt.id === m.portaria_id);
                   return <span className="text-sm text-muted-foreground">{p ? `${p.codigoPortaria} - ${p.nome}` : "-"}</span>;
+                }
+              }] : []),
+              ...(coordinators.length >= 1 ? [{
+                header: "Coordenador",
+                className: "whitespace-nowrap hidden xl:table-cell",
+                cell: (m: MemberListItem) => {
+                  const coordinator = coordinators.find((item) => item.id === m.coordinator_id);
+                  return <span className="text-sm text-muted-foreground">{coordinator?.name || "-"}</span>;
                 }
               }] : []),
               {

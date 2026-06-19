@@ -67,6 +67,7 @@ const CAPTURED_FIELDS: Array<keyof MemberRegistrationSchemaType> = [
   "telefone",
   "email",
   "codigoLocalidade",
+  "coordinatorId",
   "rg",
   "dataExpedicaoRg",
   "ufRg",
@@ -85,8 +86,10 @@ const CAPTURED_FIELDS: Array<keyof MemberRegistrationSchemaType> = [
 ];
 
 const ESCOLARIDADE_MAP: Record<string, MemberRegistrationSchemaType["escolaridade"]> = {
-  "ENSINO FUNDAMENTAL INCOMPLETO": "FUNDAMENTAL INCOMPLETO",
-  "ENSINO FUNDAMENTAL COMPLETO": "FUNDAMENTAL COMPLETO",
+  "ENSINO FUNDAMENTAL INCOMPLETO": "FUNDAMENTAL I INCOMPLETO",
+  "ENSINO FUNDAMENTAL COMPLETO": "FUNDAMENTAL II COMPLETO",
+  "FUNDAMENTAL INCOMPLETO": "FUNDAMENTAL I INCOMPLETO",
+  "FUNDAMENTAL COMPLETO": "FUNDAMENTAL II COMPLETO",
   "ENSINO MÉDIO INCOMPLETO": "MÉDIO INCOMPLETO",
   "ENSINO MÉDIO COMPLETO": "MÉDIO COMPLETO",
   "ENSINO SUPERIOR INCOMPLETO": "SUPERIOR INCOMPLETO",
@@ -171,7 +174,6 @@ export function MembershipInfoForm({
   const form = useFormContext<MemberRegistrationSchemaType>();
   const { control } = form;
   const { handleGenerateCode } = useMemberCodeGenerator(form, isEditMode);
-
   const codigoDoSocio = useWatch({ control, name: "codigoDoSocio" });
   const isPatternMatch = !!(
     codigoDoSocio && REGISTRATION_CODE_PATTERN.test(String(codigoDoSocio))
@@ -233,7 +235,7 @@ export function MembershipInfoForm({
     );
   };
 
-  const situationOptions = SITUACAO_OPTIONS;
+  const situationOptions = [...SITUACAO_OPTIONS];
 
   const renderCaptureSource = (sourceId: (typeof CAPTURE_SOURCES)[number]["id"]) => {
     if (sourceId === "receita") {
@@ -357,7 +359,6 @@ export function MembershipInfoForm({
                 placeholder="Selecione a situação"
                 options={situationOptions}
               />
-
               <div className="rounded-md border bg-muted/10 px-3 py-2">
                 <div className="mb-1.5 flex items-start justify-between gap-2">
                   <div className="min-w-0 space-y-1">

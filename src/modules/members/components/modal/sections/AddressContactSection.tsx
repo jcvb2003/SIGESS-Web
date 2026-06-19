@@ -39,6 +39,7 @@ export function AddressContactSection({ member }: AddressContactSectionProps) {
           <InfoItem label="UF" value={member.uf} />
           <InfoItem label="CEP" value={member.cep} />
           <InfoItem label="Localidade" value={localityName} />
+          <InfoItem label="Coordenador" value={member.coordinatorName} />
           <InfoItem label="Portaria" value={portariaLabel} />
           <InfoItem label="Telefone" value={member.telefone} />
           <InfoItem label="Email" value={member.email} />

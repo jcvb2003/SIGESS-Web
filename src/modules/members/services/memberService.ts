@@ -93,7 +93,7 @@ export const memberService = {
     let query = supabase
       .from("socios")
       .select(
-        "id, codigo_do_socio, nome, cpf, data_de_admissao, situacao, codigo_localidade, portaria_id, data_de_nascimento, updated_at",
+        "id, codigo_do_socio, nome, cpf, data_de_admissao, situacao, codigo_localidade, portaria_id, coordinator_id, data_de_nascimento, updated_at",
         {
           count: "exact",
         },
@@ -240,10 +240,61 @@ export const memberService = {
     }
     if (!data) return null;
 
+    const createdById =
+      typeof (data as Record<string, unknown>).created_by === "string"
+        ? String((data as Record<string, unknown>).created_by)
+        : "";
+    const updatedById =
+      typeof (data as Record<string, unknown>).updated_by === "string"
+        ? String((data as Record<string, unknown>).updated_by)
+        : "";
+    const coordinatorId =
+      typeof (data as Record<string, unknown>).coordinator_id === "string"
+        ? String((data as Record<string, unknown>).coordinator_id)
+        : "";
+
+    let createdByName = "";
+    let updatedByName = "";
+    let coordinatorName = "";
+
+    const actorIds = Array.from(new Set([createdById, updatedById].filter(Boolean)));
+    if (actorIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("user_profiles" as never)
+        .select("id, nome, email")
+        .in("id", actorIds);
+
+      const profileMap = new Map(
+        ((profiles ?? []) as Array<Record<string, unknown>>).map((profile) => [
+          String(profile.id ?? ""),
+          String(profile.nome ?? profile.email ?? ""),
+        ]),
+      );
+
+      createdByName = profileMap.get(createdById) ?? "";
+      updatedByName = profileMap.get(updatedById) ?? "";
+    }
+
+    if (coordinatorId) {
+      const { data: coordinator } = await supabase
+        .from("coordinators" as never)
+        .select("name")
+        .eq("id", coordinatorId)
+        .maybeSingle();
+
+      coordinatorName =
+        typeof (coordinator as unknown as Record<string, unknown> | null)?.name === "string"
+          ? String((coordinator as unknown as Record<string, unknown>).name)
+          : "";
+    }
+
     const photoUrl = data.cpf ? photoService.getPhotoUrl(data.cpf, data.updated_at || undefined) : null;
 
     const recordWithPhoto = {
       ...data,
+      coordinator_name: coordinatorName,
+      created_by_name: createdByName,
+      updated_by_name: updatedByName,
       fotos: photoUrl ? [{ foto_url: photoUrl }] : [],
     };
 

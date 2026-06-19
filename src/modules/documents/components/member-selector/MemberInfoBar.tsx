@@ -80,10 +80,11 @@ export function MemberInfoBar() {
         <div className="flex items-center gap-2">
           <h3 className="font-semibold text-lg">{fullMemberData.nome}</h3>
           <Badge
-            variant={
+            variant="secondary"
+            className={
               fullMemberData.situacao?.toUpperCase() === "ATIVO"
-                ? "success"
-                : "secondary"
+                ? "border-transparent bg-success text-success-foreground hover:bg-success/80"
+                : undefined
             }
           >
             {fullMemberData.situacao || "SITUAÇÃO DESCONHECIDA"}

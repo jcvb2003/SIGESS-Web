@@ -14,6 +14,7 @@ import { ErrorBoundary } from "@/shared/components/feedback/ErrorBoundary";
 const LoginPage = lazy(() => import("@/pages/Login"));
 const DashboardPage = lazy(() => import("@/pages/Dashboard"));
 const MembersPage = lazy(() => import("@/pages/Members"));
+const CoordinatorsPage = lazy(() => import("@/pages/Coordinators"));
 const MemberDetailsPage = lazy(
   () => import("@/pages/Members/MemberDetailsPage"),
 );
@@ -117,6 +118,10 @@ const router = createBrowserRouter([
       {
         path: "/members",
         element: <MembersPage />,
+      },
+      {
+        path: "/coordinators",
+        element: <CoordinatorsPage />,
       },
       {
         path: "/members/:id",

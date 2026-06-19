@@ -70,7 +70,7 @@ export function ReapHeaderBadges({
   if (!cpf || isLoading) return null;
 
   // --- Simplificado ---
-  const anosSimplificado = getApplicableYears(emissaoRgp, "simplificado");
+  const anosSimplificado = getApplicableYears(emissaoRgp ?? null, "simplificado");
   const simplificadoEnviados = anosSimplificado.filter(
     (a) => reap?.simplificado?.[String(a)]?.enviado
   ).length;
@@ -85,7 +85,7 @@ export function ReapHeaderBadges({
   );
 
   // --- Anual (2025+) ---
-  const anosAnual = getApplicableYears(emissaoRgp, "anual");
+  const anosAnual = getApplicableYears(emissaoRgp ?? null, "anual");
 
   const anualEnviados = anosAnual.filter(
     (a) => reap?.anual?.[String(a)]?.enviado

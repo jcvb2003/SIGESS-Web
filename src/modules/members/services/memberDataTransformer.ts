@@ -77,6 +77,7 @@ export function toMemberInsertPayload(
       ? String(input.codigoLocalidade)
       : null,
     portaria_id: input.portariaId || null,
+    coordinator_id: input.coordinatorId || null,
     nome: toUpperOrEmpty(input.nome),
     apelido: toUpperOrEmpty(input.apelido),
     cpf: formatCPF(input.cpf),
@@ -153,6 +154,12 @@ export function fromMemberRecord(
       ? String(record.codigo_localidade)
       : "",
     portariaId: record.portaria_id ?? "",
+    coordinatorId: typeof (record as Record<string, unknown>).coordinator_id === "string"
+      ? String((record as Record<string, unknown>).coordinator_id)
+      : "",
+    coordinatorName: typeof (record as Record<string, unknown>).coordinator_name === "string"
+      ? String((record as Record<string, unknown>).coordinator_name)
+      : "",
     nome: getString(record.nome),
     apelido: getString(record.apelido),
     cpf: getString(record.cpf),
@@ -197,6 +204,10 @@ export function fromMemberRecord(
     ufRgp: getString(record.rgp_uf),
     situacao: parseSituacao(record.situacao),
     observacoes: getString(record.observacoes),
+    createdAt: getString((record as Record<string, unknown>).created_at),
+    updatedAt: getString((record as Record<string, unknown>).updated_at),
+    createdByName: getString((record as Record<string, unknown>).created_by_name),
+    updatedByName: getString((record as Record<string, unknown>).updated_by_name),
     senhaGovInss: getString(record.senhagov_inss),
     escolaridade: getString(record.escolaridade) as EscolaridadeValue | "",
     fotos: photos,
