@@ -43,7 +43,7 @@ import {
   FileUp,
   Upload,
 } from "lucide-react";
-import { settingsService } from "../../services/settingsService";
+import { documentTemplateService } from "../../services/documentTemplateService";
 import type { DocumentTemplate } from "../../types/settings.types";
 import { useActiveScope } from "@/shared/hooks/useActiveScope";
 export function DocumentsCard({ canWrite = true }: { canWrite?: boolean }) {
@@ -57,7 +57,7 @@ export function DocumentsCard({ canWrite = true }: { canWrite?: boolean }) {
   const templatesQuery = useQuery({
     queryKey: ["settings", "document-templates"],
     queryFn: async () => {
-      const { data, error } = await settingsService.getDocumentTemplates();
+      const { data, error } = await documentTemplateService.getDocumentTemplates();
       if (error) throw error;
       return data;
     },
@@ -70,7 +70,7 @@ export function DocumentsCard({ canWrite = true }: { canWrite?: boolean }) {
     }) => {
       if (!unitId || !tenantId) throw new Error("Escopo inválido para enviar template.");
       const { data, error } =
-        await settingsService.uploadDocumentTemplate(params, { unitId, tenantId });
+        await documentTemplateService.uploadDocumentTemplate(params, { unitId, tenantId });
       if (error) throw error;
       return data;
     },
@@ -96,7 +96,7 @@ export function DocumentsCard({ canWrite = true }: { canWrite?: boolean }) {
   });
   const deleteMutation = useMutation({
     mutationFn: async (template: DocumentTemplate) => {
-      const { error } = await settingsService.deleteDocumentTemplate(template);
+      const { error } = await documentTemplateService.deleteDocumentTemplate(template);
       if (error) throw error;
     },
     onSuccess: async () => {

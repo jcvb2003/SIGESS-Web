@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { settingsService } from "../../settings/services/settingsService";
+import { documentTemplateService } from "@/modules/settings/services/documentTemplateService";
 export const usePdfTemplates = () => {
   const {
     data: templates = [],
@@ -8,7 +8,7 @@ export const usePdfTemplates = () => {
   } = useQuery({
     queryKey: ["settings", "document-templates"],
     queryFn: async () => {
-      const { data, error } = await settingsService.getDocumentTemplates();
+      const { data, error } = await documentTemplateService.getDocumentTemplates();
       if (error) throw error;
       return data || [];
     },
