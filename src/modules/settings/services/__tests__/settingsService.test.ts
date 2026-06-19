@@ -87,30 +87,6 @@ describe('settingsService.savePortaria', () => {
   });
 });
 
-// ─── saveParameters (escrita com UnitWriteScope) ──────────────────────────────
-
-describe('settingsService.saveParameters', () => {
-  afterEach(() => { vi.clearAllMocks(); vi.restoreAllMocks(); });
-
-  it('inclui tenant_id e unit_id do scope no payload do upsert', async () => {
-    const upsertMock = vi.fn().mockResolvedValue({ error: null });
-    const queryMock = buildQueryMock({ data: null, error: null });
-    vi.mocked(supabase.from).mockReturnValue({
-      upsert: upsertMock,
-      select: vi.fn().mockReturnValue({ order: vi.fn().mockReturnValue({ limit: vi.fn().mockReturnValue(queryMock) }) }),
-    } as never);
-    vi.spyOn(settingsService, 'getParameters').mockResolvedValue({ data: null, error: null });
-
-    const scope = { unitId: 'unit-1', tenantId: 'tenant-1' };
-    const input = { id: 'param-1', maintenanceMode: false, maxUploadSize: 5, allowedFileTypes: [], sessionTimeout: 30 } as never;
-    await settingsService.saveParameters(input, scope);
-    expect(upsertMock).toHaveBeenCalledWith(
-      expect.objectContaining({ tenant_id: 'tenant-1', unit_id: 'unit-1' }),
-      expect.anything()
-    );
-  });
-});
-
 // ─── updateEntitySettings (escrita com UnitWriteScope) ───────────────────────
 
 describe('settingsService.updateEntitySettings', () => {

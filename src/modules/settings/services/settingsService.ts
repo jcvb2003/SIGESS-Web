@@ -7,14 +7,12 @@ import { TENANT_CONFIG_CACHE_KEY } from "@/config/tenants";
 import {
   EntitySettings,
   defaultEntitySettings,
-  SystemParameters,
   DocumentTemplate,
   Locality,
   Portaria,
 } from "../types/settings.types";
 const ENTITY_TABLE = "entidade";
 const CONFIG_TABLE = "configuracao_entidade";
-const PARAMETERS_TABLE = "parametros";
 const DOCUMENT_TEMPLATES_TABLE = "templates";
 const DOCUMENT_TEMPLATES_BUCKET = "documentos";
 export const BRANDING_BUCKET = "branding";
@@ -222,106 +220,6 @@ export const settingsService = {
     }
 
     return this.getEntity(scope);
-  },
-  async getParameters(unitId?: string | null): Promise<ServiceResponse<SystemParameters>> {
-    let query = supabase
-      .from(PARAMETERS_TABLE)
-      .select("*")
-      .order("id", { ascending: false })
-      .limit(1);
-    if (unitId) query = query.eq("unit_id", unitId);
-    const { data, error } = await query.maybeSingle();
-    if (error) {
-      console.error("Erro ao buscar parâmetros:", error);
-      return { data: null, error };
-    }
-    if (!data) {
-      return {
-        data: {
-          maintenanceMode: false,
-          maxUploadSize: 5,
-          allowedFileTypes: [".pdf", ".jpg", ".png"],
-          sessionTimeout: 30,
-          defeso1Start: null,
-          defeso1End: null,
-          defeso2Start: null,
-          defeso2End: null,
-          defesoSpecies: "",
-          publicationNumber: "",
-          publicationDate: null,
-          publicationLocal: "",
-          fishingArea: "",
-        },
-        error: null,
-      };
-    }
-    return {
-      data: {
-        id: data.id ? String(data.id) : undefined,
-        maintenanceMode: false,
-        maxUploadSize: 5,
-        allowedFileTypes: [".pdf", ".jpg", ".png"],
-        sessionTimeout: 30,
-        defeso1Start: (data.inicio_pesca1 as string) || null,
-        defeso1End: (data.final_pesca1 as string) || null,
-        defeso2Start: (data.inicio_pesca2 as string) || null,
-        defeso2End: (data.final_pesca2 as string) || null,
-        defesoSpecies: (data.especies_proibidas as string) || "",
-        publicationNumber: (data.nr_publicacao as string) || "",
-        publicationDate: (data.data_publicacao as string) || null,
-        publicationLocal: (data.localpesca as string) || "",
-        fishingArea: (data.local_pesca as string) || "",
-      },
-      error: null,
-    };
-  },
-  async saveParameters(
-    input: SystemParameters,
-    scope: UnitWriteScope,
-  ): Promise<ServiceResponse<SystemParameters>> {
-    let parameterId = input.id;
-    if (!parameterId) {
-      let idQuery = supabase
-        .from(PARAMETERS_TABLE)
-        .select("id")
-        .order("id", { ascending: false })
-        .limit(1);
-      if (scope.unitId) idQuery = idQuery.eq("unit_id", scope.unitId);
-      const { data: latest, error: latestError } = await idQuery.maybeSingle();
-      if (latestError) {
-        console.error("Erro ao identificar parâmetro existente:", latestError);
-        return { data: null, error: latestError };
-      }
-      parameterId = latest?.id ? String(latest.id) : undefined;
-    }
-    const payload = {
-      ...(parameterId ? { id: parameterId } : {}),
-      tenant_id: scope.tenantId,
-      unit_id: scope.unitId,
-      inicio_pesca1: toNullable(input.defeso1Start),
-      final_pesca1: toNullable(input.defeso1End),
-      inicio_pesca2: toNullable(input.defeso2Start),
-      final_pesca2: toNullable(input.defeso2End),
-      especies_proibidas: toNullable(input.defesoSpecies),
-      nr_publicacao: toNullable(input.publicationNumber),
-      data_publicacao: toNullable(input.publicationDate),
-      localpesca: toNullable(input.publicationLocal),
-      local_pesca: toNullable(input.fishingArea),
-    };
-    const { error } = await supabase
-      .from(PARAMETERS_TABLE)
-      .upsert(payload, { onConflict: "id" });
-    if (error) {
-      console.error("Erro ao salvar parâmetros:", error);
-      let errorMessage = "Erro ao salvar parâmetros.";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (typeof error === "object" && error !== null && "message" in error) {
-        errorMessage = String((error as { message: unknown }).message);
-      }
-      return { data: null, error: new Error(errorMessage) };
-    }
-    return this.getParameters(scope.unitId);
   },
   async getLocalities(unitId?: string | null): Promise<ServiceResponse<Locality[]>> {
     let query = supabase

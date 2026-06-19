@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { settingsService } from "../services/settingsService";
+import { parametersService } from "../services/parametersService";
 import { SystemParameters } from "../types/settings.types";
 import { useActiveScope } from "@/shared/hooks/useActiveScope";
 
@@ -11,7 +11,7 @@ export function useParametersData() {
   const parametersQuery = useQuery({
     queryKey: ["settings", "parameters", unitId ?? null],
     queryFn: async () => {
-      const { data, error } = await settingsService.getParameters(unitId);
+      const { data, error } = await parametersService.getParameters(unitId);
       if (error) throw error;
       return data;
     },
@@ -22,7 +22,7 @@ export function useParametersData() {
   const saveMutation = useMutation({
     mutationFn: async (values: SystemParameters) => {
       if (!unitId || !tenantId) throw new Error("Escopo inválido para salvar parâmetros.");
-      const { data, error } = await settingsService.saveParameters(values, { unitId, tenantId });
+      const { data, error } = await parametersService.saveParameters(values, { unitId, tenantId });
       if (error) throw error;
       return data;
     },
