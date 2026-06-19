@@ -2,6 +2,12 @@ import { supabase } from "@/shared/lib/supabase/client";
 import { LoginCredentials } from "@/shared/types/auth.types";
 import { ServiceResponse } from "@/shared/services/base/serviceResponse";
 import { Session, User } from "@supabase/supabase-js";
+
+export interface PasswordChangeInput {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export const authService = {
   async signIn({ email, password }: LoginCredentials): Promise<
     ServiceResponse<{
@@ -80,5 +86,21 @@ export const authService = {
         `Criação de usuário deve ocorrer no backend para o email ${email} e senha ${password ? 'fornecida' : ''}.`,
       ),
     };
+  },
+  async changePassword(input: PasswordChangeInput): Promise<ServiceResponse<void>> {
+    const { auth } = supabase;
+    const { data: { user }, error: userError } = await auth.getUser();
+    if (userError) return { data: null, error: userError };
+    if (!user?.email) {
+      return { data: null, error: new Error("Usuário atual não possui email disponível para revalidação.") };
+    }
+    const { error: signInError } = await auth.signInWithPassword({
+      email: user.email,
+      password: input.currentPassword,
+    });
+    if (signInError) return { data: null, error: signInError };
+    const { error: updateError } = await auth.updateUser({ password: input.newPassword });
+    if (updateError) return { data: null, error: updateError };
+    return { data: null, error: null };
   },
 };

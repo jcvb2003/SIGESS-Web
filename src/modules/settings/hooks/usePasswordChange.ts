@@ -1,11 +1,10 @@
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { settingsService } from "../services/settingsService";
-import { PasswordChangeInput } from "../types/settings.types";
+import { authService, type PasswordChangeInput } from "@/modules/auth/services/authService";
 export function usePasswordChange() {
   const mutation = useMutation({
     mutationFn: async (values: PasswordChangeInput) => {
-      const { error } = await settingsService.changePassword(values);
+      const { error } = await authService.changePassword(values);
       if (error) throw error;
     },
     onSuccess: () => {

@@ -16,10 +16,6 @@ export interface SystemParameters {
   publicationLocal: string;
   fishingArea: string;
 }
-export interface PasswordChangeInput {
-  currentPassword: string;
-  newPassword: string;
-}
 export interface SystemUser {
   id: string;
   email: string;

@@ -11,7 +11,6 @@ import {
   DocumentTemplate,
   Locality,
   Portaria,
-  PasswordChangeInput,
 } from "../types/settings.types";
 const ENTITY_TABLE = "entidade";
 const CONFIG_TABLE = "configuracao_entidade";
@@ -691,43 +690,6 @@ export const settingsService = {
         data: null,
         error: new Error("O template nao foi excluido. Verifique se seu perfil tem permissao para essa operacao."),
       };
-    }
-    return { data: null, error: null };
-  },
-  async changePassword(
-    input: PasswordChangeInput,
-  ): Promise<ServiceResponse<void>> {
-    const { auth } = supabase;
-    const {
-      data: { user },
-      error: userError,
-    } = await auth.getUser();
-    if (userError) {
-      console.error("Erro ao obter usuário atual:", userError);
-      return { data: null, error: userError };
-    }
-    if (!user?.email) {
-      return {
-        data: null,
-        error: new Error(
-          "Usuário atual não possui email disponível para revalidação.",
-        ),
-      };
-    }
-    const { error: signInError } = await auth.signInWithPassword({
-      email: user.email,
-      password: input.currentPassword,
-    });
-    if (signInError) {
-      console.error("Erro ao validar senha atual:", signInError);
-      return { data: null, error: signInError };
-    }
-    const { error: updateError } = await auth.updateUser({
-      password: input.newPassword,
-    });
-    if (updateError) {
-      console.error("Erro ao atualizar senha:", updateError);
-      return { data: null, error: updateError };
     }
     return { data: null, error: null };
   },
