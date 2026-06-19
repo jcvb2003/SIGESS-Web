@@ -19,7 +19,8 @@ import {
   MemberRegistrationForm,
   initialMemberRegistrationForm,
 } from "../../types/member.types";
-import { DuplicateCpfError, LimitExceededError, memberService } from "../../services/memberService";
+import { memberService } from "../../services/memberService";
+import { DuplicateCpfError, LimitExceededError } from "../../domain/memberErrors";
 import {
   memberRegistrationSchema,
   MemberRegistrationSchemaType,

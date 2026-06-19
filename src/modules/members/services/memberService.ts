@@ -1,5 +1,6 @@
 import { localitiesService } from "@/modules/settings/services/localitiesService";
 import { photoService } from "./photoService";
+import { DuplicateCpfError, LimitExceededError } from "../domain/memberErrors";
 import { supabase } from "@/shared/lib/supabase/client";
 import {
   LocalityOption,
@@ -21,21 +22,7 @@ interface MemberBirthMonthRow {
   updated_at?: string | null;
   total_count: number;
 }
-export class DuplicateCpfError extends Error {
-  code = "DUPLICATE_CPF";
-  constructor(message = "CPF já cadastrado.") {
-    super(message);
-    this.name = "DuplicateCpfError";
-  }
-}
 
-export class LimitExceededError extends Error {
-  code = "LIMIT_EXCEEDED";
-  constructor(message = "Limite de cadastros atingido para este período de teste.") {
-    super(message);
-    this.name = "LimitExceededError";
-  }
-}
 export interface MemberUnitContext {
   tenantId?: string | null;
   unitId?: string | null;
