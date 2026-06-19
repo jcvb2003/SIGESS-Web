@@ -26,7 +26,7 @@ import {
   TooltipTrigger,
 } from "@/shared/components/ui/tooltip";
 import { Input } from "@/shared/components/ui/input";
-import { settingsService } from "../../services/settingsService";
+import { portariasService } from "../../services/portariasService";
 import { settingsQueryKeys } from "../../queryKeys";
 import { useActiveScope } from "@/shared/hooks/useActiveScope";
 import type { Portaria } from "../../types/settings.types";
@@ -49,7 +49,7 @@ export function PortariaManagementDialog({
   const portariasQuery = useQuery({
     queryKey: settingsQueryKeys.portarias(unitId),
     queryFn: async () => {
-      const { data, error } = await settingsService.getPortarias(unitId);
+      const { data, error } = await portariasService.getPortarias(unitId);
       if (error) throw error;
       return data;
     },
@@ -58,7 +58,7 @@ export function PortariaManagementDialog({
   const saveMutation = useMutation({
     mutationFn: async (values: { id?: string; codigoPortaria: string; nome: string }) => {
       if (!unitId || !tenantId) throw new Error("Escopo inválido para salvar portaria.");
-      const { data, error } = await settingsService.savePortaria(
+      const { data, error } = await portariasService.savePortaria(
         { id: values.id, codigoPortaria: values.codigoPortaria, nome: values.nome },
         { unitId, tenantId },
       );
@@ -85,7 +85,7 @@ export function PortariaManagementDialog({
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await settingsService.deletePortaria(id);
+      const { error } = await portariasService.deletePortaria(id);
       if (error) throw error;
     },
     onSuccess: async () => {

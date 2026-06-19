@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { settingsQueryKeys } from "@/modules/settings/queryKeys";
-import { settingsService } from "@/modules/settings/services/settingsService";
+import { portariasService } from "@/modules/settings/services/portariasService";
 import type { Portaria } from "@/modules/settings/types/settings.types";
 import { useActiveScope } from "@/shared/hooks/useActiveScope";
 
@@ -14,7 +14,7 @@ export function usePortariasData() {
   } = useQuery({
     queryKey: settingsQueryKeys.portarias(unitId),
     queryFn: async () => {
-      const response = await settingsService.getPortarias(unitId);
+      const response = await portariasService.getPortarias(unitId);
       if (response.error) throw response.error;
       return response.data || [];
     },

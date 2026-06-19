@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
-import { settingsService } from "../../services/settingsService";
+import { portariasService } from "../../services/portariasService";
 import { settingsQueryKeys } from "../../queryKeys";
 import { useActiveScope } from "@/shared/hooks/useActiveScope";
 import { PortariaManagementDialog } from "./PortariaManagementDialog";
@@ -21,7 +21,7 @@ export function PortariasCard() {
   const portariasQuery = useQuery({
     queryKey: settingsQueryKeys.portarias(unitId),
     queryFn: async () => {
-      const { data, error } = await settingsService.getPortarias(unitId);
+      const { data, error } = await portariasService.getPortarias(unitId);
       if (error) throw error;
       return data;
     },
