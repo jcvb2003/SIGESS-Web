@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { settingsService } from "@/modules/settings/services/settingsService";
+import { entityService } from "@/modules/settings/services/entityService";
 import type { EntitySettings } from "@/modules/settings/types/settings.types";
 import { useActiveScope } from "@/shared/hooks/useActiveScope";
 
@@ -12,7 +12,7 @@ export function useEntityData() {
   const entityQuery = useQuery({
     queryKey: ["settings", "entity", unitId],
     queryFn: async () => {
-      const { data, error } = await settingsService.getEntity({ unitId, tenantId });
+      const { data, error } = await entityService.getEntity({ unitId, tenantId });
       if (error) throw error;
       return data;
     },
@@ -21,7 +21,7 @@ export function useEntityData() {
 
   const tenantRootQuery = useQuery({
     queryKey: ["settings", "tenant-identity"],
-    queryFn: () => settingsService.getTenantIdentity(),
+    queryFn: () => entityService.getTenantIdentity(),
     staleTime: 60 * 60 * 1000,
     enabled: unitId === null,
   });
@@ -36,7 +36,7 @@ export function useEntityData() {
   const saveMutation = useMutation({
     mutationFn: async (values: EntitySettings) => {
       if (!unitId || !tenantId) throw new Error("Escopo inválido para salvar entidade.");
-      const { data, error } = await settingsService.updateEntitySettings(values, { unitId, tenantId });
+      const { data, error } = await entityService.updateEntitySettings(values, { unitId, tenantId });
       if (error) throw error;
       return data;
     },

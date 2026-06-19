@@ -13,7 +13,7 @@ import { useColorPreview } from "../../hooks/useColorPreview";
 import type { EntityFormData } from "../../hooks/useEntityValidation";
 import { supabase } from "@/shared/lib/supabase/client";
 import { BRANDING_COLORS, BRANDING_MAX_UPLOAD_BYTES } from "../../constants/brandingDefaults";
-import { BRANDING_BUCKET } from "../../services/settingsService";
+import { BRANDING_BUCKET } from "../../services/entityService";
 import { toast } from "sonner";
 import { ImagePlus, Trash2, Loader2, ImageIcon, Camera, RotateCcw } from "lucide-react";
 import { cn } from "@/shared/lib/utils";

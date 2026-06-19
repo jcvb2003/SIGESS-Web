@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { supabase } from '@/shared/lib/supabase/client';
-import { settingsService } from '../settingsService';
+import { entityService } from '../entityService';
 import { buildQueryMock } from '@/test/mocks/supabaseMock';
 
 vi.mock('@/shared/lib/supabase/client', () => ({
@@ -13,7 +13,7 @@ vi.mock('@/shared/lib/supabase/admin-client', () => ({
 
 // ─── getEntity (leitura com tenantId) ────────────────────────────────────────
 
-describe('settingsService.getEntity', () => {
+describe('entityService.getEntity', () => {
   let queryMock: ReturnType<typeof buildQueryMock>;
 
   beforeEach(() => {
@@ -29,14 +29,14 @@ describe('settingsService.getEntity', () => {
 
   it('filtra por tenantId quando scope.tenantId está preenchido', async () => {
     const scope = { unitId: 'unit-1', tenantId: 'tenant-1' };
-    await settingsService.getEntity(scope);
+    await entityService.getEntity(scope);
     const eqCalls = vi.mocked(queryMock.eq).mock.calls.map(([field]) => field);
     expect(eqCalls).toContain('tenant_id');
   });
 
   it('não aplica unit_id quando scope.unitId é null', async () => {
     const scope = { unitId: null, tenantId: 'tenant-1' };
-    await settingsService.getEntity(scope);
+    await entityService.getEntity(scope);
     const eqCalls = vi.mocked(queryMock.eq).mock.calls.map(([field]) => field);
     expect(eqCalls).not.toContain('unit_id');
   });
@@ -44,7 +44,7 @@ describe('settingsService.getEntity', () => {
 
 // ─── updateEntitySettings (escrita com UnitWriteScope) ───────────────────────
 
-describe('settingsService.updateEntitySettings', () => {
+describe('entityService.updateEntitySettings', () => {
   afterEach(() => { vi.clearAllMocks(); vi.restoreAllMocks(); });
 
   it('inclui unit_id e tenant_id do scope no upsert de entidade', async () => {
@@ -54,11 +54,11 @@ describe('settingsService.updateEntitySettings', () => {
       upsert: upsertMock,
       select: vi.fn().mockReturnValue({ limit: vi.fn().mockReturnValue(configQueryMock) }),
     } as never);
-    vi.spyOn(settingsService, 'getEntity').mockResolvedValue({ data: null, error: null });
+    vi.spyOn(entityService, 'getEntity').mockResolvedValue({ data: null, error: null });
 
     const scope = { unitId: 'unit-1', tenantId: 'tenant-1' };
     const settings = { id: 'entity-1', name: 'Teste' } as never;
-    await settingsService.updateEntitySettings(settings, scope);
+    await entityService.updateEntitySettings(settings, scope);
     expect(upsertMock).toHaveBeenCalledWith(
       expect.objectContaining({ unit_id: 'unit-1', tenant_id: 'tenant-1' })
     );

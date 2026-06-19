@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { settingsService } from "../services/settingsService";
+import { entityService } from "../services/entityService";
 import { useActiveScope } from "@/shared/hooks/useActiveScope";
 
 export function useEntityData() {
@@ -8,7 +8,7 @@ export function useEntityData() {
   const entityQuery = useQuery({
     queryKey: ["settings", "entity", unitId],
     queryFn: async () => {
-      const { data, error } = await settingsService.getEntity({ unitId, tenantId });
+      const { data, error } = await entityService.getEntity({ unitId, tenantId });
       if (error) throw error;
       return data;
     },
