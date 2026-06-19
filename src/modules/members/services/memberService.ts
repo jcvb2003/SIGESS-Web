@@ -1,4 +1,3 @@
-import { localitiesService } from "@/modules/settings/services/localitiesService";
 import { photoService } from "./photoService";
 import { DuplicateCpfError, LimitExceededError } from "../domain/memberErrors";
 import { supabase } from "@/shared/lib/supabase/client";
@@ -176,14 +175,6 @@ export const memberService = {
     if (!data || data.length === 0) {
       throw new Error("O socio nao foi excluido. Verifique se seu perfil tem permissao para essa operacao.");
     }
-  },
-  async getLocalities(): Promise<LocalityOption[]> {
-    const { data, error } = await localitiesService.getLocalities();
-    if (error) throw error;
-    return (data || []).map((item) => ({
-      code: item.code ? String(item.code) : "",
-      name: String(item.name ?? ""),
-    }));
   },
   async getLastRegistrationNumber(prefix: string): Promise<string | null> {
     const { data, error } = await supabase

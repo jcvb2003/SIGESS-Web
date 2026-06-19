@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { memberService } from "../../services/memberService";
+import { localitiesService } from "@/modules/settings/services/localitiesService";
 import { settingsQueryKeys } from "@/modules/settings/queryKeys";
 import { usePortariaScope } from "@/shared/context/PortariaContext";
 import { usePortariasData } from "../../hooks/data/usePortariasData";
@@ -23,7 +23,14 @@ export function useMemberFilters() {
   // Tenant-wide por design: exibe localidades de todos os polos para filtrar sócios cross-unit
   const localitiesQuery = useQuery<LocalityOption[]>({
     queryKey: settingsQueryKeys.localities(),
-    queryFn: () => memberService.getLocalities(),
+    queryFn: async () => {
+      const { data, error } = await localitiesService.getLocalities();
+      if (error) throw error;
+      return (data || []).map((item) => ({
+        code: item.code ? String(item.code) : "",
+        name: String(item.name ?? ""),
+      }));
+    },
   });
 
   const { portarias } = usePortariasData();
