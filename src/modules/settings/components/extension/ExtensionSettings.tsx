@@ -245,7 +245,7 @@ export function ExtensionSettings() {
                   {(licenseInfo.max_agro ?? 0) > 0 && (
                      <div className="bg-muted/10 p-3 rounded-lg border flex justify-between items-center animate-in zoom-in-95 duration-300">
                         <span className="text-xs text-muted-foreground uppercase flex items-center gap-2">
-                          <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+                          <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
                           Módulo Agro
                         </span>
                         <span className="text-sm font-mono font-bold">
