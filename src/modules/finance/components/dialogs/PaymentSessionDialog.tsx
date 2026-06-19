@@ -39,12 +39,14 @@ import type {
   FinanceLancamento,
 } from "../../types/finance.types";
 import { MemberFinanceConfigForm } from "../forms/MemberFinanceConfigForm";
+import { getFirstRequiredMonthForYear } from "../../utils/membershipCompetency";
 
 interface PaymentSessionDialogProps {
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
   readonly socioCpf: string | null;
   readonly socioName?: string;
+  readonly dataDeAdmissao?: string | null;
   readonly status?: FinancialStatusType;
   readonly regime?: string;
 }
@@ -54,6 +56,7 @@ export function PaymentSessionDialog({
   onOpenChange,
   socioCpf,
   socioName,
+  dataDeAdmissao,
   status,
   regime,
 }: PaymentSessionDialogProps) {
@@ -69,6 +72,7 @@ export function PaymentSessionDialog({
     selectedYears,
     selectedMonths,
     selectedYearForMensalidade,
+    allowRetroactiveMonthly,
     extraFees,
     selectedCharges,
     paymentMethod,
@@ -117,6 +121,15 @@ export function PaymentSessionDialog({
     loadConfig();
   }, [dispatchPaymentForm, open, socioCpf]);
 
+  useEffect(() => {
+    if (open) {
+      dispatchPaymentForm({
+        type: "setAllowRetroactiveMonthly",
+        checked: false,
+      });
+    }
+  }, [dispatchPaymentForm, open, socioCpf]);
+
   const toggleMonth = (m: number) => {
     const paidMonthsByYear = new Map<number, Set<number>>();
     lancamentos
@@ -130,14 +143,22 @@ export function PaymentSessionDialog({
     const paidInYear = paidMonthsByYear.get(selectedYearForMensalidade) || new Set();
     if (paidInYear.has(m)) return;
 
+    const firstAllowedMonth = allowRetroactiveMonthly
+      ? 1
+      : getFirstRequiredMonthForYear(selectedYearForMensalidade, dataDeAdmissao);
+
+    if (m < firstAllowedMonth) return;
+
     if (selectedMonths.includes(m)) {
       dispatchPaymentForm({
         type: "setSelectedMonths",
-        months: selectedMonths.filter((month) => month < m),
+        months: selectedMonths.filter(
+          (month) => month >= firstAllowedMonth && month < m,
+        ),
       });
     } else {
       const newSelection: number[] = [];
-      for (let i = 1; i <= m; i++) {
+      for (let i = firstAllowedMonth; i <= m; i++) {
         if (!paidInYear.has(i)) {
           newSelection.push(i);
         }
@@ -357,6 +378,14 @@ export function PaymentSessionDialog({
               selectedMonths={selectedMonths}
               onToggleMonth={toggleMonth}
               selectedYearForMensalidade={selectedYearForMensalidade}
+              memberAdmissionDate={dataDeAdmissao}
+              allowRetroactiveMonthly={allowRetroactiveMonthly}
+              onAllowRetroactiveMonthlyChange={(checked) =>
+                dispatchPaymentForm({
+                  type: "setAllowRetroactiveMonthly",
+                  checked,
+                })
+              }
               onYearForMensalidadeChange={(year) =>
                 dispatchPaymentForm({ type: "setSelectedYearForMensalidade", year })
               }

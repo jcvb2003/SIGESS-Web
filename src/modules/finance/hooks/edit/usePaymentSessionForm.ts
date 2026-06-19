@@ -30,6 +30,7 @@ export interface PaymentFormState {
   selectedYears: SelectedAnnuity[];
   selectedMonths: number[];
   selectedYearForMensalidade: number;
+  allowRetroactiveMonthly: boolean;
   extraFees: ExtraFeeItem[];
   selectedCharges: SelectedCharge[];
   paymentMethod: PaymentMethod;
@@ -47,6 +48,7 @@ export type PaymentFormAction =
   | { type: "updateAnnuityValue"; year: number; rawValue: string }
   | { type: "setSelectedMonths"; months: number[] }
   | { type: "setSelectedYearForMensalidade"; year: number }
+  | { type: "setAllowRetroactiveMonthly"; checked: boolean }
   | { type: "toggleExtraFee"; paymentType: PaymentType; value: number; uid: string }
   | { type: "removeExtraFee"; uid: string }
   | { type: "updateExtraFeeValue"; uid: string; rawValue: string }
@@ -69,6 +71,7 @@ function createPaymentFormState(currentYear: number): PaymentFormState {
     selectedYears: [],
     selectedMonths: [],
     selectedYearForMensalidade: currentYear,
+    allowRetroactiveMonthly: false,
     extraFees: [],
     selectedCharges: [],
     paymentMethod: "dinheiro",
@@ -131,7 +134,18 @@ function paymentFormReducer(
     case "setSelectedMonths":
       return { ...state, selectedMonths: action.months };
     case "setSelectedYearForMensalidade":
-      return { ...state, selectedYearForMensalidade: action.year };
+      return {
+        ...state,
+        selectedYearForMensalidade: action.year,
+        selectedMonths: [],
+        allowRetroactiveMonthly: false,
+      };
+    case "setAllowRetroactiveMonthly":
+      return {
+        ...state,
+        allowRetroactiveMonthly: action.checked,
+        selectedMonths: action.checked ? state.selectedMonths : [],
+      };
     case "toggleExtraFee": {
       const alreadyExists = state.extraFees.some(
         (fee) => fee.tipo === action.paymentType,

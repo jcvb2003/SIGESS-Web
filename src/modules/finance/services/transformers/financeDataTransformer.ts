@@ -23,6 +23,7 @@ export function toMemberFinancialSummary(
   return {
     cpf: row.cpf ?? "",
     nome: row.nome ?? "",
+    dataDeAdmissao: row.data_de_admissao ?? null,
     situacaoAssociativa: row.situacao_associativa ?? "",
     regime: (row.regime as "anuidade" | "mensalidade") ?? "anuidade",
     isento,

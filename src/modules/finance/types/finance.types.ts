@@ -49,6 +49,7 @@ export type FinancialStatusType =
 export interface MemberFinancialSummary {
   cpf: string;
   nome: string;
+  dataDeAdmissao?: string | null;
   situacaoAssociativa: string;
   regime: FinancialRegime;
   isento: boolean;

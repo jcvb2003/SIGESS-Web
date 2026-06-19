@@ -35,6 +35,10 @@ import type {
   ChargeType,
   SelectedAnnuity,
 } from "../../types/finance.types";
+import {
+  getFirstRequiredMonthForYear,
+  isMonthBeforeMembership,
+} from "../../utils/membershipCompetency";
 
 const MONTH_LABELS = [
   "", "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
@@ -75,6 +79,9 @@ interface PaymentItemFormProps {
   readonly onToggleMonth: (month: number) => void;
 
   readonly selectedYearForMensalidade: number;
+  readonly memberAdmissionDate?: string | null;
+  readonly allowRetroactiveMonthly: boolean;
+  readonly onAllowRetroactiveMonthlyChange: (checked: boolean) => void;
   readonly onYearForMensalidadeChange: (year: number) => void;
 
   readonly extraFees: ExtraFeeItem[];
@@ -103,6 +110,9 @@ export function PaymentItemForm({
   selectedMonths,
   onToggleMonth,
   selectedYearForMensalidade,
+  memberAdmissionDate,
+  allowRetroactiveMonthly,
+  onAllowRetroactiveMonthlyChange,
   onYearForMensalidadeChange,
   extraFees,
   onAddExtraFee,
@@ -169,6 +179,12 @@ export function PaymentItemForm({
 
   const hasInicial = extraFees.some(f => f.tipo === "inicial");
   const hasTransferencia = extraFees.some(f => f.tipo === "transferencia");
+  const firstRequiredMonth = getFirstRequiredMonthForYear(
+    selectedYearForMensalidade,
+    memberAdmissionDate,
+  );
+  const showRetroactiveControls =
+    paymentCategory === "mensalidade" && firstRequiredMonth !== 1;
 
   return (
     <div className="space-y-6 ring-0 border-none outline-none">
@@ -217,7 +233,31 @@ export function PaymentItemForm({
             <Calendar className="h-3 w-3 text-primary" />
             {paymentCategory === "anuidade" ? "SELECIONAR ANOS" : "SELECIONAR MESES"}
           </Label>
+          {showRetroactiveControls && (
+            <div className="flex items-center gap-2 bg-muted/50 px-2 py-1 rounded-full border border-border/50">
+              <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-tighter">
+                Retroativo
+              </span>
+              <Switch
+                checked={allowRetroactiveMonthly}
+                onCheckedChange={onAllowRetroactiveMonthlyChange}
+                className="scale-75 h-4 w-7"
+              />
+            </div>
+          )}
         </div>
+        {showRetroactiveControls && !allowRetroactiveMonthly && firstRequiredMonth <= 12 && (
+          <p className="text-[11px] text-muted-foreground">
+            Meses anteriores a{" "}
+            <span className="font-semibold uppercase">{MONTH_LABELS[firstRequiredMonth]}</span>{" "}
+            foram bloqueados pela data de filiação.
+          </p>
+        )}
+        {showRetroactiveControls && !allowRetroactiveMonthly && firstRequiredMonth > 12 && (
+          <p className="text-[11px] text-muted-foreground">
+            Esse ano é anterior à filiação do sócio. Ative o retroativo se quiser lançar cobranças manuais.
+          </p>
+        )}
         
         <div className={cn(
           "grid gap-2",
@@ -289,24 +329,37 @@ export function PaymentItemForm({
               {paymentCategory === "mensalidade" && Array.from({ length: 12 }, (_, i) => i + 1).map((m) => {
                 const paidInYear = paidMonthsByYear.get(selectedYearForMensalidade) || new Set();
                 const isAnnuityPaid = paidYears.has(selectedYearForMensalidade);
-                
+                const isBeforeAdmission =
+                  !allowRetroactiveMonthly &&
+                  isMonthBeforeMembership(
+                    selectedYearForMensalidade,
+                    m,
+                    memberAdmissionDate,
+                  );
+                 
                 const isPaid = paidInYear.has(m) || isAnnuityPaid;
                 const isSelected = selectedMonths.includes(m);
+                const isDisabled = isPaid || isBeforeAdmission;
 
                 let buttonClass = "bg-card border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-primary/5";
-                if (isPaid) buttonClass = "bg-muted/50 border-border/30 opacity-60 cursor-not-allowed";
+                if (isDisabled) buttonClass = "bg-muted/50 border-border/30 opacity-60 cursor-not-allowed";
                 else if (isSelected) buttonClass = "bg-primary border-primary text-primary-foreground shadow-md scale-[1.02]";
 
                 return (
                   <button
                     key={`month-${m}`}
                     type="button"
-                    disabled={isPaid}
+                    disabled={isDisabled}
                     onClick={() => onToggleMonth(m)}
                     className={cn("relative flex flex-col items-center justify-center h-14 rounded-xl border-2 transition-all p-1 font-medium", buttonClass)}
                   >
                     <span className="text-xs font-bold leading-tight uppercase tracking-tighter">{MONTH_LABELS[m]}</span>
                     {isPaid && <Check className="absolute top-1 right-1 h-3 w-3 text-primary" />}
+                    {isBeforeAdmission && (
+                      <span className="mt-0.5 text-[8px] font-bold text-muted-foreground/80">
+                        BLOQ.
+                      </span>
+                    )}
                     {isSelected && <span className="text-[8px] font-bold text-primary-foreground/90 mt-0.5 animate-in zoom-in-50">OK</span>}
                   </button>
                 );

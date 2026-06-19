@@ -1336,6 +1336,7 @@ export type Database = {
         Row: {
           anuidades_pagas: number[] | null
           cpf: string | null
+          data_de_admissao: string | null
           isento: boolean | null
           liberado_presidente: boolean | null
           meses_pagos_atual: number[] | null

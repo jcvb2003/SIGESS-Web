@@ -298,6 +298,7 @@ export default function FinancePage() {
         onOpenChange={(open) => !open && closeModal()}
         socioCpf={activeModal?.type === "payment" ? activeModal.cpf : null}
         socioName={activeMember?.nome}
+        dataDeAdmissao={activeMember?.dataDeAdmissao}
         status={activeMember?.status}
         regime={activeMember?.regime}
       />
