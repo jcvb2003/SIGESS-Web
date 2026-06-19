@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { settingsQueryKeys } from "@/modules/settings/queryKeys";
-import { settingsService } from "@/modules/settings/services/settingsService";
+import { localitiesService } from "@/modules/settings/services/localitiesService";
 import { Locality } from "@/modules/settings/types/settings.types";
 import { useActiveScope } from "@/shared/hooks/useActiveScope";
 
@@ -14,7 +14,7 @@ export function useLocalitiesData() {
   } = useQuery({
     queryKey: settingsQueryKeys.localities(unitId),
     queryFn: async () => {
-      const response = await settingsService.getLocalities(unitId);
+      const response = await localitiesService.getLocalities(unitId);
       if (response.error) throw response.error;
       return response.data || [];
     },

@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
-import { settingsService } from "../../services/settingsService";
+import { localitiesService } from "../../services/localitiesService";
 import { settingsQueryKeys } from "../../queryKeys";
 import { useActiveScope } from "@/shared/hooks/useActiveScope";
 import { LocalityManagementDialog } from "./LocalityManagementDialog";
@@ -20,7 +20,7 @@ export function LocalitiesCard() {
   const localitiesQuery = useQuery({
     queryKey: settingsQueryKeys.localities(unitId),
     queryFn: async () => {
-      const { data, error } = await settingsService.getLocalities(unitId);
+      const { data, error } = await localitiesService.getLocalities(unitId);
       if (error) throw error;
       return data;
     },

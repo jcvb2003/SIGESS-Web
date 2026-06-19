@@ -1,4 +1,4 @@
-import { settingsService } from "@/modules/settings/services/settingsService";
+import { localitiesService } from "@/modules/settings/services/localitiesService";
 import { photoService } from "./photoService";
 import { supabase } from "@/shared/lib/supabase/client";
 import {
@@ -191,7 +191,7 @@ export const memberService = {
     }
   },
   async getLocalities(): Promise<LocalityOption[]> {
-    const { data, error } = await settingsService.getLocalities();
+    const { data, error } = await localitiesService.getLocalities();
     if (error) throw error;
     return (data || []).map((item) => ({
       code: item.code ? String(item.code) : "",
