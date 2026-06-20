@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useCollectionConfig } from "../../hooks/data/useCollectionConfig";
+import { useExternalCharges } from "../../hooks/data/useExternalCharges";
 import { useCreateExternalCharge } from "../../hooks/edit/useCreateExternalCharge";
 import { RadioGroup, RadioGroupItem } from "@/shared/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
@@ -72,6 +73,7 @@ export function PaymentSessionDialog({
   const { lancamentos, isLoading: isLoadingStatement } = useMemberStatement(open ? socioCpf : null);
   const paymentMutation = usePaymentSession();
   const { config: collectionConfig } = useCollectionConfig();
+  const { charges } = useExternalCharges(open ? socioCpf : null);
   const createExternalChargeMutation = useCreateExternalCharge(socioCpf);
 
   const currentYear = new Date().getFullYear();
@@ -311,16 +313,30 @@ export function PaymentSessionDialog({
 
   // Pre-check: já existe mensalidade não cancelada para a competência selecionada
   const selectedMes = selectedMonths[0];
-  const jaTemLancamento =
-    canExternalCharge &&
-    !!selectedMes &&
-    lancamentos.some(
-      (l) =>
-        l.tipo === "mensalidade" &&
-        l.competencia_ano === selectedYearForMensalidade &&
-        l.competencia_mes === selectedMes &&
-        l.status !== "cancelado",
-    );
+  const matchedLancamento =
+    canExternalCharge && !!selectedMes
+      ? lancamentos.find(
+          (l) =>
+            l.tipo === "mensalidade" &&
+            l.competencia_ano === selectedYearForMensalidade &&
+            l.competencia_mes === selectedMes &&
+            l.status !== "cancelado",
+        ) ?? null
+      : null;
+
+  const jaTemLancamento = !!matchedLancamento;
+
+  const matchedFcx = matchedLancamento
+    ? charges.find((c) => c.lancamento_id === matchedLancamento.id) ?? null
+    : null;
+
+  const preCheckMessage = !jaTemLancamento
+    ? null
+    : matchedFcx?.status === "falha"
+      ? `Já existe uma tentativa de cobrança para ${String(selectedMes).padStart(2, "0")}/${selectedYearForMensalidade} com falha. Use Reemitir no extrato.`
+      : matchedFcx?.status === "pendente"
+        ? `Já existe uma cobrança externa pendente para ${String(selectedMes).padStart(2, "0")}/${selectedYearForMensalidade}. Use Sincronizar no extrato.`
+        : `Já existe lançamento para ${String(selectedMes).padStart(2, "0")}/${selectedYearForMensalidade}. Use o extrato → Cobranças externas para sincronizar ou reemitir.`;
 
   const handleSubmit = async () => {
     if (!socioCpf) return;
@@ -599,11 +615,8 @@ export function PaymentSessionDialog({
                     />
                   </div>
                 </div>
-                {jaTemLancamento && (
-                  <p className="text-[11px] text-amber-600">
-                    Já existe lançamento para {String(selectedMes).padStart(2, "0")}/{selectedYearForMensalidade}.
-                    Use o extrato → Cobranças externas para sincronizar ou reemitir.
-                  </p>
+                {preCheckMessage && (
+                  <p className="text-[11px] text-amber-600">{preCheckMessage}</p>
                 )}
               </div>
             )}

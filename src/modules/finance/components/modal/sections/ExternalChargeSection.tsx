@@ -60,6 +60,11 @@ function ChargeRow({ charge, onSync, isSyncing, onReissue, isReissuing }: {
           {charge.valor != null && <span>{formatCurrency(charge.valor)}</span>}
           {charge.data_vencimento && <span>Venc. {formatDate(charge.data_vencimento)}</span>}
           {charge.last_synced_at && <span>Sync {formatDate(charge.last_synced_at)}</span>}
+          {charge.status === "falha" && charge.error_message && (
+            <span className="text-[10px] text-destructive/80 truncate max-w-[180px]" title={charge.error_message}>
+              {charge.error_message}
+            </span>
+          )}
         </div>
       </div>
       <div className="flex gap-1 shrink-0">

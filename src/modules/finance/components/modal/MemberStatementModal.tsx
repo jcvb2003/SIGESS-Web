@@ -47,6 +47,7 @@ export function MemberStatementModal({
     (l) => l.tipo !== "anuidade" && l.status === "pago",
   );
   const cancelados = lancamentos.filter((l) => l.status === "cancelado");
+  const pendentes = lancamentos.filter((l) => l.status === "pendente");
 
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -198,7 +199,9 @@ export function MemberStatementModal({
 
                     {anuidades.length === 0 &&
                       daeList.length === 0 &&
-                      outros.length === 0 && (
+                      outros.length === 0 &&
+                      pendentes.length === 0 &&
+                      cancelados.length === 0 && (
                         <div className="py-12 flex flex-col items-center justify-center text-center">
                           <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
                             <Printer className="h-6 w-6 text-slate-300" />
