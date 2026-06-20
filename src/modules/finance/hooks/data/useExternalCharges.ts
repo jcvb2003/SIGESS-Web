@@ -26,11 +26,26 @@ export function useExternalCharges(cpf: string | null) {
     },
   });
 
+  const reissueMutation = useMutation({
+    mutationFn: ({ lancamentoId, billingType, dueDate }: { lancamentoId: string; billingType: "BOLETO" | "PIX"; dueDate: string }) =>
+      externalChargeService.reissue(tenantId!, lancamentoId, billingType, dueDate),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["finance", "external-charges", cpf] });
+      toast.success("Nova cobrança gerada.");
+    },
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : "Erro ao reemitir");
+    },
+  });
+
   return {
     charges: query.data ?? [],
     isLoading: query.isLoading,
     refetch: query.refetch,
     sync: (fcxId: string) => syncMutation.mutate(fcxId),
     isSyncing: syncMutation.isPending,
+    reissue: (lancamentoId: string, billingType: "BOLETO" | "PIX", dueDate: string) =>
+      reissueMutation.mutate({ lancamentoId, billingType, dueDate }),
+    isReissuing: reissueMutation.isPending,
   };
 }

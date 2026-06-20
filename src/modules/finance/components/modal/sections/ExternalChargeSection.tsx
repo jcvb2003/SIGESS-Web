@@ -1,4 +1,4 @@
-import { ExternalLink, RefreshCw, Loader2 } from "lucide-react";
+import { ExternalLink, RefreshCw, Loader2, RotateCcw } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { useExternalCharges } from "../../../hooks/data/useExternalCharges";
@@ -39,11 +39,16 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function ChargeRow({ charge, onSync, isSyncing }: {
+const REISSUABLE = new Set(["falha", "expirada"]);
+
+function ChargeRow({ charge, onSync, isSyncing, onReissue, isReissuing }: {
   charge: ExternalCharge;
   onSync: () => void;
   isSyncing: boolean;
+  onReissue: () => void;
+  isReissuing: boolean;
 }) {
+  const canReissue = REISSUABLE.has(charge.status);
   return (
     <div className="flex items-start justify-between gap-3 rounded-lg border border-border/50 bg-card/50 p-3">
       <div className="space-y-1 min-w-0">
@@ -70,18 +75,30 @@ function ChargeRow({ charge, onSync, isSyncing }: {
           size="icon"
           className="h-7 w-7"
           onClick={onSync}
-          disabled={isSyncing}
+          disabled={isSyncing || isReissuing}
           title="Sincronizar status"
         >
           {isSyncing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
         </Button>
+        {canReissue && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-amber-600 hover:text-amber-700"
+            onClick={onReissue}
+            disabled={isReissuing || isSyncing}
+            title="Reemitir cobrança (cria nova tentativa)"
+          >
+            {isReissuing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
+          </Button>
+        )}
       </div>
     </div>
   );
 }
 
 export function ExternalChargeSection({ cpf }: { cpf: string }) {
-  const { charges, isLoading, sync, isSyncing } = useExternalCharges(cpf);
+  const { charges, isLoading, sync, isSyncing, reissue, isReissuing } = useExternalCharges(cpf);
 
   if (isLoading) {
     return (
@@ -105,6 +122,12 @@ export function ExternalChargeSection({ cpf }: { cpf: string }) {
             charge={charge}
             onSync={() => sync(charge.id)}
             isSyncing={isSyncing}
+            onReissue={() => {
+              // Reemitir: novo FCX para o mesmo lançamento; FCX anterior (falha|expirada) fica em histórico
+              const dueDate = charge.data_vencimento ?? new Date().toISOString().split("T")[0];
+              reissue(charge.lancamento_id, "BOLETO", dueDate);
+            }}
+            isReissuing={isReissuing}
           />
         ))}
       </div>
