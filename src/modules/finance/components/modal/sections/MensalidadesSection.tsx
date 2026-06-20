@@ -306,8 +306,8 @@ function CompetenciaRow({
 
       {/* Ações */}
       <div className="flex items-center gap-1 shrink-0 border-l pl-2">
-        {/* Ações FCX */}
-        {fcxAtiva && (
+        {/* Ações FCX — só quando não está paga (paga = evento encerrado, sem ação) */}
+        {fcxAtiva && fcxAtiva.status !== "paga" && (
           <>
             {fcxAtiva.payment_url && (
               <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
@@ -348,8 +348,8 @@ function CompetenciaRow({
           </>
         )}
 
-        {/* Ações do lançamento local (pago) */}
-        {pagoLanc && (
+        {/* Ações do lançamento local — só quando não há FCX paga (paga = encerrado externamente) */}
+        {pagoLanc && fcxAtiva?.status !== "paga" && (
           <>
             {pagoLanc.sessao_id && (
               <TooltipProvider delayDuration={100}>
