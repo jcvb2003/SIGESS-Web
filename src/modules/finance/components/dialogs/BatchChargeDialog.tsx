@@ -42,11 +42,13 @@ export function BatchChargeDialog({ open, onOpenChange }: Readonly<BatchChargeDi
   const [mes, setMes] = useState(String(new Date().getMonth() + 1));
   const [ano, setAno] = useState(String(CURRENT_YEAR));
   const [billingType, setBillingType] = useState<"BOLETO" | "PIX">("BOLETO");
-  const [dueDate, setDueDate] = useState("");
+  const [dueDate, setDueDate] = useState(() =>
+    new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString("sv"),
+  );
 
   const handleClose = () => {
     setResult(null);
-    setDueDate("");
+    setDueDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString("sv"));
     onOpenChange(false);
   };
 
