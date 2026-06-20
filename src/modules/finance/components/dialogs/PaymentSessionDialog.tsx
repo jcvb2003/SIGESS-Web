@@ -72,7 +72,7 @@ export function PaymentSessionDialog({
   const { lancamentos, isLoading: isLoadingStatement } = useMemberStatement(open ? socioCpf : null);
   const paymentMutation = usePaymentSession();
   const { config: collectionConfig } = useCollectionConfig();
-  const createExternalChargeMutation = useCreateExternalCharge(socioCpf ?? "");
+  const createExternalChargeMutation = useCreateExternalCharge(socioCpf);
 
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
@@ -125,6 +125,7 @@ export function PaymentSessionDialog({
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
       resetPaymentForm();
+      createExternalChargeMutation.clearPendingLancamento();
     }
     onOpenChange(nextOpen);
   };
@@ -309,7 +310,7 @@ export function PaymentSessionDialog({
     canExternalCharge &&
     !!selectedMes &&
     lancamentos.some(
-      (l: { tipo: string; competencia_ano: number | null; competencia_mes: number | null; status: string }) =>
+      (l) =>
         l.tipo === "mensalidade" &&
         l.competencia_ano === selectedYearForMensalidade &&
         l.competencia_mes === selectedMes &&
