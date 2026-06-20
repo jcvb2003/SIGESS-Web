@@ -208,11 +208,6 @@ export default function FinancePage() {
         actions={
           <FinanceHeaderActions
             isAdmin={isAdmin}
-            hasActiveAdvancedFilters={Boolean(hasActiveAdvancedFilters)}
-            onOpenFilters={() => setFiltersOpen(true)}
-
-
-
             onOpenAudit={() => setAuditOpen(true)}
             onOpenSettings={() => setSettingsOpen(true)}
             onOpenBatchCharge={() => setBatchChargeOpen(true)}
@@ -262,6 +257,7 @@ export default function FinancePage() {
           <DataTableSearch
             value={params.searchTerm}
             onChange={setSearch}
+            onOpenFilters={() => setFiltersOpen(true)}
             contained={false}
           />
         </div>

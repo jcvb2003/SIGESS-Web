@@ -194,6 +194,11 @@ export function MemberStatementModal({
                     <MensalidadesSection
                       lancamentos={mensalidades}
                       charges={charges}
+                      memberName={memberName}
+                      memberCpf={cpf ?? undefined}
+                      isSelectionMode={isSelectionMode}
+                      selectedIds={selectedIds}
+                      onToggleSelection={toggleSelection}
                       sync={sync}
                       isSyncingId={isSyncingId}
                       reissue={reissue}

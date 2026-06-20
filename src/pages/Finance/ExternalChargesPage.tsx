@@ -28,6 +28,12 @@ const STATUS_VARIANT: Record<string, StatusBadgeVariant> = {
   expirada:  "destructive",
 };
 
+const LANC_STATUS_VARIANT: Record<string, StatusBadgeVariant> = {
+  pago:      "success",
+  pendente:  "warning",
+  cancelado: "secondary",
+};
+
 const STATUS_LABEL: Record<string, string> = {
   pendente:  "Pendente",
   paga:      "Paga",
@@ -103,7 +109,7 @@ export default function ExternalChargesPage() {
     {
       header: "Status local",
       cell: (row) => row.lancamento_status
-        ? <StatusBadge variant="secondary" label={row.lancamento_status} />
+        ? <StatusBadge variant={LANC_STATUS_VARIANT[row.lancamento_status] ?? "secondary"} label={row.lancamento_status} />
         : <span className="text-muted-foreground text-xs">—</span>,
     },
     {

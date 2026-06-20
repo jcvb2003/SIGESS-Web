@@ -144,7 +144,7 @@ export function FinanceSettingsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl p-0 outline-none overflow-hidden">
+      <DialogContent className="max-w-3xl p-0 outline-none overflow-hidden">
         <div className="flex flex-col h-full max-h-[90vh] sm:max-h-[85vh] overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-2 border-b flex-shrink-0">
             <div>

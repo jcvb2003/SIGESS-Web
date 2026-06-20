@@ -155,7 +155,7 @@ export default function PaymentsByPeriodPage() {
       headerClassName: "text-right px-4",
       className: "text-right px-4",
       cell: (p) => (
-        <span className="text-xs md:text-sm font-bold text-success tabular-nums">
+        <span className="text-xs md:text-sm font-bold text-foreground tabular-nums">
           {formatCurrency(p.valor)}
         </span>
       )

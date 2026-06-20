@@ -28,7 +28,7 @@ interface StatusBadgeProps {
 }
 
 const variantStyles: Record<StatusBadgeVariant, string> = {
-  success: "bg-primary/10 text-primary border-primary/20 dark:bg-primary/20 dark:text-primary dark:border-primary/30",
+  success: "bg-success/10 text-success border-success/20 dark:bg-success/20 dark:text-success dark:border-success/30",
   warning: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800",
   destructive: "bg-destructive/10 text-destructive border-destructive/20 dark:bg-destructive/20 dark:text-destructive dark:border-destructive/30",
   info: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800",

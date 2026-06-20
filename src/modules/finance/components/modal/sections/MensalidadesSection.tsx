@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ExternalLink, RefreshCw, Loader2, RotateCcw, Pencil, Trash2, FileText } from "lucide-react";
+import { ExternalLink, RefreshCw, Loader2, RotateCcw, Pencil, Trash2, FileText, Check } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import {
@@ -55,6 +55,9 @@ interface MensalidadesSectionProps {
   charges: ExternalCharge[];
   memberName?: string;
   memberCpf?: string;
+  isSelectionMode?: boolean;
+  selectedIds?: string[];
+  onToggleSelection?: (id: string, type: "lancamento" | "dae") => void;
   sync: (fcxId: string) => void;
   isSyncingId: (id: string) => boolean;
   reissue: (lancId: string, billing: "BOLETO" | "PIX", dueDate: string) => void;
@@ -74,6 +77,9 @@ export function MensalidadesSection({
   charges,
   memberName,
   memberCpf,
+  isSelectionMode,
+  selectedIds,
+  onToggleSelection,
   sync,
   isSyncingId,
   reissue,
@@ -141,6 +147,9 @@ export function MensalidadesSection({
             row={row}
             isAdmin={isAdmin}
             isLoadingReceipt={isLoadingReceipt}
+            isSelectionMode={isSelectionMode}
+            selectedIds={selectedIds}
+            onToggleSelection={onToggleSelection}
             onEdit={(l) => { setSelectedItem(l); setIsEditDialogOpen(true); }}
             onDelete={(l) => { setSelectedItem(l); setIsDeleteDialogOpen(true); }}
             onReceipt={handleViewReceipt}
@@ -202,6 +211,9 @@ function CompetenciaRow({
   row,
   isAdmin,
   isLoadingReceipt,
+  isSelectionMode,
+  selectedIds,
+  onToggleSelection,
   onEdit,
   onDelete,
   onReceipt,
@@ -213,6 +225,9 @@ function CompetenciaRow({
   row: CompRow;
   isAdmin: boolean;
   isLoadingReceipt: boolean;
+  isSelectionMode?: boolean;
+  selectedIds?: string[];
+  onToggleSelection?: (id: string, type: "lancamento" | "dae") => void;
   onEdit: (l: FinanceLancamento) => void;
   onDelete: (l: FinanceLancamento) => void;
   onReceipt: (sessaoId: string) => void;
@@ -231,8 +246,27 @@ function CompetenciaRow({
 
   const fcxPaga = fcxAtiva?.status === "paga";
 
+  const isSelected = pagoLanc ? (selectedIds?.includes(pagoLanc.id) ?? false) : false;
+
   return (
-    <div className="flex items-center gap-3 rounded-lg py-2 px-2 hover:bg-primary/5 dark:hover:bg-primary/10 border border-transparent hover:border-primary/10 transition-colors">
+    <div
+      className={cn(
+        "flex items-center gap-3 rounded-lg py-2 px-2 hover:bg-primary/5 dark:hover:bg-primary/10 border border-transparent hover:border-primary/10 transition-colors",
+        isSelectionMode && pagoLanc && "cursor-pointer"
+      )}
+      onClick={() => isSelectionMode && pagoLanc && onToggleSelection?.(pagoLanc.id, "lancamento")}
+    >
+      {/* Checkbox de seleção */}
+      {isSelectionMode && pagoLanc && (
+        <div className="flex-shrink-0">
+          <div className={cn(
+            "h-4 w-4 rounded-sm border flex items-center justify-center transition-colors",
+            isSelected ? "bg-primary border-primary text-primary-foreground" : "border-input bg-background"
+          )}>
+            {isSelected && <Check className="h-3 w-3 stroke-[3]" />}
+          </div>
+        </div>
+      )}
       {/* Competência - coluna fixa */}
       <div className="flex flex-col items-center justify-center min-w-[36px] text-center">
         <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-tight">{mesLabel}</span>
@@ -351,27 +385,29 @@ function CompetenciaRow({
           </>
         )}
 
-        {/* Ações do lançamento local — só quando não há FCX paga (paga = encerrado externamente) */}
+        {/* Comprovante — disponível mesmo quando FCX paga */}
+        {pagoLanc?.sessao_id && (
+          <TooltipProvider delayDuration={100}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-primary hover:text-primary-foreground hover:border-primary"
+                  onClick={() => onReceipt(pagoLanc.sessao_id!)}
+                  disabled={isLoadingReceipt}
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top" sideOffset={5}>Ver comprovante da sessão</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+
+        {/* Editar/Cancelar — ocultos quando FCX paga (evento encerrado externamente) */}
         {pagoLanc && !fcxPaga && (
           <>
-            {pagoLanc.sessao_id && (
-              <TooltipProvider delayDuration={100}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-7 w-7 transition-all duration-200 shadow-sm hover:scale-110 active:scale-95 hover:bg-primary hover:text-primary-foreground hover:border-primary"
-                      onClick={() => onReceipt(pagoLanc.sessao_id!)}
-                      disabled={isLoadingReceipt}
-                    >
-                      <FileText className="h-3.5 w-3.5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" sideOffset={5}>Ver comprovante da sessão</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
             <TooltipProvider delayDuration={100}>
               <Tooltip>
                 <TooltipTrigger asChild>

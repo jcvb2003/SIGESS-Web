@@ -1,10 +1,8 @@
-import { History, Settings as SettingsIcon, SlidersHorizontal, Zap } from "lucide-react";
+import { History, Settings as SettingsIcon, Zap } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 
 interface FinanceHeaderActionsProps {
   readonly isAdmin: boolean;
-  readonly hasActiveAdvancedFilters: boolean;
-  readonly onOpenFilters: () => void;
   readonly onOpenAudit: () => void;
   readonly onOpenSettings: () => void;
   readonly onOpenBatchCharge?: () => void;
@@ -14,15 +12,9 @@ interface HeaderActionButtonProps {
   readonly label: string;
   readonly icon: React.ComponentType<{ className?: string }>;
   readonly onClick: () => void;
-  readonly showPulse?: boolean;
 }
 
-function HeaderActionButton({
-  label,
-  icon: Icon,
-  onClick,
-  showPulse = false,
-}: HeaderActionButtonProps) {
+function HeaderActionButton({ label, icon: Icon, onClick }: HeaderActionButtonProps) {
   return (
     <Button
       type="button"
@@ -32,53 +24,25 @@ function HeaderActionButton({
     >
       <Icon className="h-4 w-4" />
       <span className="inline text-xs font-bold uppercase tracking-wide">{label}</span>
-      {showPulse && (
-        <span className="ml-1 h-2 w-2 rounded-full bg-primary animate-pulse" />
-      )}
     </Button>
   );
 }
 
 export function FinanceHeaderActions({
   isAdmin,
-  hasActiveAdvancedFilters,
   onOpenBatchCharge,
-  onOpenFilters,
   onOpenAudit,
   onOpenSettings,
 }: FinanceHeaderActionsProps) {
-  return (
-    <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
-      <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-        <HeaderActionButton
-          label="Filtros"
-          icon={SlidersHorizontal}
-          onClick={onOpenFilters}
-          showPulse={hasActiveAdvancedFilters}
-        />
-      </div>
+  if (!isAdmin) return null;
 
-      {isAdmin && (
-        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-          {onOpenBatchCharge && (
-            <HeaderActionButton
-              label="Cobranças do mês"
-              icon={Zap}
-              onClick={onOpenBatchCharge}
-            />
-          )}
-          <HeaderActionButton
-            label="Auditoria"
-            icon={History}
-            onClick={onOpenAudit}
-          />
-          <HeaderActionButton
-            label="Configurações"
-            icon={SettingsIcon}
-            onClick={onOpenSettings}
-          />
-        </div>
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {onOpenBatchCharge && (
+        <HeaderActionButton label="Cobranças do mês" icon={Zap} onClick={onOpenBatchCharge} />
       )}
+      <HeaderActionButton label="Auditoria" icon={History} onClick={onOpenAudit} />
+      <HeaderActionButton label="Configurações" icon={SettingsIcon} onClick={onOpenSettings} />
     </div>
   );
 }

@@ -235,7 +235,7 @@ export default function DAEsByPeriodPage() {
       headerClassName: "text-right px-4",
       className: "text-right px-4",
       cell: (dae) => (
-        <span className="text-xs md:text-sm font-bold text-success tabular-nums">
+        <span className="text-xs md:text-sm font-bold text-foreground tabular-nums">
           {formatCurrency(dae.valor)}
         </span>
       ),
