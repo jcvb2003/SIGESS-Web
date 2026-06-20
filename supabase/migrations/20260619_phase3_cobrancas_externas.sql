@@ -32,8 +32,10 @@ CREATE TABLE public.financeiro_cobrancas_externas (
   updated_at          timestamptz NOT NULL DEFAULT now()
 );
 
--- Invariante central: no máximo 1 cobrança ativa OU paga por lançamento
--- Libera recrição após cancelamento, expiração ou falha de criação
+-- Invariante central: no máximo 1 cobrança pendente OU paga por lançamento
+-- Premissa V1 fechada: lançamento com cobrança 'paga' NÃO pode gerar nova cobrança externa
+-- (sem segunda via, renegociação ou reemissão pós-quitação no V1)
+-- Liberação de nova tentativa: somente após status 'cancelada', 'expirada' ou 'falha'
 CREATE UNIQUE INDEX fcx_lancamento_ativo_idx
   ON public.financeiro_cobrancas_externas (lancamento_id)
   WHERE status IN ('pendente', 'paga');

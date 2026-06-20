@@ -51,9 +51,12 @@ CREATE POLICY "cfg_recebimento_write_owner"
   );
 
 -- Acesso seguro para o browser: RPC SECURITY DEFINER que mascara api_key e webhook_token
+-- Recebe p_tenant_id explícito e valida pertencimento — retorna no máximo 1 linha
+-- (tabela tem UNIQUE(tenant_id); sem escopo explícito retornaria todas as configs
+--  de tenants que o usuário participa em runtimes compartilhados)
 -- auth.uid() funciona sob SECURITY DEFINER no Supabase (lê JWT do connection context)
--- Web chama: supabase.rpc('get_configuracao_recebimento_publica')
-CREATE OR REPLACE FUNCTION public.get_configuracao_recebimento_publica()
+-- Web chama: supabase.rpc('get_configuracao_recebimento_publica', { p_tenant_id: tenantId })
+CREATE OR REPLACE FUNCTION public.get_configuracao_recebimento_publica(p_tenant_id uuid)
 RETURNS TABLE (
   id               uuid,
   tenant_id        uuid,
@@ -83,13 +86,14 @@ AS $$
     cr.created_at,
     cr.updated_at
   FROM public.configuracao_recebimento cr
-  WHERE EXISTS (
-    SELECT 1 FROM public.tenant_users tu
-    WHERE tu.user_id = auth.uid()
-      AND tu.tenant_id = cr.tenant_id
-      AND tu.is_active = true
-  );
+  WHERE cr.tenant_id = p_tenant_id
+    AND EXISTS (
+      SELECT 1 FROM public.tenant_users tu
+      WHERE tu.user_id = auth.uid()
+        AND tu.tenant_id = p_tenant_id
+        AND tu.is_active = true
+    );
 $$;
 
-GRANT EXECUTE ON FUNCTION public.get_configuracao_recebimento_publica() TO authenticated;
-REVOKE EXECUTE ON FUNCTION public.get_configuracao_recebimento_publica() FROM anon, public;
+GRANT EXECUTE ON FUNCTION public.get_configuracao_recebimento_publica(uuid) TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.get_configuracao_recebimento_publica(uuid) FROM anon, public;
