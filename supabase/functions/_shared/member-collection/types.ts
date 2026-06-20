@@ -17,6 +17,7 @@ export type CollectionWebhookEventType =
 
 export interface CollectionWebhookEvent {
   type: CollectionWebhookEventType;
+  rawEventType: string;       // nome bruto do evento Asaas (ex: 'PAYMENT_RECEIVED') — auditoria
   providerChargeId: string;
   // financeiro_cobrancas_externas.id — chave usada na criação da cobrança
   // permite localizar o registro local sem depender de IDs internos do provider

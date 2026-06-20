@@ -175,6 +175,7 @@ export class AsaasCollectionAdapter implements ICollectionProvider {
 
     return {
       type,
+      rawEventType: body.event ?? '',
       providerChargeId: providerChargeId ?? '',
       externalReference: body.payment?.externalReference ?? undefined,
       paidAt,
