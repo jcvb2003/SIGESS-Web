@@ -103,6 +103,7 @@ async function getEntity(scope: UnitReadScope): Promise<ServiceResponse<EntitySe
       corSidebar: toStringValue(configData?.cor_sidebar, BRANDING_COLORS.primary),
       logoPath: configData?.logo_path ? String(configData.logo_path) : undefined,
       logoUrl: logoUrl,
+      tenantMode: (entityData.tenant_mode as 'pesca' | 'agricultura') ?? null,
     },
     error: null,
   };

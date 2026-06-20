@@ -25,6 +25,11 @@ export interface EntitySettings {
   corSidebar: string;
   logoUrl?: string;
   logoPath?: string;
+  /**
+   * Modalidade de produto do tenant — NÃO é propriedade visual/branding.
+   * Valores: 'pesca' (default) | 'agricultura'. Null = não configurado → tratar como 'pesca'.
+   */
+  tenantMode?: 'pesca' | 'agricultura' | null;
 }
 export const defaultEntitySettings: EntitySettings = {
   id: undefined,
