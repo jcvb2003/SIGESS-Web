@@ -229,6 +229,11 @@ serve(async (req: Request) => {
       competencia_ano: typedLancamentoRaw.competencia_ano!,
       competencia_mes: typedLancamentoRaw.competencia_mes!,
     };
+    // DEBUG TEMPORÁRIO — remover após confirmar endereço
+    console.log("[debug-socio]", JSON.stringify({
+      cpf_buscado: typedLancamentoRaw.socio_cpf,
+      socio_raw: socio,
+    }));
     const typedSocio = socio as {
       nome: string | null; email: string | null; telefone: string | null;
       endereco: string | null; num: string | null; bairro: string | null;
