@@ -1,16 +1,18 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ExternalLink, RefreshCw, RotateCcw, Loader2, SlidersHorizontal } from "lucide-react";
+import { ExternalLink, RefreshCw, RotateCcw, Loader2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { Badge } from "@/shared/components/ui/badge";
+import { ReportPageHeaderActions } from "@/modules/reports/components/ReportPageHeaderActions";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/shared/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/shared/components/ui/sheet";
+import { Card } from "@/shared/components/ui/card";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { DataTable, type ColumnDef } from "@/shared/components/layout/DataTable";
 import { DataTablePagination } from "@/shared/components/layout/DataTablePagination";
 import { DataTableSearch } from "@/shared/components/layout/DataTableSearch";
+import { StatusBadge, type StatusBadgeVariant } from "@/shared/components/ui/StatusBadge";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { formatDate } from "@/shared/utils/formatters/dateFormatters";
 import { useExternalChargesList } from "@/modules/finance/hooks/data/useExternalChargesList";
@@ -18,20 +20,20 @@ import type { ExternalChargeListItem } from "@/modules/finance/services/external
 
 const PAGE_SIZE = 50;
 
-const STATUS_LABEL: Record<string, string> = {
-  pendente: "Pendente",
-  paga: "Paga",
-  cancelada: "Cancelada",
-  expirada: "Expirada",
-  falha: "Falha",
+const STATUS_VARIANT: Record<string, StatusBadgeVariant> = {
+  pendente:  "warning",
+  paga:      "success",
+  cancelada: "secondary",
+  falha:     "destructive",
+  expirada:  "destructive",
 };
 
-const STATUS_CLASS: Record<string, string> = {
-  pendente: "bg-amber-500/10 text-amber-700 border-amber-500/20",
-  paga: "bg-success/10 text-success border-success/20",
-  cancelada: "bg-muted text-muted-foreground",
-  expirada: "bg-destructive/10 text-destructive border-destructive/20",
-  falha: "bg-destructive/10 text-destructive border-destructive/20",
+const STATUS_LABEL: Record<string, string> = {
+  pendente:  "Pendente",
+  paga:      "Paga",
+  cancelada: "Cancelada",
+  expirada:  "Expirada",
+  falha:     "Falha",
 };
 
 const REISSUABLE = new Set(["falha", "expirada"]);
@@ -70,9 +72,13 @@ export default function ExternalChargesPage() {
     {
       header: "Sócio",
       cell: (row) => (
-        <div className="min-w-0">
-          <p className="text-xs font-medium text-foreground truncate">{row.socio_nome ?? "—"}</p>
-          <p className="text-[10px] text-muted-foreground">{row.socio_cpf ?? "—"}</p>
+        <div className="flex flex-col gap-0.5 min-w-0">
+          <span className="truncate font-medium text-xs md:text-sm text-foreground/90 uppercase leading-none">
+            {row.socio_nome ?? "—"}
+          </span>
+          <span className="text-[10px] md:text-xs text-muted-foreground truncate opacity-70 leading-none">
+            {row.socio_cpf ?? "—"}
+          </span>
         </div>
       ),
     },
@@ -80,51 +86,57 @@ export default function ExternalChargesPage() {
       header: "Competência",
       cell: (row) =>
         row.competencia_mes != null && row.competencia_ano != null
-          ? `${String(row.competencia_mes).padStart(2, "0")}/${row.competencia_ano}`
-          : "—",
+          ? <span className="text-xs md:text-sm font-medium text-foreground/80 tabular-nums">
+              {String(row.competencia_mes).padStart(2, "0")}/{row.competencia_ano}
+            </span>
+          : <span className="text-muted-foreground">—</span>,
     },
     {
       header: "Status FCX",
       cell: (row) => (
-        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium border ${STATUS_CLASS[row.status] ?? "bg-muted"}`}>
-          {STATUS_LABEL[row.status] ?? row.status}
-        </span>
+        <StatusBadge
+          variant={STATUS_VARIANT[row.status] ?? "secondary"}
+          label={STATUS_LABEL[row.status] ?? row.status}
+        />
       ),
     },
     {
       header: "Status local",
-      cell: (row) => (
-        <span className="text-[10px] text-muted-foreground">{row.lancamento_status ?? "—"}</span>
-      ),
+      cell: (row) => row.lancamento_status
+        ? <StatusBadge variant="secondary" label={row.lancamento_status} />
+        : <span className="text-muted-foreground text-xs">—</span>,
     },
     {
       header: "Tipo",
-      cell: (row) => (
-        <Badge variant="outline" className="text-[9px] font-bold uppercase">
-          {row.billing_type ?? "—"}
-        </Badge>
-      ),
+      cell: (row) => row.billing_type
+        ? <StatusBadge variant="info" label={row.billing_type} />
+        : <span className="text-muted-foreground text-xs">—</span>,
     },
     {
       header: "Vencimento",
-      cell: (row) => <span className="text-xs">{row.data_vencimento ? formatDate(row.data_vencimento) : "—"}</span>,
+      cell: (row) => (
+        <span className="text-xs md:text-sm font-medium text-foreground/80 tabular-nums">
+          {row.data_vencimento ? formatDate(row.data_vencimento) : "—"}
+        </span>
+      ),
     },
     {
       header: "Valor",
+      headerClassName: "text-right px-4",
+      className: "text-right px-4",
       cell: (row) => (
-        <span className="text-xs font-semibold text-right block">
+        <span className="text-xs md:text-sm font-bold tabular-nums">
           {row.valor != null ? formatCurrency(row.valor) : "—"}
         </span>
       ),
     },
     {
       header: "Erro",
-      cell: (row) =>
-        row.error_message ? (
-          <span className="text-[10px] text-destructive/80 truncate max-w-[120px] block" title={row.error_message}>
-            {row.error_message}
-          </span>
-        ) : null,
+      cell: (row) => row.error_message ? (
+        <span className="text-[10px] text-destructive truncate max-w-[120px] block" title={row.error_message}>
+          {row.error_message}
+        </span>
+      ) : null,
     },
     {
       header: "Ações",
@@ -155,7 +167,7 @@ export default function ExternalChargesPage() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-amber-600"
+              className="h-7 w-7 text-warning"
               onClick={() => {
                 const dueDate = row.data_vencimento ?? new Date().toISOString().split("T")[0];
                 reissue(row.lancamento_id, (row.billing_type as "BOLETO" | "PIX" | null) ?? "BOLETO", dueDate);
@@ -183,14 +195,12 @@ export default function ExternalChargesPage() {
   };
 
   return (
-    <div className="space-y-4 p-6">
+    <div className="space-y-6 p-6">
       <PageHeader
         title="Cobranças Externas"
         description="Visão operacional global de cobranças via Asaas"
-        leftAction={
-          <Button variant="ghost" size="sm" onClick={() => navigate("/finance")} className="gap-1.5">
-            <ArrowLeft className="h-4 w-4" /> Financeiro
-          </Button>
+        actions={
+          <ReportPageHeaderActions showExport={false} onBack={() => navigate("/finance")} />
         }
       />
 
@@ -199,8 +209,9 @@ export default function ExternalChargesPage() {
         {(["pendente", "paga", "falha", "expirada"] as const).map((s) => (
           <button
             key={s}
+            type="button"
             onClick={() => { setStatusFilter(statusFilter === s ? null : s); setPage(1); }}
-            className={`rounded-lg border p-3 text-left transition-colors ${statusFilter === s ? "border-primary bg-primary/5" : "border-border bg-card hover:bg-muted/30"}`}
+            className={`rounded-lg border p-3 text-left transition-colors ${statusFilter === s ? "border-primary bg-primary/5" : "border-border/50 bg-card hover:bg-primary/10"}`}
           >
             <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{STATUS_LABEL[s]}</p>
             <p className="text-xl font-black text-foreground">{summary[s] ?? 0}</p>
@@ -208,42 +219,51 @@ export default function ExternalChargesPage() {
         ))}
       </div>
 
-      {/* Toolbar */}
-      <div className="flex items-center gap-2">
-        <DataTableSearch
-          value={search}
-          onChange={(v) => { setSearch(v); setPage(1); }}
-          placeholder="Buscar por nome ou CPF..."
-        />
-        <Button variant="outline" size="sm" onClick={() => setSheetOpen(true)} className="gap-1.5 shrink-0">
-          <SlidersHorizontal className="h-4 w-4" /> Filtros
-        </Button>
-      </div>
-
       {/* Tabela */}
-      <DataTable
-        columns={columns}
-        data={data}
-        isLoading={isLoading || isFetching}
-        emptyMessage="Nenhuma cobrança externa encontrada."
-      />
+      <Card className="border-border/50 shadow-sm overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b bg-muted/5">
+          <div className="flex-1">
+            <DataTableSearch
+              value={search}
+              onChange={(v) => { setSearch(v); setPage(1); }}
+              onOpenFilters={() => setSheetOpen(true)}
+              placeholder="Buscar por nome ou CPF..."
+            />
+          </div>
+        </div>
 
-      <DataTablePagination
-        page={page}
-        pageSize={PAGE_SIZE}
-        total={total}
-        onPageChange={setPage}
-      />
+        <DataTable
+          columns={columns}
+          data={data}
+          isLoading={isLoading}
+          isFetching={isFetching}
+          variant="minimal"
+          skeletonCount={10}
+          emptyMessage="Nenhuma cobrança externa encontrada."
+          emptyDescription="Tente ajustar os filtros ou o termo de busca."
+        />
+
+        <DataTablePagination
+          page={page}
+          pageSize={PAGE_SIZE}
+          total={total}
+          onPageChange={setPage}
+          entityName="cobranças"
+          showNumbers
+        />
+      </Card>
 
       {/* Sheet de filtros avançados */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent side="right" className="w-80">
+        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
           <SheetHeader>
             <SheetTitle>Filtros avançados</SheetTitle>
+            <SheetDescription>Refine a listagem por status, tipo e competência.</SheetDescription>
           </SheetHeader>
-          <div className="space-y-4 py-6">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Status</Label>
+
+          <div className="mt-8 flex flex-col gap-6">
+            <div className="space-y-3">
+              <span className="text-xs font-semibold text-muted-foreground uppercase">Status</span>
               <Select value={statusFilter ?? "__all__"} onValueChange={(v) => setStatusFilter(v === "__all__" ? null : v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -254,8 +274,9 @@ export default function ExternalChargesPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Tipo de cobrança</Label>
+
+            <div className="space-y-3">
+              <span className="text-xs font-semibold text-muted-foreground uppercase">Tipo de cobrança</span>
               <Select value={billingTypeFilter ?? "__all__"} onValueChange={(v) => setBillingTypeFilter(v === "__all__" ? null : v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -265,32 +286,38 @@ export default function ExternalChargesPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Mês</Label>
-                <Input
-                  type="number"
-                  min={1}
-                  max={12}
-                  placeholder="1–12"
-                  value={mesFilter ?? ""}
-                  onChange={(e) => setMesFilter(e.target.value ? Number(e.target.value) : null)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Ano</Label>
-                <Input
-                  type="number"
-                  min={2020}
-                  placeholder="2026"
-                  value={anoFilter ?? ""}
-                  onChange={(e) => setAnoFilter(e.target.value ? Number(e.target.value) : null)}
-                />
+
+            <div className="space-y-3">
+              <span className="text-xs font-semibold text-muted-foreground uppercase">Competência</span>
+              <div className="grid grid-cols-2 gap-3 rounded-xl border border-border/60 bg-muted/10 p-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold">Mês</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={12}
+                    placeholder="1–12"
+                    value={mesFilter ?? ""}
+                    onChange={(e) => setMesFilter(e.target.value ? Number(e.target.value) : null)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold">Ano</Label>
+                  <Input
+                    type="number"
+                    min={2020}
+                    placeholder="2026"
+                    value={anoFilter ?? ""}
+                    onChange={(e) => setAnoFilter(e.target.value ? Number(e.target.value) : null)}
+                  />
+                </div>
               </div>
             </div>
           </div>
-          <SheetFooter>
-            <Button variant="outline" className="w-full" onClick={resetFilters}>Limpar filtros</Button>
+
+          <SheetFooter className="mt-8 mb-6 flex flex-col sm:flex-row gap-3">
+            <Button variant="outline" className="flex-1 h-11" onClick={resetFilters}>Limpar filtros</Button>
+            <Button className="flex-1 h-11" onClick={() => setSheetOpen(false)}>Aplicar filtros</Button>
           </SheetFooter>
         </SheetContent>
       </Sheet>

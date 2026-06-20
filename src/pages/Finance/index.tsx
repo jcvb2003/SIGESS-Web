@@ -4,6 +4,7 @@ import { Button } from "@/shared/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { cn } from "@/shared/lib/utils";
+import { ChevronRight, Receipt, FileSpreadsheet, CreditCard } from "lucide-react";
 import { useFinanceDashboard } from "@/modules/finance/hooks/data/useFinanceDashboard";
 import { useFinanceSettings } from "@/modules/finance/hooks/data/useFinanceSettings";
 import { useFinanceFilters } from "@/modules/finance/hooks/filters/useFinanceFilters";
@@ -51,6 +52,13 @@ const MONTH_NAMES = [
   "", "janeiro", "fevereiro", "março", "abril", "maio", "junho",
   "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
 ];
+
+
+const NAV_LINKS = [
+  { label: 'Pagamentos', icon: Receipt, path: '/finance/payments-report' },
+  { label: 'DAEs', icon: FileSpreadsheet, path: '/finance/daes-report' },
+  { label: 'Cobranças externas', icon: CreditCard, path: '/finance/external-charges' },
+] as const;
 
 export default function FinancePage() {
   const navigate = useNavigate();
@@ -202,15 +210,37 @@ export default function FinancePage() {
             isAdmin={isAdmin}
             hasActiveAdvancedFilters={Boolean(hasActiveAdvancedFilters)}
             onOpenFilters={() => setFiltersOpen(true)}
-            onOpenPaymentsReport={() => navigate("/finance/payments-report")}
-            onOpenDaesReport={() => navigate("/finance/daes-report")}
-            onOpenExternalCharges={() => navigate("/finance/external-charges")}
+
+
+
             onOpenAudit={() => setAuditOpen(true)}
             onOpenSettings={() => setSettingsOpen(true)}
             onOpenBatchCharge={() => setBatchChargeOpen(true)}
           />
         }
       />
+
+
+      {/* Nav strip — relatórios e páginas relacionadas */}
+      <div className="grid grid-cols-3 gap-3 -mt-4">
+        {NAV_LINKS.map(({ label, icon: Icon, path }) => (
+          <Card
+            key={path}
+            className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:bg-primary/10"
+            onClick={() => navigate(path)}
+          >
+            <div className="flex items-center gap-3 px-4 py-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 transition-transform duration-300 group-hover:scale-110">
+                <Icon className="h-5 w-5 text-primary" />
+              </div>
+              <span className="flex-1 text-sm font-semibold uppercase tracking-wider text-muted-foreground group-hover:text-primary">
+                {label}
+              </span>
+              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
+            </div>
+          </Card>
+        ))}
+      </div>
 
       {/* Summary Cards */}
       <SummaryCards
@@ -355,4 +385,5 @@ export default function FinancePage() {
     </div>
   );
 }
+
 

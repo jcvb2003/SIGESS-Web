@@ -1,13 +1,10 @@
-import { History, Receipt, Settings as SettingsIcon, SlidersHorizontal, FileSpreadsheet, Zap, CreditCard } from "lucide-react";
+import { History, Settings as SettingsIcon, SlidersHorizontal, Zap } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 
 interface FinanceHeaderActionsProps {
   readonly isAdmin: boolean;
   readonly hasActiveAdvancedFilters: boolean;
   readonly onOpenFilters: () => void;
-  readonly onOpenPaymentsReport: () => void;
-  readonly onOpenDaesReport: () => void;
-  readonly onOpenExternalCharges: () => void;
   readonly onOpenAudit: () => void;
   readonly onOpenSettings: () => void;
   readonly onOpenBatchCharge?: () => void;
@@ -47,9 +44,6 @@ export function FinanceHeaderActions({
   hasActiveAdvancedFilters,
   onOpenBatchCharge,
   onOpenFilters,
-  onOpenPaymentsReport,
-  onOpenDaesReport,
-  onOpenExternalCharges,
   onOpenAudit,
   onOpenSettings,
 }: FinanceHeaderActionsProps) {
@@ -61,21 +55,6 @@ export function FinanceHeaderActions({
           icon={SlidersHorizontal}
           onClick={onOpenFilters}
           showPulse={hasActiveAdvancedFilters}
-        />
-        <HeaderActionButton
-          label="Pagamentos"
-          icon={Receipt}
-          onClick={onOpenPaymentsReport}
-        />
-        <HeaderActionButton
-          label="DAEs"
-          icon={FileSpreadsheet}
-          onClick={onOpenDaesReport}
-        />
-        <HeaderActionButton
-          label="Cobranças ext."
-          icon={CreditCard}
-          onClick={onOpenExternalCharges}
         />
       </div>
 
@@ -94,7 +73,7 @@ export function FinanceHeaderActions({
             onClick={onOpenAudit}
           />
           <HeaderActionButton
-            label="Configurar"
+            label="Configurações"
             icon={SettingsIcon}
             onClick={onOpenSettings}
           />
