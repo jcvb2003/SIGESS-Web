@@ -81,7 +81,9 @@ export function PaymentSessionDialog({
 
   const [chargeMode, setChargeMode] = useState<"immediate" | "external">("immediate");
   const [billingType, setBillingType] = useState<"BOLETO" | "PIX">("BOLETO");
-  const [dueDate, setDueDate] = useState("");
+  const [dueDate, setDueDate] = useState(() =>
+    new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString("sv"),
+  );
   const {
     paymentCategory,
     selectedYears,
@@ -125,6 +127,9 @@ export function PaymentSessionDialog({
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
       resetPaymentForm();
+      setChargeMode("immediate");
+      setBillingType("BOLETO");
+      setDueDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString("sv"));
       createExternalChargeMutation.clearPendingLancamento();
     }
     onOpenChange(nextOpen);
