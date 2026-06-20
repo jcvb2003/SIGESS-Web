@@ -134,7 +134,7 @@ export function MensalidadesSection({
       <p className="mb-3 text-[10px] font-black text-muted-foreground uppercase tracking-wider">
         Mensalidades
       </p>
-      <div className="space-y-2">
+      <div className="divide-y divide-border/50">
         {rows.map((row) => (
           <CompetenciaRow
             key={`${row.ano}-${row.mes}`}
