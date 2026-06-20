@@ -69,6 +69,10 @@ serve(async (req: Request) => {
       return jsonResponse({ error: "Parâmetros obrigatórios ausentes" }, 400);
     }
 
+    if (billing_type !== "BOLETO" && billing_type !== "PIX") {
+      return jsonResponse({ error: "billing_type deve ser 'BOLETO' ou 'PIX'" }, 400);
+    }
+
     // ── Passo 2: validar pertencimento ao tenant (anti-spoofing) ─────────────────
     // p_tenant_id explícito + EXISTS em tenant_users evita LIMIT 1 frágil em shared runtime
     const { data: membership } = await supabaseAdmin
@@ -93,6 +97,16 @@ serve(async (req: Request) => {
     if (lancErr) throw lancErr;
     if (!lancamento) return jsonResponse({ error: "Lançamento não encontrado" }, 404);
 
+    const typedLancamentoRaw = lancamento as { id: string; socio_cpf: string | null; valor: number | null };
+
+    // Validação explícita: schema permite nulos para lançamentos legados/incompletos
+    if (!typedLancamentoRaw.socio_cpf) {
+      return jsonResponse({ error: "Lançamento sem socio_cpf — não pode gerar cobrança" }, 422);
+    }
+    if (typedLancamentoRaw.valor == null || typedLancamentoRaw.valor <= 0) {
+      return jsonResponse({ error: "Lançamento sem valor válido — não pode gerar cobrança" }, 422);
+    }
+
     // ── Passo 4: verificar posse via socios.tenant_id ─────────────────────────────
     // socios TEM tenant_id no banco vivo (verificado em OEIRAS)
     // tenant_id nullable: null = gap de dados legado → tratado como não-pertencente
@@ -108,7 +122,7 @@ serve(async (req: Request) => {
       return jsonResponse({ error: "Lançamento não pertence a este tenant" }, 404);
     }
 
-    const typedLancamento = lancamento as { id: string; socio_cpf: string; valor: number };
+    const typedLancamento = { id: typedLancamentoRaw.id, socio_cpf: typedLancamentoRaw.socio_cpf!, valor: typedLancamentoRaw.valor! };
     const typedSocio = socio as { nome: string | null; email: string | null; telefone: string | null };
 
     // ── Passo 5: buscar configuração de recebimento ───────────────────────────────
@@ -177,7 +191,7 @@ serve(async (req: Request) => {
       });
     } catch (providerErr) {
       // ── Passo 9b: falha no provider → preserva lançamento local, marca falha ───
-      await supabaseAdmin
+      const { error: failUpdateErr } = await supabaseAdmin
         .from("financeiro_cobrancas_externas" as never)
         .update({
           status: "falha",
@@ -186,6 +200,11 @@ serve(async (req: Request) => {
         })
         .eq("id", fcxId);
 
+      if (failUpdateErr) {
+        // Registro fica em 'pendente' com charge criada no provider — logar para diagnóstico
+        console.error("[member-collection-action] Falha ao marcar status=falha:", failUpdateErr);
+      }
+
       return jsonResponse(
         { error: "Falha ao criar cobrança no provider", cobrancaId: fcxId },
         502,
@@ -193,18 +212,36 @@ serve(async (req: Request) => {
     }
 
     // ── Passo 9a: sucesso → atualizar registro com dados do provider ──────────────
-    await supabaseAdmin
+    // provider_status = null: não inventar valor; será preenchido a partir de webhook real
+    // pix_qr_code_url não existe na tabela (verificado no banco live OEIRAS)
+    const { error: successUpdateErr } = await supabaseAdmin
       .from("financeiro_cobrancas_externas" as never)
       .update({
         provider_charge_id: charge.providerChargeId,
-        provider_status: "PENDING",
+        provider_status: null,
         payment_url: charge.paymentUrl ?? null,
         pix_code: charge.pixCode ?? null,
-        // pix_qr_code_url não existe na tabela (verificado no banco live)
         last_synced_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
       .eq("id", fcxId);
+
+    if (successUpdateErr) {
+      // Cobrança criada no provider mas registro local sem provider_charge_id
+      // → estado inconsistente; logar para reconciliação manual
+      console.error(
+        "[member-collection-action] Cobrança criada no provider mas UPDATE falhou:",
+        { fcxId, providerChargeId: charge.providerChargeId, error: successUpdateErr },
+      );
+      return jsonResponse(
+        {
+          error: "Cobrança criada no provider mas falha ao salvar dados localmente",
+          cobrancaId: fcxId,
+          providerChargeId: charge.providerChargeId,
+        },
+        500,
+      );
+    }
 
     return jsonResponse({
       cobrancaId: fcxId,
