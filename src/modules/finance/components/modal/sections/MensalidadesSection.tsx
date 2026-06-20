@@ -229,15 +229,17 @@ function CompetenciaRow({
   const mesLabel = MONTH_LABELS[row.mes] ?? String(row.mes);
   const competenciaLabel = `${String(row.mes).padStart(2, "0")}/${row.ano}`;
 
+  const fcxPaga = fcxAtiva?.status === "paga";
+
   return (
     <div className="flex items-center gap-3 rounded-lg py-2 px-2 hover:bg-primary/5 dark:hover:bg-primary/10 border border-transparent hover:border-primary/10 transition-colors">
-      {/* Competência */}
+      {/* Competência - coluna fixa */}
       <div className="flex flex-col items-center justify-center min-w-[36px] text-center">
         <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-tight">{mesLabel}</span>
         <span className="text-[10px] font-bold text-foreground">{row.ano}</span>
       </div>
 
-      {/* Conteúdo */}
+      {/* Conteúdo - cresce */}
       <div className="flex-1 min-w-0">
         {pagoLanc && (
           <div className="flex items-center gap-2 flex-wrap">
@@ -255,16 +257,23 @@ function CompetenciaRow({
           <span className="text-xs text-muted-foreground">Mensalidade {competenciaLabel}</span>
         )}
 
-        {/* Detalhes pagamento local */}
+        {/* Detalhes pagamento: data + método */}
         {pagoLanc && (
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
             {pagoLanc.data_pagamento && (
               <span className="text-[10px] text-muted-foreground">{formatDate(pagoLanc.data_pagamento)}</span>
             )}
-            {pagoLanc.forma_pagamento && (
+            {/* FCX paga: mostrar billing_type externo; caso contrário: forma_pagamento local */}
+            {fcxPaga && fcxAtiva?.billing_type ? (
               <span className="text-[10px] text-muted-foreground">
-                {PAYMENT_METHOD_LABELS[pagoLanc.forma_pagamento] ?? pagoLanc.forma_pagamento}
+                {fcxAtiva.billing_type === "PIX" ? "PIX" : "Boleto"}
               </span>
+            ) : (
+              pagoLanc.forma_pagamento && (
+                <span className="text-[10px] text-muted-foreground">
+                  {PAYMENT_METHOD_LABELS[pagoLanc.forma_pagamento] ?? pagoLanc.forma_pagamento}
+                </span>
+              )
             )}
           </div>
         )}
@@ -278,12 +287,12 @@ function CompetenciaRow({
             <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium border ${FCX_STATUS_CLASS[fcxAtiva.status] ?? "bg-muted text-muted-foreground"}`}>
               {FCX_STATUS_LABEL[fcxAtiva.status] ?? fcxAtiva.status}
             </span>
-            {fcxAtiva.status === "paga" && (fcxAtiva.webhook_received_at || fcxAtiva.last_synced_at) && (
+            {fcxPaga && (fcxAtiva.webhook_received_at || fcxAtiva.last_synced_at) && (
               <span className="text-[10px] text-muted-foreground">
                 {formatDate((fcxAtiva.webhook_received_at ?? fcxAtiva.last_synced_at)!)}
               </span>
             )}
-            {fcxAtiva.status !== "paga" && fcxAtiva.data_vencimento && (
+            {!fcxPaga && fcxAtiva.data_vencimento && (
               <span className="text-[10px] text-muted-foreground">Venc. {formatDate(fcxAtiva.data_vencimento)}</span>
             )}
             {fcxAtiva.status === "falha" && fcxAtiva.error_message && (
@@ -295,19 +304,19 @@ function CompetenciaRow({
         )}
       </div>
 
-      {/* Valor */}
-      {(pagoLanc ?? pendenteLanc) && (
-        <div className="text-right shrink-0">
+      {/* Valor - coluna fixa separada dos botões */}
+      <div className="w-20 text-right shrink-0">
+        {(pagoLanc ?? pendenteLanc) && (
           <p className="text-xs font-semibold text-foreground leading-none">
             {formatCurrency((pagoLanc ?? pendenteLanc)!.valor)}
           </p>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Ações */}
-      <div className="flex items-center gap-1 shrink-0 border-l pl-2">
+      {/* Ações - coluna fixa para manter alinhamento entre linhas */}
+      <div className="flex items-center gap-1 shrink-0 border-l pl-2 min-w-[100px] justify-end">
         {/* Ações FCX — só quando não está paga (paga = evento encerrado, sem ação) */}
-        {fcxAtiva && fcxAtiva.status !== "paga" && (
+        {fcxAtiva && !fcxPaga && (
           <>
             {fcxAtiva.payment_url && (
               <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
@@ -349,7 +358,7 @@ function CompetenciaRow({
         )}
 
         {/* Ações do lançamento local — só quando não há FCX paga (paga = encerrado externamente) */}
-        {pagoLanc && fcxAtiva?.status !== "paga" && (
+        {pagoLanc && !fcxPaga && (
           <>
             {pagoLanc.sessao_id && (
               <TooltipProvider delayDuration={100}>
