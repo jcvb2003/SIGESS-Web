@@ -121,15 +121,18 @@ serve(async (req: Request) => {
   if (event.type === "PAYMENT_RECEIVED") {
     if (typedFcx.status === "paga") {
       // Idempotência: já pago → só atualiza timestamps e provider_status
-      await supabaseAdmin
+      const { error: idemErr } = await supabaseAdmin
         .from("financeiro_cobrancas_externas" as never)
         .update({ provider_status: event.rawEventType, webhook_received_at: now, last_synced_at: now, updated_at: now })
         .eq("id", typedFcx.id);
-      console.log("[webhook] PAYMENT_RECEIVED idempotente (já pago):", typedFcx.id);
+      if (idemErr) console.warn("[webhook] PAYMENT_RECEIVED idempotente — falha ao atualizar timestamps:", idemErr);
+      else console.log("[webhook] PAYMENT_RECEIVED idempotente (já pago):", typedFcx.id);
       return new Response("ok", { status: 200 });
     }
 
-    await supabaseAdmin
+    // FCX deve ser atualizado PRIMEIRO; lançamento só é atualizado se FCX tiver êxito
+    // Isso evita divergência: lançamento pago mas FCX ainda pendente
+    const { error: fcxErr } = await supabaseAdmin
       .from("financeiro_cobrancas_externas" as never)
       .update({
         status: "paga",
@@ -140,7 +143,15 @@ serve(async (req: Request) => {
       })
       .eq("id", typedFcx.id);
 
-    // Atualizar lançamento local — idempotente (UPDATE SET status='pago' é inofensivo se já pago)
+    if (fcxErr) {
+      console.error("[webhook] PAYMENT_RECEIVED — falha ao atualizar FCX (lançamento não tocado):", {
+        fcxId: typedFcx.id,
+        error: fcxErr,
+      });
+      return new Response("ok", { status: 200 });
+    }
+
+    // Atualizar lançamento local — idempotente; só executa se FCX teve êxito
     const { error: lancErr } = await supabaseAdmin
       .from("financeiro_lancamentos")
       .update({
@@ -162,7 +173,7 @@ serve(async (req: Request) => {
   }
 
   if (event.type === "PAYMENT_OVERDUE") {
-    await supabaseAdmin
+    const { error: overdueErr } = await supabaseAdmin
       .from("financeiro_cobrancas_externas" as never)
       .update({
         status: "expirada",
@@ -172,12 +183,13 @@ serve(async (req: Request) => {
         updated_at: now,
       })
       .eq("id", typedFcx.id);
+    if (overdueErr) console.error("[webhook] PAYMENT_OVERDUE — falha ao atualizar FCX:", overdueErr);
     // Lançamento local NÃO alterado — expiração é estado do provider
     return new Response("ok", { status: 200 });
   }
 
   if (event.type === "PAYMENT_REFUNDED") {
-    await supabaseAdmin
+    const { error: refundErr } = await supabaseAdmin
       .from("financeiro_cobrancas_externas" as never)
       .update({
         status: "cancelada",
@@ -187,6 +199,7 @@ serve(async (req: Request) => {
         updated_at: now,
       })
       .eq("id", typedFcx.id);
+    if (refundErr) console.error("[webhook] PAYMENT_REFUNDED — falha ao atualizar FCX:", refundErr);
     // Lançamento local NÃO revertido automaticamente — requer ação operacional
     console.warn("[webhook] PAYMENT_REFUNDED: lançamento", typedFcx.lancamento_id, "requer revisão manual");
     return new Response("ok", { status: 200 });
