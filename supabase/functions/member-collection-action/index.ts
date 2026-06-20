@@ -66,25 +66,29 @@ serve(async (req: Request) => {
       const { fcx_id } = body as { fcx_id: string };
       if (!p_tenant_id || !fcx_id) return jsonResponse({ error: "p_tenant_id e fcx_id obrigatórios" }, 400);
 
-      const { data: membershipSync } = await supabaseAdmin
+      const { data: membershipSync, error: membershipSyncErr } = await supabaseAdmin
         .from("tenant_users").select("tenant_id").eq("user_id", user.id)
         .eq("tenant_id", p_tenant_id).eq("is_active", true).maybeSingle();
+      if (membershipSyncErr) throw membershipSyncErr;
       if (!membershipSync) return jsonResponse({ error: "Acesso negado" }, 403);
 
-      const { data: fcxSync } = await supabaseAdmin
+      // busca provider_charge_id + lancamento_id numa única query (evita round-trip extra)
+      const { data: fcxSync, error: fcxSyncErr } = await supabaseAdmin
         .from("financeiro_cobrancas_externas")
-        .select("provider_charge_id, provider")
+        .select("provider_charge_id, provider, lancamento_id")
         .eq("id", fcx_id).eq("tenant_id", p_tenant_id).maybeSingle();
+      if (fcxSyncErr) throw fcxSyncErr;
       if (!fcxSync) return jsonResponse({ error: "Cobrança externa não encontrada" }, 404);
 
-      const typedFcxSync = fcxSync as { provider_charge_id: string | null; provider: string };
+      const typedFcxSync = fcxSync as { provider_charge_id: string | null; provider: string; lancamento_id: string };
       if (!typedFcxSync.provider_charge_id) {
         return jsonResponse({ error: "Cobrança sem ID no provider (criação falhou)" }, 422);
       }
 
-      const { data: configSync } = await supabaseAdmin
+      const { data: configSync, error: cfgSyncErr } = await supabaseAdmin
         .from("configuracao_recebimento")
         .select("api_key, ambiente").eq("tenant_id", p_tenant_id).maybeSingle();
+      if (cfgSyncErr) throw cfgSyncErr;
       const typedCfgSync = configSync as { api_key: string | null; ambiente: string } | null;
       if (!typedCfgSync?.api_key) return jsonResponse({ error: "API key não configurada" }, 422);
 
@@ -94,32 +98,33 @@ serve(async (req: Request) => {
       const now = new Date().toISOString();
       const domainStatus = charge.status;
 
-      // Atualizar FCX com status real e provider_status bruto do Asaas
-      await supabaseAdmin
+      const { error: fcxUpdateErr } = await supabaseAdmin
         .from("financeiro_cobrancas_externas")
         .update({
           status: domainStatus,
-          provider_status: charge.providerRawStatus ?? null,  // status bruto (ex: 'RECEIVED'), não o nome do provider
+          provider_status: charge.providerRawStatus ?? null,
           last_synced_at: now,
           updated_at: now,
         })
         .eq("id", fcx_id);
 
-      // Se a cobrança foi paga: reconciliar o lançamento local
-      // (garante recovery quando o webhook falhou e o operador sincroniza manualmente)
+      if (fcxUpdateErr) {
+        console.error("[sync-charge] Falha ao atualizar FCX:", fcxUpdateErr);
+        return jsonResponse({ error: "Falha ao salvar status da cobrança" }, 500);
+      }
+
       if (domainStatus === "paga") {
-        const { data: fcxFull } = await supabaseAdmin
-          .from("financeiro_cobrancas_externas")
-          .select("lancamento_id")
-          .eq("id", fcx_id)
-          .maybeSingle();
-        const lancamentoId = (fcxFull as { lancamento_id: string } | null)?.lancamento_id;
-        if (lancamentoId) {
-          const paidDate = charge.paidAt ? charge.paidAt.split("T")[0] : now.split("T")[0];
-          await supabaseAdmin
-            .from("financeiro_lancamentos")
-            .update({ status: "pago", data_pagamento: paidDate, updated_at: now })
-            .eq("id", lancamentoId);
+        const paidDate = charge.paidAt ? charge.paidAt.split("T")[0] : now.split("T")[0];
+        const { error: lancUpdateErr } = await supabaseAdmin
+          .from("financeiro_lancamentos")
+          .update({ status: "pago", data_pagamento: paidDate, updated_at: now })
+          .eq("id", typedFcxSync.lancamento_id);
+
+        if (lancUpdateErr) {
+          console.error("[sync-charge] FCX atualizado mas falha ao reconciliar lançamento:", {
+            fcx_id, lancamentoId: typedFcxSync.lancamento_id, error: lancUpdateErr,
+          });
+          return jsonResponse({ error: "Status sincronizado mas falha ao reconciliar lançamento" }, 500);
         }
       }
 
@@ -215,6 +220,7 @@ serve(async (req: Request) => {
         lancamento_id: typedLancamento.id,
         tenant_id: p_tenant_id,
         provider: typedConfig.provider,
+        billing_type,
         valor: typedLancamento.valor,
         data_vencimento: due_date,
         status: "pendente",

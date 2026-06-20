@@ -258,6 +258,7 @@ export type Database = {
       }
       financeiro_cobrancas_externas: {
         Row: {
+          billing_type: string | null
           created_at: string
           data_vencimento: string | null
           error_message: string | null
@@ -278,6 +279,7 @@ export type Database = {
           webhook_received_at: string | null
         }
         Insert: {
+          billing_type?: string | null
           created_at?: string
           data_vencimento?: string | null
           error_message?: string | null
@@ -298,6 +300,7 @@ export type Database = {
           webhook_received_at?: string | null
         }
         Update: {
+          billing_type?: string | null
           created_at?: string
           data_vencimento?: string | null
           error_message?: string | null

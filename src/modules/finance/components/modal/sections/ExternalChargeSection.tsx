@@ -98,7 +98,7 @@ function ChargeRow({ charge, onSync, isSyncing, onReissue, isReissuing }: {
 }
 
 export function ExternalChargeSection({ cpf }: { cpf: string }) {
-  const { charges, isLoading, sync, isSyncing, reissue, isReissuing } = useExternalCharges(cpf);
+  const { charges, isLoading, sync, isSyncingId, reissue, isReissuingLancId } = useExternalCharges(cpf);
 
   if (isLoading) {
     return (
@@ -121,13 +121,13 @@ export function ExternalChargeSection({ cpf }: { cpf: string }) {
             key={charge.id}
             charge={charge}
             onSync={() => sync(charge.id)}
-            isSyncing={isSyncing}
+            isSyncing={isSyncingId(charge.id)}
             onReissue={() => {
-              // Reemitir: novo FCX para o mesmo lançamento; FCX anterior (falha|expirada) fica em histórico
               const dueDate = charge.data_vencimento ?? new Date().toISOString().split("T")[0];
-              reissue(charge.lancamento_id, "BOLETO", dueDate);
+              const billingType = (charge.billing_type as "BOLETO" | "PIX" | null) ?? "BOLETO";
+              reissue(charge.lancamento_id, billingType, dueDate);
             }}
-            isReissuing={isReissuing}
+            isReissuing={isReissuingLancId(charge.lancamento_id)}
           />
         ))}
       </div>

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useActiveScope } from "@/shared/hooks/useActiveScope";
@@ -5,6 +6,10 @@ import { externalChargeService } from "../../services/externalChargeService";
 
 export function useExternalCharges(cpf: string | null) {
   const { tenantId, bootstrapped } = useActiveScope();
+  const queryClient = useQueryClient();
+
+  const [syncingId, setSyncingId] = useState<string | null>(null);
+  const [reissuingLancId, setReissuingLancId] = useState<string | null>(null);
 
   const query = useQuery({
     queryKey: ["finance", "external-charges", cpf, tenantId ?? null],
@@ -13,10 +18,11 @@ export function useExternalCharges(cpf: string | null) {
     staleTime: 2 * 60 * 1000,
   });
 
-  const queryClient = useQueryClient();
-
   const syncMutation = useMutation({
-    mutationFn: (fcxId: string) => externalChargeService.sync(tenantId!, fcxId),
+    mutationFn: (fcxId: string) => {
+      setSyncingId(fcxId);
+      return externalChargeService.sync(tenantId!, fcxId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["finance", "external-charges", cpf] });
       toast.success("Cobrança sincronizada.");
@@ -24,11 +30,14 @@ export function useExternalCharges(cpf: string | null) {
     onError: (err: unknown) => {
       toast.error(err instanceof Error ? err.message : "Erro ao sincronizar");
     },
+    onSettled: () => setSyncingId(null),
   });
 
   const reissueMutation = useMutation({
-    mutationFn: ({ lancamentoId, billingType, dueDate }: { lancamentoId: string; billingType: "BOLETO" | "PIX"; dueDate: string }) =>
-      externalChargeService.reissue(tenantId!, lancamentoId, billingType, dueDate),
+    mutationFn: ({ lancamentoId, billingType, dueDate }: { lancamentoId: string; billingType: "BOLETO" | "PIX"; dueDate: string }) => {
+      setReissuingLancId(lancamentoId);
+      return externalChargeService.reissue(tenantId!, lancamentoId, billingType, dueDate);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["finance", "external-charges", cpf] });
       toast.success("Nova cobrança gerada.");
@@ -36,6 +45,7 @@ export function useExternalCharges(cpf: string | null) {
     onError: (err: unknown) => {
       toast.error(err instanceof Error ? err.message : "Erro ao reemitir");
     },
+    onSettled: () => setReissuingLancId(null),
   });
 
   return {
@@ -43,9 +53,9 @@ export function useExternalCharges(cpf: string | null) {
     isLoading: query.isLoading,
     refetch: query.refetch,
     sync: (fcxId: string) => syncMutation.mutate(fcxId),
-    isSyncing: syncMutation.isPending,
+    isSyncingId: (id: string) => syncingId === id,
     reissue: (lancamentoId: string, billingType: "BOLETO" | "PIX", dueDate: string) =>
       reissueMutation.mutate({ lancamentoId, billingType, dueDate }),
-    isReissuing: reissueMutation.isPending,
+    isReissuingLancId: (lancId: string) => reissuingLancId === lancId,
   };
 }
