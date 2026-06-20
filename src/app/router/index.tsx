@@ -24,6 +24,9 @@ const FinancePage = lazy(() => import("@/pages/Finance"));
 const PaymentsByPeriodPage = lazy(
   () => import("@/pages/Finance/PaymentsByPeriodPage"),
 );
+const ExternalChargesPage = lazy(
+  () => import("@/pages/Finance/ExternalChargesPage"),
+);
 const DAEsByPeriodPage = lazy(
   () => import("@/pages/Finance/DAEsByPeriodPage"),
 );
@@ -142,6 +145,10 @@ const router = createBrowserRouter([
       {
         path: "/finance/payments-report",
         element: <PaymentsByPeriodPage />,
+      },
+      {
+        path: "/finance/external-charges",
+        element: <ExternalChargesPage />,
       },
       {
         path: "/finance/daes-report",

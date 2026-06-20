@@ -204,6 +204,7 @@ export default function FinancePage() {
             onOpenFilters={() => setFiltersOpen(true)}
             onOpenPaymentsReport={() => navigate("/finance/payments-report")}
             onOpenDaesReport={() => navigate("/finance/daes-report")}
+            onOpenExternalCharges={() => navigate("/finance/external-charges")}
             onOpenAudit={() => setAuditOpen(true)}
             onOpenSettings={() => setSettingsOpen(true)}
             onOpenBatchCharge={() => setBatchChargeOpen(true)}

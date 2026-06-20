@@ -6,6 +6,38 @@ export type ExternalCharge = Tables<"financeiro_cobrancas_externas"> & {
   competencia_mes: number | null;
 };
 
+export interface ExternalChargeListItem {
+  id: string;
+  lancamento_id: string;
+  provider: string;
+  status: string;
+  billing_type: string | null;
+  valor: number | null;
+  data_vencimento: string | null;
+  payment_url: string | null;
+  error_message: string | null;
+  last_synced_at: string | null;
+  webhook_received_at: string | null;
+  created_at: string;
+  lancamento_status: string | null;
+  competencia_ano: number | null;
+  competencia_mes: number | null;
+  socio_cpf: string | null;
+  socio_nome: string | null;
+  total_count: number;
+}
+
+export interface ExternalChargesListFilters {
+  unitId?: string | null;
+  status?: string | null;
+  billingType?: string | null;
+  mes?: number | null;
+  ano?: number | null;
+  search?: string;
+  page?: number;
+  pageSize?: number;
+}
+
 export const externalChargeService = {
   // DOIS PASSOS (V1): mais previsível que JOIN REST com FK no Supabase JS
   async getBySocio(cpf: string, tenantId: string): Promise<ExternalCharge[]> {
@@ -88,5 +120,29 @@ export const externalChargeService = {
     });
     if (error) throw error;
     if (data?.error) throw new Error(data.providerError ?? data.error);
+  },
+
+  async getList(
+    tenantId: string,
+    filters: ExternalChargesListFilters,
+  ): Promise<{ data: ExternalChargeListItem[]; total: number }> {
+    const { page = 1, pageSize = 50, unitId, status, billingType, mes, ano, search } = filters;
+    const { data, error } = await supabase.rpc(
+      "get_external_charges_list" as never,
+      {
+        p_tenant_id: tenantId,
+        p_unit_id: unitId ?? null,
+        p_status: status ?? null,
+        p_billing_type: billingType ?? null,
+        p_mes: mes ?? null,
+        p_ano: ano ?? null,
+        p_search: search || null,
+        p_limit: pageSize,
+        p_offset: (page - 1) * pageSize,
+      } as never,
+    );
+    if (error) throw error;
+    const rows = (data as ExternalChargeListItem[]) ?? [];
+    return { data: rows, total: rows[0]?.total_count ?? 0 };
   },
 };
