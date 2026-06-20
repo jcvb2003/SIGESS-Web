@@ -8,6 +8,12 @@ export interface EnsureMemberCustomerInput {
   cpf: string;        // limpo (só dígitos)
   email?: string;
   telefone?: string;
+  endereco?: string;
+  num?: string;
+  bairro?: string;
+  cidade?: string;
+  uf?: string;
+  cep?: string;
 }
 
 export interface CreateMemberChargeInput {

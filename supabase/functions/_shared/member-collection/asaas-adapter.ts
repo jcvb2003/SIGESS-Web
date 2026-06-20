@@ -97,6 +97,15 @@ export class AsaasCollectionAdapter implements ICollectionProvider {
   async ensureCustomer(input: EnsureMemberCustomerInput): Promise<{ providerId: string }> {
     const externalReference = `${input.tenantId}:${input.cpf}`;
 
+    const addressFields = {
+      ...(input.endereco ? { address: input.endereco.trim() }                  : {}),
+      ...(input.num      ? { addressNumber: input.num.trim() }                 : {}),
+      ...(input.bairro   ? { province: input.bairro.trim() }                   : {}),
+      ...(input.cidade   ? { city: input.cidade.trim() }                       : {}),
+      ...(input.uf       ? { state: input.uf.trim().toUpperCase() }            : {}),
+      ...(input.cep      ? { postalCode: input.cep.replace(/\D/g, '') }        : {}),
+    };
+
     const list = await this.client.get<AsaasListResponse<AsaasCustomer>>(
       '/customers',
       { externalReference, limit: '1' },
@@ -107,8 +116,9 @@ export class AsaasCollectionAdapter implements ICollectionProvider {
       await this.client.post<AsaasCustomer>(`/customers/${existing.id}`, {
         name: input.nome,
         cpfCnpj: input.cpf,
-        ...(input.email ? { email: input.email } : {}),
-        ...(input.telefone ? { mobilePhone: input.telefone } : {}),
+        ...(input.email    ? { email: input.email }           : {}),
+        ...(input.telefone ? { mobilePhone: input.telefone }  : {}),
+        ...addressFields,
       });
       return { providerId: existing.id };
     }
@@ -117,8 +127,9 @@ export class AsaasCollectionAdapter implements ICollectionProvider {
       name: input.nome,
       cpfCnpj: input.cpf,
       externalReference,
-      ...(input.email ? { email: input.email } : {}),
-      ...(input.telefone ? { mobilePhone: input.telefone } : {}),
+      ...(input.email    ? { email: input.email }           : {}),
+      ...(input.telefone ? { mobilePhone: input.telefone }  : {}),
+      ...addressFields,
     });
     return { providerId: created.id };
   }

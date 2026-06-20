@@ -18,10 +18,9 @@ function jsonResponse(data: unknown, status = 200): Response {
   });
 }
 
-function buildDescription(billingType: string, nome: string, dueDate: string): string {
-  const [year, month] = dueDate.split("-");
+function buildDescription(billingType: string, nome: string, mes: number, ano: number): string {
   const label = billingType === "PIX" ? "PIX" : "Boleto";
-  return `${label} - Mensalidade ${month}/${year} - ${nome}`;
+  return `${label} - Mensalidade ${String(mes).padStart(2, "0")}/${ano} - ${nome}`;
 }
 
 serve(async (req: Request) => {
@@ -160,14 +159,17 @@ serve(async (req: Request) => {
     // ── Passo 3: buscar lançamento (sem filtro de tenant_id — coluna não existe) ──
     const { data: lancamento, error: lancErr } = await supabaseAdmin
       .from("financeiro_lancamentos")
-      .select("id, socio_cpf, valor")
+      .select("id, socio_cpf, valor, competencia_ano, competencia_mes")
       .eq("id", lancamento_id)
       .maybeSingle();
 
     if (lancErr) throw lancErr;
     if (!lancamento) return jsonResponse({ error: "Lançamento não encontrado" }, 404);
 
-    const typedLancamentoRaw = lancamento as { id: string; socio_cpf: string | null; valor: number | null };
+    const typedLancamentoRaw = lancamento as {
+      id: string; socio_cpf: string | null; valor: number | null;
+      competencia_ano: number | null; competencia_mes: number | null;
+    };
 
     // Validação explícita: schema permite nulos para lançamentos legados/incompletos
     if (!typedLancamentoRaw.socio_cpf) {
@@ -176,13 +178,16 @@ serve(async (req: Request) => {
     if (typedLancamentoRaw.valor == null || typedLancamentoRaw.valor <= 0) {
       return jsonResponse({ error: "Lançamento sem valor válido — não pode gerar cobrança" }, 422);
     }
+    if (!typedLancamentoRaw.competencia_ano || !typedLancamentoRaw.competencia_mes) {
+      return jsonResponse({ error: "Lançamento sem competência — cobrança externa requer mensalidade recorrente" }, 422);
+    }
 
     // ── Passo 4: verificar posse via socios.tenant_id ─────────────────────────────
     // socios TEM tenant_id no banco vivo (verificado em OEIRAS)
     // tenant_id nullable: null = gap de dados legado → tratado como não-pertencente
     const { data: socio, error: socioErr } = await supabaseAdmin
       .from("socios")
-      .select("id, nome, email, telefone")
+      .select("id, nome, email, telefone, endereco, num, bairro, cidade, uf, cep")
       .eq("cpf", (lancamento as { socio_cpf: string }).socio_cpf)
       .eq("tenant_id", p_tenant_id)
       .maybeSingle();
@@ -192,8 +197,18 @@ serve(async (req: Request) => {
       return jsonResponse({ error: "Lançamento não pertence a este tenant" }, 404);
     }
 
-    const typedLancamento = { id: typedLancamentoRaw.id, socio_cpf: typedLancamentoRaw.socio_cpf!, valor: typedLancamentoRaw.valor! };
-    const typedSocio = socio as { nome: string | null; email: string | null; telefone: string | null };
+    const typedLancamento = {
+      id: typedLancamentoRaw.id,
+      socio_cpf: typedLancamentoRaw.socio_cpf!,
+      valor: typedLancamentoRaw.valor!,
+      competencia_ano: typedLancamentoRaw.competencia_ano!,
+      competencia_mes: typedLancamentoRaw.competencia_mes!,
+    };
+    const typedSocio = socio as {
+      nome: string | null; email: string | null; telefone: string | null;
+      endereco: string | null; num: string | null; bairro: string | null;
+      cidade: string | null; uf: string | null; cep: string | null;
+    };
 
     // ── Passo 5: buscar configuração de recebimento ───────────────────────────────
     const { data: config, error: configErr } = await supabaseAdmin
@@ -250,6 +265,12 @@ serve(async (req: Request) => {
         nome: typedSocio.nome ?? "Sócio",
         email: typedSocio.email ?? undefined,
         telefone: typedSocio.telefone ?? undefined,
+        endereco: typedSocio.endereco ?? undefined,
+        num: typedSocio.num ?? undefined,
+        bairro: typedSocio.bairro ?? undefined,
+        cidade: typedSocio.cidade ?? undefined,
+        uf: typedSocio.uf ?? undefined,
+        cep: typedSocio.cep ?? undefined,
       });
 
       charge = await provider.createCharge({
@@ -257,7 +278,12 @@ serve(async (req: Request) => {
         amount: typedLancamento.valor,
         dueDate: due_date,
         billingType: billing_type,
-        description: buildDescription(billing_type, typedSocio.nome ?? "Sócio", due_date),
+        description: buildDescription(
+          billing_type,
+          typedSocio.nome ?? "Sócio",
+          typedLancamento.competencia_mes,
+          typedLancamento.competencia_ano,
+        ),
         externalReference: fcxId,
       });
     } catch (providerErr) {

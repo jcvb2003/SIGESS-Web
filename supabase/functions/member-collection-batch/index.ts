@@ -107,8 +107,8 @@ serve(async (req: Request) => {
     // ── 4. Membros elegíveis ────────────────────────────────────────────────────
     let membersQuery = supabaseAdmin
       .from("socios")
-      .select(`cpf, nome, email, telefone, data_de_admissao,
-               financeiro_config_socio!left(regime, isento, data_inicio_cobranca)`)
+      .select(`cpf, nome, email, telefone, endereco, num, bairro, cidade, uf, cep,
+               data_de_admissao, financeiro_config_socio!left(regime, isento, data_inicio_cobranca)`)
       .eq("tenant_id", p_tenant_id)
       .eq("situacao", "ATIVO");
     if (p_unit_id) membersQuery = membersQuery.eq("unit_id", p_unit_id);
@@ -117,6 +117,8 @@ serve(async (req: Request) => {
 
     const allMembers = (members ?? []) as Array<{
       cpf: string; nome: string | null; email: string | null; telefone: string | null;
+      endereco: string | null; num: string | null; bairro: string | null;
+      cidade: string | null; uf: string | null; cep: string | null;
       data_de_admissao: string | null;
       financeiro_config_socio: { regime: string | null; isento: boolean; data_inicio_cobranca: string | null } | null;
     }>;
@@ -211,6 +213,12 @@ serve(async (req: Request) => {
           nome: member.nome ?? "Sócio",
           email: member.email ?? undefined,
           telefone: member.telefone ?? undefined,
+          endereco: member.endereco ?? undefined,
+          num: member.num ?? undefined,
+          bairro: member.bairro ?? undefined,
+          cidade: member.cidade ?? undefined,
+          uf: member.uf ?? undefined,
+          cep: member.cep ?? undefined,
         });
 
         const charge = await provider.createCharge({
