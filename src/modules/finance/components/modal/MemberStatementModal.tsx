@@ -9,12 +9,13 @@ import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { Button } from "@/shared/components/ui/button";
 import { Printer, X, FileText } from "lucide-react";
 import { useMemberStatement } from "../../hooks/data/useMemberStatement";
+import { useExternalCharges } from "../../hooks/data/useExternalCharges";
 import { MemberFinancePreview } from "../shared/MemberFinancePreview";
 import { AnnuitiesSection } from "./sections/AnnuitiesSection";
 import { DAESection } from "./sections/DAESection";
 import { OtherPaymentsSection } from "./sections/OtherPaymentsSection";
 import { CancelledPaymentsSection } from "./sections/CancelledPaymentsSection";
-import { ExternalChargeSection } from "./sections/ExternalChargeSection";
+import { MensalidadesSection } from "./sections/MensalidadesSection";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import type { FinancialStatusType, FinanceDAE } from "../../types/finance.types";
 import { SessionReceiptDialog } from "../dialogs/SessionReceiptDialog";
@@ -40,14 +41,22 @@ export function MemberStatementModal({
   const { lancamentos, daes, isLoading } = useMemberStatement(
     open ? cpf : null,
   );
+  const { charges, sync, isSyncingId, reissue, isReissuingLancId } = useExternalCharges(
+    open ? cpf : null,
+  );
 
   const anuidades = lancamentos.filter((l) => l.tipo === "anuidade" && l.status === "pago");
   const daeList = daes.filter((d) => d.status === "pago");
-  const outros = lancamentos.filter(
-    (l) => l.tipo !== "anuidade" && l.status === "pago",
+  // Mensalidades: todos os statuses — MensalidadesSection agrupa por competência
+  const mensalidades = lancamentos.filter((l) => l.tipo === "mensalidade");
+  // Avulsos: tipos != mensalidade e != anuidade, apenas pagos
+  const outrosNaoMensalidade = lancamentos.filter(
+    (l) => l.tipo !== "anuidade" && l.tipo !== "mensalidade" && l.status === "pago",
   );
-  const cancelados = lancamentos.filter((l) => l.status === "cancelado");
-  const pendentes = lancamentos.filter((l) => l.status === "pendente");
+  // Cancelados de tipos não-mensalidade (cancelados de mensalidade ficam na MensalidadesSection)
+  const canceladosNaoMensalidade = lancamentos.filter(
+    (l) => l.tipo !== "mensalidade" && l.status === "cancelado",
+  );
 
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -182,26 +191,33 @@ export function MemberStatementModal({
                         onToggleSelection={toggleSelection}
                       />
                     )}
-                    {outros.length > 0 && (
-                      <OtherPaymentsSection 
-                        lancamentos={outros} 
-                        memberName={memberName} 
-                        memberCpf={cpf ?? undefined} 
+                    <MensalidadesSection
+                      lancamentos={mensalidades}
+                      charges={charges}
+                      sync={sync}
+                      isSyncingId={isSyncingId}
+                      reissue={reissue}
+                      isReissuingLancId={isReissuingLancId}
+                    />
+
+                    {outrosNaoMensalidade.length > 0 && (
+                      <OtherPaymentsSection
+                        lancamentos={outrosNaoMensalidade}
+                        memberName={memberName}
+                        memberCpf={cpf ?? undefined}
                         isSelectionMode={isSelectionMode}
                         selectedIds={selectedIds}
                         onToggleSelection={toggleSelection}
                       />
                     )}
 
-                    <CancelledPaymentsSection lancamentos={cancelados} />
-
-                    {cpf && <ExternalChargeSection cpf={cpf} />}
+                    <CancelledPaymentsSection lancamentos={canceladosNaoMensalidade} />
 
                     {anuidades.length === 0 &&
                       daeList.length === 0 &&
-                      outros.length === 0 &&
-                      pendentes.length === 0 &&
-                      cancelados.length === 0 && (
+                      mensalidades.length === 0 &&
+                      outrosNaoMensalidade.length === 0 &&
+                      canceladosNaoMensalidade.length === 0 && (
                         <div className="py-12 flex flex-col items-center justify-center text-center">
                           <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
                             <Printer className="h-6 w-6 text-slate-300" />

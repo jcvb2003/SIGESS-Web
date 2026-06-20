@@ -203,6 +203,9 @@ export function PaymentSessionDialog({
   const effectiveChargeStartDate = gracePeriodStartDate ?? dataDeAdmissao ?? null;
 
   const toggleMonth = (m: number) => {
+    // Guard: mês com FCX pendente está reservado — não seleciona
+    if (externalStatusByMonth.get(m) === "pendente") return;
+
     const paidMonthsByYear = new Map<number, Set<number>>();
     lancamentos
       .filter((l: FinanceLancamento) => l.tipo === "mensalidade" && l.status === "pago")

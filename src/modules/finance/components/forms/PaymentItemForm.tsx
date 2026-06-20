@@ -426,10 +426,12 @@ export function PaymentItemForm({
                 const isDisabled = isPaid || isBeforeAdmission;
                 // Status da FCX vinculada ao lançamento pendente deste mês (se houver)
                 const extStatus = externalStatusByMonth?.get(m);
+                const isExternalPending = !isDisabled && extStatus === "pendente";
 
                 let buttonClass = "bg-card border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-primary/5";
                 if (isDisabled) buttonClass = "bg-muted/50 border-border/30 opacity-60 cursor-not-allowed";
                 else if (isSelected) buttonClass = "bg-primary border-primary text-primary-foreground shadow-md scale-[1.02]";
+                else if (isExternalPending) buttonClass = "bg-amber-500/5 border-amber-500/30 text-amber-700 cursor-pointer";
 
                 return (
                   <button
@@ -447,6 +449,9 @@ export function PaymentItemForm({
                       </span>
                     )}
                     {isSelected && <span className="text-[8px] font-bold text-primary-foreground/90 mt-0.5 animate-in zoom-in-50">OK</span>}
+                    {isExternalPending && !isSelected && (
+                      <span className="mt-0.5 text-[8px] font-bold text-amber-600">COB.</span>
+                    )}
                     {!isPaid && extStatus === "pendente" && (
                       <span
                         className="absolute top-1 right-1 h-2 w-2 rounded-full bg-amber-500"
