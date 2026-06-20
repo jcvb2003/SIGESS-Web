@@ -8,7 +8,8 @@ import {
   DialogTitle,
 } from "@/shared/components/ui/dialog";
 import { EntityTabs, TabItem } from "@/shared/components/layout/EntityTabs";
-import { Loader2, Settings, CreditCard, Wrench } from "lucide-react";
+import { Loader2, Settings, CreditCard, Wrench, Wifi } from "lucide-react";
+import { RecebimentoTab } from "./tabs/RecebimentoTab";
 
 import { useFinanceSettings } from "../../hooks/data/useFinanceSettings";
 import { useChargeTypes } from "../../hooks/data/useChargeTypes";
@@ -189,6 +190,12 @@ export function FinanceSettingsDialog({
                     isMutationPending={createChargeType.isPending || updateChargeType.isPending || deleteChargeType.isPending}
                   />
                 )
+              },
+              {
+                value: "recebimento",
+                label: "Recebimento",
+                icon: Wifi,
+                content: <RecebimentoTab />
               },
               ...(isAdmin ? [{
                 value: "manutencao",

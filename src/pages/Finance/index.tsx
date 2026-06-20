@@ -32,6 +32,7 @@ import { DAEDialog } from "@/modules/finance/components/dialogs/DAEDialog";
 import { FinanceSettingsDialog } from "@/modules/finance/components/dialogs/FinanceSettingsDialog";
 import { FinanceFilterPanel } from "@/modules/finance/components/filters/FinanceFilterPanel";
 import { AuditLogDialog } from "@/modules/finance/components/dialogs/AuditLogDialog";
+import { BatchChargeDialog } from "@/modules/finance/components/dialogs/BatchChargeDialog";
 import { usePermissions } from "@/shared/hooks/usePermissions";
 import type { FinanceDashboardParams } from "@/modules/finance/types/finance.types";
 import { FinanceHeaderActions } from "@/modules/finance/components/shared/FinanceHeaderActions";
@@ -82,6 +83,7 @@ export default function FinancePage() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [auditOpen, setAuditOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [batchChargeOpen, setBatchChargeOpen] = useState(false);
 
   const closeModal = useCallback(() => setActiveModal(null), []);
   const handleOpenStatement = useCallback((cpf: string) => setActiveModal({ type: "statement", cpf }), []);
@@ -204,6 +206,7 @@ export default function FinancePage() {
             onOpenDaesReport={() => navigate("/finance/daes-report")}
             onOpenAudit={() => setAuditOpen(true)}
             onOpenSettings={() => setSettingsOpen(true)}
+            onOpenBatchCharge={() => setBatchChargeOpen(true)}
           />
         }
       />
@@ -339,9 +342,14 @@ export default function FinancePage() {
       />
 
       {/* Audit Log Dialog */}
-      <AuditLogDialog 
+      <AuditLogDialog
         open={auditOpen}
         onOpenChange={setAuditOpen}
+      />
+
+      <BatchChargeDialog
+        open={batchChargeOpen}
+        onOpenChange={setBatchChargeOpen}
       />
     </div>
   );

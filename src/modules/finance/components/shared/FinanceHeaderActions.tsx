@@ -1,4 +1,4 @@
-import { History, Receipt, Settings as SettingsIcon, SlidersHorizontal, FileSpreadsheet } from "lucide-react";
+import { History, Receipt, Settings as SettingsIcon, SlidersHorizontal, FileSpreadsheet, Zap } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 
 interface FinanceHeaderActionsProps {
@@ -9,6 +9,7 @@ interface FinanceHeaderActionsProps {
   readonly onOpenDaesReport: () => void;
   readonly onOpenAudit: () => void;
   readonly onOpenSettings: () => void;
+  readonly onOpenBatchCharge?: () => void;
 }
 
 interface HeaderActionButtonProps {
@@ -43,6 +44,7 @@ function HeaderActionButton({
 export function FinanceHeaderActions({
   isAdmin,
   hasActiveAdvancedFilters,
+  onOpenBatchCharge,
   onOpenFilters,
   onOpenPaymentsReport,
   onOpenDaesReport,
@@ -72,6 +74,13 @@ export function FinanceHeaderActions({
 
       {isAdmin && (
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+          {onOpenBatchCharge && (
+            <HeaderActionButton
+              label="Cobranças do mês"
+              icon={Zap}
+              onClick={onOpenBatchCharge}
+            />
+          )}
           <HeaderActionButton
             label="Auditoria"
             icon={History}
