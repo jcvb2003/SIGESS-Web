@@ -57,6 +57,11 @@ function ChargeRow({ charge, onSync, isSyncing, onReissue, isReissuing }: {
           <StatusBadge status={charge.status} />
         </div>
         <div className="text-xs text-muted-foreground flex flex-wrap gap-3">
+          {charge.competencia_mes != null && charge.competencia_ano != null && (
+            <span className="font-medium text-foreground">
+              {String(charge.competencia_mes).padStart(2, "0")}/{charge.competencia_ano}
+            </span>
+          )}
           {charge.valor != null && <span>{formatCurrency(charge.valor)}</span>}
           {charge.data_vencimento && <span>Venc. {formatDate(charge.data_vencimento)}</span>}
           {charge.last_synced_at && <span>Sync {formatDate(charge.last_synced_at)}</span>}
