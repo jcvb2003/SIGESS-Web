@@ -229,11 +229,6 @@ serve(async (req: Request) => {
       competencia_ano: typedLancamentoRaw.competencia_ano!,
       competencia_mes: typedLancamentoRaw.competencia_mes!,
     };
-    // DEBUG TEMPORÁRIO — remover após confirmar endereço
-    console.log("[debug-socio]", JSON.stringify({
-      cpf_buscado: typedLancamentoRaw.socio_cpf,
-      socio_raw: socio,
-    }));
     const typedSocio = socio as {
       nome: string | null; email: string | null; telefone: string | null;
       endereco: string | null; num: string | null; bairro: string | null;
@@ -286,17 +281,6 @@ serve(async (req: Request) => {
     // ── Passo 7-8: chamar provider ────────────────────────────────────────────────
     const sandbox = typedConfig.ambiente === "sandbox";
     const provider = createCollectionProvider(typedConfig.api_key, sandbox);
-
-    // DEBUG TEMPORÁRIO — remover após confirmar versão deployada
-    console.log("[debug-v2-ensureCustomer]", JSON.stringify({
-      has_endereco: !!typedSocio.endereco,
-      has_num: !!typedSocio.num,
-      has_cidade: !!typedSocio.cidade,
-      has_uf: !!typedSocio.uf,
-      competencia_mes: typedLancamento.competencia_mes,
-      competencia_ano: typedLancamento.competencia_ano,
-      description_preview: buildDescription(billing_type, typedSocio.nome ?? "Sócio", typedLancamento.competencia_mes, typedLancamento.competencia_ano),
-    }));
 
     let charge;
     try {
