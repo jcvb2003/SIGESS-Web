@@ -175,7 +175,12 @@ function CompetenciaRow({
             <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium border ${FCX_STATUS_CLASS[fcxAtiva.status] ?? "bg-muted text-muted-foreground"}`}>
               {FCX_STATUS_LABEL[fcxAtiva.status] ?? fcxAtiva.status}
             </span>
-            {fcxAtiva.data_vencimento && (
+            {fcxAtiva.status === "paga" && (fcxAtiva.webhook_received_at || fcxAtiva.last_synced_at) && (
+              <span className="text-[10px] text-muted-foreground">
+                Pago {formatDate((fcxAtiva.webhook_received_at ?? fcxAtiva.last_synced_at)!)}
+              </span>
+            )}
+            {fcxAtiva.status !== "paga" && fcxAtiva.data_vencimento && (
               <span className="text-[10px] text-muted-foreground">Venc. {formatDate(fcxAtiva.data_vencimento)}</span>
             )}
             {fcxAtiva.status === "falha" && fcxAtiva.error_message && (
