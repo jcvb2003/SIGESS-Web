@@ -16,6 +16,7 @@ import { StatusBadge, type StatusBadgeVariant } from "@/shared/components/ui/Sta
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { formatDate } from "@/shared/utils/formatters/dateFormatters";
 import { useExternalChargesList } from "@/modules/finance/hooks/data/useExternalChargesList";
+import { useExternalChargesSummary } from "@/modules/finance/hooks/data/useExternalChargesSummary";
 import type { ExternalChargeListItem } from "@/modules/finance/services/externalChargeService";
 
 const PAGE_SIZE = 50;
@@ -68,11 +69,14 @@ export default function ExternalChargesPage() {
   const { data, total, isLoading, isFetching, sync, isSyncing, syncingId, reissue, isReissuing, reissuingLancId } =
     useExternalChargesList(filters);
 
-  const summary = useMemo(() => {
-    const counts: Record<string, number> = { pendente: 0, paga: 0, falha: 0, expirada: 0, cancelada: 0 };
-    for (const r of data) counts[r.status] = (counts[r.status] ?? 0) + 1;
-    return counts;
-  }, [data]);
+  const summaryFilters = useMemo(() => ({
+    billingType: billingTypeFilter,
+    mes: mesFilter,
+    ano: anoFilter,
+    search,
+  }), [billingTypeFilter, mesFilter, anoFilter, search]);
+
+  const summary = useExternalChargesSummary(summaryFilters);
 
   const columns: ColumnDef<ExternalChargeListItem>[] = [
     {

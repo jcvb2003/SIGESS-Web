@@ -145,4 +145,25 @@ export const externalChargeService = {
     const rows = (data as ExternalChargeListItem[]) ?? [];
     return { data: rows, total: rows[0]?.total_count ?? 0 };
   },
+
+  async getCounts(
+    tenantId: string,
+    filters: Omit<ExternalChargesListFilters, "status" | "page" | "pageSize">,
+  ): Promise<Record<string, number>> {
+    const { unitId, billingType, mes, ano, search } = filters;
+    const { data, error } = await supabase.rpc(
+      "get_external_charges_counts" as never,
+      {
+        p_tenant_id: tenantId,
+        p_unit_id: unitId ?? null,
+        p_billing_type: billingType ?? null,
+        p_mes: mes ?? null,
+        p_ano: ano ?? null,
+        p_search: search || null,
+      } as never,
+    );
+    if (error) throw error;
+    const rows = (data as { status: string; count: number }[]) ?? [];
+    return Object.fromEntries(rows.map((r) => [r.status, r.count]));
+  },
 };
