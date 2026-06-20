@@ -46,11 +46,16 @@ serve(async (req: Request) => {
   }
 
   // ── Passo 2: buscar configuração de recebimento ─────────────────────────────
-  const { data: config } = await supabaseAdmin
+  const { data: config, error: configReadErr } = await supabaseAdmin
     .from("configuracao_recebimento")
     .select("webhook_token, provider, api_key, ambiente")
     .eq("tenant_id", p_tenant_id)
     .maybeSingle();
+
+  if (configReadErr) {
+    console.error("[webhook] Falha ao ler configuracao_recebimento:", { p_tenant_id, error: configReadErr });
+    return new Response("ok", { status: 200 });
+  }
 
   const typedConfig = config as {
     webhook_token: string | null;
@@ -60,7 +65,7 @@ serve(async (req: Request) => {
   } | null;
 
   if (!typedConfig) {
-    console.error("[webhook] Tenant sem configuração de recebimento:", p_tenant_id);
+    console.error("[webhook] Tenant sem configuração de recebimento (não encontrado):", p_tenant_id);
     return new Response("ok", { status: 200 });
   }
   if (!typedConfig.webhook_token) {
@@ -101,15 +106,19 @@ serve(async (req: Request) => {
   }
 
   // ── Passo 6: buscar financeiro_cobrancas_externas ───────────────────────────
-  const { data: fcx } = await supabaseAdmin
-    .from("financeiro_cobrancas_externas" as never)
+  const { data: fcx, error: fcxReadErr } = await supabaseAdmin
+    .from("financeiro_cobrancas_externas")
     .select("id, lancamento_id, status")
     .eq("id", event.externalReference ?? "")
     .eq("tenant_id", p_tenant_id)
     .maybeSingle();
 
+  if (fcxReadErr) {
+    console.error("[webhook] Falha ao ler financeiro_cobrancas_externas:", { ref: event.externalReference, error: fcxReadErr });
+    return new Response("ok", { status: 200 });
+  }
   if (!fcx) {
-    console.warn("[webhook] externalReference não encontrado:", event.externalReference, "tenant:", p_tenant_id);
+    console.warn("[webhook] externalReference não encontrado (registro inexistente):", event.externalReference, "tenant:", p_tenant_id);
     return new Response("ok", { status: 200 });
   }
 
@@ -122,7 +131,7 @@ serve(async (req: Request) => {
     if (typedFcx.status === "paga") {
       // Idempotência: já pago → só atualiza timestamps e provider_status
       const { error: idemErr } = await supabaseAdmin
-        .from("financeiro_cobrancas_externas" as never)
+        .from("financeiro_cobrancas_externas")
         .update({ provider_status: event.rawEventType, webhook_received_at: now, last_synced_at: now, updated_at: now })
         .eq("id", typedFcx.id);
       if (idemErr) console.warn("[webhook] PAYMENT_RECEIVED idempotente — falha ao atualizar timestamps:", idemErr);
@@ -133,7 +142,7 @@ serve(async (req: Request) => {
     // FCX deve ser atualizado PRIMEIRO; lançamento só é atualizado se FCX tiver êxito
     // Isso evita divergência: lançamento pago mas FCX ainda pendente
     const { error: fcxErr } = await supabaseAdmin
-      .from("financeiro_cobrancas_externas" as never)
+      .from("financeiro_cobrancas_externas")
       .update({
         status: "paga",
         provider_status: event.rawEventType,
@@ -174,7 +183,7 @@ serve(async (req: Request) => {
 
   if (event.type === "PAYMENT_OVERDUE") {
     const { error: overdueErr } = await supabaseAdmin
-      .from("financeiro_cobrancas_externas" as never)
+      .from("financeiro_cobrancas_externas")
       .update({
         status: "expirada",
         provider_status: event.rawEventType,
@@ -190,7 +199,7 @@ serve(async (req: Request) => {
 
   if (event.type === "PAYMENT_REFUNDED") {
     const { error: refundErr } = await supabaseAdmin
-      .from("financeiro_cobrancas_externas" as never)
+      .from("financeiro_cobrancas_externas")
       .update({
         status: "cancelada",
         provider_status: event.rawEventType,

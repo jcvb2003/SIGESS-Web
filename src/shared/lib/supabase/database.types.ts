@@ -214,6 +214,119 @@ export type Database = {
         }
         Relationships: []
       }
+      configuracao_recebimento: {
+        Row: {
+          ambiente: string
+          api_key: string | null
+          created_at: string
+          dia_vencimento: number
+          envio_automatico: boolean
+          forma_padrao: string
+          id: string
+          provider: string
+          tenant_id: string
+          updated_at: string
+          webhook_token: string | null
+        }
+        Insert: {
+          ambiente?: string
+          api_key?: string | null
+          created_at?: string
+          dia_vencimento?: number
+          envio_automatico?: boolean
+          forma_padrao?: string
+          id?: string
+          provider?: string
+          tenant_id: string
+          updated_at?: string
+          webhook_token?: string | null
+        }
+        Update: {
+          ambiente?: string
+          api_key?: string | null
+          created_at?: string
+          dia_vencimento?: number
+          envio_automatico?: boolean
+          forma_padrao?: string
+          id?: string
+          provider?: string
+          tenant_id?: string
+          updated_at?: string
+          webhook_token?: string | null
+        }
+        Relationships: []
+      }
+      financeiro_cobrancas_externas: {
+        Row: {
+          created_at: string
+          data_vencimento: string | null
+          error_message: string | null
+          id: string
+          invoice_url: string | null
+          lancamento_id: string
+          last_synced_at: string | null
+          payment_url: string | null
+          pix_code: string | null
+          provider: string
+          provider_charge_id: string | null
+          provider_payload: Json | null
+          provider_status: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+          valor: number | null
+          webhook_received_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          data_vencimento?: string | null
+          error_message?: string | null
+          id?: string
+          invoice_url?: string | null
+          lancamento_id: string
+          last_synced_at?: string | null
+          payment_url?: string | null
+          pix_code?: string | null
+          provider: string
+          provider_charge_id?: string | null
+          provider_payload?: Json | null
+          provider_status?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+          valor?: number | null
+          webhook_received_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          data_vencimento?: string | null
+          error_message?: string | null
+          id?: string
+          invoice_url?: string | null
+          lancamento_id?: string
+          last_synced_at?: string | null
+          payment_url?: string | null
+          pix_code?: string | null
+          provider?: string
+          provider_charge_id?: string | null
+          provider_payload?: Json | null
+          provider_status?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+          valor?: number | null
+          webhook_received_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financeiro_cobrancas_externas_lancamento_id_fkey"
+            columns: ["lancamento_id"]
+            isOneToOne: false
+            referencedRelation: "financeiro_lancamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       financeiro_cobrancas_geradas: {
         Row: {
           cancelado_em: string | null

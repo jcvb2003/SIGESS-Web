@@ -145,7 +145,7 @@ serve(async (req: Request) => {
 
     // ── Passo 6: INSERT em financeiro_cobrancas_externas (antes de chamar provider) ─
     const { data: fcxRow, error: fcxInsertErr } = await supabaseAdmin
-      .from("financeiro_cobrancas_externas" as never)
+      .from("financeiro_cobrancas_externas")
       .insert({
         lancamento_id: typedLancamento.id,
         tenant_id: p_tenant_id,
@@ -192,7 +192,7 @@ serve(async (req: Request) => {
     } catch (providerErr) {
       // ── Passo 9b: falha no provider → preserva lançamento local, marca falha ───
       const { error: failUpdateErr } = await supabaseAdmin
-        .from("financeiro_cobrancas_externas" as never)
+        .from("financeiro_cobrancas_externas")
         .update({
           status: "falha",
           error_message: (providerErr as Error).message ?? "Erro desconhecido no provider",
@@ -215,7 +215,7 @@ serve(async (req: Request) => {
     // provider_status = null: não inventar valor; será preenchido a partir de webhook real
     // pix_qr_code_url não existe na tabela (verificado no banco live OEIRAS)
     const { error: successUpdateErr } = await supabaseAdmin
-      .from("financeiro_cobrancas_externas" as never)
+      .from("financeiro_cobrancas_externas")
       .update({
         provider_charge_id: charge.providerChargeId,
         provider_status: null,
