@@ -159,7 +159,8 @@ export default function ExternalChargesPage() {
               </a>
             </Button>
           )}
-          {row.status !== "paga" && row.status !== "cancelada" && (
+          {(row.status !== "paga" && row.status !== "cancelada") ||
+           (row.status === "paga" && row.lancamento_status !== "pago") ? (
             <Button
               variant="ghost"
               size="icon"
@@ -172,7 +173,7 @@ export default function ExternalChargesPage() {
                 ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 : <RefreshCw className="h-3.5 w-3.5" />}
             </Button>
-          )}
+          ) : null}
           {REISSUABLE.has(row.status) && (
             <Button
               variant="ghost"

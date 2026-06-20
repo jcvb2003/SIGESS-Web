@@ -343,10 +343,10 @@ function CompetenciaRow({
 
       {/* Ações - coluna fixa para manter alinhamento entre linhas */}
       <div className="flex items-center gap-1 shrink-0 border-l pl-2 min-w-[100px] justify-end">
-        {/* Ações FCX — só quando não está paga (paga = evento encerrado, sem ação) */}
-        {fcxAtiva && !fcxPaga && (
+        {/* Ações FCX */}
+        {fcxAtiva && (!fcxPaga || !pagoLanc) && (
           <>
-            {fcxAtiva.payment_url && (
+            {fcxAtiva.payment_url && !fcxPaga && (
               <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
                 <a href={fcxAtiva.payment_url} target="_blank" rel="noopener noreferrer" title="Abrir cobrança">
                   <ExternalLink className="h-3.5 w-3.5" />

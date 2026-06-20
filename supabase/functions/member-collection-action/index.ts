@@ -116,7 +116,7 @@ serve(async (req: Request) => {
         const paidDate = charge.paidAt ? charge.paidAt.split("T")[0] : now.split("T")[0];
         const { error: lancUpdateErr } = await supabaseAdmin
           .from("financeiro_lancamentos")
-          .update({ status: "pago", data_pagamento: paidDate, updated_at: now })
+          .update({ status: "pago", data_pagamento: paidDate })
           .eq("id", typedFcxSync.lancamento_id);
 
         if (lancUpdateErr) {
@@ -157,7 +157,6 @@ serve(async (req: Request) => {
               .update({
                 status: "cancelado",
                 cancelamento_obs: "Cancelado automaticamente: competência já quitada por outro lançamento pago.",
-                updated_at: now,
               })
               .eq("id", typedFcxSync.lancamento_id)
               .eq("status", "pendente");

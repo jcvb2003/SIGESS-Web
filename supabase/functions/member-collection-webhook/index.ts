@@ -166,7 +166,6 @@ serve(async (req: Request) => {
       .update({
         status: "pago",
         data_pagamento: extractDate(event.paidAt),  // YYYY-MM-DD
-        updated_at: now,
       })
       .eq("id", typedFcx.lancamento_id);
 
