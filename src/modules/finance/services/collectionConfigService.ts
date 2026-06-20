@@ -33,7 +33,7 @@ export const collectionConfigService = {
     return rows?.[0] ?? null;
   },
 
-  // Escrita: owner via RLS
+  // Escrita: presidente via RLS (operator_type = 'presidente')
   // REGRA DE SECRETS: só inclui api_key/webhook_token se foram preenchidos
   // Campo vazio = não sobrescrever o secret existente
   async upsertConfig(tenantId: string, values: CollectionConfigUpdate): Promise<void> {
