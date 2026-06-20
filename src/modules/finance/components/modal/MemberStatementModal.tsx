@@ -14,6 +14,7 @@ import { AnnuitiesSection } from "./sections/AnnuitiesSection";
 import { DAESection } from "./sections/DAESection";
 import { OtherPaymentsSection } from "./sections/OtherPaymentsSection";
 import { CancelledPaymentsSection } from "./sections/CancelledPaymentsSection";
+import { ExternalChargeSection } from "./sections/ExternalChargeSection";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import type { FinancialStatusType, FinanceDAE } from "../../types/finance.types";
 import { SessionReceiptDialog } from "../dialogs/SessionReceiptDialog";
@@ -192,6 +193,8 @@ export function MemberStatementModal({
                     )}
 
                     <CancelledPaymentsSection lancamentos={cancelados} />
+
+                    {cpf && <ExternalChargeSection cpf={cpf} />}
 
                     {anuidades.length === 0 &&
                       daeList.length === 0 &&

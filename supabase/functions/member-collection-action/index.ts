@@ -61,6 +61,45 @@ serve(async (req: Request) => {
       due_date: string;
     };
 
+    // ── Action: sync-charge ───────────────────────────────────────────────────
+    if (action === "sync-charge") {
+      const { fcx_id } = body as { fcx_id: string };
+      if (!p_tenant_id || !fcx_id) return jsonResponse({ error: "p_tenant_id e fcx_id obrigatórios" }, 400);
+
+      const { data: membershipSync } = await supabaseAdmin
+        .from("tenant_users").select("tenant_id").eq("user_id", user.id)
+        .eq("tenant_id", p_tenant_id).eq("is_active", true).maybeSingle();
+      if (!membershipSync) return jsonResponse({ error: "Acesso negado" }, 403);
+
+      const { data: fcxSync } = await supabaseAdmin
+        .from("financeiro_cobrancas_externas")
+        .select("provider_charge_id, provider")
+        .eq("id", fcx_id).eq("tenant_id", p_tenant_id).maybeSingle();
+      if (!fcxSync) return jsonResponse({ error: "Cobrança externa não encontrada" }, 404);
+
+      const typedFcxSync = fcxSync as { provider_charge_id: string | null; provider: string };
+      if (!typedFcxSync.provider_charge_id) {
+        return jsonResponse({ error: "Cobrança sem ID no provider (criação falhou)" }, 422);
+      }
+
+      const { data: configSync } = await supabaseAdmin
+        .from("configuracao_recebimento")
+        .select("api_key, ambiente").eq("tenant_id", p_tenant_id).maybeSingle();
+      const typedCfgSync = configSync as { api_key: string | null; ambiente: string } | null;
+      if (!typedCfgSync?.api_key) return jsonResponse({ error: "API key não configurada" }, 422);
+
+      const syncProvider = createCollectionProvider(typedCfgSync.api_key, typedCfgSync.ambiente === "sandbox");
+      const charge = await syncProvider.fetchCharge(typedFcxSync.provider_charge_id);
+
+      const domainStatus = charge.status;
+      await supabaseAdmin
+        .from("financeiro_cobrancas_externas")
+        .update({ status: domainStatus, provider_status: typedFcxSync.provider, last_synced_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+        .eq("id", fcx_id);
+
+      return jsonResponse({ status: domainStatus });
+    }
+
     if (action !== "create-charge") {
       return jsonResponse({ error: `Ação desconhecida: ${action}` }, 400);
     }
