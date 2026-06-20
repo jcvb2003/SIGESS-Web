@@ -77,7 +77,10 @@ export const externalChargeService = {
       body: { action: "sync-charge", p_tenant_id: tenantId, fcx_id: fcxId },
     });
     if (error) throw error;
-    if (data?.error) throw new Error(data.error);
+    if (data?.error) {
+      const detail = data.detail ? ` [${data.code ?? ""}] ${data.detail}` : "";
+      throw new Error(`${data.error}${detail}`);
+    }
   },
 
   // Cria cobrança externa para um lançamento existente (primeira tentativa)

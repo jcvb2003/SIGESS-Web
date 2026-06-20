@@ -114,75 +114,48 @@ serve(async (req: Request) => {
 
       if (domainStatus === "paga") {
         const paidDate = charge.paidAt ? charge.paidAt.split("T")[0] : now.split("T")[0];
+
+        // Buscar competência do lançamento FCX-linked para neutralizar conflitos antes do promote
+        const { data: fcxLanc } = await supabaseAdmin
+          .from("financeiro_lancamentos")
+          .select("socio_cpf, competencia_ano, competencia_mes")
+          .eq("id", typedFcxSync.lancamento_id)
+          .maybeSingle() as { data: { socio_cpf: string; competencia_ano: number; competencia_mes: number } | null };
+
+        // Regra: FCX paga é fonte de verdade final.
+        // Cancelar proativamente qualquer lançamento conflitante (não-FCX) para a mesma competência.
+        if (fcxLanc) {
+          await supabaseAdmin
+            .from("financeiro_lancamentos")
+            .update({
+              status: "cancelado",
+              cancelado_por: user.id,
+              cancelamento_obs: "Cancelado automaticamente: competência quitada via cobrança externa confirmada no Asaas.",
+            })
+            .eq("socio_cpf", fcxLanc.socio_cpf)
+            .eq("competencia_ano", fcxLanc.competencia_ano)
+            .eq("competencia_mes", fcxLanc.competencia_mes)
+            .neq("id", typedFcxSync.lancamento_id)
+            .in("status", ["pendente", "pago"]);
+        }
+
+        // Promover o lançamento FCX-linked a pago (conflitos já neutralizados)
         const { error: lancUpdateErr } = await supabaseAdmin
           .from("financeiro_lancamentos")
           .update({ status: "pago", data_pagamento: paidDate })
           .eq("id", typedFcxSync.lancamento_id);
 
         if (lancUpdateErr) {
-          // Verificar se é duplicata semântica antes de auto-cancelar:
-          // buscar o lançamento para obter CPF e competência, depois checar se
-          // já existe outro lançamento pago para a mesma competência.
-          const { data: lancData } = await supabaseAdmin
-            .from("financeiro_lancamentos")
-            .select("socio_cpf, competencia_ano, competencia_mes")
-            .eq("id", typedFcxSync.lancamento_id)
-            .maybeSingle();
-
-          const typedLancData = lancData as {
-            socio_cpf: string | null;
-            competencia_ano: number | null;
-            competencia_mes: number | null;
-          } | null;
-
-          const isDuplicate = !!(
-            typedLancData?.socio_cpf &&
-            typedLancData?.competencia_ano &&
-            typedLancData?.competencia_mes &&
-            (await supabaseAdmin
-              .from("financeiro_lancamentos")
-              .select("id")
-              .eq("socio_cpf", typedLancData.socio_cpf)
-              .eq("competencia_ano", typedLancData.competencia_ano)
-              .eq("competencia_mes", typedLancData.competencia_mes)
-              .eq("status", "pago")
-              .neq("id", typedFcxSync.lancamento_id)
-              .maybeSingle()
-            ).data
-          );
-
-          if (isDuplicate) {
-            const { error: cancelErr } = await supabaseAdmin
-              .from("financeiro_lancamentos")
-              .update({
-                status: "cancelado",
-                cancelamento_obs: "Cancelado automaticamente: competência já quitada por outro lançamento pago.",
-              })
-              .eq("id", typedFcxSync.lancamento_id)
-              .eq("status", "pendente");
-
-            if (!cancelErr) {
-              console.log("[sync-charge] Lançamento pendente cancelado — duplicata confirmada:", {
-                fcx_id, lancamentoId: typedFcxSync.lancamento_id,
-              });
-              return jsonResponse({
-                status: domainStatus,
-                conflito: "lancamento_cancelado_duplicata",
-                message: "Cobrança sincronizada; lançamento pendente duplicado foi cancelado automaticamente.",
-              });
-            }
-
-            console.error("[sync-charge] Duplicata confirmada mas cancelamento falhou:", {
-              fcx_id, lancamentoId: typedFcxSync.lancamento_id, cancelError: cancelErr,
-            });
-          }
-
-          // Não é duplicata confirmada, ou cancelamento falhou — erro real
-          console.error("[sync-charge] FCX atualizado mas falha ao reconciliar lançamento:", {
+          console.error("[sync-charge] FCX atualizado mas falha ao promover lançamento:", {
             fcx_id, lancamentoId: typedFcxSync.lancamento_id,
             updateError: lancUpdateErr,
           });
-          return jsonResponse({ error: "Status sincronizado mas falha ao reconciliar lançamento" }, 500);
+          return jsonResponse({
+            error: "Falha ao reconciliar lançamento",
+            detail: lancUpdateErr.message,
+            code: lancUpdateErr.code,
+            hint: lancUpdateErr.hint ?? null,
+          }, 500);
         }
       }
 
