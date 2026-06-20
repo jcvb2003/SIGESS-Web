@@ -21,9 +21,11 @@ import { UserManagementSection } from "@/modules/settings/components/passwords/U
 import { ExtensionSettings } from "@/modules/settings/components/extension/ExtensionSettings";
 import { BillingTab } from "@/modules/billing/components/BillingTab";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
+import { useTenantMode } from "@/shared/hooks/useTenantMode";
 
 export default function Settings() {
   const { isAdmin, canManageEntitySettings } = usePermissions();
+  const tenantMode = useTenantMode();
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
@@ -46,7 +48,7 @@ export default function Settings() {
                 </fieldset>
                 <DocumentsCard canWrite={canManageEntitySettings} />
                 <LocalitiesCard />
-                <PortariasCard />
+                {tenantMode !== 'agricultura' && <PortariasCard />}
                 <fieldset disabled={!isAdmin} className={!isAdmin ? "opacity-50 grayscale pointer-events-none" : ""}>
                   <PhotoImportCard />
                 </fieldset>
@@ -59,12 +61,12 @@ export default function Settings() {
             icon: Building,
             content: <EntityForm readOnly={!isAdmin} />
           },
-          {
+          ...(tenantMode !== 'agricultura' ? [{
             value: "parametros",
             label: "Parâmetros",
             icon: SettingsIcon,
             content: <ParametersForm readOnly={!isAdmin} />
-          },
+          }] : []),
           {
             value: "senhas",
             label: "Perfil",

@@ -15,6 +15,7 @@ import { useNetworkStatus } from "@/shared/hooks/useNetworkStatus";
 import { PWABanner } from "@/shared/components/feedback/PWABanner";
 import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 import { usePortalContext } from "@/shared/hooks/usePortalContext";
+import { useTenantMode } from "@/shared/hooks/useTenantMode";
 import { PortariaProvider } from "@/shared/context/PortariaContext";
 import { GlobalMemberSearch } from "./GlobalMemberSearch";
 import { GlobalPortariaSelect } from "./GlobalPortariaSelect";
@@ -27,6 +28,7 @@ export function DashboardLayout() {
   const avatarUrl = useProfileAvatarUrl(metadata?.avatarPath);
   usePresenceHeartbeat();
   const { isPortalContextLoading, isStatePortal } = usePortalContext();
+  const tenantMode = useTenantMode();
   const loading = authLoading || metadataLoading;
   const isMobile = useMobile();
   const navigate = useNavigate();
@@ -86,6 +88,11 @@ export function DashboardLayout() {
     location.pathname === "/select-unit" &&
     (!hasMultipleUnits || activeUnit)
   ) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  const AGRICULTURE_BLOCKED = ['/requirements', '/reap'];
+  if (tenantMode === 'agricultura' && AGRICULTURE_BLOCKED.includes(location.pathname)) {
     return <Navigate to="/dashboard" replace />;
   }
 

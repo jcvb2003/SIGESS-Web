@@ -22,6 +22,7 @@ import {
 } from "@/shared/components/ui/tooltip";
 import { useMobile } from "@/shared/hooks/useMobile";
 import { useEntityData } from "@/shared/hooks/useEntityData";
+import { useTenantMode } from "@/shared/hooks/useTenantMode";
 import { NAV_ITEMS } from "@/shared/components/layout/navigationItems";
 import {
   DropdownMenu,
@@ -59,13 +60,17 @@ function SidebarContent({
   const { entity, isLoading: isEntityLoading } = useEntityData();
   const { activeUnit, availableUnits, hasMultipleUnits, setActiveUnit } = useTenantUnits();
   const { canAccessTenantAdministration } = usePermissions();
+  const tenantMode = useTenantMode();
   const isTenantAdministrationOnly =
     canAccessTenantAdministration && availableUnits.length === 0;
+  const AGRICULTURE_HIDDEN = new Set(['/requirements', '/reap']);
   const navigationItems = NAV_ITEMS.filter((item) => {
     if (isTenantAdministrationOnly) {
       return item.adminOnly === true;
     }
-
+    if (tenantMode === 'agricultura' && AGRICULTURE_HIDDEN.has(item.href)) {
+      return false;
+    }
     return !item.adminOnly || canAccessTenantAdministration;
   });
 

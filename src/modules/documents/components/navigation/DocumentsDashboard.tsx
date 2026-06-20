@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTenantMode } from "@/shared/hooks/useTenantMode";
 import { DefesoRequestDocument } from "../templates/defeso-request/DefesoRequestDocument";
 import { useDocumentMember } from "../../context/useDocumentMember";
 import { Button } from "@/shared/components/ui/button";
@@ -26,6 +27,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/aler
 export function DocumentsDashboard() {
   const { selectedMember, fullMemberData } = useDocumentMember();
   const { entity } = useEntityData();
+  const tenantMode = useTenantMode();
   const [activeModal, setActiveModal] = useState<
     "residence" | "representation" | "other" | null
   >(null);
@@ -388,12 +390,14 @@ export function DocumentsDashboard() {
         </Button>
       </div>
 
-      <div className="bg-card border rounded-xl p-6 shadow-sm">
-        <DefesoRequestDocument
-          availableModels={defesoModels}
-          isBlocked={financialIssues?.type === "blocking"}
-        />
-      </div>
+      {tenantMode !== 'agricultura' && (
+        <div className="bg-card border rounded-xl p-6 shadow-sm">
+          <DefesoRequestDocument
+            availableModels={defesoModels}
+            isBlocked={financialIssues?.type === "blocking"}
+          />
+        </div>
+      )}
 
       <WitnessDialog
         open={activeModal === "residence"}
