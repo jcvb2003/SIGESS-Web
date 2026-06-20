@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useCollectionConfig } from "../../hooks/data/useCollectionConfig";
 import { useExternalCharges } from "../../hooks/data/useExternalCharges";
 import { useCreateExternalCharge } from "../../hooks/edit/useCreateExternalCharge";
+import { validateCPF } from "@/shared/utils/validators/documentValidators";
 import { RadioGroup, RadioGroupItem } from "@/shared/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import { Zap } from "lucide-react";
@@ -105,12 +106,16 @@ export function PaymentSessionDialog({
   const valorMensalidade = settings?.valor_mensalidade ?? (valorAnuidade / 12);
 
   // Elegibilidade para cobrança externa — derivada do estado do reducer em tempo de render
-  const canExternalCharge =
+  const cpfValido = !!socioCpf && validateCPF(socioCpf);
+  const elegibilidadeBase =
     paymentCategory === "mensalidade" &&
     selectedMonths.length === 1 &&
     extraFees.length === 0 &&
     selectedCharges.length === 0 &&
     !!collectionConfig?.has_api_key;
+  const canExternalCharge = elegibilidadeBase && cpfValido;
+  // Quando tudo está elegível mas o CPF é inválido: exibir aviso explicativo
+  const cpfBloqueiaCobranca = elegibilidadeBase && !cpfValido;
 
   // Forçar modo imediato quando perde elegibilidade
   useEffect(() => {
@@ -541,6 +546,13 @@ export function PaymentSessionDialog({
               isHistoricMember={isHistoricMember}
               onToggleHistoricMember={handleToggleHistoricMember}
             />
+
+            {/* CPF inválido — aviso quando seria elegível mas CPF não passa na validação */}
+            {cpfBloqueiaCobranca && (
+              <p className="text-[11px] text-destructive pt-2">
+                CPF do sócio inválido ({socioCpf}). Cobrança externa não disponível.
+              </p>
+            )}
 
             {/* Modo de Recebimento — só quando elegível para cobrança externa */}
             {canExternalCharge && (
