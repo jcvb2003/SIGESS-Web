@@ -116,6 +116,7 @@ export class AsaasCollectionAdapter implements ICollectionProvider {
       await this.client.post<AsaasCustomer>(`/customers/${existing.id}`, {
         name: input.nome,
         cpfCnpj: input.cpf,
+        notificationDisabled: true,
         ...(input.email    ? { email: input.email }           : {}),
         ...(input.telefone ? { mobilePhone: input.telefone }  : {}),
         ...addressFields,
@@ -127,6 +128,7 @@ export class AsaasCollectionAdapter implements ICollectionProvider {
       name: input.nome,
       cpfCnpj: input.cpf,
       externalReference,
+      notificationDisabled: true,
       ...(input.email    ? { email: input.email }           : {}),
       ...(input.telefone ? { mobilePhone: input.telefone }  : {}),
       ...addressFields,
