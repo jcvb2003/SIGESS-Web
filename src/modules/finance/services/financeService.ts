@@ -346,6 +346,29 @@ export const financeService = {
     if (error) throw error;
   },
 
+  async createPendingLancamento(item: {
+    socio_cpf: string;
+    tipo: "mensalidade";
+    valor: number;
+    competencia_ano: number;
+    competencia_mes: number;
+    forma_pagamento: "boleto" | "pix";
+  }): Promise<string> {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data, error } = await supabase
+      .from("financeiro_lancamentos")
+      .insert({
+        ...item,
+        status: "pendente",
+        data_pagamento: null,
+        registrado_por: user?.id ?? null,
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    return (data as { id: string }).id;
+  },
+
   /**
    * Busca lançamentos por sessão (para comprovante).
    */

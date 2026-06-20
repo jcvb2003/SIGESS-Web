@@ -1,4 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { useCollectionConfig } from "../../hooks/data/useCollectionConfig";
+import { useCreateExternalCharge } from "../../hooks/edit/useCreateExternalCharge";
+import { RadioGroup, RadioGroupItem } from "@/shared/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
+import { Zap } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -66,11 +71,17 @@ export function PaymentSessionDialog({
   const { settings } = useFinanceSettings();
   const { lancamentos, isLoading: isLoadingStatement } = useMemberStatement(open ? socioCpf : null);
   const paymentMutation = usePaymentSession();
+  const { config: collectionConfig } = useCollectionConfig();
+  const createExternalChargeMutation = useCreateExternalCharge(socioCpf ?? "");
 
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
   const { state: paymentForm, dispatch: dispatchPaymentForm } =
     usePaymentSessionForm(currentYear);
+
+  const [chargeMode, setChargeMode] = useState<"immediate" | "external">("immediate");
+  const [billingType, setBillingType] = useState<"BOLETO" | "PIX">("BOLETO");
+  const [dueDate, setDueDate] = useState("");
   const {
     paymentCategory,
     selectedYears,
@@ -88,6 +99,20 @@ export function PaymentSessionDialog({
   const anoBase = settings?.ano_base_cobranca ?? 2024;
   const valorAnuidade = settings?.valor_anuidade ?? 0;
   const valorMensalidade = settings?.valor_mensalidade ?? (valorAnuidade / 12);
+
+  // Elegibilidade para cobrança externa — derivada do estado do reducer em tempo de render
+  const canExternalCharge =
+    paymentCategory === "mensalidade" &&
+    selectedMonths.length === 1 &&
+    extraFees.length === 0 &&
+    selectedCharges.length === 0 &&
+    !!collectionConfig?.has_api_key;
+
+  // Forçar modo imediato quando perde elegibilidade
+  useEffect(() => {
+    if (!canExternalCharge) setChargeMode("immediate");
+  }, [canExternalCharge]);
+
   const [savedGraceStartDate, setSavedGraceStartDate] = useState<string | null>(null);
   const [gracePeriodEnabled, setGracePeriodEnabled] = useState(false);
   const [gracePeriodMonth, setGracePeriodMonth] = useState<number>(currentMonth);
@@ -278,8 +303,35 @@ export function PaymentSessionDialog({
       extraFees.length > 0 ||
       selectedCharges.length > 0);
 
+  // Pre-check: já existe mensalidade não cancelada para a competência selecionada
+  const selectedMes = selectedMonths[0];
+  const jaTemLancamento =
+    canExternalCharge &&
+    !!selectedMes &&
+    lancamentos.some(
+      (l: { tipo: string; competencia_ano: number | null; competencia_mes: number | null; status: string }) =>
+        l.tipo === "mensalidade" &&
+        l.competencia_ano === selectedYearForMensalidade &&
+        l.competencia_mes === selectedMes &&
+        l.status !== "cancelado",
+    );
+
   const handleSubmit = async () => {
     if (!socioCpf) return;
+
+    // Fluxo externo: criar lançamento pendente + cobrança no provider
+    if (chargeMode === "external") {
+      if (!selectedMes || !dueDate) return;
+      createExternalChargeMutation.mutate(
+        {
+          item: { valor: valorMensalidade, competencia_ano: selectedYearForMensalidade, competencia_mes: selectedMes },
+          billingType,
+          dueDate,
+        },
+        { onSuccess: () => handleOpenChange(false) },
+      );
+      return;
+    }
 
     if (savedGraceStartDate !== gracePeriodStartDate) {
       try {
@@ -468,29 +520,87 @@ export function PaymentSessionDialog({
               onToggleHistoricMember={handleToggleHistoricMember}
             />
 
-            {/* Payment Method & Date */}
-            <div className="grid grid-cols-2 gap-4 pt-2">
-              <PaymentMethodSelect
-                value={paymentMethod}
-                onChange={(method) =>
-                  dispatchPaymentForm({ type: "setPaymentMethod", method })
-                }
-              />
-              <div className="space-y-1.5">
-                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">Data do Recebimento</Label>
-                <Input
-                  type="date"
-                  value={paymentDate}
-                  onChange={(e) =>
-                    dispatchPaymentForm({
-                      type: "setPaymentDate",
-                      date: e.target.value,
-                    })
-                  }
-                  className="h-10 text-xs font-bold border-border focus:ring-primary bg-card"
-                />
+            {/* Modo de Recebimento — só quando elegível para cobrança externa */}
+            {canExternalCharge && (
+              <div className="space-y-2 pt-2 border-t border-border/50">
+                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">
+                  Modo de recebimento
+                </Label>
+                <RadioGroup
+                  value={chargeMode}
+                  onValueChange={(v) => setChargeMode(v as "immediate" | "external")}
+                  className="grid grid-cols-2 gap-2"
+                >
+                  <label className={`flex items-center gap-2 rounded-lg border p-3 cursor-pointer text-xs font-semibold transition-colors ${chargeMode === "immediate" ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground"}`}>
+                    <RadioGroupItem value="immediate" />
+                    Recebimento imediato
+                  </label>
+                  <label className={`flex items-center gap-2 rounded-lg border p-3 cursor-pointer text-xs font-semibold transition-colors ${chargeMode === "external" ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground"}`}>
+                    <RadioGroupItem value="external" />
+                    <Zap className="h-3 w-3" />
+                    Gerar cobrança externa
+                  </label>
+                </RadioGroup>
               </div>
-            </div>
+            )}
+
+            {/* Payment Method & Date */}
+            {chargeMode === "immediate" ? (
+              <div className="grid grid-cols-2 gap-4 pt-2">
+                <PaymentMethodSelect
+                  value={paymentMethod}
+                  onChange={(method) =>
+                    dispatchPaymentForm({ type: "setPaymentMethod", method })
+                  }
+                />
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">Data do Recebimento</Label>
+                  <Input
+                    type="date"
+                    value={paymentDate}
+                    onChange={(e) =>
+                      dispatchPaymentForm({
+                        type: "setPaymentDate",
+                        date: e.target.value,
+                      })
+                    }
+                    className="h-10 text-xs font-bold border-border focus:ring-primary bg-card"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3 pt-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">Tipo de cobrança</Label>
+                    <Select value={billingType} onValueChange={(v) => setBillingType(v as "BOLETO" | "PIX")}>
+                      <SelectTrigger className="h-10 text-xs font-bold">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="BOLETO">Boleto</SelectItem>
+                        <SelectItem value="PIX">PIX</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">Data de vencimento</Label>
+                    <Input
+                      type="date"
+                      value={dueDate}
+                      onChange={(e) => setDueDate(e.target.value)}
+                      className="h-10 text-xs font-bold border-border focus:ring-primary bg-card"
+                    />
+                  </div>
+                </div>
+                {jaTemLancamento && (
+                  <p className="text-[11px] text-amber-600">
+                    Já existe lançamento para {String(selectedMes).padStart(2, "0")}/{selectedYearForMensalidade}.
+                    Use o extrato → Cobranças externas para sincronizar ou reemitir.
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Action Area */}
             <div className="flex flex-col gap-4 pt-6 border-t border-border/50">
@@ -509,15 +619,21 @@ export function PaymentSessionDialog({
                     </Button>
                   <Button
                     onClick={handleSubmit}
-                    disabled={paymentMutation.isPending || !canConfirm}
+                    disabled={
+                      chargeMode === "external"
+                        ? (createExternalChargeMutation.isPending || !dueDate || !selectedMes || jaTemLancamento)
+                        : (paymentMutation.isPending || !canConfirm)
+                    }
                     className="bg-primary hover:bg-primary/90 text-white font-black text-[11px] gap-2 h-10 px-6 shadow-md dark:shadow-none transition-all hover:-translate-y-0.5"
                   >
-                    {paymentMutation.isPending ? (
+                    {(paymentMutation.isPending || createExternalChargeMutation.isPending) ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : chargeMode === "external" ? (
+                      <Zap className="h-4 w-4 shrink-0" />
                     ) : (
                       <Check className="h-4 w-4 shrink-0" />
                     )}
-                    CONFIRMAR LANÇAMENTO
+                    {chargeMode === "external" ? "GERAR COBRANÇA" : "CONFIRMAR LANÇAMENTO"}
                   </Button>
                 </div>
               </div>

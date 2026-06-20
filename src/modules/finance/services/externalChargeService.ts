@@ -37,6 +37,27 @@ export const externalChargeService = {
     if (data?.error) throw new Error(data.error);
   },
 
+  // Cria cobrança externa para um lançamento existente (primeira tentativa)
+  async createCharge(
+    tenantId: string,
+    lancamentoId: string,
+    billingType: "BOLETO" | "PIX",
+    dueDate: string,
+  ): Promise<{ cobrancaId: string; paymentUrl: string | null; pixCode: string | null }> {
+    const { data, error } = await supabase.functions.invoke("member-collection-action", {
+      body: {
+        action: "create-charge",
+        p_tenant_id: tenantId,
+        lancamento_id: lancamentoId,
+        billing_type: billingType,
+        due_date: dueDate,
+      },
+    });
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+    return data as { cobrancaId: string; paymentUrl: string | null; pixCode: string | null };
+  },
+
   // Reemissão: cria NOVO FCX para o mesmo lançamento
   // (FCX anterior em status 'falha'|'expirada' libera o partial unique index)
   async reissue(
