@@ -120,8 +120,33 @@ serve(async (req: Request) => {
           .eq("id", typedFcxSync.lancamento_id);
 
         if (lancUpdateErr) {
+          // Tentar cancelar o lançamento pendente — pode ser duplicata de pagamento manual
+          // (competência já quitada por outro lançamento local)
+          const { error: cancelErr } = await supabaseAdmin
+            .from("financeiro_lancamentos")
+            .update({
+              status: "cancelado",
+              cancelamento_obs: "Cancelado automaticamente: competência já quitada por outro lançamento pago.",
+              updated_at: now,
+            })
+            .eq("id", typedFcxSync.lancamento_id)
+            .eq("status", "pendente"); // só cancela se ainda estiver pendente (idempotência)
+
+          if (!cancelErr) {
+            console.log("[sync-charge] Lançamento pendente cancelado automaticamente — duplicata de pagamento manual:", {
+              fcx_id, lancamentoId: typedFcxSync.lancamento_id,
+            });
+            return jsonResponse({
+              status: domainStatus,
+              conflito: "lancamento_cancelado_duplicata",
+              message: "Cobrança sincronizada; lançamento pendente duplicado foi cancelado automaticamente.",
+            });
+          }
+
+          // Cancelamento também falhou — erro real, preservar ambos os erros
           console.error("[sync-charge] FCX atualizado mas falha ao reconciliar lançamento:", {
-            fcx_id, lancamentoId: typedFcxSync.lancamento_id, error: lancUpdateErr,
+            fcx_id, lancamentoId: typedFcxSync.lancamento_id,
+            updateError: lancUpdateErr, cancelError: cancelErr,
           });
           return jsonResponse({ error: "Status sincronizado mas falha ao reconciliar lançamento" }, 500);
         }
