@@ -397,8 +397,8 @@ export function PaymentSessionDialog({
                 <Wallet className="h-5 w-5" />
                 <DialogTitle className="text-xl font-bold tracking-tight">Novo Lançamento Financeiro</DialogTitle>
               </div>
-              <p className="text-sm text-muted-foreground flex items-center gap-2">
-                Recibo de Sessão de Pagamento · <span className="font-bold text-muted-foreground uppercase text-[10px] tracking-tight">{paymentMethod}</span>
+              <p className="text-sm text-muted-foreground">
+                Recibo de Sessão de Pagamento
               </p>
             </div>
             <Button
