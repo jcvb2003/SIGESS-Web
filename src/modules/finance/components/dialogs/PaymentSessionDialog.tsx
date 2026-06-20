@@ -309,6 +309,26 @@ export function PaymentSessionDialog({
     [lancamentos],
   );
 
+  // Mapa mês → status FCX para o ano selecionado (só lançamentos pendentes)
+  // Permite indicadores visuais no grid de meses sem alterar regra de bloqueio
+  const externalStatusByMonth = useMemo(() => {
+    const map = new Map<number, "pendente" | "paga" | "cancelada" | "expirada" | "falha">();
+    for (const lanc of lancamentos) {
+      if (
+        lanc.tipo !== "mensalidade" ||
+        lanc.competencia_ano !== selectedYearForMensalidade ||
+        !lanc.competencia_mes ||
+        lanc.status !== "pendente"
+      ) continue;
+      // Preferir a FCX mais recente não cancelada (charges está ordenado por created_at DESC)
+      const fcx = charges.find((c) => c.lancamento_id === lanc.id && c.status !== "cancelada");
+      if (fcx) {
+        map.set(lanc.competencia_mes, fcx.status as "pendente" | "paga" | "cancelada" | "expirada" | "falha");
+      }
+    }
+    return map;
+  }, [lancamentos, charges, selectedYearForMensalidade]);
+
   const canConfirm =
     totalValue > 0 &&
     ((paymentCategory === "anuidade" && selectedYears.length > 0) ||
@@ -545,6 +565,7 @@ export function PaymentSessionDialog({
               onRemoveCharge={removeCharge}
               isHistoricMember={isHistoricMember}
               onToggleHistoricMember={handleToggleHistoricMember}
+              externalStatusByMonth={externalStatusByMonth}
             />
 
             {/* CPF inválido — aviso quando seria elegível mas CPF não passa na validação */}

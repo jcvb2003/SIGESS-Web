@@ -63,11 +63,14 @@ export interface ExtraFeeItem extends PaymentSessionItem {
 // Re-export for PaymentSessionDialog
 export type { SelectedCharge } from "../shared/PaymentTypeSelector";
 
+type ExternalChargeStatus = "pendente" | "paga" | "cancelada" | "expirada" | "falha";
+
 interface PaymentItemFormProps {
   readonly currentYear: number;
   readonly anoBase: number;
   readonly lancamentos: FinanceLancamento[];
   readonly isLoadingStatement: boolean;
+  readonly externalStatusByMonth?: Map<number, ExternalChargeStatus>;
 
   readonly paymentCategory: "anuidade" | "mensalidade";
   readonly onPaymentCategoryChange: (category: "anuidade" | "mensalidade") => void;
@@ -140,6 +143,7 @@ export function PaymentItemForm({
   onRemoveCharge,
   isHistoricMember,
   onToggleHistoricMember,
+  externalStatusByMonth,
 }: PaymentItemFormProps) {
   const [showAllYears, setShowAllYears] = useState(false);
 
@@ -416,10 +420,12 @@ export function PaymentItemForm({
                     m,
                     memberAdmissionDate,
                   );
-                 
+
                 const isPaid = paidInYear.has(m) || isAnnuityPaid;
                 const isSelected = selectedMonths.includes(m);
                 const isDisabled = isPaid || isBeforeAdmission;
+                // Status da FCX vinculada ao lançamento pendente deste mês (se houver)
+                const extStatus = externalStatusByMonth?.get(m);
 
                 let buttonClass = "bg-card border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-primary/5";
                 if (isDisabled) buttonClass = "bg-muted/50 border-border/30 opacity-60 cursor-not-allowed";
@@ -441,6 +447,18 @@ export function PaymentItemForm({
                       </span>
                     )}
                     {isSelected && <span className="text-[8px] font-bold text-primary-foreground/90 mt-0.5 animate-in zoom-in-50">OK</span>}
+                    {!isPaid && extStatus === "pendente" && (
+                      <span
+                        className="absolute top-1 right-1 h-2 w-2 rounded-full bg-amber-500"
+                        title="Cobrança externa pendente"
+                      />
+                    )}
+                    {!isPaid && (extStatus === "falha" || extStatus === "expirada") && (
+                      <span
+                        className="absolute top-1 right-1 text-[9px] font-black leading-none text-destructive"
+                        title="Cobrança com falha — use Reemitir no extrato"
+                      >!</span>
+                    )}
                   </button>
                 );
               })}
