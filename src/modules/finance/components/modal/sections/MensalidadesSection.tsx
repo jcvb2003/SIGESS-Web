@@ -242,19 +242,13 @@ function CompetenciaRow({
       {/* Conteúdo - cresce */}
       <div className="flex-1 min-w-0">
         {pagoLanc && (
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-medium text-foreground">Mensalidade</span>
-            <span className="text-[11px] text-muted-foreground">{competenciaLabel}</span>
-          </div>
+          <span className="text-xs font-medium text-foreground">Mensalidade</span>
         )}
         {!pagoLanc && pendenteLanc && (
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-amber-600">Aguardando</span>
-            <span className="text-[11px] text-muted-foreground">{competenciaLabel}</span>
-          </div>
+          <span className="text-xs font-medium text-amber-600">Aguardando</span>
         )}
         {!pagoLanc && !pendenteLanc && (
-          <span className="text-xs text-muted-foreground">Mensalidade {competenciaLabel}</span>
+          <span className="text-xs text-muted-foreground">Mensalidade</span>
         )}
 
         {/* Detalhes pagamento: data + método */}
