@@ -1,6 +1,7 @@
 export interface MemberCharge {
   providerChargeId: string;
   status: 'pendente' | 'paga' | 'cancelada' | 'expirada';
+  providerRawStatus?: string;  // status bruto do Asaas (ex: 'RECEIVED', 'PENDING') — para auditoria
   amount: number;
   dueDate: string;        // YYYY-MM-DD
   paymentUrl?: string;    // boleto URL ou invoice URL

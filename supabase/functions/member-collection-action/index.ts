@@ -91,11 +91,37 @@ serve(async (req: Request) => {
       const syncProvider = createCollectionProvider(typedCfgSync.api_key, typedCfgSync.ambiente === "sandbox");
       const charge = await syncProvider.fetchCharge(typedFcxSync.provider_charge_id);
 
+      const now = new Date().toISOString();
       const domainStatus = charge.status;
+
+      // Atualizar FCX com status real e provider_status bruto do Asaas
       await supabaseAdmin
         .from("financeiro_cobrancas_externas")
-        .update({ status: domainStatus, provider_status: typedFcxSync.provider, last_synced_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+        .update({
+          status: domainStatus,
+          provider_status: charge.providerRawStatus ?? null,  // status bruto (ex: 'RECEIVED'), não o nome do provider
+          last_synced_at: now,
+          updated_at: now,
+        })
         .eq("id", fcx_id);
+
+      // Se a cobrança foi paga: reconciliar o lançamento local
+      // (garante recovery quando o webhook falhou e o operador sincroniza manualmente)
+      if (domainStatus === "paga") {
+        const { data: fcxFull } = await supabaseAdmin
+          .from("financeiro_cobrancas_externas")
+          .select("lancamento_id")
+          .eq("id", fcx_id)
+          .maybeSingle();
+        const lancamentoId = (fcxFull as { lancamento_id: string } | null)?.lancamento_id;
+        if (lancamentoId) {
+          const paidDate = charge.paidAt ? charge.paidAt.split("T")[0] : now.split("T")[0];
+          await supabaseAdmin
+            .from("financeiro_lancamentos")
+            .update({ status: "pago", data_pagamento: paidDate, updated_at: now })
+            .eq("id", lancamentoId);
+        }
+      }
 
       return jsonResponse({ status: domainStatus });
     }

@@ -75,6 +75,7 @@ function mapAsaasWebhookEvent(asaasEvent: string): CollectionWebhookEventType {
 function mapPayment(res: AsaasPayment): MemberCharge {
   return {
     providerChargeId: res.id,
+    providerRawStatus: res.status,
     status: mapAsaasStatus(res.status),
     amount: res.value,
     dueDate: res.dueDate,
