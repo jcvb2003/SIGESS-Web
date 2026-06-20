@@ -125,7 +125,7 @@ serve(async (req: Request) => {
         // Regra: FCX paga é fonte de verdade final.
         // Cancelar proativamente qualquer lançamento conflitante (não-FCX) para a mesma competência.
         if (fcxLanc) {
-          await supabaseAdmin
+          const { error: cancelConflictErr } = await supabaseAdmin
             .from("financeiro_lancamentos")
             .update({
               status: "cancelado",
@@ -137,6 +137,19 @@ serve(async (req: Request) => {
             .eq("competencia_mes", fcxLanc.competencia_mes)
             .neq("id", typedFcxSync.lancamento_id)
             .in("status", ["pendente", "pago"]);
+
+          if (cancelConflictErr) {
+            console.error("[sync-charge] Falha ao cancelar lançamento conflitante — abortando promote:", {
+              fcx_id, lancamentoId: typedFcxSync.lancamento_id,
+              cancelError: cancelConflictErr,
+            });
+            return jsonResponse({
+              error: "Falha ao neutralizar lançamento conflitante antes de reconciliar",
+              detail: cancelConflictErr.message,
+              code: cancelConflictErr.code,
+              hint: cancelConflictErr.hint ?? null,
+            }, 500);
+          }
         }
 
         // Promover o lançamento FCX-linked a pago (conflitos já neutralizados)
