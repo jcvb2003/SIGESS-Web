@@ -66,7 +66,9 @@ export function useCreateExternalCharge(socioCpf: string | null) {
       // pendingLancamentoId preservado para retry reutilizar o mesmo lançamento
       invalidate();
       toast.error(
-        "Lançamento criado, mas cobrança falhou. Tente novamente ou veja o extrato para reemitir.",
+        err instanceof Error
+          ? `Cobrança falhou: ${err.message}`
+          : "Cobrança falhou. Veja o extrato para reemitir.",
       );
       console.error("[useCreateExternalCharge]", err);
     },

@@ -277,7 +277,11 @@ serve(async (req: Request) => {
       }
 
       return jsonResponse(
-        { error: "Falha ao criar cobrança no provider", cobrancaId: fcxId },
+        {
+          error: "Falha ao criar cobrança no provider",
+          providerError: (providerErr as Error).message ?? null,
+          cobrancaId: fcxId,
+        },
         502,
       );
     }

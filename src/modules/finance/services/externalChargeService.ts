@@ -54,7 +54,7 @@ export const externalChargeService = {
       },
     });
     if (error) throw error;
-    if (data?.error) throw new Error(data.error);
+    if (data?.error) throw new Error(data.providerError ?? data.error);
     return data as { cobrancaId: string; paymentUrl: string | null; pixCode: string | null };
   },
 
@@ -76,6 +76,6 @@ export const externalChargeService = {
       },
     });
     if (error) throw error;
-    if (data?.error) throw new Error(data.error);
+    if (data?.error) throw new Error(data.providerError ?? data.error);
   },
 };
