@@ -287,6 +287,17 @@ serve(async (req: Request) => {
     const sandbox = typedConfig.ambiente === "sandbox";
     const provider = createCollectionProvider(typedConfig.api_key, sandbox);
 
+    // DEBUG TEMPORÁRIO — remover após confirmar versão deployada
+    console.log("[debug-v2-ensureCustomer]", JSON.stringify({
+      has_endereco: !!typedSocio.endereco,
+      has_num: !!typedSocio.num,
+      has_cidade: !!typedSocio.cidade,
+      has_uf: !!typedSocio.uf,
+      competencia_mes: typedLancamento.competencia_mes,
+      competencia_ano: typedLancamento.competencia_ano,
+      description_preview: buildDescription(billing_type, typedSocio.nome ?? "Sócio", typedLancamento.competencia_mes, typedLancamento.competencia_ano),
+    }));
+
     let charge;
     try {
       const customer = await provider.ensureCustomer({
