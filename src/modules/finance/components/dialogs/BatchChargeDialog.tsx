@@ -8,7 +8,6 @@ import { Loader2, CheckCircle2, XCircle, SkipForward, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/shared/lib/supabase/client";
 import { useActiveScope } from "@/shared/hooks/useActiveScope";
-import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 
 interface BatchChargeDialogProps {
   open: boolean;
@@ -36,8 +35,6 @@ const YEARS = [CURRENT_YEAR - 1, CURRENT_YEAR, CURRENT_YEAR + 1].map(String);
 
 export function BatchChargeDialog({ open, onOpenChange }: Readonly<BatchChargeDialogProps>) {
   const { tenantId, unitId } = useActiveScope();
-  const { availableUnits } = useTenantUnits();
-  const hasMultiplePolos = availableUnits.length > 1;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<BatchResult | null>(null);
@@ -46,9 +43,6 @@ export function BatchChargeDialog({ open, onOpenChange }: Readonly<BatchChargeDi
   const [ano, setAno] = useState(String(CURRENT_YEAR));
   const [billingType, setBillingType] = useState<"BOLETO" | "PIX">("BOLETO");
   const [dueDate, setDueDate] = useState("");
-  // Polo selecionado: null = tenant todo (sem filtro de unit), string = unit_id específico
-  // Default: polo ativo atual; em tenants sem polos, sempre null
-  const [selectedUnitId, setSelectedUnitId] = useState<string | null>(unitId ?? null);
 
   const handleClose = () => {
     setResult(null);
@@ -68,7 +62,7 @@ export function BatchChargeDialog({ open, onOpenChange }: Readonly<BatchChargeDi
         body: {
           action: "batch-charge",
           p_tenant_id: tenantId,
-          p_unit_id: selectedUnitId,  // null = tenant todo; string = polo específico
+          p_unit_id: unitId ?? null,
           competencia_ano: Number(ano),
           competencia_mes: Number(mes),
           billing_type: billingType,
@@ -138,29 +132,6 @@ export function BatchChargeDialog({ open, onOpenChange }: Readonly<BatchChargeDi
               <Label>Data de vencimento</Label>
               <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
             </div>
-
-            {hasMultiplePolos && (
-              <div className="space-y-1.5">
-                <Label>Polo</Label>
-                <Select
-                  value={selectedUnitId ?? "__all__"}
-                  onValueChange={(v) => setSelectedUnitId(v === "__all__" ? null : v)}
-                >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__all__">Todos os polos (tenant)</SelectItem>
-                    {availableUnits.map((u) => (
-                      <SelectItem key={u.id} value={u.id}>{u.nome ?? u.id}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {!selectedUnitId && (
-                  <p className="text-[11px] text-amber-600">
-                    Recomendado: selecionar polo em tenants compartilhados para evitar ambiguidade de parâmetros.
-                  </p>
-                )}
-              </div>
-            )}
 
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>Cancelar</Button>
