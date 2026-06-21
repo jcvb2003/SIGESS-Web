@@ -198,7 +198,6 @@ export default function ExternalChargesPage() {
                 <TableHead className="h-11 px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Tipo</TableHead>
                 <TableHead className="h-11 px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground/80 hidden md:table-cell">Vencimento</TableHead>
                 <TableHead className="h-11 px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground/80 text-right hidden sm:table-cell">Valor</TableHead>
-                <TableHead className="h-11 px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Erro</TableHead>
                 <TableHead className="h-11 px-4" />
               </TableRow>
             </TableHeader>
@@ -206,7 +205,7 @@ export default function ExternalChargesPage() {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i} className="border-b border-border/20">
-                    {Array.from({ length: 9 }).map((__, j) => (
+                    {Array.from({ length: 8 }).map((__, j) => (
                       <TableCell key={j} className="px-4 py-3">
                         <Skeleton className="h-4 w-full" />
                       </TableCell>
@@ -215,7 +214,7 @@ export default function ExternalChargesPage() {
                 ))
               ) : groups.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="py-16 text-center">
+                  <TableCell colSpan={8} className="py-16 text-center">
                     <p className="text-sm font-medium text-muted-foreground">Nenhuma cobrança externa encontrada.</p>
                     <p className="text-xs text-muted-foreground mt-1">Tente ajustar os filtros ou o termo de busca.</p>
                   </TableCell>
@@ -245,7 +244,11 @@ export default function ExternalChargesPage() {
                           <span className="text-xs md:text-sm font-medium text-foreground/80 tabular-nums">{comp}</span>
                         </TableCell>
                         <TableCell className="px-4 py-3">
-                          <StatusBadge variant={STATUS_VARIANT[primary.status] ?? "secondary"} label={STATUS_LABEL[primary.status] ?? primary.status} />
+                          <StatusBadge
+                            variant={STATUS_VARIANT[primary.status] ?? "secondary"}
+                            label={STATUS_LABEL[primary.status] ?? primary.status}
+                            tooltip={primary.error_message ?? null}
+                          />
                         </TableCell>
                         <TableCell className="px-4 py-3">
                           {primary.lancamento_status
@@ -266,13 +269,6 @@ export default function ExternalChargesPage() {
                           <span className="text-xs md:text-sm font-semibold tabular-nums">
                             {primary.valor != null ? formatCurrency(primary.valor) : "—"}
                           </span>
-                        </TableCell>
-                        <TableCell className="px-4 py-3">
-                          {primary.error_message ? (
-                            <span className="text-[10px] text-destructive truncate max-w-[100px] block" title={primary.error_message}>
-                              {primary.error_message}
-                            </span>
-                          ) : null}
                         </TableCell>
                         <TableCell className="px-4 py-3">
                           <div className="flex items-center gap-1 justify-end">
@@ -310,7 +306,6 @@ export default function ExternalChargesPage() {
                             </span>
                           </TableCell>
                           <TableCell className="px-4 py-2 hidden sm:table-cell" />
-                          <TableCell className="px-4 py-2" />
                           <TableCell className="px-4 py-2" />
                         </TableRow>
                       ))}
