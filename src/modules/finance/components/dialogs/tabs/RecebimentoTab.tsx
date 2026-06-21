@@ -7,9 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/shared/components/ui/switch";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { Badge } from "@/shared/components/ui/badge";
-import { Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle, Copy, Check } from "lucide-react";
 import { useCollectionConfig } from "../../../hooks/data/useCollectionConfig";
 import { useUpdateCollectionConfig } from "../../../hooks/edit/useUpdateCollectionConfig";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
+import { getCurrentTenantConfig } from "@/config/tenants";
 
 interface RecebimentoForm {
   provider: string;
@@ -23,6 +25,20 @@ interface RecebimentoForm {
 export function RecebimentoTab() {
   const { config, isLoading } = useCollectionConfig();
   const updateMutation = useUpdateCollectionConfig();
+  const { tenantId } = useActiveScope();
+  const [copied, setCopied] = useState(false);
+
+  const tenantConfig = getCurrentTenantConfig();
+  const webhookUrl = tenantConfig?.supabaseUrl && tenantId
+    ? `${tenantConfig.supabaseUrl}/functions/v1/member-collection-webhook?p_tenant_id=${tenantId}`
+    : null;
+
+  const handleCopyWebhook = () => {
+    if (!webhookUrl) return;
+    navigator.clipboard.writeText(webhookUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const { register, handleSubmit, setValue, watch } = useForm<RecebimentoForm>({
     defaultValues: {
@@ -141,6 +157,34 @@ export function RecebimentoTab() {
                 Deixe em branco para manter o token atual.
               </p>
             </div>
+
+            {webhookUrl && (
+              <div className="space-y-1.5">
+                <Label>URL do webhook</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    readOnly
+                    value={webhookUrl}
+                    className="font-mono text-[11px] text-muted-foreground bg-muted/30"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0 h-9 w-9"
+                    onClick={handleCopyWebhook}
+                    title="Copiar URL"
+                  >
+                    {copied
+                      ? <Check className="h-3.5 w-3.5 text-success" />
+                      : <Copy className="h-3.5 w-3.5" />}
+                  </Button>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Cole esta URL no campo de webhook do Asaas.
+                </p>
+              </div>
+            )}
           </>
         )}
 

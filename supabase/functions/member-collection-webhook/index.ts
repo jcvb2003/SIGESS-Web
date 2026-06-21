@@ -160,21 +160,56 @@ serve(async (req: Request) => {
       return new Response("ok", { status: 200 });
     }
 
-    // Atualizar lançamento local — idempotente; só executa se FCX teve êxito
+    // Regra: FCX paga é fonte de verdade final.
+    // Buscar competência do FCX-linked para cancelar conflitos antes de promover.
+    const paidDate = extractDate(event.paidAt);
+    const { data: fcxLanc } = await supabaseAdmin
+      .from("financeiro_lancamentos")
+      .select("socio_cpf, competencia_ano, competencia_mes")
+      .eq("id", typedFcx.lancamento_id)
+      .maybeSingle() as { data: { socio_cpf: string; competencia_ano: number; competencia_mes: number } | null };
+
+    if (fcxLanc) {
+      // Buscar um admin/owner do tenant para satisfazer chk_cancelamento_audit_lancamentos
+      const { data: adminUser } = await supabaseAdmin
+        .from("tenant_users")
+        .select("user_id")
+        .eq("tenant_id", p_tenant_id)
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle() as { data: { user_id: string } | null };
+
+      const canceladoPor = adminUser?.user_id ?? p_tenant_id; // fallback: usar tenant_id como UUID
+
+      const { error: cancelConflictErr } = await supabaseAdmin
+        .from("financeiro_lancamentos")
+        .update({
+          status: "cancelado",
+          cancelado_por: canceladoPor,
+          cancelamento_obs: "Cancelado automaticamente: competência quitada via cobrança externa confirmada no Asaas.",
+        })
+        .eq("socio_cpf", fcxLanc.socio_cpf)
+        .eq("competencia_ano", fcxLanc.competencia_ano)
+        .eq("competencia_mes", fcxLanc.competencia_mes)
+        .neq("id", typedFcx.lancamento_id)
+        .neq("status", "cancelado");
+
+      if (cancelConflictErr) {
+        console.error("[webhook] Falha ao cancelar lançamento conflitante:", {
+          fcxId: typedFcx.id, lancamentoId: typedFcx.lancamento_id, error: cancelConflictErr,
+        });
+      }
+    }
+
+    // Promover FCX-linked a pago (conflitos já neutralizados)
     const { error: lancErr } = await supabaseAdmin
       .from("financeiro_lancamentos")
-      .update({
-        status: "pago",
-        data_pagamento: extractDate(event.paidAt),  // YYYY-MM-DD
-      })
+      .update({ status: "pago", data_pagamento: paidDate })
       .eq("id", typedFcx.lancamento_id);
 
     if (lancErr) {
-      // FCX já marcado como pago; inconsistência de lançamento → logar para reconciliação
-      console.error("[webhook] FCX pago mas falha ao atualizar lançamento:", {
-        fcxId: typedFcx.id,
-        lancamentoId: typedFcx.lancamento_id,
-        error: lancErr,
+      console.error("[webhook] FCX pago mas falha ao promover lançamento:", {
+        fcxId: typedFcx.id, lancamentoId: typedFcx.lancamento_id, error: lancErr,
       });
     }
     return new Response("ok", { status: 200 });

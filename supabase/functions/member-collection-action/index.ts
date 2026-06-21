@@ -113,6 +113,7 @@ serve(async (req: Request) => {
 
       const now = new Date().toISOString();
       const domainStatus = charge.status;
+      console.log("[sync-charge] status do provider:", { providerRawStatus: charge.providerRawStatus, domainStatus });
 
       const { error: fcxUpdateErr } = await supabaseAdmin
         .from("financeiro_cobrancas_externas")
@@ -291,29 +292,69 @@ serve(async (req: Request) => {
     }
 
     // ── Passo 6: INSERT em financeiro_cobrancas_externas (antes de chamar provider) ─
+    const fcxPayload = {
+      lancamento_id: typedLancamento.id,
+      tenant_id: p_tenant_id,
+      provider: typedConfig.provider,
+      billing_type,
+      valor: typedLancamento.valor,
+      data_vencimento: due_date,
+      status: "pendente",
+    };
+
+    let fcxId: string;
     const { data: fcxRow, error: fcxInsertErr } = await supabaseAdmin
       .from("financeiro_cobrancas_externas")
-      .insert({
-        lancamento_id: typedLancamento.id,
-        tenant_id: p_tenant_id,
-        provider: typedConfig.provider,
-        billing_type,
-        valor: typedLancamento.valor,
-        data_vencimento: due_date,
-        status: "pendente",
-      })
+      .insert(fcxPayload)
       .select("id")
       .single();
 
     if (fcxInsertErr) {
-      // 23505 = unique_violation → já existe cobrança ativa para este lançamento
-      if ((fcxInsertErr as { code?: string }).code === "23505") {
-        return jsonResponse({ error: "Já existe cobrança ativa para este lançamento" }, 409);
-      }
-      throw fcxInsertErr;
-    }
+      const fcxErr = fcxInsertErr as { code?: string; constraint?: string };
+      // 23505 em fcx_lancamento_ativo_idx: existe FCX pendente/paga bloqueando a reemissão.
+      // Cancelar a FCX bloqueante e retentar.
+      if (fcxErr.code === "23505" && fcxErr.constraint === "fcx_lancamento_ativo_idx") {
+        // Buscar FCX bloqueantes (pendente/paga) usando neq encadeados — mais confiável que .in() no Deno
+        const { data: bloqueantesRaw, error: fetchBloqErr } = await supabaseAdmin
+          .from("financeiro_cobrancas_externas")
+          .select("id, provider_charge_id")
+          .eq("lancamento_id", typedLancamento.id)
+          .neq("status", "cancelada")
+          .neq("status", "expirada")
+          .neq("status", "falha");
 
-    const fcxId = (fcxRow as { id: string }).id;
+        console.log("[create-charge] FCX bloqueantes encontrados:", { bloqueantesRaw, fetchBloqErr });
+
+        for (const b of (bloqueantesRaw ?? []) as { id: string; provider_charge_id: string | null }[]) {
+          if (b.provider_charge_id && typedConfig.api_key) {
+            try {
+              const cp = createCollectionProvider(typedConfig.api_key, typedConfig.ambiente === "sandbox");
+              await cp.cancelCharge(b.provider_charge_id);
+            } catch (e) {
+              console.warn("[create-charge] Falha ao cancelar no provider (best-effort):", e);
+            }
+          }
+          const { error: cancelBloqErr } = await supabaseAdmin
+            .from("financeiro_cobrancas_externas")
+            .update({ status: "cancelada" })
+            .eq("id", b.id);
+          console.log("[create-charge] Cancel bloqueante:", { id: b.id, cancelBloqErr });
+        }
+
+        const { data: fcxRetry, error: fcxRetryErr } = await supabaseAdmin
+          .from("financeiro_cobrancas_externas")
+          .insert(fcxPayload)
+          .select("id")
+          .single();
+
+        if (fcxRetryErr) throw fcxRetryErr;
+        fcxId = (fcxRetry as { id: string }).id;
+      } else {
+        throw fcxInsertErr;
+      }
+    } else {
+      fcxId = (fcxRow as { id: string }).id;
+    }
 
     // ── Passo 7-8: chamar provider ────────────────────────────────────────────────
     const sandbox = typedConfig.ambiente === "sandbox";
@@ -413,6 +454,8 @@ serve(async (req: Request) => {
     });
   } catch (err) {
     console.error("[member-collection-action] Erro inesperado:", err);
-    return jsonResponse({ error: "Erro interno" }, 500);
+    const e = err as { message?: string; code?: string; details?: string };
+    const message = e.message ?? String(err);
+    return jsonResponse({ error: "Erro interno", detail: message, ...(e.code ? { code: e.code } : {}), ...(e.details ? { details: e.details } : {}) }, 500);
   }
 });
