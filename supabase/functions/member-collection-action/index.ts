@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 // @ts-expect-error: Deno-specific URL imports
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { createCollectionProvider } from "../_shared/member-collection/asaas-adapter.ts";
+import { createCollectionProvider, AsaasApiError } from "../_shared/member-collection/asaas-adapter.ts";
 
 declare const Deno: { env: { get(key: string): string | undefined } };
 
@@ -92,7 +92,24 @@ serve(async (req: Request) => {
       if (!typedCfgSync?.api_key) return jsonResponse({ error: "API key não configurada" }, 422);
 
       const syncProvider = createCollectionProvider(typedCfgSync.api_key, typedCfgSync.ambiente === "sandbox");
-      const charge = await syncProvider.fetchCharge(typedFcxSync.provider_charge_id);
+
+      let charge;
+      try {
+        charge = await syncProvider.fetchCharge(typedFcxSync.provider_charge_id);
+      } catch (fetchErr) {
+        // 404 = cobrança não existe mais no provider (ex: deletada manualmente no Asaas)
+        // Tratar como cancelada — lançamento local volta a ficar livre para nova emissão
+        if (fetchErr instanceof AsaasApiError && fetchErr.status === 404) {
+          const now = new Date().toISOString();
+          await supabaseAdmin
+            .from("financeiro_cobrancas_externas")
+            .update({ status: "cancelada", provider_status: "DELETED", last_synced_at: now, updated_at: now })
+            .eq("id", fcx_id);
+          console.log("[sync-charge] Cobrança não encontrada no provider (404) — marcada como cancelada:", { fcx_id });
+          return jsonResponse({ status: "cancelada", detail: "Cobrança não encontrada no provider" });
+        }
+        throw fetchErr;
+      }
 
       const now = new Date().toISOString();
       const domainStatus = charge.status;

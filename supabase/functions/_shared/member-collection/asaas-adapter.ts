@@ -48,6 +48,7 @@ function mapAsaasStatus(asaasStatus: string): MemberCharge['status'] {
     case 'CHARGEBACK_DISPUTE':
     case 'AWAITING_CHARGEBACK_REVERSAL':
     case 'DUNNING_RECEIVED':
+    case 'DELETED':
       return 'cancelada';
     default:
       return 'pendente';

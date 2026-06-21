@@ -4,10 +4,11 @@ import { Button } from "@/shared/components/ui/button";
 import { Label } from "@/shared/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import { Input } from "@/shared/components/ui/input";
-import { Loader2, CheckCircle2, XCircle, SkipForward, Zap } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, SkipForward, Zap, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/shared/lib/supabase/client";
 import { useActiveScope } from "@/shared/hooks/useActiveScope";
+import { useAuth } from "@/modules/auth/context/authContextStore";
 
 interface BatchChargeDialogProps {
   open: boolean;
@@ -20,6 +21,8 @@ interface BatchResult {
   failed: { cpf: string; error: string }[];
   skipped: { cpf: string; reason: string }[];
 }
+
+type Step = "config" | "confirm" | "result";
 
 const MESES = [
   { value: "1", label: "Janeiro" }, { value: "2", label: "Fevereiro" },
@@ -35,9 +38,13 @@ const YEARS = [CURRENT_YEAR - 1, CURRENT_YEAR, CURRENT_YEAR + 1].map(String);
 
 export function BatchChargeDialog({ open, onOpenChange }: Readonly<BatchChargeDialogProps>) {
   const { tenantId, unitId } = useActiveScope();
+  const { user } = useAuth();
 
+  const [step, setStep] = useState<Step>("config");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<BatchResult | null>(null);
+  const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   const [mes, setMes] = useState(String(new Date().getMonth() + 1));
   const [ano, setAno] = useState(String(CURRENT_YEAR));
@@ -47,17 +54,39 @@ export function BatchChargeDialog({ open, onOpenChange }: Readonly<BatchChargeDi
   );
 
   const handleClose = () => {
+    setStep("config");
     setResult(null);
+    setPassword("");
+    setPasswordError(null);
     setDueDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString("sv"));
     onOpenChange(false);
   };
 
-  const handleSubmit = async () => {
-    if (!tenantId) return;
+  const handleAdvanceToConfirm = () => {
     if (!dueDate) { toast.error("Informe a data de vencimento."); return; }
+    setPassword("");
+    setPasswordError(null);
+    setStep("confirm");
+  };
+
+  const handleConfirmAndSubmit = async () => {
+    if (!password) { setPasswordError("Informe sua senha."); return; }
+    if (!tenantId || !user?.email) return;
 
     setIsSubmitting(true);
-    setResult(null);
+    setPasswordError(null);
+
+    // Re-autenticar com a senha informada
+    const { error: authErr } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password,
+    });
+
+    if (authErr) {
+      setPasswordError("Senha incorreta. Tente novamente.");
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       const { data, error } = await supabase.functions.invoke("member-collection-batch", {
@@ -76,12 +105,15 @@ export function BatchChargeDialog({ open, onOpenChange }: Readonly<BatchChargeDi
       if (data?.error) throw new Error(data.error);
 
       setResult(data as BatchResult);
+      setStep("result");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao gerar cobranças");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const mesLabel = MESES.find((m) => m.value === mes)?.label ?? mes;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -96,7 +128,7 @@ export function BatchChargeDialog({ open, onOpenChange }: Readonly<BatchChargeDi
           </DialogDescription>
         </DialogHeader>
 
-        {!result ? (
+        {step === "config" && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
@@ -136,14 +168,59 @@ export function BatchChargeDialog({ open, onOpenChange }: Readonly<BatchChargeDi
             </div>
 
             <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>Cancelar</Button>
-              <Button onClick={handleSubmit} disabled={isSubmitting} className="gap-2">
+              <Button variant="outline" onClick={handleClose}>Cancelar</Button>
+              <Button onClick={handleAdvanceToConfirm} className="gap-2">
+                <Zap className="h-4 w-4" />
+                Continuar
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {step === "confirm" && (
+          <div className="space-y-4">
+            <div className="rounded-xl border border-warning/30 bg-warning/5 p-4 space-y-1">
+              <p className="text-sm font-semibold text-foreground">Confirmar operação em massa</p>
+              <p className="text-xs text-muted-foreground">
+                Serão geradas cobranças via Asaas para <strong>{mesLabel}/{ano}</strong>{" "}
+                via <strong>{billingType}</strong> com vencimento em <strong>{dueDate}</strong>.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Esta ação não pode ser desfeita em lote.
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="flex items-center gap-1.5">
+                <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                Confirme sua senha para prosseguir
+              </Label>
+              <Input
+                type="password"
+                placeholder="Senha"
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setPasswordError(null); }}
+                onKeyDown={(e) => e.key === "Enter" && !isSubmitting && handleConfirmAndSubmit()}
+                autoFocus
+              />
+              {passwordError && (
+                <p className="text-xs text-destructive">{passwordError}</p>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setStep("config")} disabled={isSubmitting}>
+                Voltar
+              </Button>
+              <Button onClick={handleConfirmAndSubmit} disabled={isSubmitting || !password} className="gap-2">
                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
                 Gerar cobranças
               </Button>
             </div>
           </div>
-        ) : (
+        )}
+
+        {step === "result" && result && (
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-3 text-center">
               <div className="rounded-lg bg-success/10 p-3">
@@ -164,7 +241,7 @@ export function BatchChargeDialog({ open, onOpenChange }: Readonly<BatchChargeDi
             </div>
 
             {result.failed.length > 0 && (
-              <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 space-y-1">
+              <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 space-y-1 max-h-40 overflow-y-auto">
                 <p className="text-xs font-semibold text-destructive">Falhas:</p>
                 {result.failed.map((f) => (
                   <p key={f.cpf} className="text-xs text-muted-foreground">{f.cpf}: {f.error}</p>
