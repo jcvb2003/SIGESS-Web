@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/shared/components/ui/sheet";
 import { Card } from "@/shared/components/ui/card";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { DataTablePagination } from "@/shared/components/layout/DataTablePagination";
 import { DataTableSearch } from "@/shared/components/layout/DataTableSearch";
@@ -84,7 +85,6 @@ export default function ExternalChargesPage() {
   }), [billingTypeFilter, mesFilter, anoFilter, search]);
 
   const summary = useExternalChargesSummary(summaryFilters);
-
   const groups = useMemo(() => groupByCompetencia(data), [data]);
 
   const toggleExpand = (key: string) => {
@@ -96,7 +96,7 @@ export default function ExternalChargesPage() {
   };
 
   const renderActions = (row: ExternalChargeListItem) => (
-    <div className="flex items-center gap-1 shrink-0">
+    <div className="flex items-center gap-1">
       {row.payment_url && row.status !== "paga" && (
         <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
           <a href={row.payment_url} target="_blank" rel="noopener noreferrer" title="Abrir cobrança">
@@ -134,7 +134,7 @@ export default function ExternalChargesPage() {
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-10">
       <PageHeader
         title="Cobranças Externas"
         description="Visão operacional global de cobranças via Asaas"
@@ -143,14 +143,24 @@ export default function ExternalChargesPage() {
 
       {/* Summary strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {(["pendente", "paga", "falha", "expirada"] as const).map((s) => (
-          <button key={s} type="button"
-            onClick={() => { setStatusFilter(statusFilter === s ? null : s); setPage(1); }}
-            className={`rounded-lg border p-3 text-left transition-colors ${statusFilter === s ? "border-primary bg-primary/5" : "border-border/50 bg-card hover:bg-primary/10"}`}>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{STATUS_LABEL[s]}</p>
-            <p className="text-xl font-black text-foreground">{summary[s] ?? 0}</p>
-          </button>
-        ))}
+        {(["pendente", "paga", "falha", "expirada"] as const).map((s) => {
+          const active = statusFilter === s;
+          const colorMap: Record<string, { bg: string; border: string; text: string; activeBg: string; activeBorder: string }> = {
+            pendente: { bg: "bg-warning/5",     border: "border-warning/20",     text: "text-warning",     activeBg: "bg-warning/10",     activeBorder: "border-warning/40" },
+            paga:     { bg: "bg-success/5",     border: "border-success/20",     text: "text-success",     activeBg: "bg-success/10",     activeBorder: "border-success/40" },
+            falha:    { bg: "bg-destructive/5", border: "border-destructive/20", text: "text-destructive", activeBg: "bg-destructive/10", activeBorder: "border-destructive/40" },
+            expirada: { bg: "bg-destructive/5", border: "border-destructive/20", text: "text-destructive", activeBg: "bg-destructive/10", activeBorder: "border-destructive/40" },
+          };
+          const c = colorMap[s];
+          return (
+            <button key={s} type="button"
+              onClick={() => { setStatusFilter(active ? null : s); setPage(1); }}
+              className={`rounded-lg border p-3 text-left transition-all duration-200 hover:shadow-md ${active ? `${c.activeBg} ${c.activeBorder}` : `${c.bg} ${c.border} hover:${c.activeBg}`}`}>
+              <p className={`text-[10px] font-bold uppercase tracking-wider ${c.text}`}>{STATUS_LABEL[s]}</p>
+              <p className={`text-xl font-black ${c.text}`}>{summary[s] ?? 0}</p>
+            </button>
+          );
+        })}
       </div>
 
       {/* Tabela agrupada */}
@@ -166,113 +176,140 @@ export default function ExternalChargesPage() {
           </div>
         </div>
 
-        {isLoading ? (
-          <div className="divide-y divide-border">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-4 px-4 py-3">
-                <Skeleton className="h-8 w-40" />
-                <Skeleton className="h-5 w-16" />
-                <Skeleton className="h-5 w-20" />
-                <Skeleton className="h-5 w-20" />
-                <Skeleton className="h-5 w-16 ml-auto" />
-              </div>
-            ))}
-          </div>
-        ) : groups.length === 0 ? (
-          <div className="py-16 text-center">
-            <p className="text-sm font-medium text-muted-foreground">Nenhuma cobrança externa encontrada.</p>
-            <p className="text-xs text-muted-foreground mt-1">Tente ajustar os filtros ou o termo de busca.</p>
-          </div>
-        ) : (
-          <div className={`divide-y divide-border ${isFetching ? "opacity-60 pointer-events-none" : ""}`}>
-            {groups.map(({ key, primary, history }) => {
-              const expanded = expandedKeys.has(key);
-              const comp = primary.competencia_mes != null && primary.competencia_ano != null
-                ? `${String(primary.competencia_mes).padStart(2, "0")}/${primary.competencia_ano}`
-                : "—";
+        <div className={`overflow-x-auto ${isFetching ? "opacity-60 pointer-events-none" : ""}`}>
+          <Table>
+            <TableHeader>
+              <TableRow className="border-b border-border/40 bg-muted/20 hover:bg-muted/20">
+                <TableHead className="h-11 px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Sócio</TableHead>
+                <TableHead className="h-11 px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Comp.</TableHead>
+                <TableHead className="h-11 px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Status FCX</TableHead>
+                <TableHead className="h-11 px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Local</TableHead>
+                <TableHead className="h-11 px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Tipo</TableHead>
+                <TableHead className="h-11 px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground/80 hidden md:table-cell">Vencimento</TableHead>
+                <TableHead className="h-11 px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground/80 text-right hidden sm:table-cell">Valor</TableHead>
+                <TableHead className="h-11 px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Erro</TableHead>
+                <TableHead className="h-11 px-4" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i} className="border-b border-border/20">
+                    {Array.from({ length: 9 }).map((__, j) => (
+                      <TableCell key={j} className="px-4 py-3">
+                        <Skeleton className="h-4 w-full" />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : groups.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="py-16 text-center">
+                    <p className="text-sm font-medium text-muted-foreground">Nenhuma cobrança externa encontrada.</p>
+                    <p className="text-xs text-muted-foreground mt-1">Tente ajustar os filtros ou o termo de busca.</p>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                groups.map(({ key, primary, history }) => {
+                  const expanded = expandedKeys.has(key);
+                  const comp = primary.competencia_mes != null && primary.competencia_ano != null
+                    ? `${String(primary.competencia_mes).padStart(2, "0")}/${primary.competencia_ano}`
+                    : "—";
 
-              return (
-                <div key={key}>
-                  {/* Linha principal */}
-                  <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted/20 transition-colors">
-                    {/* Sócio */}
-                    <div className="min-w-0 w-44 shrink-0">
-                      <p className="text-xs font-medium text-foreground truncate uppercase">{primary.socio_nome ?? "—"}</p>
-                      <p className="text-[10px] text-muted-foreground opacity-70">{primary.socio_cpf ?? "—"}</p>
-                    </div>
-                    {/* Competência */}
-                    <span className="text-xs font-medium text-foreground/80 tabular-nums w-14 shrink-0">{comp}</span>
-                    {/* Status FCX */}
-                    <div className="w-24 shrink-0">
-                      <StatusBadge variant={STATUS_VARIANT[primary.status] ?? "secondary"} label={STATUS_LABEL[primary.status] ?? primary.status} />
-                    </div>
-                    {/* Status local */}
-                    <div className="w-20 shrink-0">
-                      {primary.lancamento_status
-                        ? <StatusBadge variant={LANC_STATUS_VARIANT[primary.lancamento_status] ?? "secondary"} label={primary.lancamento_status} />
-                        : <span className="text-muted-foreground text-xs">—</span>}
-                    </div>
-                    {/* Tipo */}
-                    <div className="w-16 shrink-0">
-                      {primary.billing_type
-                        ? <StatusBadge variant="info" label={primary.billing_type} />
-                        : <span className="text-muted-foreground text-xs">—</span>}
-                    </div>
-                    {/* Vencimento */}
-                    <span className="text-xs text-foreground/80 tabular-nums w-24 shrink-0 hidden md:block">
-                      {primary.data_vencimento ? formatDate(primary.data_vencimento) : "—"}
-                    </span>
-                    {/* Valor */}
-                    <span className="text-xs font-semibold tabular-nums text-right w-20 shrink-0 hidden sm:block">
-                      {primary.valor != null ? formatCurrency(primary.valor) : "—"}
-                    </span>
-                    {/* Erro */}
-                    {primary.error_message ? (
-                      <span className="text-[10px] text-destructive truncate max-w-[100px] hidden lg:block" title={primary.error_message}>
-                        {primary.error_message}
-                      </span>
-                    ) : <span className="flex-1 hidden lg:block" />}
-                    {/* Ações */}
-                    <div className="flex items-center gap-1 ml-auto">
-                      {renderActions(primary)}
-                      {history.length > 0 && (
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground"
-                          onClick={() => toggleExpand(key)} title={expanded ? "Ocultar histórico" : `${history.length} cobrança(s) anterior(es)`}>
-                          <History className="h-3.5 w-3.5" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
+                  return (
+                    <>
+                      {/* Linha principal */}
+                      <TableRow key={key} className="border-b border-border/20 hover:bg-muted/20">
+                        <TableCell className="px-4 py-3">
+                          <div className="flex flex-col gap-0.5 min-w-0">
+                            <span className="truncate font-medium text-xs md:text-sm text-foreground/90 uppercase leading-none">
+                              {primary.socio_nome ?? "—"}
+                            </span>
+                            <span className="text-[10px] md:text-xs text-muted-foreground truncate opacity-70 leading-none">
+                              {primary.socio_cpf ?? "—"}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          <span className="text-xs md:text-sm font-medium text-foreground/80 tabular-nums">{comp}</span>
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          <StatusBadge variant={STATUS_VARIANT[primary.status] ?? "secondary"} label={STATUS_LABEL[primary.status] ?? primary.status} />
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          {primary.lancamento_status
+                            ? <StatusBadge variant={LANC_STATUS_VARIANT[primary.lancamento_status] ?? "secondary"} label={primary.lancamento_status} />
+                            : <span className="text-muted-foreground text-xs">—</span>}
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          {primary.billing_type
+                            ? <StatusBadge variant="info" label={primary.billing_type} />
+                            : <span className="text-muted-foreground text-xs">—</span>}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 hidden md:table-cell">
+                          <span className="text-xs md:text-sm font-medium text-foreground/80 tabular-nums">
+                            {primary.data_vencimento ? formatDate(primary.data_vencimento) : "—"}
+                          </span>
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-right hidden sm:table-cell">
+                          <span className="text-xs md:text-sm font-semibold tabular-nums">
+                            {primary.valor != null ? formatCurrency(primary.valor) : "—"}
+                          </span>
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          {primary.error_message ? (
+                            <span className="text-[10px] text-destructive truncate max-w-[100px] block" title={primary.error_message}>
+                              {primary.error_message}
+                            </span>
+                          ) : null}
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          <div className="flex items-center gap-1 justify-end">
+                            {renderActions(primary)}
+                            {history.length > 0 && (
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground"
+                                onClick={() => toggleExpand(key)}
+                                title={expanded ? "Ocultar anteriores" : `${history.length} cobrança(s) anterior(es)`}>
+                                <History className="h-3.5 w-3.5" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
 
-                  {/* Histórico expandido */}
-                  {expanded && history.map((h) => (
-                    <div key={h.id} className="flex items-center gap-3 px-4 py-2 bg-muted/10 border-t border-dashed border-border/50">
-                      <div className="w-44 shrink-0" />
-                      <span className="w-14 shrink-0" />
-                      <div className="w-24 shrink-0">
-                        <StatusBadge variant={STATUS_VARIANT[h.status] ?? "secondary"} label={STATUS_LABEL[h.status] ?? h.status} className="opacity-70" />
-                      </div>
-                      <div className="w-20 shrink-0" />
-                      <div className="w-16 shrink-0">
-                        {h.billing_type
-                          ? <span className="text-[10px] text-muted-foreground">{h.billing_type}</span>
-                          : null}
-                      </div>
-                      <span className="text-[10px] text-muted-foreground tabular-nums w-24 shrink-0 hidden md:block">
-                        {h.data_vencimento ? formatDate(h.data_vencimento) : "—"}
-                      </span>
-                      <span className="flex-1" />
-                      <div className="flex items-center gap-1 ml-auto">
-                        {renderActions(h)}
-                        <span className="w-7" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
-          </div>
-        )}
+                      {/* Linhas históricas */}
+                      {expanded && history.map((h) => (
+                        <TableRow key={h.id} className="border-b border-dashed border-border/40 bg-muted/10 hover:bg-muted/10">
+                          <TableCell className="px-4 py-2" />
+                          <TableCell className="px-4 py-2">
+                            <span className="text-xs text-muted-foreground tabular-nums">{comp}</span>
+                          </TableCell>
+                          <TableCell className="px-4 py-2">
+                            <StatusBadge variant={STATUS_VARIANT[h.status] ?? "secondary"} label={STATUS_LABEL[h.status] ?? h.status} className="opacity-70" />
+                          </TableCell>
+                          <TableCell className="px-4 py-2" />
+                          <TableCell className="px-4 py-2">
+                            {h.billing_type
+                              ? <span className="text-[10px] text-muted-foreground">{h.billing_type}</span>
+                              : null}
+                          </TableCell>
+                          <TableCell className="px-4 py-2 hidden md:table-cell">
+                            <span className="text-[10px] text-muted-foreground tabular-nums">
+                              {h.data_vencimento ? formatDate(h.data_vencimento) : "—"}
+                            </span>
+                          </TableCell>
+                          <TableCell className="px-4 py-2 hidden sm:table-cell" />
+                          <TableCell className="px-4 py-2" />
+                          <TableCell className="px-4 py-2" />
+                        </TableRow>
+                      ))}
+                    </>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
         <DataTablePagination
           page={page} pageSize={PAGE_SIZE} total={total}
