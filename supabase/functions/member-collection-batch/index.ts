@@ -195,6 +195,7 @@ serve(async (req: Request) => {
           lancamento_id: lancamentoId,
           tenant_id: p_tenant_id,
           provider: typedConfig.provider,
+          billing_type,
           valor: typedParams.valor_mensalidade,
           data_vencimento: due_date,
           status: "pendente",
