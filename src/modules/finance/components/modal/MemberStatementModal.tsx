@@ -41,7 +41,7 @@ export function MemberStatementModal({
   const { lancamentos, daes, isLoading } = useMemberStatement(
     open ? cpf : null,
   );
-  const { charges, sync, isSyncingId, reissue, isReissuingLancId } = useExternalCharges(
+  const { charges, sync, isSyncingId, reissue, isReissuingLancId, cancelCharge, isCancellingId } = useExternalCharges(
     open ? cpf : null,
   );
 
@@ -203,6 +203,8 @@ export function MemberStatementModal({
                       isSyncingId={isSyncingId}
                       reissue={reissue}
                       isReissuingLancId={isReissuingLancId}
+                      cancelCharge={cancelCharge}
+                      isCancellingId={isCancellingId}
                     />
 
                     {outrosNaoMensalidade.length > 0 && (

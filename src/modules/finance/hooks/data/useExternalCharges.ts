@@ -10,6 +10,7 @@ export function useExternalCharges(cpf: string | null) {
 
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [reissuingLancId, setReissuingLancId] = useState<string | null>(null);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   const query = useQuery({
     queryKey: ["finance", "external-charges", cpf, tenantId ?? null],
@@ -48,6 +49,21 @@ export function useExternalCharges(cpf: string | null) {
     onSettled: () => setReissuingLancId(null),
   });
 
+  const cancelMutation = useMutation({
+    mutationFn: (fcxId: string) => {
+      setCancellingId(fcxId);
+      return externalChargeService.cancel(tenantId!, fcxId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["finance", "external-charges", cpf] });
+      toast.success("Cobrança cancelada.");
+    },
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : "Erro ao cancelar");
+    },
+    onSettled: () => setCancellingId(null),
+  });
+
   return {
     charges: query.data ?? [],
     isLoading: query.isLoading,
@@ -57,5 +73,7 @@ export function useExternalCharges(cpf: string | null) {
     reissue: (lancamentoId: string, billingType: "BOLETO" | "PIX", dueDate: string) =>
       reissueMutation.mutate({ lancamentoId, billingType, dueDate }),
     isReissuingLancId: (lancId: string) => reissuingLancId === lancId,
+    cancelCharge: (fcxId: string) => cancelMutation.mutate(fcxId),
+    isCancellingId: (id: string) => cancellingId === id,
   };
 }

@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ExternalLink, RefreshCw, RotateCcw, Loader2, History } from "lucide-react";
+import { ExternalLink, RefreshCw, RotateCcw, Loader2, History, XCircle } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/shared/components/ui/alert-dialog";
 import { ReportPageHeaderActions } from "@/modules/reports/components/ReportPageHeaderActions";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -71,13 +72,14 @@ export default function ExternalChargesPage() {
   const [anoFilter, setAnoFilter] = useState<number | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
+  const [cancelFcxId, setCancelFcxId] = useState<string | null>(null);
 
   const filters = useMemo(() => ({
     status: statusFilter, billingType: billingTypeFilter,
     mes: mesFilter, ano: anoFilter, search, page, pageSize: PAGE_SIZE,
   }), [statusFilter, billingTypeFilter, mesFilter, anoFilter, search, page]);
 
-  const { data, total, isLoading, isFetching, sync, isSyncing, syncingId, reissue, isReissuing, reissuingLancId } =
+  const { data, total, isLoading, isFetching, sync, isSyncing, syncingId, reissue, isReissuing, reissuingLancId, cancelCharge, isCancelling, cancellingId } =
     useExternalChargesList(filters);
 
   const summaryFilters = useMemo(() => ({
@@ -113,6 +115,15 @@ export default function ExternalChargesPage() {
             : <RefreshCw className="h-3.5 w-3.5" />}
         </Button>
       ) : null}
+      {row.status === "pendente" && (
+        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"
+          onClick={() => setCancelFcxId(row.id)}
+          disabled={isCancelling && cancellingId === row.id} title="Cancelar cobrança externa">
+          {isCancelling && cancellingId === row.id
+            ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            : <XCircle className="h-3.5 w-3.5" />}
+        </Button>
+      )}
       {REISSUABLE.has(row.status) && (
         <Button variant="ghost" size="icon" className="h-7 w-7 text-warning"
           onClick={() => {
@@ -318,6 +329,26 @@ export default function ExternalChargesPage() {
       </Card>
 
       {/* Sheet de filtros avançados */}
+      <AlertDialog open={!!cancelFcxId} onOpenChange={(open) => !open && setCancelFcxId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancelar cobrança externa?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A cobrança será cancelada no Asaas e a competência ficará livre para registro de pagamento manual.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Não, manter</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+              onClick={() => { if (cancelFcxId) { cancelCharge(cancelFcxId); setCancelFcxId(null); } }}
+            >
+              Sim, cancelar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
           <SheetHeader>

@@ -83,6 +83,17 @@ export const externalChargeService = {
     }
   },
 
+  async cancel(tenantId: string, fcxId: string): Promise<void> {
+    const { data, error } = await supabase.functions.invoke("member-collection-action", {
+      body: { action: "cancel-charge", p_tenant_id: tenantId, fcx_id: fcxId },
+    });
+    if (error) throw error;
+    if (data?.error) {
+      const detail = data.detail ? ` [${data.code ?? ""}] ${data.detail}` : "";
+      throw new Error(`${data.error}${detail}`);
+    }
+  },
+
   // Cria cobrança externa para um lançamento existente (primeira tentativa)
   async createCharge(
     tenantId: string,

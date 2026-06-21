@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { ExternalLink, RefreshCw, Loader2, RotateCcw, Pencil, Trash2, FileText, Check } from "lucide-react";
+import { ExternalLink, RefreshCw, Loader2, RotateCcw, Pencil, Trash2, FileText, Check, XCircle } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/shared/components/ui/alert-dialog";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import {
@@ -62,6 +63,8 @@ interface MensalidadesSectionProps {
   isSyncingId: (id: string) => boolean;
   reissue: (lancId: string, billing: "BOLETO" | "PIX", dueDate: string) => void;
   isReissuingLancId: (lancId: string) => boolean;
+  cancelCharge: (fcxId: string) => void;
+  isCancellingId: (id: string) => boolean;
 }
 
 type CompKey = `${number}-${number}`;
@@ -84,10 +87,13 @@ export function MensalidadesSection({
   isSyncingId,
   reissue,
   isReissuingLancId,
+  cancelCharge,
+  isCancellingId,
 }: MensalidadesSectionProps) {
   const [selectedItem, setSelectedItem] = useState<FinanceLancamento | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [cancelFcxId, setCancelFcxId] = useState<string | null>(null);
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   const [receiptData, setReceiptData] = useState<{ lancamentos: FinanceLancamento[]; daes: FinanceDAE[] }>({ lancamentos: [], daes: [] });
   const [isLoadingReceipt, setIsLoadingReceipt] = useState(false);
@@ -153,6 +159,8 @@ export function MensalidadesSection({
             onEdit={(l) => { setSelectedItem(l); setIsEditDialogOpen(true); }}
             onDelete={(l) => { setSelectedItem(l); setIsDeleteDialogOpen(true); }}
             onReceipt={handleViewReceipt}
+            onCancelFcx={(fcxId) => setCancelFcxId(fcxId)}
+            isCancellingId={isCancellingId}
             sync={sync}
             isSyncingId={isSyncingId}
             reissue={reissue}
@@ -189,6 +197,26 @@ export function MensalidadesSection({
         title="Cancelar Lançamento"
       />
 
+      <AlertDialog open={!!cancelFcxId} onOpenChange={(open) => !open && setCancelFcxId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancelar cobrança externa?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A cobrança será cancelada no Asaas e a competência ficará livre para registro de pagamento manual.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Não, manter</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+              onClick={() => { if (cancelFcxId) { cancelCharge(cancelFcxId); setCancelFcxId(null); } }}
+            >
+              Sim, cancelar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <EditLancamentoDialog
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
@@ -217,6 +245,8 @@ function CompetenciaRow({
   onEdit,
   onDelete,
   onReceipt,
+  onCancelFcx,
+  isCancellingId,
   sync,
   isSyncingId,
   reissue,
@@ -231,6 +261,8 @@ function CompetenciaRow({
   onEdit: (l: FinanceLancamento) => void;
   onDelete: (l: FinanceLancamento) => void;
   onReceipt: (sessaoId: string) => void;
+  onCancelFcx: (fcxId: string) => void;
+  isCancellingId: (id: string) => boolean;
   sync: (fcxId: string) => void;
   isSyncingId: (id: string) => boolean;
   reissue: (lancId: string, billing: "BOLETO" | "PIX", dueDate: string) => void;
@@ -365,6 +397,20 @@ function CompetenciaRow({
                 ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 : <RefreshCw className="h-3.5 w-3.5" />}
             </Button>
+            {fcxAtiva.status === "pendente" && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-destructive"
+                onClick={() => onCancelFcx(fcxAtiva.id)}
+                disabled={isCancellingId(fcxAtiva.id)}
+                title="Cancelar cobrança externa"
+              >
+                {isCancellingId(fcxAtiva.id)
+                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  : <XCircle className="h-3.5 w-3.5" />}
+              </Button>
+            )}
             {REISSUABLE.has(fcxAtiva.status) && (
               <Button
                 variant="ghost"

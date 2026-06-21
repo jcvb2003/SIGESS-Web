@@ -40,6 +40,12 @@ export function useExternalChargesList(filters: ListFilters) {
     onError: (err: unknown) => toast.error(err instanceof Error ? err.message : "Erro ao reemitir"),
   });
 
+  const cancelMutation = useMutation({
+    mutationFn: (fcxId: string) => externalChargeService.cancel(tenantId!, fcxId),
+    onSuccess: () => { invalidate(); toast.success("Cobrança cancelada."); },
+    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : "Erro ao cancelar"),
+  });
+
   return {
     data: query.data?.data ?? [],
     total: query.data?.total ?? 0,
@@ -52,5 +58,8 @@ export function useExternalChargesList(filters: ListFilters) {
       reissueMutation.mutate({ lancamentoId, billingType, dueDate }),
     isReissuing: reissueMutation.isPending,
     reissuingLancId: (reissueMutation.variables as { lancamentoId: string } | undefined)?.lancamentoId,
+    cancelCharge: (fcxId: string) => cancelMutation.mutate(fcxId),
+    isCancelling: cancelMutation.isPending,
+    cancellingId: cancelMutation.variables as string | undefined,
   };
 }

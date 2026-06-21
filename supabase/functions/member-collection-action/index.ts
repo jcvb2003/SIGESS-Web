@@ -193,6 +193,86 @@ serve(async (req: Request) => {
       return jsonResponse({ status: domainStatus });
     }
 
+    // ── Action: cancel-charge ─────────────────────────────────────────────────
+    if (action === "cancel-charge") {
+      const { fcx_id } = body as { fcx_id: string };
+      if (!p_tenant_id || !fcx_id) return jsonResponse({ error: "p_tenant_id e fcx_id obrigatórios" }, 400);
+
+      const { data: membershipCancel } = await supabaseAdmin
+        .from("tenant_users").select("tenant_id").eq("user_id", user.id)
+        .eq("tenant_id", p_tenant_id).eq("is_active", true).maybeSingle();
+      if (!membershipCancel) return jsonResponse({ error: "Acesso negado" }, 403);
+
+      const { data: fcxCancel, error: fcxCancelErr } = await supabaseAdmin
+        .from("financeiro_cobrancas_externas")
+        .select("id, provider_charge_id, status, lancamento_id")
+        .eq("id", fcx_id).eq("tenant_id", p_tenant_id).maybeSingle();
+      if (fcxCancelErr) throw fcxCancelErr;
+      if (!fcxCancel) return jsonResponse({ error: "Cobrança externa não encontrada" }, 404);
+
+      const typedFcxCancel = fcxCancel as { id: string; provider_charge_id: string | null; status: string; lancamento_id: string };
+
+      if (typedFcxCancel.status !== "pendente") {
+        return jsonResponse({ error: "Somente cobranças pendentes podem ser canceladas", status: typedFcxCancel.status }, 409);
+      }
+
+      // Guard de integridade: lançamento pago vinculado a FCX pendente é estado anômalo
+      const { data: lancCancel } = await supabaseAdmin
+        .from("financeiro_lancamentos")
+        .select("id, status")
+        .eq("id", typedFcxCancel.lancamento_id)
+        .maybeSingle() as { data: { id: string; status: string } | null };
+
+      if (lancCancel?.status === "pago") {
+        return jsonResponse({ error: "Lançamento já pago — inconsistência detectada", lancamento_id: typedFcxCancel.lancamento_id }, 409);
+      }
+
+      // Cancelar no provider
+      if (typedFcxCancel.provider_charge_id) {
+        const { data: cfgCancel } = await supabaseAdmin
+          .from("configuracao_recebimento")
+          .select("api_key, ambiente").eq("tenant_id", p_tenant_id).maybeSingle();
+        const typedCfgCancel = cfgCancel as { api_key: string | null; ambiente: string } | null;
+
+        if (typedCfgCancel?.api_key) {
+          try {
+            const cancelProvider = createCollectionProvider(typedCfgCancel.api_key, typedCfgCancel.ambiente === "sandbox");
+            await cancelProvider.cancelCharge(typedFcxCancel.provider_charge_id);
+          } catch (providerCancelErr) {
+            // 404 = charge já inexistente no provider → tratar como cancelada, continuar
+            if (!(providerCancelErr instanceof AsaasApiError && providerCancelErr.status === 404)) {
+              const e = providerCancelErr as { message?: string; code?: string };
+              return jsonResponse({ error: "Falha ao cancelar no provider", detail: e.message, code: e.code }, 500);
+            }
+            console.log("[cancel-charge] Provider 404 — charge inexistente, prosseguindo cancelamento local:", { fcx_id });
+          }
+        }
+      }
+
+      // UPDATE FCX
+      const now = new Date().toISOString();
+      const { error: fcxUpdateCancelErr } = await supabaseAdmin
+        .from("financeiro_cobrancas_externas")
+        .update({ status: "cancelada", updated_at: now })
+        .eq("id", fcx_id);
+      if (fcxUpdateCancelErr) {
+        return jsonResponse({ error: "Falha ao cancelar cobrança externa", detail: fcxUpdateCancelErr.message, code: fcxUpdateCancelErr.code }, 500);
+      }
+
+      // UPDATE lançamento → pendente
+      const { error: lancUpdateCancelErr } = await supabaseAdmin
+        .from("financeiro_lancamentos")
+        .update({ status: "pendente", data_pagamento: null })
+        .eq("id", typedFcxCancel.lancamento_id);
+      if (lancUpdateCancelErr) {
+        // FCX já cancelada mas lançamento não revertido — estado torto, retornar 500 com detalhe
+        console.error("[cancel-charge] FCX cancelada mas falha ao reverter lançamento:", { fcx_id, lancamento_id: typedFcxCancel.lancamento_id, error: lancUpdateCancelErr });
+        return jsonResponse({ error: "FCX cancelada mas falha ao reverter lançamento para pendente", detail: lancUpdateCancelErr.message, code: lancUpdateCancelErr.code }, 500);
+      }
+
+      return jsonResponse({ status: "cancelada" });
+    }
+
     if (action !== "create-charge") {
       return jsonResponse({ error: `Ação desconhecida: ${action}` }, 400);
     }
