@@ -102,8 +102,8 @@ export function MemberStatementModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-2xl p-0 outline-none overflow-hidden [&>button]:hidden">
-        <div className="flex flex-col h-full max-h-[90vh] sm:max-h-[85vh] overflow-hidden">
+      <DialogContent className="w-full max-w-4xl p-0 outline-none overflow-hidden [&>button]:hidden">
+        <div className="flex flex-col h-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-4 border-b flex-shrink-0">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">

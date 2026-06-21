@@ -249,28 +249,26 @@ serve(async (req: Request) => {
         }
       }
 
-      // UPDATE FCX
-      const now = new Date().toISOString();
-      const { error: fcxUpdateCancelErr } = await supabaseAdmin
+      // DELETE FCX primeiro (FK referencia lancamento — ordem importa)
+      const { error: fcxDeleteErr } = await supabaseAdmin
         .from("financeiro_cobrancas_externas")
-        .update({ status: "cancelada", updated_at: now })
+        .delete()
         .eq("id", fcx_id);
-      if (fcxUpdateCancelErr) {
-        return jsonResponse({ error: "Falha ao cancelar cobrança externa", detail: fcxUpdateCancelErr.message, code: fcxUpdateCancelErr.code }, 500);
+      if (fcxDeleteErr) {
+        return jsonResponse({ error: "Falha ao excluir cobrança externa", detail: fcxDeleteErr.message, code: fcxDeleteErr.code }, 500);
       }
 
-      // UPDATE lançamento → pendente
-      const { error: lancUpdateCancelErr } = await supabaseAdmin
+      // DELETE lançamento
+      const { error: lancDeleteErr } = await supabaseAdmin
         .from("financeiro_lancamentos")
-        .update({ status: "pendente", data_pagamento: null })
+        .delete()
         .eq("id", typedFcxCancel.lancamento_id);
-      if (lancUpdateCancelErr) {
-        // FCX já cancelada mas lançamento não revertido — estado torto, retornar 500 com detalhe
-        console.error("[cancel-charge] FCX cancelada mas falha ao reverter lançamento:", { fcx_id, lancamento_id: typedFcxCancel.lancamento_id, error: lancUpdateCancelErr });
-        return jsonResponse({ error: "FCX cancelada mas falha ao reverter lançamento para pendente", detail: lancUpdateCancelErr.message, code: lancUpdateCancelErr.code }, 500);
+      if (lancDeleteErr) {
+        console.error("[cancel-charge] FCX excluída mas falha ao excluir lançamento:", { fcx_id, lancamento_id: typedFcxCancel.lancamento_id, error: lancDeleteErr });
+        return jsonResponse({ error: "Cobrança excluída no Asaas e localmente, mas falha ao excluir lançamento", detail: lancDeleteErr.message, code: lancDeleteErr.code }, 500);
       }
 
-      return jsonResponse({ status: "cancelada" });
+      return jsonResponse({ deleted: true });
     }
 
     if (action !== "create-charge") {

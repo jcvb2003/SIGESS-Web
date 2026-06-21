@@ -433,7 +433,7 @@ export function PaymentSessionDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="w-full max-w-xl p-0 outline-none [&>button]:hidden overflow-hidden bg-card shadow-2xl rounded-2xl border-none">
+      <DialogContent className="w-full max-w-3xl p-0 outline-none [&>button]:hidden overflow-hidden bg-card shadow-2xl rounded-2xl border-none">
         <DialogHeader className="px-6 pt-6 pb-2 border-b flex-shrink-0">
           <div className="flex items-center justify-between">
             <div>
