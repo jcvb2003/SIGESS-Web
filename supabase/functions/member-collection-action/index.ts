@@ -291,69 +291,111 @@ serve(async (req: Request) => {
       return jsonResponse({ error: "Credenciais do provider não configuradas" }, 422);
     }
 
-    // ── Passo 6: INSERT em financeiro_cobrancas_externas (antes de chamar provider) ─
-    const fcxPayload = {
-      lancamento_id: typedLancamento.id,
-      tenant_id: p_tenant_id,
-      provider: typedConfig.provider,
-      billing_type,
-      valor: typedLancamento.valor,
-      data_vencimento: due_date,
-      status: "pendente",
-    };
-
+    // ── Passo 6: FCX — reutilizar se existir em status terminal (reemissão), senão inserir ─
+    // Reemissão = UPDATE da FCX existente (falha/expirada) com nova data e novo provider_charge_id.
+    // Criação inicial = INSERT. Isso evita acúmulo de registros históricos.
     let fcxId: string;
-    const { data: fcxRow, error: fcxInsertErr } = await supabaseAdmin
+
+    const { data: fcxExistente } = await supabaseAdmin
       .from("financeiro_cobrancas_externas")
-      .insert(fcxPayload)
-      .select("id")
-      .single();
+      .select("id, provider_charge_id")
+      .eq("lancamento_id", typedLancamento.id)
+      .neq("status", "cancelada")
+      .neq("status", "pendente")
+      .neq("status", "paga")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle() as { data: { id: string; provider_charge_id: string | null } | null };
 
-    if (fcxInsertErr) {
-      const fcxErr = fcxInsertErr as { code?: string; constraint?: string };
-      // 23505 em fcx_lancamento_ativo_idx: existe FCX pendente/paga bloqueando a reemissão.
-      // Cancelar a FCX bloqueante e retentar.
-      if (fcxErr.code === "23505" && fcxErr.constraint === "fcx_lancamento_ativo_idx") {
-        // Buscar FCX bloqueantes (pendente/paga) usando neq encadeados — mais confiável que .in() no Deno
-        const { data: bloqueantesRaw, error: fetchBloqErr } = await supabaseAdmin
-          .from("financeiro_cobrancas_externas")
-          .select("id, provider_charge_id")
-          .eq("lancamento_id", typedLancamento.id)
-          .neq("status", "cancelada")
-          .neq("status", "expirada")
-          .neq("status", "falha");
-
-        console.log("[create-charge] FCX bloqueantes encontrados:", { bloqueantesRaw, fetchBloqErr });
-
-        for (const b of (bloqueantesRaw ?? []) as { id: string; provider_charge_id: string | null }[]) {
-          if (b.provider_charge_id && typedConfig.api_key) {
-            try {
-              const cp = createCollectionProvider(typedConfig.api_key, typedConfig.ambiente === "sandbox");
-              await cp.cancelCharge(b.provider_charge_id);
-            } catch (e) {
-              console.warn("[create-charge] Falha ao cancelar no provider (best-effort):", e);
-            }
-          }
-          const { error: cancelBloqErr } = await supabaseAdmin
-            .from("financeiro_cobrancas_externas")
-            .update({ status: "cancelada" })
-            .eq("id", b.id);
-          console.log("[create-charge] Cancel bloqueante:", { id: b.id, cancelBloqErr });
+    if (fcxExistente) {
+      // Reemissão: cancelar no provider (best-effort) e reutilizar o registro
+      if (fcxExistente.provider_charge_id) {
+        try {
+          const cp = createCollectionProvider(typedConfig.api_key, typedConfig.ambiente === "sandbox");
+          await cp.cancelCharge(fcxExistente.provider_charge_id);
+        } catch (e) {
+          console.warn("[create-charge] Falha ao cancelar charge anterior no provider:", e);
         }
-
-        const { data: fcxRetry, error: fcxRetryErr } = await supabaseAdmin
-          .from("financeiro_cobrancas_externas")
-          .insert(fcxPayload)
-          .select("id")
-          .single();
-
-        if (fcxRetryErr) throw fcxRetryErr;
-        fcxId = (fcxRetry as { id: string }).id;
-      } else {
-        throw fcxInsertErr;
       }
+      const { error: updateErr } = await supabaseAdmin
+        .from("financeiro_cobrancas_externas")
+        .update({
+          billing_type,
+          valor: typedLancamento.valor,
+          data_vencimento: due_date,
+          status: "pendente",
+          provider_charge_id: null,
+          error_message: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", fcxExistente.id);
+      if (updateErr) throw updateErr;
+      fcxId = fcxExistente.id;
     } else {
-      fcxId = (fcxRow as { id: string }).id;
+      // Criação inicial: INSERT
+      const { data: fcxRow, error: fcxInsertErr } = await supabaseAdmin
+        .from("financeiro_cobrancas_externas")
+        .insert({
+          lancamento_id: typedLancamento.id,
+          tenant_id: p_tenant_id,
+          provider: typedConfig.provider,
+          billing_type,
+          valor: typedLancamento.valor,
+          data_vencimento: due_date,
+          status: "pendente",
+        })
+        .select("id")
+        .single();
+
+      if (fcxInsertErr) {
+        // 23505: FCX pendente/paga bloqueando — cancelar e retentar
+        const fcxErr = fcxInsertErr as { code?: string; constraint?: string };
+        if (fcxErr.code === "23505" && fcxErr.constraint === "fcx_lancamento_ativo_idx") {
+          const { data: bloqueantes } = await supabaseAdmin
+            .from("financeiro_cobrancas_externas")
+            .select("id, provider_charge_id")
+            .eq("lancamento_id", typedLancamento.id)
+            .neq("status", "cancelada")
+            .neq("status", "expirada")
+            .neq("status", "falha");
+
+          for (const b of (bloqueantes ?? []) as { id: string; provider_charge_id: string | null }[]) {
+            if (b.provider_charge_id) {
+              try {
+                const cp = createCollectionProvider(typedConfig.api_key, typedConfig.ambiente === "sandbox");
+                await cp.cancelCharge(b.provider_charge_id);
+              } catch (e) {
+                console.warn("[create-charge] Falha ao cancelar bloqueante no provider:", e);
+              }
+            }
+            await supabaseAdmin
+              .from("financeiro_cobrancas_externas")
+              .update({ status: "cancelada" })
+              .eq("id", b.id);
+          }
+
+          const { data: fcxRetry, error: fcxRetryErr } = await supabaseAdmin
+            .from("financeiro_cobrancas_externas")
+            .insert({
+              lancamento_id: typedLancamento.id,
+              tenant_id: p_tenant_id,
+              provider: typedConfig.provider,
+              billing_type,
+              valor: typedLancamento.valor,
+              data_vencimento: due_date,
+              status: "pendente",
+            })
+            .select("id")
+            .single();
+
+          if (fcxRetryErr) throw fcxRetryErr;
+          fcxId = (fcxRetry as { id: string }).id;
+        } else {
+          throw fcxInsertErr;
+        }
+      } else {
+        fcxId = (fcxRow as { id: string }).id;
+      }
     }
 
     // ── Passo 7-8: chamar provider ────────────────────────────────────────────────
