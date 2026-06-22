@@ -2,7 +2,6 @@ import { photoService } from "./photoService";
 import { DuplicateCpfError, LimitExceededError } from "../domain/memberErrors";
 import { supabase } from "@/shared/lib/supabase/client";
 import {
-  LocalityOption,
   MemberRegistrationForm,
   MemberSearchParams,
   MembersResult,

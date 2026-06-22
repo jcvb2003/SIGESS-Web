@@ -62,7 +62,7 @@ const NAV_LINKS = [
 
 export default function FinancePage() {
   const navigate = useNavigate();
-  const { params, setSearch, setTab, setPage, setPageSize, applyAdvancedFilters, clearAdvancedFilters, hasActiveAdvancedFilters } = useFinanceFilters();
+  const { params, setSearch, setTab, setPage, setPageSize, applyAdvancedFilters, clearAdvancedFilters } = useFinanceFilters();
   const debouncedSearchTerm = useDebounce(params.searchTerm, 300);
   const { settings } = useFinanceSettings();
   const { isAdmin } = usePermissions();

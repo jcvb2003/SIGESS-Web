@@ -67,6 +67,8 @@ async function getEntity(scope: UnitReadScope): Promise<ServiceResponse<EntitySe
     return { data: { ...defaultEntitySettings }, error: null };
   }
 
+  const entityRecord = entityData as Record<string, unknown>;
+
   let logoUrl: string | undefined = undefined;
   if (configData?.logo_path) {
     const { data: publicUrlData } = supabase.storage
@@ -78,7 +80,7 @@ async function getEntity(scope: UnitReadScope): Promise<ServiceResponse<EntitySe
   return {
     data: {
       id: entityData.id ? String(entityData.id) : undefined,
-      unitId: (entityData as Record<string, unknown>).unit_id as string | null ?? null,
+      unitId: entityRecord.unit_id as string | null ?? null,
       name: toStringValue(entityData.nome_entidade),
       shortName: toStringValue(entityData.nome_abreviado),
       cnpj: toStringValue(entityData.cnpj),
@@ -103,7 +105,7 @@ async function getEntity(scope: UnitReadScope): Promise<ServiceResponse<EntitySe
       corSidebar: toStringValue(configData?.cor_sidebar, BRANDING_COLORS.primary),
       logoPath: configData?.logo_path ? String(configData.logo_path) : undefined,
       logoUrl: logoUrl,
-      tenantMode: (entityData.tenant_mode as 'pesca' | 'agricultura') ?? null,
+      tenantMode: (entityRecord.tenant_mode as 'pesca' | 'agricultura' | undefined) ?? null,
     },
     error: null,
   };

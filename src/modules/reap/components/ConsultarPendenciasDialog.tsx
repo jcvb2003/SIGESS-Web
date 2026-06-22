@@ -25,7 +25,6 @@ import { Label } from "@/shared/components/ui/label";
 import * as pdfjs from "pdfjs-dist";
 import pdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import {
-  type ReapMember,
   type ReconciliationResult,
   parsePdfRows,
   buildMemberIndex,

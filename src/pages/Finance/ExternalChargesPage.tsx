@@ -320,6 +320,7 @@ export default function ExternalChargesPage() {
         <DataTablePagination
           page={page} pageSize={PAGE_SIZE} total={total}
           onPageChange={setPage} entityName="cobranças" showNumbers
+          onPageSizeChange={() => undefined}
         />
       </Card>
 

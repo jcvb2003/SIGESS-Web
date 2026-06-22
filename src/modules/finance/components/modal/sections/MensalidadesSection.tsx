@@ -274,8 +274,6 @@ function CompetenciaRow({
   const pendenteLanc = row.lancamentos.find((l) => l.status === "pendente") ?? null;
 
   const mesLabel = MONTH_LABELS[row.mes] ?? String(row.mes);
-  const competenciaLabel = `${String(row.mes).padStart(2, "0")}/${row.ano}`;
-
   const fcxPaga = fcxAtiva?.status === "paga";
 
   const isSelected = pagoLanc ? (selectedIds?.includes(pagoLanc.id) ?? false) : false;

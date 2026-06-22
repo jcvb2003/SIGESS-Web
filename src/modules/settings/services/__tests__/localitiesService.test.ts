@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { supabase } from '@/shared/lib/supabase/client';
 import { localitiesService } from '../localitiesService';
-import { buildQueryMock } from '@/test/mocks/supabaseMock';
 
 vi.mock('@/shared/lib/supabase/client', () => ({
   supabase: { from: vi.fn() },
