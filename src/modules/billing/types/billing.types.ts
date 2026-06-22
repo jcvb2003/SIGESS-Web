@@ -8,6 +8,8 @@ export interface BillingSummaryRow {
   pending_charge_amount: number | null;
   payment_url: string | null;
   last_synced_at: string | null;
+  is_billing_blocked: boolean;
+  billing_blocked_reason: 'billing_delinquent' | 'manual_suspend' | null;
 }
 
 export interface PortalTokenPayload {
