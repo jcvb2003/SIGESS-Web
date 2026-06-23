@@ -148,16 +148,61 @@ export function FinanceReceiptContent({
                 </div>
               ))}
             </>
-          ) : (
-            <div className="flex justify-between items-baseline gap-2 w-full">
-              <p className="text-[10px] font-medium text-foreground/90 flex-1">
-                {buildAggregatedDescription(lancamentos)}
-              </p>
-              <span className="text-[10px] font-semibold text-foreground shrink-0">
-                {formatCurrency(totalLancamentos)}
-              </span>
-            </div>
-          )}
+          ) : (() => {
+            const mensalidades = lancamentos.filter((l) => l.tipo === 'mensalidade');
+            const outros = lancamentos.filter((l) => l.tipo !== 'mensalidade');
+            const totalMensalidades = mensalidades.reduce((sum, l) => sum + Number(l.valor), 0);
+
+            const renderLancamento = (l: FinanceLancamento) => (
+              <div key={l.id} className="flex justify-between items-baseline gap-2 w-full">
+                <div className="flex-1">
+                  <p className="text-[10px] font-medium text-foreground/90">
+                    {(l.tipo ? PAYMENT_TYPE_LABELS[l.tipo] : "") || l.tipo}
+                  </p>
+                  <p className="text-[9px] text-muted-foreground">
+                    {(() => {
+                      if (l.competencia_mes && l.competencia_ano)
+                        return `Ref: ${String(l.competencia_mes).padStart(2, "0")}/${l.competencia_ano}`;
+                      if (l.competencia_ano) return `Ref: ${l.competencia_ano}`;
+                      return l.descricao || "—";
+                    })()}
+                  </p>
+                </div>
+                <span className="text-[10px] font-semibold text-foreground">
+                  {formatCurrency(Number(l.valor))}
+                </span>
+              </div>
+            );
+
+            return (
+              <>
+                {mensalidades.length > 0 && (
+                  <div className="flex justify-between items-baseline gap-2 w-full">
+                    <p className="text-[10px] font-medium text-foreground/90 flex-1">
+                      {buildAggregatedDescription(mensalidades)}
+                    </p>
+                    <span className="text-[10px] font-semibold text-foreground shrink-0">
+                      {formatCurrency(totalMensalidades)}
+                    </span>
+                  </div>
+                )}
+                {outros.map(renderLancamento)}
+                {daes.map((d) => (
+                  <div key={d.id} className="flex justify-between items-baseline gap-2 w-full">
+                    <div className="flex-1">
+                      <p className="text-[10px] font-medium text-foreground/90">Repasse DAE</p>
+                      <p className="text-[9px] text-muted-foreground">
+                        Ref: {String(d.competencia_mes).padStart(2, "0")}/{d.competencia_ano}
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-semibold text-foreground">
+                      {formatCurrency(Number(d.valor))}
+                    </span>
+                  </div>
+                ))}
+              </>
+            );
+          })()}
         </div>
       </div>
 
