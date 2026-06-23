@@ -63,11 +63,7 @@ export function FinanceReceiptContent({
     <div className="flex flex-col items-stretch gap-2 w-full">
 
       {/* Header Context */}
-      <div className="text-center space-y-1 w-full">
-        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-          <Check className="h-2.5 w-2.5" />
-          <span className="text-[9px] font-semibold uppercase tracking-wide">Pagamento Confirmado</span>
-        </div>
+      <div className="text-center w-full">
         <h2 className="text-sm font-bold text-foreground uppercase tracking-tight">Recibo de Atendimento</h2>
       </div>
 
