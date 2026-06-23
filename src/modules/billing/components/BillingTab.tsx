@@ -118,6 +118,19 @@ export function BillingTab() {
         </div>
       )}
 
+      {/* Plano agendado */}
+      {data?.next_plan_name && (
+        <div className="rounded-md border border-border/50 bg-secondary/20 px-3 py-2 text-sm text-foreground">
+          Plano agendado: <strong>{data.next_plan_name}</strong>
+          {data.next_plan_effective_date && (
+            <span className="text-muted-foreground">
+              {' · a partir de '}
+              {format(new Date(data.next_plan_effective_date), "dd/MM/yyyy", { locale: ptBR })}
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Status da assinatura */}
       <Card className="p-6 space-y-4">
         <div className="flex items-center justify-between gap-3">

@@ -10,6 +10,8 @@ export interface BillingSummaryRow {
   last_synced_at: string | null;
   is_billing_blocked: boolean;
   billing_blocked_reason: 'billing_delinquent' | 'manual_suspend' | null;
+  next_plan_name: string | null;
+  next_plan_effective_date: string | null;
 }
 
 export interface PortalTokenPayload {

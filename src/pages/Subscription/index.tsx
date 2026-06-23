@@ -96,6 +96,18 @@ export default function SubscriptionPage() {
           </div>
         )}
 
+        {data.next_plan_name && (
+          <div className="rounded-md border border-border/50 bg-secondary/20 px-3 py-2 text-sm text-foreground">
+            Plano agendado: <strong>{data.next_plan_name}</strong>
+            {data.next_plan_effective_date && (
+              <span className="text-muted-foreground">
+                {' · a partir de '}
+                {format(new Date(data.next_plan_effective_date), "dd/MM/yyyy", { locale: ptBR })}
+              </span>
+            )}
+          </div>
+        )}
+
         {data.has_pending_charge && data.payment_url && (
           <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-4 space-y-3">
             <div className="flex items-center gap-2">
