@@ -273,6 +273,13 @@ function CompetenciaRow({
   const pagoLanc = row.lancamentos.find((l) => l.status === "pago") ?? null;
   const pendenteLanc = row.lancamentos.find((l) => l.status === "pendente") ?? null;
 
+  // Competência cujos lançamentos locais estão todos cancelados e sem FCX ativa:
+  // exibir em CancelledPaymentsSection (com purge físico), não como ghost row aqui.
+  // Guard !fcxAtiva: se houver FCX relevante, manter a linha visível para o operador.
+  const allCancelled = row.lancamentos.length > 0
+    && row.lancamentos.every((l) => l.status === "cancelado");
+  if (allCancelled && !fcxAtiva) return null;
+
   const mesLabel = MONTH_LABELS[row.mes] ?? String(row.mes);
   const fcxPaga = fcxAtiva?.status === "paga";
 

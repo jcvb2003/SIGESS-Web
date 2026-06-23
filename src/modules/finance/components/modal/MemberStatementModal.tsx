@@ -53,10 +53,8 @@ export function MemberStatementModal({
   const outrosNaoMensalidade = lancamentos.filter(
     (l) => l.tipo !== "anuidade" && l.tipo !== "mensalidade" && l.status === "pago",
   );
-  // Cancelados de tipos não-mensalidade (cancelados de mensalidade ficam na MensalidadesSection)
-  const canceladosNaoMensalidade = lancamentos.filter(
-    (l) => l.tipo !== "mensalidade" && l.status === "cancelado",
-  );
+  // Todos os cancelados — mensalidades canceladas também vêm aqui para ter acesso ao purge físico
+  const cancelados = lancamentos.filter((l) => l.status === "cancelado");
 
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -218,13 +216,13 @@ export function MemberStatementModal({
                       />
                     )}
 
-                    <CancelledPaymentsSection lancamentos={canceladosNaoMensalidade} />
+                    <CancelledPaymentsSection lancamentos={cancelados} />
 
                     {anuidades.length === 0 &&
                       daeList.length === 0 &&
                       mensalidades.length === 0 &&
                       outrosNaoMensalidade.length === 0 &&
-                      canceladosNaoMensalidade.length === 0 && (
+                      cancelados.length === 0 && (
                         <div className="py-12 flex flex-col items-center justify-center text-center">
                           <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
                             <Printer className="h-6 w-6 text-slate-300" />
