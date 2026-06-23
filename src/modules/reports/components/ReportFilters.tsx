@@ -17,6 +17,8 @@ interface ReportFiltersProps {
   onReportChange: (value: string) => void;
   carenciaFilter: string;
   onCarenciaChange: (value: string) => void;
+  aposentadoriaFilter?: string;
+  onAposentadoriaChange?: (value: string) => void;
 }
 export function ReportFilters({
   searchTerm,
@@ -25,6 +27,8 @@ export function ReportFilters({
   onReportChange,
   carenciaFilter,
   onCarenciaChange,
+  aposentadoriaFilter = "all",
+  onAposentadoriaChange,
 }: ReportFiltersProps) {
 
 
@@ -53,8 +57,34 @@ export function ReportFilters({
           <SelectContent>
             <SelectItem value="requerimentos">Relatório de Requerimentos</SelectItem>
             <SelectItem value="nao_assinados">Sócios sem Requerimento</SelectItem>
+            <SelectItem value="aposentadoria">Aposentadoria</SelectItem>
           </SelectContent>
         </Select>
+
+        {selectedReport === "aposentadoria" && (
+          <div className="flex flex-col gap-2 pl-4 border-l border-border/40 ml-2 animate-in fade-in slide-in-from-right-4 duration-500">
+            <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+              Situação
+            </Label>
+            <RadioGroup
+              value={aposentadoriaFilter}
+              onValueChange={onAposentadoriaChange}
+              className="flex items-center gap-4"
+            >
+              {[
+                { value: "all",         label: "Todos" },
+                { value: "aptos",       label: "Aptos" },
+                { value: "em_breve",    label: "Em breve" },
+                { value: "aposentados", label: "Aposentados" },
+              ].map(({ value, label }) => (
+                <div key={value} className="flex items-center space-x-1.5">
+                  <RadioGroupItem value={value} id={`rep-apos-${value}`} className="h-3.5 w-3.5" />
+                  <Label htmlFor={`rep-apos-${value}`} className="font-normal cursor-pointer text-xs">{label}</Label>
+                </div>
+              ))}
+            </RadioGroup>
+          </div>
+        )}
 
         {selectedReport === "nao_assinados" && (
           <div className="flex flex-col gap-2 pl-4 border-l border-border/40 ml-2 animate-in fade-in slide-in-from-right-4 duration-500">

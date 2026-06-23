@@ -149,31 +149,29 @@ export function AddressForm() {
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <SelectField
-              control={control}
-              name="coordinatorId"
-              label="Coordenador"
-              placeholder={
-                coordinators.length > 0
-                  ? "Selecione o coordenador"
-                  : "Nenhum coordenador cadastrado"
-              }
-              options={[
-                { label: "Sem coordenador", value: "__none__" },
-                ...coordinatorOptions,
-              ]}
-              onChange={(value) => {
-                if (value === "__none__") {
-                  setValue("coordinatorId", "", {
-                    shouldValidate: true,
-                    shouldDirty: true,
-                    shouldTouch: true,
-                  });
-                }
-              }}
-            />
-          </div>
+          {coordinators.length > 0 && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <SelectField
+                control={control}
+                name="coordinatorId"
+                label="Coordenador"
+                placeholder="Selecione o coordenador"
+                options={[
+                  { label: "Sem coordenador", value: "__none__" },
+                  ...coordinatorOptions,
+                ]}
+                onChange={(value) => {
+                  if (value === "__none__") {
+                    setValue("coordinatorId", "", {
+                      shouldValidate: true,
+                      shouldDirty: true,
+                      shouldTouch: true,
+                    });
+                  }
+                }}
+              />
+            </div>
+          )}
 
           {hasMultiplePortarias && (
             <SelectField

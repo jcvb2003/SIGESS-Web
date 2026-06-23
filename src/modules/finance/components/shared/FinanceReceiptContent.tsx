@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { Check, Smartphone, Calendar, Hash } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import { cn } from "@/shared/lib/utils";
 import { formatCurrency } from "@/shared/utils/formatters/currencyFormatters";
 import { formatDate } from "@/shared/utils/formatters/dateFormatters";
 import type { FinanceLancamento, FinanceDAE } from "../../types/finance.types";
@@ -7,6 +9,32 @@ import {
   PAYMENT_METHOD_LABELS,
   PAYMENT_TYPE_LABELS
 } from "./constants";
+
+const MONTH_NAMES = [
+  "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+  "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro",
+];
+
+function buildAggregatedDescription(lancamentos: FinanceLancamento[]): string {
+  const withComp = lancamentos.filter((l) => l.competencia_mes && l.competencia_ano);
+  if (withComp.length === 0) return "Serviços prestados";
+
+  const sorted = [...withComp].sort(
+    (a, b) => (a.competencia_ano! * 12 + a.competencia_mes!) - (b.competencia_ano! * 12 + b.competencia_mes!)
+  );
+  const first = sorted[0];
+  const last = sorted[sorted.length - 1];
+  const firstName = MONTH_NAMES[(first.competencia_mes ?? 1) - 1];
+  const lastName = MONTH_NAMES[(last.competencia_mes ?? 1) - 1];
+
+  if (first.competencia_mes === last.competencia_mes && first.competencia_ano === last.competencia_ano) {
+    return `Mensalidades ref. competência de ${firstName} de ${first.competencia_ano}`;
+  }
+  if (first.competencia_ano === last.competencia_ano) {
+    return `Mensalidades ref. competências de ${firstName} a ${lastName} de ${first.competencia_ano}`;
+  }
+  return `Mensalidades ref. competências de ${firstName}/${first.competencia_ano} a ${lastName}/${last.competencia_ano}`;
+}
 
 interface FinanceReceiptContentProps {
   readonly lancamentos: FinanceLancamento[];
@@ -21,6 +49,7 @@ export function FinanceReceiptContent({
   memberName,
   memberCpf,
 }: FinanceReceiptContentProps) {
+  const [model, setModel] = useState<0 | 1>(0);
   const totalLancamentos = lancamentos.reduce((sum, l) => sum + Number(l.valor), 0);
   const totalDAEs = daes.reduce((sum, d) => sum + Number(d.valor), 0);
   const totalValue = totalLancamentos + totalDAEs;
@@ -68,35 +97,74 @@ export function FinanceReceiptContent({
           <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide">Valor</span>
         </div>
 
+        {/* Seletor de modelo */}
+        <div className="flex justify-center gap-1.5 py-0.5">
+          {([0, 1] as const).map((i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setModel(i)}
+              className={cn(
+                "h-1.5 w-1.5 rounded-full transition-all",
+                model === i ? "bg-primary" : "bg-muted-foreground/30"
+              )}
+              aria-label={i === 0 ? "Detalhado" : "Resumido"}
+            />
+          ))}
+        </div>
+
         <div className="border-y border-dashed border-border/60 py-1.5 space-y-1 w-full">
-          {lancamentos.map((l) => (
-            <div key={l.id} className="flex justify-between items-baseline gap-2 w-full">
-              <div className="flex-1">
-                <p className="text-[10px] font-medium text-foreground/90">
-                  {(l.tipo ? PAYMENT_TYPE_LABELS[l.tipo] : "") || l.tipo}
-                </p>
-                <p className="text-[9px] text-muted-foreground">
-                  Ref: {l.competencia_mes ? `${String(l.competencia_mes).padStart(2, "0")}/` : ""}{l.competencia_ano || "—"}
-                </p>
-              </div>
-              <span className="text-[10px] font-semibold text-foreground">
-                {formatCurrency(Number(l.valor))}
+          {model === 0 ? (
+            <>
+              {lancamentos.map((l) => (
+                <div key={l.id} className="flex justify-between items-baseline gap-2 w-full">
+                  <div className="flex-1">
+                    <p className="text-[10px] font-medium text-foreground/90">
+                      {(l.tipo ? PAYMENT_TYPE_LABELS[l.tipo] : "") || l.tipo}
+                    </p>
+                    <p className="text-[9px] text-muted-foreground">
+                      Ref: {(() => {
+                        if (l.competencia_mes && l.competencia_ano)
+                          return `${String(l.competencia_mes).padStart(2, "0")}/${l.competencia_ano}`;
+                        if (l.competencia_ano)
+                          return String(l.competencia_ano);
+                        if (l.data_pagamento) {
+                          const d = new Date(l.data_pagamento);
+                          return `${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+                        }
+                        return "—";
+                      })()}
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-semibold text-foreground">
+                    {formatCurrency(Number(l.valor))}
+                  </span>
+                </div>
+              ))}
+              {daes.map((d) => (
+                <div key={d.id} className="flex justify-between items-baseline gap-2 w-full">
+                  <div className="flex-1">
+                    <p className="text-[10px] font-medium text-foreground/90">Repasse DAE</p>
+                    <p className="text-[9px] text-muted-foreground">
+                      Ref: {String(d.competencia_mes).padStart(2, "0")}/{d.competencia_ano}
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-semibold text-foreground">
+                    {formatCurrency(Number(d.valor))}
+                  </span>
+                </div>
+              ))}
+            </>
+          ) : (
+            <div className="flex justify-between items-baseline gap-2 w-full">
+              <p className="text-[10px] font-medium text-foreground/90 flex-1">
+                {buildAggregatedDescription(lancamentos)}
+              </p>
+              <span className="text-[10px] font-semibold text-foreground shrink-0">
+                {formatCurrency(totalLancamentos)}
               </span>
             </div>
-          ))}
-          {daes.map((d) => (
-            <div key={d.id} className="flex justify-between items-baseline gap-2 w-full">
-              <div className="flex-1">
-                <p className="text-[10px] font-medium text-foreground/90">Repasse DAE</p>
-                <p className="text-[9px] text-muted-foreground">
-                  Ref: {String(d.competencia_mes).padStart(2, "0")}/{d.competencia_ano}
-                </p>
-              </div>
-              <span className="text-[10px] font-semibold text-foreground">
-                {formatCurrency(Number(d.valor))}
-              </span>
-            </div>
-          ))}
+          )}
         </div>
       </div>
 

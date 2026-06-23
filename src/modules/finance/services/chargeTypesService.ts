@@ -38,9 +38,19 @@ export const chargeTypesService = {
   },
 
   async update(id: string, updates: Partial<ChargeType>): Promise<void> {
+    // Remover undefined — Supabase JS pode convertê-los inesperadamente em null
+    const clean = Object.fromEntries(
+      Object.entries(updates).filter(([, v]) => v !== undefined)
+    ) as Partial<ChargeType>;
+
+    // Invariante do chk_obrigatoriedade: cadastro_governamental nunca pode ter obrigatoriedade
+    if (clean.categoria === 'cadastro_governamental') {
+      (clean as Record<string, unknown>).obrigatoriedade = null;
+    }
+
     const { error } = await supabase
       .from("tipos_cobranca")
-      .update(updates)
+      .update(clean)
       .eq("id", id);
 
     if (error) throw error;

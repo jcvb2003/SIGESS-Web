@@ -174,7 +174,10 @@ export function useAdministrationPage(enabled: boolean) {
   const memberships = membershipsQuery.data ?? [];
 
   const activeUnitsCount = useMemo(() => units.filter((u) => u.isActive).length, [units]);
-  const activeUsersCount = useMemo(() => tenantUsers.filter((u) => u.isActive).length, [tenantUsers]);
+  const activeUsersCount = useMemo(
+    () => tenantUsers.filter((u) => u.isActive && u.tenantRole !== 'owner').length,
+    [tenantUsers]
+  );
   const membershipsCount = useMemo(() => memberships.filter((m) => m.isActive).length, [memberships]);
 
   const membershipRows = useMemo(() => {

@@ -28,6 +28,10 @@ export default function Reports() {
   const [selectedReport, setSelectedReport] = useState("requerimentos");
   const [searchTerm, setSearchTerm] = useState("");
   const [carenciaFilter, setCarenciaFilter] = useState("all");
+  const [aposentadoriaFilter, setAposentadoriaFilter] = useState("all");
+
+  // Aposentadoria não tem lógica ainda — não acionar o fetch de requerimentos
+  const isAposentadoria = selectedReport === "aposentadoria";
 
   const {
     data: requestsData,
@@ -42,7 +46,7 @@ export default function Reports() {
     isFetching,
     error: requestsError,
     refetch,
-  } = useRequestsReport(searchTerm, selectedReport, carenciaFilter, true);
+  } = useRequestsReport(searchTerm, selectedReport, carenciaFilter, !isAposentadoria);
 
   const handleExport = async (format: ExportFormat) => {
     const labels = EXPORT_LABELS[format];
@@ -93,9 +97,16 @@ export default function Reports() {
           onReportChange={setSelectedReport}
           carenciaFilter={carenciaFilter}
           onCarenciaChange={setCarenciaFilter}
+          aposentadoriaFilter={aposentadoriaFilter}
+          onAposentadoriaChange={setAposentadoriaFilter}
         />
 
-        {requestsError ? (
+        {isAposentadoria ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center gap-2">
+            <p className="text-sm font-medium text-muted-foreground">Em breve</p>
+            <p className="text-xs text-muted-foreground/60">O relatório de aposentadoria estará disponível em breve.</p>
+          </div>
+        ) : requestsError ? (
           <div className="p-8">
             <ErrorState
               title="Erro ao carregar relatório"

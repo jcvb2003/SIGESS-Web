@@ -4,9 +4,10 @@ import { Button } from "@/shared/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { cn } from "@/shared/lib/utils";
-import { ChevronRight, Receipt, FileSpreadsheet, CreditCard } from "lucide-react";
+import { BarChart2, ChevronRight, Receipt, FileSpreadsheet, CreditCard } from "lucide-react";
 import { useFinanceDashboard } from "@/modules/finance/hooks/data/useFinanceDashboard";
 import { useFinanceSettings } from "@/modules/finance/hooks/data/useFinanceSettings";
+import { useCollectionConfig } from "@/modules/finance/hooks/data/useCollectionConfig";
 import { useFinanceFilters } from "@/modules/finance/hooks/filters/useFinanceFilters";
 import { useFinanceStats } from "@/modules/finance/hooks/data/useFinanceStats";
 import { useFinanceTabCounts } from "@/modules/finance/hooks/data/useFinanceTabCounts";
@@ -55,9 +56,10 @@ const MONTH_NAMES = [
 
 
 const NAV_LINKS = [
-  { label: 'Pagamentos', icon: Receipt, path: '/finance/payments-report' },
-  { label: 'DAEs', icon: FileSpreadsheet, path: '/finance/daes-report' },
-  { label: 'Cobranças externas', icon: CreditCard, path: '/finance/external-charges' },
+  { label: 'Pagamentos',          icon: Receipt,       path: '/finance/payments-report',  disabled: false },
+  { label: 'DAEs',                icon: FileSpreadsheet, path: '/finance/daes-report',    disabled: false },
+  { label: 'Cobranças externas',  icon: CreditCard,    path: '/finance/external-charges', disabled: false },
+  { label: 'Receitas e Despesas', icon: BarChart2,     path: '/finance/income-expenses',  disabled: true  },
 ] as const;
 
 export default function FinancePage() {
@@ -66,6 +68,10 @@ export default function FinancePage() {
   const debouncedSearchTerm = useDebounce(params.searchTerm, 300);
   const { settings } = useFinanceSettings();
   const { isAdmin } = usePermissions();
+  const { config: collectionConfig } = useCollectionConfig();
+  const isAsaasConfigured = collectionConfig?.provider === 'asaas'
+    && collectionConfig?.has_api_key === true
+    && collectionConfig?.has_webhook_token === true;
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
   const anoBase = settings?.ano_base_cobranca ?? 2024;
@@ -210,19 +216,24 @@ export default function FinancePage() {
             isAdmin={isAdmin}
             onOpenAudit={() => setAuditOpen(true)}
             onOpenSettings={() => setSettingsOpen(true)}
-            onOpenBatchCharge={() => setBatchChargeOpen(true)}
+            onOpenBatchCharge={isAsaasConfigured ? () => setBatchChargeOpen(true) : undefined}
           />
         }
       />
 
 
       {/* Nav strip — relatórios e páginas relacionadas */}
-      <div className="grid grid-cols-3 gap-3 -mt-4">
-        {NAV_LINKS.map(({ label, icon: Icon, path }) => (
+      <div className="grid grid-cols-2 gap-3 -mt-4 sm:grid-cols-4">
+        {NAV_LINKS.map(({ label, icon: Icon, path, disabled }) => (
           <Card
             key={path}
-            className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:bg-primary/10"
-            onClick={() => navigate(path)}
+            className={cn(
+              "group transition-all duration-300",
+              disabled
+                ? "opacity-60 cursor-not-allowed"
+                : "cursor-pointer hover:shadow-lg hover:bg-primary/10"
+            )}
+            onClick={disabled ? undefined : () => navigate(path)}
           >
             <div className="flex items-center gap-3 px-4 py-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 transition-transform duration-300 group-hover:scale-110">
@@ -231,7 +242,9 @@ export default function FinancePage() {
               <span className="flex-1 text-sm font-semibold uppercase tracking-wider text-muted-foreground group-hover:text-primary">
                 {label}
               </span>
-              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
+              {disabled
+                ? <span className="text-[10px] font-medium text-muted-foreground border border-border rounded px-1.5 py-0.5 shrink-0">Em breve</span>
+                : <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary shrink-0" />}
             </div>
           </Card>
         ))}
