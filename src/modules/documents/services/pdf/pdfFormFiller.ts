@@ -9,6 +9,9 @@ import { findField } from "./fieldFinder/fieldFinder";
 import { FieldFontConfig } from "./fontExtraction/fontExtractor";
 import { getFont } from "./fontConfiguration/fontConfig";
 import { getPdfFieldMappings } from "./pdfFieldMappings";
+// Regex para o operador Tf no stream DA: "/FontName SIZE Tf"
+const TF_REGEX = /\/(\S+)\s+([\d.]+)\s+Tf/;
+
 async function applyFieldConfig(
   field: PDFTextField,
   pdfDoc: PDFDocument,
@@ -16,31 +19,42 @@ async function applyFieldConfig(
 ) {
   const fieldName = field.getName();
   const config = fieldConfigurations.find((c) => c.fieldName === fieldName);
-  if (config) {
-    try {
-      const font = await getFont(config.fontConfig.fontName, pdfDoc);
-      field.setFontSize(config.fontConfig.fontSize);
-      switch (config.fontConfig.alignment) {
-        case "center":
-          field.setAlignment(TextAlignment.Center);
-          break;
-        case "right":
-          field.setAlignment(TextAlignment.Right);
-          break;
-        case "left":
-        default:
-          field.setAlignment(TextAlignment.Left);
-          break;
-      }
-      // Em templates "other", este refresh local e o que materializa o valor
-      // com a fonte/tamanho/alinhamento corretos sem depender de foco manual.
-      field.updateAppearances(font);
-    } catch (error) {
-      console.warn(
-        `Erro ao aplicar configuração de fonte para o campo ${fieldName}:`,
-        error,
-      );
+  if (!config) return;
+
+  try {
+    const font = await getFont(config.fontConfig.fontName, pdfDoc);
+
+    switch (config.fontConfig.alignment) {
+      case "center": field.setAlignment(TextAlignment.Center); break;
+      case "right":  field.setAlignment(TextAlignment.Right);  break;
+      default:       field.setAlignment(TextAlignment.Left);
     }
+
+    if (config.fontConfig.fontSize === 0) {
+      // Campo auto-size (0 Tf no DA original).
+      // defaultTextFieldAppearanceProvider lê `widgetFontSize ?? fieldFontSize`.
+      // O widget pode ter um tamanho fixo herdado do editor de PDF — se for não-zero,
+      // ele sobrescreve o field-level 0 e bloqueia o computeFontSize.
+      // Solução: patchar o DA de cada widget para 0 Tf antes de updateAppearances,
+      // forçando o caminho fontSize===0 → computeFontSize → texto se ajusta ao campo.
+      const acroField = (field as unknown as { acroField: { getWidgets(): { getDefaultAppearance(): string | undefined; setDefaultAppearance(da: string): void }[] } }).acroField;
+      if (acroField?.getWidgets) {
+        for (const widget of acroField.getWidgets()) {
+          const da = widget.getDefaultAppearance?.() ?? "";
+          if (da) {
+            widget.setDefaultAppearance?.(da.replace(TF_REGEX, "/$1 0 Tf"));
+          }
+        }
+      }
+      // Patchar também o field-level DA para o caso de widget sem DA próprio.
+      field.setFontSize(0);
+    } else {
+      field.setFontSize(config.fontConfig.fontSize);
+    }
+
+    field.updateAppearances(font);
+  } catch (error) {
+    console.warn(`Erro ao aplicar configuração de fonte para o campo ${fieldName}:`, error);
   }
 }
 async function processPdfField(

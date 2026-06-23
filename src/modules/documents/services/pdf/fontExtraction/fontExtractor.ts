@@ -210,7 +210,9 @@ class PdfFontExtractor {
                 fieldName,
                 fontConfig: {
                   fontName: fontName || "Helvetica",
-                  fontSize: fontSize || 12,
+                  // 0 = auto-size: pdf-lib chama computeFontSize em layoutSinglelineText
+                  // quando fontSize===0. Usar || descartaria o 0 e fixaria em 12.
+                  fontSize: fontSize,
                   fontColor: fontColor || "#000000",
                   alignment:
                     (alignment as "left" | "center" | "right") || "left",

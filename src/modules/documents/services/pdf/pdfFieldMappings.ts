@@ -3,10 +3,10 @@
  *
  * Cada chave interna mapeia para EXATAMENTE UM nome de campo no PDF.
  * Variações, fallbacks ou nomes alternativos são ESTRITAMENTE PROIBIDOS.
- *
- * Todos os PDFs enviados ao sistema DEVEM seguir o padrão do PDF de Requerimento.
+ * Esta regra é UNIVERSAL — quem se adequa ao mapeamento é o PDF, nunca o código.
  * Se um PDF possuir campo com nome diferente do padrão, o PDF deve ser corrigido
- * manualmente antes de ser usado pelo sistema.
+ * manualmente antes de ser usado pelo sistema. Jamais adicionar chaves paralelas
+ * (ex: agro_nome, agro_cpf) que apontem para o mesmo campo PDF de uma chave já existente.
  *
  * Caso um novo campo seja necessário, ele deve ser adicionado aqui com UM ÚNICO
  * nome padronizado, e o PDF correspondente deve usar esse mesmo nome.
@@ -17,7 +17,7 @@ export function getPdfFieldMappings(): Record<string, string[]> {
     nome: ["Nome do requerente"],
     dtnasc: ["Data de nascimento"],
     data_filiacao: ["Data de filiação"],
-    mae: ["Nome da mãe"],
+    mae: ["Mãe"],
     cpf: ["CPF do requerente"],
     rg: ["RG"],
     nit: ["PIS"],
@@ -34,22 +34,16 @@ export function getPdfFieldMappings(): Record<string, string[]> {
     email: ["Email do requerente"],
     estado_civil: ["Estado civil"],
 
-    // Carteira Agro
-    agro_nome: ["Nome do requerente"],
-    agro_nascimento: ["Nascimento"],
-    agro_data_filiacao: ["Data de filiação"],
-    agro_mae: ["Mãe"],
-    agro_pai: ["Pai"],
-    agro_cpf: ["CPF do requerente"],
-    agro_rg: ["RG"],
-    agro_nis: ["NIS"],
-    agro_pis: ["PIS"],
-    agro_ctps: ["CTPS"],
-    agro_caepf: ["CAEPF"],
-    agro_caf: ["CAF"],
-    agro_matricula: ["Mátricula"],
-    agro_categoria: ["Categoria"],
-    agro_data: ["Data"],
+    // Campos exclusivos não cobertos pelo mapeamento base.
+    // O sistema não conhece tipos de documento — cada chave representa um campo,
+    // não um documento. PDFs de qualquer tipo devem usar estes nomes canônicos.
+    pai: ["Pai"],
+    nis: ["NIS"],
+    ctps: ["CTPS"],
+    caepf: ["CAEPF"],
+    caf: ["CAF"],
+    matricula: ["Matrícula"],
+    categoria: ["Categoria"],
 
     // Dados de Defeso / Portarias
     nrpub: ["Número da portaria"],

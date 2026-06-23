@@ -51,7 +51,7 @@ export default function SelectUnitPage() {
             <div className="space-y-2">
               <CardTitle className="text-3xl">Escolha o polo</CardTitle>
               <CardDescription className="text-base leading-relaxed">
-                Seu acesso est&aacute; vinculado a mais de um polo. Selecione qual contexto
+                Seu acesso está vinculado a mais de um polo. Selecione qual contexto
                 deseja usar agora para navegar no sistema.
               </CardDescription>
             </div>
@@ -60,7 +60,7 @@ export default function SelectUnitPage() {
             <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
               <p className="text-sm font-medium text-foreground">Como funciona</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Voc&ecirc; poder&aacute; trocar de polo depois pelo menu lateral, sem
+                Você poderá trocar de polo depois pelo menu lateral, sem
                 precisar sair da conta.
               </p>
             </div>
@@ -113,7 +113,7 @@ export default function SelectUnitPage() {
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        {unit.code ? `C&oacute;digo ${unit.code}` : "Polo sem c&oacute;digo p&uacute;blico"}
+                        {unit.code ? `Código ${unit.code}` : "Polo sem código público"}
                       </p>
                     </div>
                   </div>

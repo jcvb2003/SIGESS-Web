@@ -60,22 +60,14 @@ export function processDocumentData(
     email: member.email || "",
     estado_civil: member.estado_civil || "",
 
-    // Carteira Agro
-    agro_nome: member.nome || "",
-    agro_nascimento: dataNascimento,
-    agro_data_filiacao: member.data_de_admissao ? formatDate(member.data_de_admissao) : "",
-    agro_mae: member.mae || "",
-    agro_pai: member.pai || "",
-    agro_cpf: member.cpf || "",
-    agro_rg: member.rg || "",
-    agro_nis: member.nit || "",
-    agro_pis: member.nit || "",
-    agro_ctps: additionalData["ctps"] || "",
-    agro_caepf: member.caepf || "",
-    agro_caf: member.caf || "",
-    agro_matricula: member.codigo_do_socio || "",
-    agro_categoria: additionalData["categoria"] || "AGRICULTOR",
-    agro_data: dataAtual,
+    // Campos exclusivos não cobertos pelo mapeamento base.
+    pai: member.pai || "",
+    nis: member.nit || "",
+    ctps: additionalData["ctps"] || "",
+    caepf: member.caepf || "",
+    caf: member.caf || "",
+    matricula: member.codigo_do_socio || "",
+    categoria: additionalData["categoria"] || "AGRICULTOR",
 
     // Dados auxiliares (não mapeados diretamente a campos de PDF)
     dia: dia,
