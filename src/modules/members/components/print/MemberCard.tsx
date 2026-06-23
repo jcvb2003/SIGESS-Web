@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { MemberRegistrationForm } from "../../types/member.types";
 import { format, addYears } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -11,6 +12,7 @@ interface MemberCardProps {
 }
 
 export function MemberCard({ member, entity }: MemberCardProps) {
+  const [photoError, setPhotoError] = useState(false);
   const today = new Date();
   const validityDate = addYears(today, 1);
     
@@ -81,11 +83,18 @@ export function MemberCard({ member, entity }: MemberCardProps) {
             {/* Foto Section */}
             <div className="flex flex-col items-center gap-1.5 shrink-0">
               <div className="w-[18mm] h-[24mm] rounded-lg border-2 border-primary/20 p-0.5 bg-slate-50 shadow-inner overflow-hidden relative">
-                {member.fotos?.[0]?.foto_url ? (
-                  <img src={member.fotos[0].foto_url} alt="Sócio" className="w-full h-full object-cover rounded-md" />
+                {member.fotos?.[0]?.foto_url && !photoError ? (
+                  <img
+                    src={member.fotos[0].foto_url}
+                    alt=""
+                    className="w-full h-full object-cover rounded-md"
+                    onError={() => setPhotoError(true)}
+                  />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-slate-100 opacity-20">
-                     <svg className="w-8 h-8 text-slate-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                  <div className="w-full h-full flex items-center justify-center bg-slate-100">
+                    <svg className="w-8 h-8 text-slate-300" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
                   </div>
                 )}
               </div>

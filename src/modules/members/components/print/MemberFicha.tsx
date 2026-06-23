@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { MemberRegistrationForm } from "../../types/member.types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -32,6 +33,7 @@ const LabelValue = ({ label, value, className = "" }: { label: string; value?: s
 
 export function MemberFicha({ member }: MemberFichaProps) {
   const { entity } = useEntityData();
+  const [photoError, setPhotoError] = useState(false);
   const today = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
 
   return (
@@ -71,10 +73,19 @@ export function MemberFicha({ member }: MemberFichaProps) {
               <span className="text-lg font-black text-primary leading-none">#{member.codigoDoSocio || "0000"}</span>
             </div>
             <div className="h-24 w-20 border-2 border-slate-100 rounded-lg flex items-center justify-center bg-slate-50/50 overflow-hidden shadow-inner">
-              {member.fotos?.[0]?.foto_url ? (
-                <img src={member.fotos[0].foto_url} alt="Foto" className="h-full w-full object-cover" />
+              {member.fotos?.[0]?.foto_url && !photoError ? (
+                <img
+                  src={member.fotos[0].foto_url}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  onError={() => setPhotoError(true)}
+                />
               ) : (
-                <span className="text-[8px] text-slate-300 font-black text-center px-2 uppercase">Foto 3x4</span>
+                <div className="h-full w-full flex items-center justify-center bg-slate-100">
+                  <svg className="w-8 h-8 text-slate-300" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                  </svg>
+                </div>
               )}
             </div>
           </div>
