@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { memberService } from "@/modules/members/services/memberService";
@@ -5,10 +6,12 @@ import { memberQueryKeys } from "@/modules/members/queryKeys";
 import { MemberCard } from "@/modules/members/components/print/MemberCard";
 import { Loader2, Printer } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
+import { cn } from "@/shared/lib/utils";
 import { useEntityData } from "@/modules/settings/hooks/useEntityData";
 
 export default function MemberCardPage() {
   const { id } = useParams();
+  const [model, setModel] = useState<0 | 1>(0);
 
   const { data: member, isLoading, error } = useQuery({
     queryKey: id ? memberQueryKeys.detail(id) : ["member", null],
@@ -54,6 +57,22 @@ export default function MemberCardPage() {
       <div className="no-print mb-8 text-center">
         <h1 className="text-2xl font-black text-slate-800">Pré-visualização da Carteirinha</h1>
         <p className="text-sm text-slate-500">O tamanho está ajustado para o padrão de cartões de identificação.</p>
+      </div>
+
+      {/* Seletor de modelo — pronto para alternar entre versões futuras */}
+      <div className="no-print flex justify-center gap-2 mb-4">
+        {([0, 1] as const).map((i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => setModel(i)}
+            className={cn(
+              "h-2 w-2 rounded-full transition-all",
+              model === i ? "bg-primary scale-125" : "bg-slate-300 hover:bg-slate-400"
+            )}
+            aria-label={`Modelo ${i + 1}`}
+          />
+        ))}
       </div>
 
       <MemberCard member={member} entity={entity} />
