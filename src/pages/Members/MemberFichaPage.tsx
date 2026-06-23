@@ -3,17 +3,28 @@ import { useQuery } from "@tanstack/react-query";
 import { memberService } from "@/modules/members/services/memberService";
 import { memberQueryKeys } from "@/modules/members/queryKeys";
 import { MemberFicha } from "@/modules/members/components/print/MemberFicha";
+import { financeService } from "@/modules/finance/services/financeService";
 import { Loader2, Printer } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 
 export default function MemberFichaPage() {
   const { id } = useParams();
 
-  const { data: member, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: id ? memberQueryKeys.detail(id) : ["member", null],
-    queryFn: () => (id ? memberService.getMemberById(id) : null),
+    queryFn: async () => {
+      if (!id) return null;
+      const member = await memberService.getMemberById(id);
+      const statement = member?.cpf
+        ? await financeService.getMemberStatement(member.cpf)
+        : [];
+      return { member, statement };
+    },
     enabled: !!id,
   });
+
+  const member = data?.member ?? null;
+  const statement = data?.statement ?? [];
 
   if (isLoading) {
     return (
@@ -57,7 +68,7 @@ export default function MemberFichaPage() {
         </Button>
       </div>
 
-      <MemberFicha member={member} />
+      <MemberFicha member={member} financialStatement={statement} />
     </div>
   );
 }
