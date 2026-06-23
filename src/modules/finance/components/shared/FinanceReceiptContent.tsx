@@ -123,16 +123,13 @@ export function FinanceReceiptContent({
                       {(l.tipo ? PAYMENT_TYPE_LABELS[l.tipo] : "") || l.tipo}
                     </p>
                     <p className="text-[9px] text-muted-foreground">
-                      Ref: {(() => {
+                      {(() => {
                         if (l.competencia_mes && l.competencia_ano)
-                          return `${String(l.competencia_mes).padStart(2, "0")}/${l.competencia_ano}`;
+                          return `Ref: ${String(l.competencia_mes).padStart(2, "0")}/${l.competencia_ano}`;
                         if (l.competencia_ano)
-                          return String(l.competencia_ano);
-                        if (l.data_pagamento) {
-                          const d = new Date(l.data_pagamento);
-                          return `${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
-                        }
-                        return "—";
+                          return `Ref: ${l.competencia_ano}`;
+                        // Sem competência: mostrar descrição da cobrança (ex: "REAP 2025")
+                        return l.descricao || "—";
                       })()}
                     </p>
                   </div>
