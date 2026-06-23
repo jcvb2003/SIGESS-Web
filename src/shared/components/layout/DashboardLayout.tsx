@@ -10,6 +10,8 @@ import { useUserMetadata } from "@/modules/auth/hooks/useUserMetadata";
 import { useProfileAvatarUrl } from "@/modules/settings/hooks/useProfileAvatarUrl";
 import { usePresenceHeartbeat } from "@/shared/hooks/usePresenceHeartbeat";
 import { AccessExpiredModal } from "./AccessExpiredModal";
+import { BillingBlockedModal } from "./BillingBlockedModal";
+import { useBillingSummary } from "@/modules/billing/hooks/data/useBillingSummary";
 import { Loader2 } from "lucide-react";
 import { useNetworkStatus } from "@/shared/hooks/useNetworkStatus";
 import { PWABanner } from "@/shared/components/feedback/PWABanner";
@@ -25,6 +27,7 @@ export function DashboardLayout() {
   const { session, user, loading: authLoading, signOut } = useAuth();
   const { activeUnit, hasMultipleUnits, hydrated } = useTenantUnits();
   const { metadata, loading: metadataLoading } = useUserMetadata();
+  const { data: billingSummary } = useBillingSummary();
   const avatarUrl = useProfileAvatarUrl(metadata?.avatarPath);
   usePresenceHeartbeat();
   const { isPortalContextLoading, isStatePortal } = usePortalContext();
@@ -203,6 +206,13 @@ export function DashboardLayout() {
         />
 
         {metadata?.isExpired && <AccessExpiredModal open={true} />}
+        {!metadata?.isExpired && billingSummary?.is_billing_blocked && (
+          <BillingBlockedModal
+            open={true}
+            reason={billingSummary.billing_blocked_reason}
+            paymentUrl={billingSummary.payment_url}
+          />
+        )}
         <PWABanner />
       </div>
     </PortariaProvider>

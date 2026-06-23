@@ -1,4 +1,4 @@
-import { ExternalLink, Loader2, RefreshCw, CreditCard, Calendar, AlertCircle, Users, CalendarClock } from "lucide-react";
+import { ExternalLink, Loader2, RefreshCw, CreditCard, Calendar, AlertCircle, Users, CalendarClock, Ban } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Button } from "@/shared/components/ui/button";
@@ -99,6 +99,25 @@ export function BillingTab() {
 
   return (
     <div className="space-y-4 max-w-lg">
+      {/* Banner de bloqueio de acesso */}
+      {data?.is_billing_blocked && (
+        <div className="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3">
+          <Ban className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+          <div className="space-y-0.5">
+            <p className="text-sm font-medium text-destructive">
+              {data.billing_blocked_reason === "manual_suspend"
+                ? "Acesso suspenso pelo administrador"
+                : "Acesso bloqueado por inadimplência"}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {data.billing_blocked_reason === "manual_suspend"
+                ? "Entre em contato com o suporte para regularizar."
+                : "Regularize o pagamento pendente para reativar o sistema."}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Status da assinatura */}
       <Card className="p-6 space-y-4">
         <div className="flex items-center justify-between gap-3">
