@@ -1,4 +1,5 @@
 import { supabase } from "@/shared/lib/supabase/client";
+import { getAposentadoriaCategory } from "@/modules/reports/domain/aposentadoriaRules";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
@@ -12,6 +13,16 @@ import {
   getPaymentTypeLabel,
 } from "@/modules/finance/utils/paymentReportLabels";
 import { formatDate } from "@/shared/utils/date";
+export interface AposentadoriaItem {
+  id: string;
+  nome: string;
+  cpf: string;
+  data_de_nascimento: string | null;
+  sexo: string | null;
+  situacao: string | null;
+  categoria: 'aposentado' | 'apto' | 'em_breve';
+}
+
 export interface RequestReportItem {
   id: string;
   cod_req: number | string;
@@ -357,5 +368,38 @@ export const reportsService = {
     doc.save(
       `relatorio_daes_${new Date().toISOString().slice(0, 10)}.pdf`,
     );
+  },
+
+  async fetchAposentadoriaReport(
+    page: number,
+    pageSize: number,
+    searchTerm: string,
+    aposentadoriaFilter: string,
+    unitId: string | null,
+  ): Promise<{ data: AposentadoriaItem[]; total: number }> {
+    let query = supabase
+      .from('socios')
+      .select('id, nome, cpf, data_de_nascimento, sexo, situacao')
+      .order('nome', { ascending: true });
+
+    if (unitId) query = query.eq('unit_id', unitId);
+    if (searchTerm.trim()) {
+      query = query.or(`nome.ilike.%${searchTerm.trim()}%,cpf.ilike.%${searchTerm.trim()}%`);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const classified = (data ?? [])
+      .map((s) => {
+        const cat = getAposentadoriaCategory(s.data_de_nascimento, s.sexo, s.situacao);
+        return cat ? ({ ...s, categoria: cat } as AposentadoriaItem) : null;
+      })
+      .filter((s): s is AposentadoriaItem => s !== null)
+      .filter((s) => s.categoria === aposentadoriaFilter);
+
+    const total = classified.length;
+    const from = (page - 1) * pageSize;
+    return { data: classified.slice(from, from + pageSize), total };
   },
 };

@@ -72,10 +72,9 @@ export function ReportFilters({
               className="flex items-center gap-4"
             >
               {[
-                { value: "all",         label: "Todos" },
+                { value: "aposentados", label: "Aposentados" },
                 { value: "aptos",       label: "Aptos" },
                 { value: "em_breve",    label: "Em breve" },
-                { value: "aposentados", label: "Aposentados" },
               ].map(({ value, label }) => (
                 <div key={value} className="flex items-center space-x-1.5">
                   <RadioGroupItem value={value} id={`rep-apos-${value}`} className="h-3.5 w-3.5" />

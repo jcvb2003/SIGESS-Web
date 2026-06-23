@@ -3,7 +3,9 @@ import { Card } from "@/shared/components/ui/card";
 import { ReportExportButtons } from "@/modules/reports/components/ReportExportButtons";
 import { ReportFilters } from "@/modules/reports/components/ReportFilters";
 import { useRequestsReport } from "@/modules/reports/hooks/useRequestsReport";
+import { useAposentadoriaReport } from "@/modules/reports/hooks/useAposentadoriaReport";
 import { RequestsTable } from "@/modules/reports/components/requests/RequestsTable";
+import { AposentadoriaTable } from "@/modules/reports/components/aposentadoria/AposentadoriaTable";
 import { reportsService } from "@/modules/reports/services/reportsService";
 import { toast } from "sonner";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
@@ -28,9 +30,8 @@ export default function Reports() {
   const [selectedReport, setSelectedReport] = useState("requerimentos");
   const [searchTerm, setSearchTerm] = useState("");
   const [carenciaFilter, setCarenciaFilter] = useState("all");
-  const [aposentadoriaFilter, setAposentadoriaFilter] = useState("all");
+  const [aposentadoriaFilter, setAposentadoriaFilter] = useState("aposentados");
 
-  // Aposentadoria não tem lógica ainda — não acionar o fetch de requerimentos
   const isAposentadoria = selectedReport === "aposentadoria";
 
   const {
@@ -47,6 +48,11 @@ export default function Reports() {
     error: requestsError,
     refetch,
   } = useRequestsReport(searchTerm, selectedReport, carenciaFilter, !isAposentadoria);
+
+  const aposentadoriaReport = useAposentadoriaReport(
+    isAposentadoria ? searchTerm : '',
+    aposentadoriaFilter,
+  );
 
   const handleExport = async (format: ExportFormat) => {
     const labels = EXPORT_LABELS[format];
@@ -102,10 +108,18 @@ export default function Reports() {
         />
 
         {isAposentadoria ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center gap-2">
-            <p className="text-sm font-medium text-muted-foreground">Em breve</p>
-            <p className="text-xs text-muted-foreground/60">O relatório de aposentadoria estará disponível em breve.</p>
-          </div>
+          <AposentadoriaTable
+            data={aposentadoriaReport.data}
+            isLoading={aposentadoriaReport.isLoading || aposentadoriaReport.isFetching}
+            pagination={{
+              page: aposentadoriaReport.page,
+              pageSize: aposentadoriaReport.pageSize,
+              total: aposentadoriaReport.total,
+              totalPages: aposentadoriaReport.totalPages,
+              setPage: aposentadoriaReport.setPage,
+              setPageSize: aposentadoriaReport.setPageSize,
+            }}
+          />
         ) : requestsError ? (
           <div className="p-8">
             <ErrorState
