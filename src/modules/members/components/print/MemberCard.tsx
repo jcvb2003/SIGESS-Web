@@ -146,7 +146,7 @@ export function MemberCard({ member, entity }: MemberCardProps) {
           
           {/* Marca d'água de fundo (Frente) */}
           <div className="absolute right-[-10px] bottom-[-10px] opacity-[0.05] w-32 h-32 pointer-events-none">
-             <img src="/logo.svg" alt="" className="w-full h-full object-contain" />
+             <img src={logoUrl} alt="" className="w-full h-full object-contain" />
           </div>
           
           {/* Glossy Overlay (Digital only) */}
@@ -239,7 +239,7 @@ export function MemberCard({ member, entity }: MemberCardProps) {
 
             {/* Marca d'água de fundo */}
             <div className="absolute right-[-20px] bottom-[-20px] opacity-[0.05] w-40 h-40 pointer-events-none">
-               <img src="/logo.svg" alt="" className="w-full h-full object-contain" />
+               <img src={logoUrl} alt="" className="w-full h-full object-contain" />
             </div>
           </div>
           

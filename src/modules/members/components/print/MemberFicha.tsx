@@ -57,20 +57,45 @@ function buildMonthlyGrid(statement: FinanceLancamento[]) {
 
   const years = Array.from(new Set(paidMonthly.map((item) => item.competencia_ano as number))).sort((a, b) => a - b);
   const paidByYear = new Map<number, Set<number>>();
+  const amountByCompetency = new Map<string, number>();
 
   for (const item of paidMonthly) {
     const year = item.competencia_ano as number;
     const month = item.competencia_mes as number;
     if (!paidByYear.has(year)) paidByYear.set(year, new Set<number>());
     paidByYear.get(year)?.add(month);
+    amountByCompetency.set(`${year}-${month}`, Number(item.valor) || 0);
   }
 
-  return { years, paidByYear };
+  return { years, paidByYear, amountByCompetency };
+}
+
+function getPaidAnnuityYears(statement: FinanceLancamento[]) {
+  const paidAnnuities = statement.filter(
+    (item) =>
+      item.status === "pago" &&
+      item.tipo === "anuidade" &&
+      item.competencia_ano,
+  );
+
+  const years = Array.from(new Set(paidAnnuities.map((item) => item.competencia_ano as number))).sort((a, b) => a - b);
+  const amountByYear = new Map<number, number>();
+
+  for (const item of paidAnnuities) {
+    amountByYear.set(item.competencia_ano as number, Number(item.valor) || 0);
+  }
+
+  return { years, amountByYear };
 }
 
 function getFinancialHighlights(statement: FinanceLancamento[]) {
   return statement
-    .filter((item) => item.status !== "cancelado" && item.tipo !== "mensalidade")
+    .filter(
+      (item) =>
+        item.status !== "cancelado" &&
+        item.tipo !== "mensalidade" &&
+        item.tipo !== "anuidade",
+    )
     .sort((a, b) => {
       const dateA = new Date(a.data_pagamento ?? a.created_at ?? 0).getTime();
       const dateB = new Date(b.data_pagamento ?? b.created_at ?? 0).getTime();
@@ -82,7 +107,8 @@ export function MemberFicha({ member, financialStatement = [] }: MemberFichaProp
   const { entity } = useEntityData();
   const [photoError, setPhotoError] = useState(false);
   const today = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
-  const { years, paidByYear } = buildMonthlyGrid(financialStatement);
+  const { years, paidByYear, amountByCompetency } = buildMonthlyGrid(financialStatement);
+  const { years: annuityYears, amountByYear: annuityAmountByYear } = getPaidAnnuityYears(financialStatement);
   const financialHighlights = getFinancialHighlights(financialStatement);
 
   return (
@@ -90,11 +116,8 @@ export function MemberFicha({ member, financialStatement = [] }: MemberFichaProp
     <div className="relative max-w-[210mm] mx-auto bg-white p-10 shadow-sm print:shadow-none min-h-[297mm] font-dmsans border border-slate-100 print:border-none overflow-hidden flex flex-col">
       
       {/* Marca d'água de fundo */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] rotate-[-30deg]">
-        <div className="flex flex-col items-center">
-          <img src="/logo.svg" alt="" className="w-80 h-80 object-contain grayscale brightness-0" />
-          <span className="text-[120px] font-black tracking-[0.2em] mt-[-40px]">SIGESS</span>
-        </div>
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.035]">
+        <img src={entity?.logoUrl || "/logo.svg"} alt="" className="w-80 h-80 object-contain" />
       </div>
 
       <div className="relative z-10 flex-1 flex flex-col">
@@ -268,9 +291,11 @@ export function MemberFicha({ member, financialStatement = [] }: MemberFichaProp
                   return (
                     <div
                       key={`${year}-${month}`}
-                      className="h-6 rounded border border-slate-200 flex items-center justify-center text-[11px] font-black text-slate-800"
+                      className="h-10 rounded border border-slate-200 flex items-center justify-center text-slate-800 leading-none"
                     >
-                      {checked ? "X" : ""}
+                      <span className="text-[8px] font-black text-slate-700">
+                        {checked ? Number(amountByCompetency.get(`${year}-${month}`) || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : ""}
+                      </span>
                     </div>
                   );
                 })}
@@ -279,6 +304,29 @@ export function MemberFicha({ member, financialStatement = [] }: MemberFichaProp
           </div>
         ) : (
           <p className="text-[10px] text-slate-500 italic">Nenhuma mensalidade quitada registrada.</p>
+        )}
+      </div>
+
+      <div className="mb-6">
+        <h3 className="text-[11px] font-black text-primary uppercase border-b border-primary/20 pb-0.5 mb-3 tracking-wider">
+          Anuidades por Competência
+        </h3>
+        {annuityYears.length > 0 ? (
+          <div className="grid grid-cols-4 gap-2">
+            {annuityYears.map((year) => (
+              <div
+                key={year}
+                className="h-12 rounded border border-slate-200 flex flex-col items-center justify-center text-slate-800"
+              >
+                <span className="text-[10px] font-black">{year}</span>
+                <span className="text-[9px] font-black text-slate-700">
+                  {Number(annuityAmountByYear.get(year) || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-[10px] text-slate-500 italic">Nenhuma anuidade quitada registrada.</p>
         )}
       </div>
 
