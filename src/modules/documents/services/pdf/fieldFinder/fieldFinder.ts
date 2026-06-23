@@ -29,9 +29,13 @@ export function findField(form: PDFForm, fieldName: string) {
         return form.getTextField(matchingField.getName());
       } catch {
         try {
-          return form.getCheckBox(matchingField.getName());
+          return form.getButton(matchingField.getName());
         } catch {
-          return null;
+          try {
+            return form.getCheckBox(matchingField.getName());
+          } catch {
+            return null;
+          }
         }
       }
     }

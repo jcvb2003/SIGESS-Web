@@ -14,6 +14,7 @@
 export function getPdfFieldMappings(): Record<string, string[]> {
   return {
     // Membro / Requerente
+    foto: ["Foto"],
     nome: ["Nome do requerente"],
     dtnasc: ["Data de nascimento"],
     data_filiacao: ["Data de filiação"],

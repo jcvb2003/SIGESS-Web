@@ -1,9 +1,11 @@
 import {
+  PDFButton,
   PDFCheckBox,
   PDFForm,
   PDFTextField,
   PDFDocument,
   TextAlignment,
+  ImageAlignment,
 } from "pdf-lib";
 import { findField } from "./fieldFinder/fieldFinder";
 import { FieldFontConfig } from "./fontExtraction/fontExtractor";
@@ -57,14 +59,33 @@ async function applyFieldConfig(
     console.warn(`Erro ao aplicar configuração de fonte para o campo ${fieldName}:`, error);
   }
 }
+async function embedImageInButton(
+  button: PDFButton,
+  imageUrl: string,
+  pdfDoc: PDFDocument,
+): Promise<void> {
+  const response = await fetch(imageUrl);
+  if (!response.ok) throw new Error(`Falha ao baixar imagem: ${response.status}`);
+  const bytes = await response.arrayBuffer();
+  const contentType = response.headers.get("content-type") ?? "";
+  const image = contentType.includes("png")
+    ? await pdfDoc.embedPng(bytes)
+    : await pdfDoc.embedJpg(bytes);
+  button.setImage(image, ImageAlignment.Center);
+}
+
 async function processPdfField(
-  field: PDFTextField | PDFCheckBox,
+  field: PDFTextField | PDFCheckBox | PDFButton,
   value: string,
   pdfDoc?: PDFDocument,
   fieldConfigurations?: FieldFontConfig[],
 ): Promise<boolean> {
   try {
-    if (field instanceof PDFTextField) {
+    if (field instanceof PDFButton) {
+      if (pdfDoc && value) {
+        await embedImageInButton(field, value, pdfDoc);
+      }
+    } else if (field instanceof PDFTextField) {
       field.setText(value);
       if (pdfDoc && fieldConfigurations) {
         await applyFieldConfig(field, pdfDoc, fieldConfigurations);

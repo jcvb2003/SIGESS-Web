@@ -40,6 +40,7 @@ export function processDocumentData(
 
   const map: Record<string, string> = {
     // Membro / Requerente
+    foto: member.foto_url || "",
     nome: member.nome || "",
     cpf: member.cpf || "",
     rg: member.rg || "",
