@@ -95,7 +95,7 @@ export function AposentadoriaTable({ data, isLoading, pagination }: Readonly<Apo
           total={pagination.total}
           totalPages={pagination.totalPages}
           onPageChange={pagination.setPage}
-          onPageSizeChange={pagination.setPageSize}
+          onPageSizeChange={(v) => pagination.setPageSize(Number(v))}
         />
       </div>
     </div>
