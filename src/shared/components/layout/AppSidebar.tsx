@@ -58,6 +58,18 @@ function SidebarContent({
 }: Readonly<SidebarContentProps>) {
   const navigate = useNavigate();
   const { entity, isLoading: isEntityLoading } = useEntityData();
+
+  const nameRef = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    const el = nameRef.current;
+    if (!el) return;
+    el.style.fontSize = "20px";
+    let size = 20;
+    while (size > 11 && el.scrollHeight > el.clientHeight) {
+      size -= 1;
+      el.style.fontSize = `${size}px`;
+    }
+  }, [entity?.shortName]);
   const { activeUnit, availableUnits, hasMultipleUnits, setActiveUnit } = useTenantUnits();
   const { canAccessTenantAdministration } = usePermissions();
   const tenantMode = useTenantMode();
@@ -82,11 +94,8 @@ function SidebarContent({
           isCollapsed && "justify-center",
         )}
       >
-        <Link
-          to="/dashboard"
-          className="flex items-center gap-3 group overflow-hidden"
-        >
-          <div className="flex h-10 w-10 min-w-[2.5rem] items-center justify-center rounded-xl bg-primary-foreground/20 dark:bg-white/10 text-sidebar-foreground transition-all group-hover:bg-primary-foreground group-hover:text-primary dark:group-hover:bg-primary dark:group-hover:text-white shadow-sm overflow-hidden">
+        <div className="flex items-center gap-3 overflow-hidden min-w-0">
+          <div className="flex h-10 w-10 min-w-[2.5rem] items-center justify-center rounded-xl bg-primary-foreground dark:bg-white/20 text-primary shadow-sm overflow-hidden">
             {entity?.logoUrl ? (
               <img
                 src={entity.logoUrl}
@@ -101,15 +110,19 @@ function SidebarContent({
           </div>
           <div
             className={cn(
-              "flex flex-col transition-opacity duration-300",
-              isCollapsed ? "opacity-0 w-0 hidden" : "opacity-100 w-auto",
+              "flex flex-col transition-opacity duration-300 min-w-0 overflow-hidden",
+              isCollapsed ? "opacity-0 w-0 hidden" : "opacity-100 flex-1",
             )}
           >
-            <span className="font-bold text-xl tracking-tight leading-none text-sidebar-foreground whitespace-nowrap">
-              SIGESS
+            <span
+              ref={nameRef}
+              className="font-bold leading-tight text-sidebar-foreground break-words block overflow-hidden"
+              style={{ fontSize: "20px", maxHeight: "3.5rem" }}
+            >
+              {entity?.shortName || "SIGESS"}
             </span>
           </div>
-        </Link>
+        </div>
       </div>
 
       {/* polo ativo movido para o trigger do dropdown abaixo */}
