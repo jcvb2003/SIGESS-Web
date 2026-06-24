@@ -14,15 +14,15 @@ const EMPTY_COUNTS = {
 export function useFinanceTabCounts(
   searchTerm: string,
   year: number,
-  anoBase: number,
+  anoBase: number | undefined,
 ) {
   const { unitId, bootstrapped } = useActiveScope();
 
   const query = useQuery({
     queryKey: financeQueryKeys.tabCounts(searchTerm, year, anoBase, unitId),
-    queryFn: () => financeService.getTabCounts(searchTerm, year, anoBase, unitId),
-    staleTime: 0,
-    enabled: bootstrapped && !!unitId,
+    queryFn: () => financeService.getTabCounts(searchTerm, year, anoBase!, unitId),
+    staleTime: 60_000,
+    enabled: bootstrapped && !!unitId && anoBase !== undefined,
   });
 
   return {

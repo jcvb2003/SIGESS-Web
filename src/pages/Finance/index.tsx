@@ -66,7 +66,7 @@ export default function FinancePage() {
   const navigate = useNavigate();
   const { params, setSearch, setTab, setPage, setPageSize, applyAdvancedFilters, clearAdvancedFilters } = useFinanceFilters();
   const debouncedSearchTerm = useDebounce(params.searchTerm, 300);
-  const { settings } = useFinanceSettings();
+  const { settings, isLoading: settingsLoading } = useFinanceSettings();
   const { isAdmin } = usePermissions();
   const { config: collectionConfig } = useCollectionConfig();
   const isAsaasConfigured = collectionConfig?.provider === 'asaas'
@@ -74,7 +74,8 @@ export default function FinancePage() {
     && collectionConfig?.has_webhook_token === true;
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
-  const anoBase = settings?.ano_base_cobranca ?? 2024;
+  // undefined while loading — prevents double-fetch when anoBase changes from default to real value
+  const anoBase = settingsLoading ? undefined : (settings?.ano_base_cobranca ?? 2024);
 
   const { members, total, isLoading } = useFinanceDashboard({ 
     ...params, 

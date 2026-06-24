@@ -49,8 +49,8 @@ function PublicRoute() {
   const { session, loading } = useAuth();
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex h-screen items-center justify-center bg-white">
+        <Loader2 className="h-8 w-8 animate-spin text-slate-500" />
       </div>
     );
   }
@@ -191,8 +191,8 @@ export function AppRouter() {
     <ErrorBoundary>
       <Suspense
         fallback={
-          <div className="flex h-screen items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <div className="flex h-screen items-center justify-center bg-white">
+            <Loader2 className="h-8 w-8 animate-spin text-slate-500" />
           </div>
         }
       >

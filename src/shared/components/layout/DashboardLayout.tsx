@@ -76,8 +76,8 @@ export function DashboardLayout() {
   });
   if (loading || isPortalContextLoading || (session && !themeReady)) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="h-screen w-screen flex items-center justify-center bg-white">
+        <Loader2 className="h-8 w-8 animate-spin text-slate-500" />
       </div>
     );
   }

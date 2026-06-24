@@ -9,8 +9,8 @@ export function useFinanceDashboard(params: FinanceDashboardParams) {
   const query = useQuery({
     queryKey: financeQueryKeys.dashboard({ ...params, _unitId: unitId }),
     queryFn: () => financeService.getDashboard(params, unitId),
-    staleTime: 0,
-    enabled: bootstrapped && !!unitId,
+    staleTime: 60_000,
+    enabled: bootstrapped && !!unitId && params.anoBase !== undefined,
   });
 
   return {
