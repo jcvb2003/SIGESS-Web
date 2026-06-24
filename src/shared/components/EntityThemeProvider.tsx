@@ -1,9 +1,28 @@
-import { useEffect, useLayoutEffect, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { EntitySettings } from "@/modules/settings/types/settings.types";
 import { useAuth } from "@/modules/auth/context/authContextStore";
 import { generateAccessibleForeground } from "../utils/colorConversion";
 import { useTheme } from "next-themes";
+
+// ---------------------------------------------------------------------------
+// Contexto público
+// ---------------------------------------------------------------------------
+
+interface EntityThemeContextValue {
+  /** true quando o tema da entidade foi aplicado (ou não há sessão ativa) */
+  themeReady: boolean;
+}
+
+const EntityThemeContext = createContext<EntityThemeContextValue>({ themeReady: true });
+
+export function useEntityTheme() {
+  return useContext(EntityThemeContext);
+}
+
+// ---------------------------------------------------------------------------
+// CSS vars gerenciadas
+// ---------------------------------------------------------------------------
 
 const COLOR_MAPPINGS = {
   corPrimaria: ["--primary", "--ring"],
@@ -33,33 +52,45 @@ function clearAllManagedVars(root: HTMLElement) {
   for (const cssVar of DERIVED_VARS) root.style.removeProperty(cssVar);
 }
 
+// ---------------------------------------------------------------------------
+// Provider
+// ---------------------------------------------------------------------------
+
 export function EntityThemeProvider({
   children,
 }: Readonly<{ children: ReactNode }>) {
   const { session } = useAuth();
   const queryClient = useQueryClient();
   const { theme, resolvedTheme } = useTheme();
-
   const currentTheme = theme === "system" ? resolvedTheme : theme;
 
-  // useLayoutEffect para aplicar cores antes do primeiro paint e evitar flash
+  // Contador usado apenas para forçar re-renders quando o cache muda.
+  // themeReady é computado sincronamente a cada render — sem lag de useState.
+  const [cacheVersion, setCacheVersion] = useState(0);
+
+  // themeReady calculado de forma síncrona:
+  // - Sem sessão: true (tela de login, nenhum tema customizado necessário)
+  // - Com sessão: true apenas quando dados da entidade estão no cache
+  const entityQueries = queryClient.getQueriesData<EntitySettings>({
+    queryKey: ["settings", "entity"],
+  });
+  const entityCached = entityQueries.some(([, data]) => data != null);
+  const themeReady = !session || entityCached;
+
+  // Aplica as CSS vars ANTES do paint (useLayoutEffect).
+  // Dependência de cacheVersion garante re-execução quando dados chegam.
   useLayoutEffect(() => {
     if (!session) {
       clearAllManagedVars(document.documentElement);
       return;
     }
-
-    // getQueriesData com chave parcial encontra ["settings","entity",unitId]
-    // sem precisar saber o unitId exato (getQueryData exigiria exact match).
-    const queries = queryClient.getQueriesData<EntitySettings>({ queryKey: ["settings", "entity"] });
-    const cached = queries.find(([, data]) => data != null)?.[1];
-
-    // Sempre chama applyEntityColors — mesmo sem entity, limpa vars obsoletas
-    // para que o CSS do globals.css (ex: sidebar charcoal no dark mode) assuma.
+    const cached = entityQueries.find(([, data]) => data != null)?.[1];
     applyEntityColors(cached, currentTheme);
-  }, [session, queryClient, currentTheme]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, currentTheme, cacheVersion]);
 
-  // useEffect para subscrever mudanças futuras (save, reset)
+  // Subscription: dispara re-render quando o cache da entidade muda.
+  // O re-render recalcula entityCached/themeReady de forma síncrona.
   useEffect(() => {
     if (!session) return;
 
@@ -69,27 +100,37 @@ export function EntityThemeProvider({
         event.query.queryKey[0] === "settings" &&
         event.query.queryKey[1] === "entity"
       ) {
-        const entity = event.query.state.data as EntitySettings | null | undefined;
-        applyEntityColors(entity, currentTheme);
+        setCacheVersion((v) => v + 1);
       }
     });
 
     return unsubscribe;
-  }, [session, queryClient, currentTheme]);
+  }, [session, queryClient]);
 
-  return <>{children}</>;
+  // Fallback de segurança: se a query demorar ou falhar, desbloqueio após 3s.
+  useEffect(() => {
+    if (themeReady) return;
+    const timer = setTimeout(() => setCacheVersion((v) => v + 1), 3000);
+    return () => clearTimeout(timer);
+  }, [themeReady]);
+
+  return (
+    <EntityThemeContext.Provider value={{ themeReady }}>
+      {children}
+    </EntityThemeContext.Provider>
+  );
 }
+
+// ---------------------------------------------------------------------------
+// Aplicação de cores
+// ---------------------------------------------------------------------------
 
 function applyEntityColors(
   entity: EntitySettings | null | undefined,
-  theme: string | undefined
+  theme: string | undefined,
 ): void {
   const root = document.documentElement;
-
-  // Limpa todos os overrides antes de reaplicar — garante que um reset
-  // para o padrão não deixe vars obsoletas do estado anterior.
   clearAllManagedVars(root);
-
   if (!entity) return;
 
   for (const [field, cssVars] of Object.entries(COLOR_MAPPINGS)) {
@@ -97,16 +138,13 @@ function applyEntityColors(
     if (!value) continue;
 
     for (const cssVar of cssVars) {
-      if (theme === "dark" && cssVar === "--sidebar-background") {
-        continue; // dark mode usa charcoal do globals.css
-      }
+      if (theme === "dark" && cssVar === "--sidebar-background") continue;
       root.style.setProperty(cssVar, value);
     }
 
     const foregroundVars = FOREGROUND_MAPPINGS[field as keyof typeof FOREGROUND_MAPPINGS];
     if (foregroundVars) {
       if (theme === "dark" && field === "corSidebar") continue;
-
       const contrastColor = generateAccessibleForeground(value);
       for (const fgVar of foregroundVars) {
         root.style.setProperty(fgVar, contrastColor);

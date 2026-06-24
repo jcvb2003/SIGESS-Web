@@ -31,6 +31,7 @@ import { PortariaProvider } from "@/shared/context/PortariaContext";
 import { GlobalMemberSearch } from "./GlobalMemberSearch";
 import { GlobalPortariaSelect } from "./GlobalPortariaSelect";
 import { MemberDetailsModal } from "@/modules/members/components/modal/MemberDetailsModal";
+import { useEntityTheme } from "@/shared/components/EntityThemeProvider";
 
 export function DashboardLayout() {
   const { session, user, loading: authLoading, signOut } = useAuth();
@@ -42,6 +43,7 @@ export function DashboardLayout() {
   usePresenceHeartbeat();
   const { isPortalContextLoading, isStatePortal } = usePortalContext();
   const tenantMode = useTenantMode();
+  const { themeReady } = useEntityTheme();
   const loading = authLoading || metadataLoading;
   const isMobile = useMobile();
   const navigate = useNavigate();
@@ -72,9 +74,9 @@ export function DashboardLayout() {
   useIdleTimeout({
     onTimeout: handleIdleTimeout,
   });
-  if (loading || isPortalContextLoading) {
+  if (loading || isPortalContextLoading || (session && !themeReady)) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center">
+      <div className="h-screen w-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
