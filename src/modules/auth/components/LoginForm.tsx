@@ -91,7 +91,7 @@ export function LoginForm() {
           SIGESS
         </h1>
         <p className="text-sm text-foreground/60">
-          Sistema de Gestão para Sindicatos de Pescadores Artesanais
+          Sistema de Gestão para Entidades de Pescadores Artesanais
         </p>
       </div>
 

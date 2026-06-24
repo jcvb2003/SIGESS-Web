@@ -12,16 +12,22 @@ const BUILD_MARKER = import.meta.env.VITE_VERCEL_GIT_COMMIT_SHA ?? globalThis.lo
 if ("serviceWorker" in navigator) {
   let hasRegisteredReload = false;
 
-  const forceReloadForFreshBuild = () => {
+  const safeReload = () => {
     if (sessionStorage.getItem(SW_RELOAD_KEY) === BUILD_MARKER) return;
+
+    // Não recarregar se o usuário já preencheu qualquer campo de formulário.
+    const hasFormData = Array.from(
+      document.querySelectorAll<HTMLInputElement>("input, textarea, select"),
+    ).some((el) => el.value.length > 0);
+    if (hasFormData) return;
+
     sessionStorage.setItem(SW_RELOAD_KEY, BUILD_MARKER);
     globalThis.location.reload();
   };
 
-  navigator.serviceWorker.addEventListener("controllerchange", () => {
-    forceReloadForFreshBuild();
-  });
-
+  // Não usar controllerchange: dispara na primeira ativação normal do SW,
+  // causando reloads inesperados mesmo sem nova versão disponível.
+  // onNeedRefresh é o hook correto — só dispara quando há atualização real.
   registerSW({
     immediate: true,
     onRegisteredSW(_swUrl, registration) {
@@ -31,13 +37,11 @@ if ("serviceWorker" in navigator) {
       const lastSeenBuild = localStorage.getItem(SW_BUILD_KEY);
       if (lastSeenBuild !== BUILD_MARKER) {
         localStorage.setItem(SW_BUILD_KEY, BUILD_MARKER);
-        registration.update().catch(() => {
-          // Ignora falha silenciosamente; o chunk recovery abaixo cobre a navegação atual.
-        });
+        registration.update().catch(() => {});
       }
     },
     onNeedRefresh() {
-      forceReloadForFreshBuild();
+      safeReload();
     },
   });
 }
