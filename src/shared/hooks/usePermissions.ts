@@ -53,6 +53,7 @@ export function usePermissions() {
   const isAdmin = role === "admin";
   const canAccessTenantAdministration = tenantEntityRole === "owner";
   const canManageEntitySettings = isAdmin;
+  const canManageCustomization = isAdmin || tenantEntityRole === "owner";
 
   return {
     role,
@@ -62,6 +63,7 @@ export function usePermissions() {
     tenantOperatorType,
     isTenantAdministrationLoading: tenantAdministrationQuery.isLoading,
     canManageEntitySettings,
+    canManageCustomization,
     canCancelPayments: isAdmin,
     canConfigureFinance: isAdmin,
     canReleaseMembers: isAdmin,

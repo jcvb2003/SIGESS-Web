@@ -25,7 +25,7 @@ import { useTenantMode } from "@/shared/hooks/useTenantMode";
 import { useSearchParams } from "react-router-dom";
 
 export default function Settings() {
-  const { isAdmin, canManageEntitySettings } = usePermissions();
+  const { isAdmin, canManageEntitySettings, canManageCustomization } = usePermissions();
   const tenantMode = useTenantMode();
   const [searchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") ?? "dados";
@@ -80,8 +80,8 @@ export default function Settings() {
             value: "personalizacao",
             label: "Personalização",
             icon: Palette,
-            content: <CustomizationForm />,
-            disabled: !isAdmin
+            content: <CustomizationForm readOnly={!canManageCustomization} />,
+            disabled: !canManageCustomization
           },
           {
             value: "extensao",

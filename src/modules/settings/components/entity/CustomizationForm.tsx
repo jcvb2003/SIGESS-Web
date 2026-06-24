@@ -9,7 +9,11 @@ import { BRANDING_COLORS } from "../../constants/brandingDefaults";
 import type { EntitySettings } from "../../types/settings.types";
 import { entitySchema, EntityFormData } from "../../hooks/useEntityValidation";
 
-export function CustomizationForm() {
+interface CustomizationFormProps {
+  readOnly?: boolean;
+}
+
+export function CustomizationForm({ readOnly = false }: Readonly<CustomizationFormProps>) {
   const { entity, isLoading, isSaving, saveEntity } = useEntityData();
   const methods = useForm<EntityFormData>({
     resolver: zodResolver(entitySchema),
@@ -54,6 +58,7 @@ export function CustomizationForm() {
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-4">
+        <fieldset disabled={readOnly || isLoading || isSaving} className={readOnly ? "opacity-50 grayscale pointer-events-none" : ""}>
         <div className="flex justify-end gap-2">
           {methods.formState.isDirty && (
             <Button
@@ -66,7 +71,7 @@ export function CustomizationForm() {
               Cancelar
             </Button>
           )}
-          <Button type="submit" disabled={isLoading || isSaving || !methods.formState.isDirty} size="sm">
+          <Button type="submit" disabled={readOnly || isLoading || isSaving || !methods.formState.isDirty} size="sm">
             {isSaving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -83,6 +88,7 @@ export function CustomizationForm() {
         <div className="grid gap-4">
           <EntityVisualIdentity />
         </div>
+        </fieldset>
       </form>
     </FormProvider>
   );
