@@ -12,12 +12,21 @@ import { usePresenceHeartbeat } from "@/shared/hooks/usePresenceHeartbeat";
 import { AccessExpiredModal } from "./AccessExpiredModal";
 import { BillingBlockedModal } from "./BillingBlockedModal";
 import { useBillingSummary } from "@/modules/billing/hooks/data/useBillingSummary";
-import { Loader2 } from "lucide-react";
+import { Loader2, User, LogOut, Sun, Moon } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/shared/components/ui/dropdown-menu";
 import { useNetworkStatus } from "@/shared/hooks/useNetworkStatus";
 import { PWABanner } from "@/shared/components/feedback/PWABanner";
 import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 import { usePortalContext } from "@/shared/hooks/usePortalContext";
 import { useTenantMode } from "@/shared/hooks/useTenantMode";
+import { useTheme } from "next-themes";
 import { PortariaProvider } from "@/shared/context/PortariaContext";
 import { GlobalMemberSearch } from "./GlobalMemberSearch";
 import { GlobalPortariaSelect } from "./GlobalPortariaSelect";
@@ -28,6 +37,7 @@ export function DashboardLayout() {
   const { activeUnit, hasMultipleUnits, hydrated } = useTenantUnits();
   const { metadata, loading: metadataLoading } = useUserMetadata();
   const { data: billingSummary } = useBillingSummary();
+  const { theme, setTheme } = useTheme();
   const avatarUrl = useProfileAvatarUrl(metadata?.avatarPath);
   usePresenceHeartbeat();
   const { isPortalContextLoading, isStatePortal } = usePortalContext();
@@ -127,51 +137,98 @@ export function DashboardLayout() {
             <div className="flex items-center justify-end gap-4 w-64 shrink-0 min-w-0">
               <GlobalPortariaSelect />
               <div className="h-6 w-px bg-border shrink-0" />
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full ring-2 ring-primary/25 overflow-hidden">
-                  {avatarUrl ? (
-                    <>
-                      <div
-                        className="absolute inset-0 rounded-full"
-                        style={{ backgroundColor: "#fff" }}
-                      />
-                      <img
-                        src={avatarUrl}
-                        alt=""
-                        style={{
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "contain",
-                          objectPosition: "center",
-                        }}
-                      />
-                    </>
-                  ) : (
-                    <div className="absolute inset-0" style={{ backgroundColor: "hsl(var(--primary) / 0.1)" }} />
-                  )}
-                  {!avatarUrl && (
-                    <div className="relative z-10 text-primary text-xs font-bold">
-                      {metadata?.profileName?.charAt(0)?.toUpperCase()
-                        ?? (user?.user_metadata?.full_name as string | undefined)?.charAt(0)?.toUpperCase()
-                        ?? user?.email?.charAt(0)?.toUpperCase()
-                        ?? "?"}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full ring-2 ring-primary/30 hover:ring-primary/60 transition-all overflow-hidden outline-none">
+                    {avatarUrl ? (
+                      <>
+                        <div className="absolute inset-0 rounded-full" style={{ backgroundColor: "#fff" }} />
+                        <img
+                          src={avatarUrl}
+                          alt=""
+                          className="absolute inset-0 w-full h-full object-contain"
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <div className="absolute inset-0" style={{ backgroundColor: "hsl(var(--primary) / 0.1)" }} />
+                        <span className="relative z-10 text-primary text-sm font-bold">
+                          {metadata?.profileName?.charAt(0)?.toUpperCase()
+                            ?? (user?.user_metadata?.full_name as string | undefined)?.charAt(0)?.toUpperCase()
+                            ?? user?.email?.charAt(0)?.toUpperCase()
+                            ?? "?"}
+                        </span>
+                      </>
+                    )}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64 p-0 overflow-hidden">
+                  {/* Cabeçalho com identidade do usuário */}
+                  <DropdownMenuLabel className="p-0">
+                    <div className="flex items-center gap-3 px-4 py-3 bg-muted/40 border-b border-border/60">
+                      <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full ring-2 ring-primary/20 overflow-hidden">
+                        {avatarUrl ? (
+                          <>
+                            <div className="absolute inset-0 rounded-full" style={{ backgroundColor: "#fff" }} />
+                            <img src={avatarUrl} alt="" className="absolute inset-0 w-full h-full object-contain" />
+                          </>
+                        ) : (
+                          <>
+                            <div className="absolute inset-0" style={{ backgroundColor: "hsl(var(--primary) / 0.1)" }} />
+                            <span className="relative z-10 text-primary text-sm font-bold">
+                              {metadata?.profileName?.charAt(0)?.toUpperCase()
+                                ?? (user?.user_metadata?.full_name as string | undefined)?.charAt(0)?.toUpperCase()
+                                ?? user?.email?.charAt(0)?.toUpperCase()
+                                ?? "?"}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-sm font-semibold text-foreground truncate">
+                          {metadata?.profileName
+                            ?? (user?.user_metadata?.full_name as string | undefined)
+                            ?? user?.email?.split("@")[0]}
+                        </span>
+                        <span className="text-xs text-muted-foreground truncate">
+                          {user?.email}
+                        </span>
+                      </div>
                     </div>
-                  )}
-                </div>
-                <div className="flex flex-col min-w-0 leading-tight">
-                  <span className="text-xs font-semibold text-foreground truncate">
-                    {metadata?.profileName
-                      ?? (user?.user_metadata?.full_name as string | undefined)
-                      ?? user?.email?.split("@")[0]}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground/70 truncate">
-                    {user?.email}
-                  </span>
-                </div>
-              </div>
+                  </DropdownMenuLabel>
+                  {/* Ações */}
+                  <div className="p-1">
+                    <DropdownMenuItem
+                      className="gap-2.5 cursor-pointer rounded-lg"
+                      onClick={() => navigate("/settings?tab=senhas")}
+                    >
+                      <User className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <span>Editar meu perfil</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="gap-2.5 cursor-pointer rounded-lg"
+                      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                    >
+                      {theme === "dark" ? (
+                        <Sun className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      ) : (
+                        <Moon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      )}
+                      <span>Tema {theme === "dark" ? "Claro" : "Escuro"}</span>
+                    </DropdownMenuItem>
+                  </div>
+                  <DropdownMenuSeparator className="my-0" />
+                  <div className="p-1">
+                    <DropdownMenuItem
+                      className="gap-2.5 cursor-pointer rounded-lg text-destructive focus:bg-destructive/10 focus:text-destructive"
+                      onClick={signOut}
+                    >
+                      <LogOut className="h-4 w-4 shrink-0" />
+                      <span>Sair</span>
+                    </DropdownMenuItem>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </header>
 

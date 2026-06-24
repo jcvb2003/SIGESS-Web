@@ -1,11 +1,9 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LogOut, Menu, Sun, Moon, ChevronsUpDown, Building2, LayoutDashboard, Check } from "lucide-react";
+import { Menu, ChevronsUpDown, Building2, LayoutDashboard, Check } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/components/ui/button";
-import { useAuth } from "@/modules/auth/context/authContextStore";
 import { useTenantUnits } from "@/modules/tenant-units/context/TenantUnitContext";
 import { usePermissions } from "@/shared/hooks/usePermissions";
-import { useTheme } from "next-themes";
 import {
   Sheet,
   SheetContent,
@@ -36,10 +34,7 @@ import {
 type SidebarContentProps = {
   isCollapsed: boolean;
   pathname: string;
-  theme: string | undefined;
-  setTheme: (theme: string) => void;
   onNavigate: () => void;
-  onSignOut: () => void;
   accountMenuOpen: boolean;
   onAccountMenuOpenChange: (open: boolean) => void;
   navScrollRef?: React.RefObject<HTMLDivElement | null>;
@@ -48,10 +43,7 @@ type SidebarContentProps = {
 function SidebarContent({
   isCollapsed,
   pathname,
-  theme,
-  setTheme,
   onNavigate,
-  onSignOut,
   accountMenuOpen,
   onAccountMenuOpenChange,
   navScrollRef,
@@ -210,31 +202,7 @@ function SidebarContent({
           isCollapsed ? "items-center justify-center" : "",
         )}
       >
-        <Button
-          variant="ghost"
-          className={cn(
-            "w-full gap-3 text-sidebar-foreground/80 hover:text-white hover:bg-primary-foreground/20 transition-all whitespace-nowrap rounded-xl h-12",
-            isCollapsed
-              ? "justify-center px-0 w-10 mx-auto"
-              : "justify-start px-4",
-          )}
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-        >
-          {theme === "dark" ? (
-            <Sun className="h-[18px] w-[18px] shrink-0" />
-          ) : (
-            <Moon className="h-[18px] w-[18px] shrink-0" />
-          )}
-          <span
-            className={cn(
-              "transition-all duration-300 font-semibold",
-              isCollapsed ? "hidden w-0 opacity-0" : "w-auto opacity-100",
-            )}
-          >
-            Tema {theme === "dark" ? "Claro" : "Escuro"}
-          </span>
-        </Button>
-        {hasMultipleUnits && !isCollapsed ? (
+        {hasMultipleUnits && !isCollapsed && (
           <DropdownMenu open={accountMenuOpen} onOpenChange={onAccountMenuOpenChange}>
             <DropdownMenuTrigger asChild>
               <Button
@@ -283,37 +251,8 @@ function SidebarContent({
                   </DropdownMenuItem>
                 </>
               )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={onSignOut}
-                className="gap-2.5 cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive"
-              >
-                <LogOut className="h-4 w-4 shrink-0" />
-                <span>Sair da conta</span>
-              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        ) : (
-          <Button
-            variant="ghost"
-            className={cn(
-              "w-full gap-3 text-sidebar-foreground/80 hover:text-white hover:bg-destructive/90 transition-all whitespace-nowrap rounded-xl h-12",
-              isCollapsed
-                ? "justify-center px-0 w-10 mx-auto"
-                : "justify-start px-4",
-            )}
-            onClick={onSignOut}
-          >
-            <LogOut className="h-[18px] w-[18px] shrink-0" />
-            <span
-              className={cn(
-                "transition-all duration-300 font-semibold",
-                isCollapsed ? "hidden w-0 opacity-0" : "w-auto opacity-100",
-              )}
-            >
-              Sair
-            </span>
-          </Button>
         )}
       </div>
     </div>
@@ -332,8 +271,6 @@ export function AppSidebar({
   onMouseLeave,
 }: Readonly<AppSidebarProps>) {
   const { pathname } = useLocation();
-  const { signOut } = useAuth();
-  const { theme, setTheme } = useTheme();
   const isMobile = useMobile();
   const [open, setOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
@@ -374,10 +311,9 @@ export function AppSidebar({
           <SidebarContent
             isCollapsed={false}
             pathname={pathname}
-            theme={theme}
-            setTheme={setTheme}
+
             onNavigate={() => setOpen(false)}
-            onSignOut={signOut}
+
             accountMenuOpen={accountMenuOpen}
             onAccountMenuOpenChange={setAccountMenuOpen}
             navScrollRef={navScrollRef}
@@ -404,10 +340,7 @@ export function AppSidebar({
         <SidebarContent
           isCollapsed={isCollapsed}
           pathname={pathname}
-          theme={theme}
-          setTheme={setTheme}
           onNavigate={() => undefined}
-          onSignOut={signOut}
           accountMenuOpen={accountMenuOpen}
           onAccountMenuOpenChange={setAccountMenuOpen}
           navScrollRef={navScrollRef}

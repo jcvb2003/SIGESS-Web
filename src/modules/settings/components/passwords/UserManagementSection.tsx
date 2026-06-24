@@ -353,7 +353,7 @@ export function UserManagementSection() {
                       Presidente
                     </Badge>
                   ) : (
-                    <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 gap-1 py-0.5 px-2 font-bold uppercase text-[9px]">
+                    <Badge variant="outline" className="bg-muted text-muted-foreground border-border gap-1 py-0.5 px-2 font-bold uppercase text-[9px]">
                       <ShieldAlert className="h-3 w-3" />
                       Auxiliar
                     </Badge>

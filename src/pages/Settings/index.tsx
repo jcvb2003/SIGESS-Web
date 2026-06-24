@@ -22,10 +22,13 @@ import { ExtensionSettings } from "@/modules/settings/components/extension/Exten
 import { BillingTab } from "@/modules/billing/components/BillingTab";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { useTenantMode } from "@/shared/hooks/useTenantMode";
+import { useSearchParams } from "react-router-dom";
 
 export default function Settings() {
   const { isAdmin, canManageEntitySettings } = usePermissions();
   const tenantMode = useTenantMode();
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") ?? "dados";
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
@@ -35,7 +38,7 @@ export default function Settings() {
       />
 
       <EntityTabs
-        defaultValue="dados"
+        defaultValue={initialTab}
         items={[
           {
             value: "dados",
