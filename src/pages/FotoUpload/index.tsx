@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { initSupabaseClient } from "@/shared/lib/supabase/client";
+import { getCachedTenantConfig } from "@/config/tenants";
 import { Camera, ImagePlus, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Scanner } from "@yudiel/react-qr-scanner";
@@ -79,26 +80,43 @@ export default function FotoUploadPage() {
 
           ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, targetWidth, targetHeight);
 
-          // 3. Converter para Base64 (JPEG 0.7)
-          const base64Photo = canvas.toDataURL("image/jpeg", 0.7).split(",")[1];
+          // 3. Blob binário (sem base64)
+          const blob = await new Promise<Blob>((res, rej) =>
+            canvas.toBlob((b) => b ? res(b) : rej(new Error("toBlob failed")), "image/jpeg", 0.7)
+          );
 
-          // 4. Enviar via RPC
+          // 4. Inicializar cliente e obter supabaseUrl
           let supabase;
           try {
             supabase = await initSupabaseClient(tenant!);
           } catch {
             throw new Error("Entidade do QR Code não encontrada ou indisponível.");
           }
-          
+          const supabaseUrl = getCachedTenantConfig(tenant!)?.supabaseUrl;
+          if (!supabaseUrl) throw new Error("Configuração da entidade indisponível.");
+
+          // 5. Obter signed upload URL via Edge Function
+          const urlResp = await fetch(`${supabaseUrl}/functions/v1/foto-upload-url?token=${token}&tenant=${tenant}`);
+          if (!urlResp.ok) throw new Error("Token inválido ou expirado.");
+          const { signedUrl } = await urlResp.json() as { signedUrl: string };
+
+          // 6. PUT binário direto ao Storage (sem passar pelo Postgres)
+          const putResp = await fetch(signedUrl, {
+            method: "PUT",
+            body: blob,
+            headers: { "Content-Type": "image/jpeg" },
+          });
+          if (!putResp.ok) throw new Error("Falha no upload para o Storage.");
+
+          // 7. Confirmar (registra storage_path, marca used=true)
           /* eslint-disable @typescript-eslint/no-explicit-any */
           const { data, error } = await (supabase as any).rpc("confirmar_upload_foto", {
             p_token: token,
-            p_base64: base64Photo,
           });
           /* eslint-enable @typescript-eslint/no-explicit-any */
 
           if (error || !data) {
-            throw new Error(error?.message || "Erro no servidor ao salvar foto.");
+            throw new Error(error?.message || "Erro no servidor ao confirmar foto.");
           }
 
           setStatus("success");

@@ -30,7 +30,7 @@ import { Button } from "@/shared/components/ui/button";
 type FotoUploadToken = {
   token: string;
   socio_cpf: string;
-  foto_base64: string | null;
+  storage_path: string | null;
   expires_at: string;
   created_at: string;
 };
@@ -114,7 +114,11 @@ export function MemberPhotoField() {
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout>;
     if (isQrModalOpen) {
+      const capturedToken = qrToken;
       timeoutId = setTimeout(() => {
+        if (capturedToken) {
+          supabase.storage.from("foto-staging").remove([`${capturedToken}.jpg`]);
+        }
         setIsQrModalOpen(false);
         setQrToken(null);
         toast.info(
@@ -125,12 +129,15 @@ export function MemberPhotoField() {
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [isQrModalOpen]);
+  }, [isQrModalOpen, qrToken]);
 
   const closeQrModal = useCallback(() => {
+    if (qrToken) {
+      supabase.storage.from("foto-staging").remove([`${qrToken}.jpg`]);
+    }
     setIsQrModalOpen(false);
     setQrToken(null);
-  }, []);
+  }, [qrToken]);
 
   const generatePhotoToken = async () => {
     if (!cpf) {
@@ -168,11 +175,8 @@ export function MemberPhotoField() {
     }
   };
 
-  const processBase64Photo = useCallback(async (base64: string) => {
+  const processBlob = useCallback(async (blob: Blob) => {
     try {
-      const res = await fetch(`data:image/jpeg;base64,${base64}`);
-      const blob = await res.blob();
-
       const compressedBlob = await compressMemberPhoto(
         new File([blob], "foto_mobile.jpg", { type: "image/jpeg" }),
       );
@@ -205,8 +209,10 @@ export function MemberPhotoField() {
         },
         async (payload) => {
           const newData = payload.new as FotoUploadToken;
-          if (newData.foto_base64) {
-            await processBase64Photo(newData.foto_base64);
+          if (newData.storage_path) {
+            const path = newData.storage_path.replace("foto-staging/", "");
+            const { data: blobData } = await supabase.storage.from("foto-staging").download(path);
+            if (blobData) await processBlob(blobData);
           }
         },
       )
@@ -215,7 +221,7 @@ export function MemberPhotoField() {
     const intervalId = globalThis.setInterval(async () => {
       /* eslint-disable @typescript-eslint/no-explicit-any */
       const { data, error } = await ((supabase.from("foto_upload_tokens" as any) as any)
-        .select("foto_base64")
+        .select("storage_path")
         .eq("token", qrToken)
         .maybeSingle());
       /* eslint-enable @typescript-eslint/no-explicit-any */
@@ -224,9 +230,11 @@ export function MemberPhotoField() {
         return;
       }
 
-      const tokenData = data as { foto_base64?: string | null } | null;
-      if (tokenData?.foto_base64) {
-        await processBase64Photo(tokenData.foto_base64);
+      const tokenData = data as { storage_path?: string | null } | null;
+      if (tokenData?.storage_path) {
+        const path = tokenData.storage_path.replace("foto-staging/", "");
+        const { data: blobData } = await supabase.storage.from("foto-staging").download(path);
+        if (blobData) await processBlob(blobData);
       }
     }, 2000);
 
@@ -234,7 +242,7 @@ export function MemberPhotoField() {
       globalThis.clearInterval(intervalId);
       supabase.removeChannel(channel);
     };
-  }, [qrToken, isQrModalOpen, processBase64Photo]);
+  }, [qrToken, isQrModalOpen, processBlob]);
 
   // --- Upload local ---
 
@@ -287,10 +295,12 @@ export function MemberPhotoField() {
     handleStagePhoto(pendingPhoto.file, pendingPhoto.previewUrl);
 
     if (qrToken) {
+      // fire-and-forget: limpar arquivo de staging e zerar storage_path
+      supabase.storage.from("foto-staging").remove([`${qrToken}.jpg`]);
       /* eslint-disable @typescript-eslint/no-explicit-any */
-      await ((supabase.from("foto_upload_tokens" as any) as any)
-        .update({ foto_base64: null })
-        .eq("token", qrToken));
+      (supabase.from("foto_upload_tokens" as any) as any)
+        .update({ storage_path: null })
+        .eq("token", qrToken);
       /* eslint-enable @typescript-eslint/no-explicit-any */
       setQrToken(null);
     }
