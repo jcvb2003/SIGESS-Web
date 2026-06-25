@@ -7,7 +7,38 @@ export default defineConfig({
         react(),
         VitePWA({
             registerType: 'autoUpdate',
-            manifest: false,
+            includeAssets: ['logo.svg', 'pwa-192.png', 'pwa-512.png'],
+            devOptions: {
+                enabled: true,
+            },
+            manifest: {
+                name: 'SIGESS',
+                short_name: 'SIGESS',
+                description: 'Sistema de gestão para sindicatos e colônias.',
+                theme_color: '#059669',
+                background_color: '#ffffff',
+                display: 'standalone',
+                start_url: '/',
+                scope: '/',
+                icons: [
+                    {
+                        src: '/pwa-192.png',
+                        sizes: '192x192',
+                        type: 'image/png',
+                    },
+                    {
+                        src: '/pwa-512.png',
+                        sizes: '512x512',
+                        type: 'image/png',
+                    },
+                    {
+                        src: '/logo.svg',
+                        sizes: 'any',
+                        type: 'image/svg+xml',
+                        purpose: 'any',
+                    },
+                ],
+            },
             workbox: {
                 cleanupOutdatedCaches: true,
                 clientsClaim: true,
