@@ -45,7 +45,7 @@ export function useOnlineUsers() {
       }
 
       const { data: teamData, error: teamError } = await supabase.functions.invoke("manage-user", {
-        body: { action: "list", payload: {} },
+        body: { action: "list", payload: { activeUnitId: unitId } },
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },

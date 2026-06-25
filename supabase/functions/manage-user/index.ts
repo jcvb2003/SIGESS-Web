@@ -606,9 +606,22 @@ async function handleList(
   payload?: Record<string, unknown>,
 ) {
   const scope = await resolveAccessScope(admin, currentUser);
+  const activeUnitId =
+    typeof payload?.activeUnitId === "string" && payload.activeUnitId.trim() !== ""
+      ? payload.activeUnitId.trim()
+      : null;
   console.log(
     `[ManageUser] Listando usuários (tenantId=${scope.tenantId ?? "n/a"}, tenantRole=${scope.tenantRole ?? "n/a"}, operatorType=${scope.operatorType ?? "n/a"}, isAdmin=${scope.isAdmin})...`,
   );
+
+  if (
+    scope.tenantId !== null &&
+    scope.tenantRole !== "owner" &&
+    scope.unitIds.length > 0 &&
+    activeUnitId === null
+  ) {
+    throw new Error("Polo ativo obrigatorio para listar a equipe neste contexto.");
+  }
 
   const allowedIds =
     scope.tenantId !== null
@@ -616,7 +629,7 @@ async function handleList(
           admin,
           scope,
           currentUser,
-          typeof payload?.activeUnitId === "string" ? payload.activeUnitId : null,
+          activeUnitId,
         )
       : scope.isAdmin
         ? null
