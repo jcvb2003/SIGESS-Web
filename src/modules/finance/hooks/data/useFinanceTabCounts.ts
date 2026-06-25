@@ -17,10 +17,11 @@ export function useFinanceTabCounts(
   anoBase: number | undefined,
 ) {
   const { unitId, bootstrapped } = useActiveScope();
+  const resolvedAnoBase = anoBase ?? 2024;
 
   const query = useQuery({
-    queryKey: financeQueryKeys.tabCounts(searchTerm, year, anoBase, unitId),
-    queryFn: () => financeService.getTabCounts(searchTerm, year, anoBase!, unitId),
+    queryKey: financeQueryKeys.tabCounts(searchTerm, year, resolvedAnoBase, unitId),
+    queryFn: () => financeService.getTabCounts(searchTerm, year, resolvedAnoBase, unitId),
     staleTime: 60_000,
     enabled: bootstrapped && !!unitId && anoBase !== undefined,
   });

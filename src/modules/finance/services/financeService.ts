@@ -203,45 +203,27 @@ export const financeService = {
 
   /**
    * Retorna contagens por aba para os badges do dashboard.
+   * 1 RPC com FILTER substitui os 5 HEAD queries independentes.
    */
   async getTabCounts(
     searchTerm: string,
-    year: number,
-    anoBase: number,
+    _year: number,
+    _anoBase: number,
     unitId?: string | null,
   ): Promise<Record<string, number>> {
-    const requiredYears = getRequiredYears(anoBase, year);
-
-    const tabs: FinanceDashboardParams["tab"][] = [
-      "todos",
-      "em-dia",
-      "inadimplentes",
-      "liberados",
-      "isentos",
-    ];
-
-    const results = await Promise.all(
-      tabs.map(async (tab) => {
-        const query = this.applyDashboardCountFilters(
-          createDashboardCountQuery(unitId),
-          {
-            page: 1,
-            pageSize: 1,
-            searchTerm,
-            year,
-            anoBase,
-            tab,
-          },
-          requiredYears,
-        );
-
-        const { count, error } = await query;
-        if (error) throw error;
-        return [tab, count ?? 0] as const;
-      }),
-    );
-
-    return Object.fromEntries(results);
+    const { data, error } = await supabase.rpc("get_finance_tab_counts", {
+      p_unit_id: unitId ?? null,
+      p_search:  searchTerm || null,
+    });
+    if (error) throw error;
+    const row = (data as Array<Record<string, unknown>>)?.[0] ?? {};
+    return {
+      todos:         Number(row.todos         ?? 0),
+      "em-dia":      Number(row.em_dia        ?? 0),
+      inadimplentes: Number(row.inadimplentes ?? 0),
+      liberados:     Number(row.liberados      ?? 0),
+      isentos:       Number(row.isentos        ?? 0),
+    };
   },
 
   /**

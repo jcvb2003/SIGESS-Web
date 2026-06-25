@@ -76,6 +76,7 @@ export default function FinancePage() {
   const currentMonth = new Date().getMonth() + 1;
   // undefined while loading — prevents double-fetch when anoBase changes from default to real value
   const anoBase = settingsLoading ? undefined : (settings?.ano_base_cobranca ?? 2024);
+  const resolvedAnoBase = anoBase ?? 2024;
 
   const { members, total, isLoading } = useFinanceDashboard({ 
     ...params, 
@@ -124,7 +125,7 @@ export default function FinancePage() {
     {
       header: "Situação",
       className: "whitespace-nowrap",
-      cell: (m: MemberFinancialSummary) => <FinancialStatusCell member={m} anoBase={anoBase} />
+        cell: (m: MemberFinancialSummary) => <FinancialStatusCell member={m} anoBase={resolvedAnoBase} />
     },
     {
       header: "Último pag.",
@@ -138,7 +139,7 @@ export default function FinancePage() {
     {
       header: "Cobrança",
       cell: (m: MemberFinancialSummary) => (
-        <AnnuitiesCell member={m} currentYear={currentYear} anoBase={anoBase} />
+          <AnnuitiesCell member={m} currentYear={currentYear} anoBase={resolvedAnoBase} />
       )
     },
     {
@@ -205,7 +206,7 @@ export default function FinancePage() {
         </div>
       )
     }
-  ], [anoBase, currentYear, handleOpenStatement, handleOpenPayment, handleOpenDAE]);
+  ], [resolvedAnoBase, currentYear, handleOpenStatement, handleOpenPayment, handleOpenDAE]);
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-top-4 duration-500 pb-10">
