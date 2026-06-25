@@ -43,7 +43,7 @@ export function DashboardLayout() {
   usePresenceHeartbeat();
   const { isPortalContextLoading, isStatePortal } = usePortalContext();
   const tenantMode = useTenantMode();
-  const { themeReady } = useEntityTheme();
+  const { themeReady, hasAppliedTheme } = useEntityTheme();
   const loading = authLoading || metadataLoading;
   const isMobile = useMobile();
   const navigate = useNavigate();
@@ -74,7 +74,7 @@ export function DashboardLayout() {
   useIdleTimeout({
     onTimeout: handleIdleTimeout,
   });
-  if (loading || isPortalContextLoading || (session && !themeReady)) {
+  if (loading || isPortalContextLoading || (session && !themeReady && !hasAppliedTheme)) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-white">
         <Loader2 className="h-8 w-8 animate-spin text-slate-500" />

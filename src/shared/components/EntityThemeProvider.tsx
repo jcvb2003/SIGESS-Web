@@ -13,9 +13,13 @@ import { useActiveScope } from "@/shared/hooks/useActiveScope";
 interface EntityThemeContextValue {
   /** true quando o tema da entidade foi aplicado (ou não há sessão ativa) */
   themeReady: boolean;
+  hasAppliedTheme: boolean;
 }
 
-const EntityThemeContext = createContext<EntityThemeContextValue>({ themeReady: true });
+const EntityThemeContext = createContext<EntityThemeContextValue>({
+  themeReady: true,
+  hasAppliedTheme: false,
+});
 
 export function useEntityTheme() {
   return useContext(EntityThemeContext);
@@ -80,6 +84,8 @@ export function EntityThemeProvider({
   ]);
   const entityCached = entityCachedData != null;
   const themeReady = !session || entityCached;
+  const hasAppliedTheme =
+    document.documentElement.style.getPropertyValue("--primary").trim() !== "";
 
   // Aplica as CSS vars ANTES do paint (useLayoutEffect).
   // Dependência de cacheVersion garante re-execução quando dados chegam.
@@ -118,7 +124,7 @@ export function EntityThemeProvider({
   }, [themeReady]);
 
   return (
-    <EntityThemeContext.Provider value={{ themeReady }}>
+    <EntityThemeContext.Provider value={{ themeReady, hasAppliedTheme }}>
       {children}
     </EntityThemeContext.Provider>
   );
