@@ -4,6 +4,7 @@ import type { EntitySettings } from "@/modules/settings/types/settings.types";
 import { useAuth } from "@/modules/auth/context/authContextStore";
 import { generateAccessibleForeground } from "../utils/colorConversion";
 import { useTheme } from "next-themes";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 
 // ---------------------------------------------------------------------------
 // Contexto público
@@ -61,6 +62,7 @@ export function EntityThemeProvider({
 }: Readonly<{ children: ReactNode }>) {
   const { session } = useAuth();
   const queryClient = useQueryClient();
+  const { unitId } = useActiveScope();
   const { theme, resolvedTheme } = useTheme();
   const currentTheme = theme === "system" ? resolvedTheme : theme;
 
@@ -71,10 +73,12 @@ export function EntityThemeProvider({
   // themeReady calculado de forma síncrona:
   // - Sem sessão: true (tela de login, nenhum tema customizado necessário)
   // - Com sessão: true apenas quando dados da entidade estão no cache
-  const entityQueries = queryClient.getQueriesData<EntitySettings>({
-    queryKey: ["settings", "entity"],
-  });
-  const entityCached = entityQueries.some(([, data]) => data != null);
+  const entityCachedData = queryClient.getQueryData<EntitySettings>([
+    "settings",
+    "entity",
+    unitId,
+  ]);
+  const entityCached = entityCachedData != null;
   const themeReady = !session || entityCached;
 
   // Aplica as CSS vars ANTES do paint (useLayoutEffect).
@@ -84,10 +88,9 @@ export function EntityThemeProvider({
       clearAllManagedVars(document.documentElement);
       return;
     }
-    const cached = entityQueries.find(([, data]) => data != null)?.[1];
-    applyEntityColors(cached, currentTheme);
+    applyEntityColors(entityCachedData, currentTheme);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session, currentTheme, cacheVersion]);
+  }, [session, currentTheme, cacheVersion, unitId]);
 
   // Subscription: dispara re-render quando o cache da entidade muda.
   // O re-render recalcula entityCached/themeReady de forma síncrona.

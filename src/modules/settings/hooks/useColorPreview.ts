@@ -5,6 +5,7 @@ import { useTheme } from "next-themes";
 import type { EntityFormData } from "./useEntityValidation";
 import type { EntitySettings } from "@/modules/settings/types/settings.types";
 import { generateAccessibleForeground } from "@/shared/utils/colorConversion";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 
 /**
  * Aplica preview ao vivo das cores no documento enquanto o usuário edita.
@@ -17,6 +18,7 @@ export function useColorPreview() {
   const corSidebar = useWatch<EntityFormData>({ name: "corSidebar" }) as string | undefined;
 
   const queryClient = useQueryClient();
+  const { unitId } = useActiveScope();
   const { theme, resolvedTheme } = useTheme();
   const currentTheme = theme === "system" ? resolvedTheme : theme;
 
@@ -28,11 +30,11 @@ export function useColorPreview() {
   // Restaura ao desmontar (navegação entre abas de Settings)
   useEffect(() => {
     return () => {
-      // Busca parcial de chave: encontra ["settings", "entity", unitId]
-      // sem precisar saber o unitId exato.
-      // Assume um único contexto de entidade ativo no runtime.
-      const queries = queryClient.getQueriesData<EntitySettings>({ queryKey: ["settings", "entity"] });
-      const cached = queries.find(([, data]) => data != null)?.[1];
+      const cached = queryClient.getQueryData<EntitySettings>([
+        "settings",
+        "entity",
+        unitId,
+      ]);
 
       const root = document.documentElement;
       const theme = currentThemeRef.current;
@@ -66,7 +68,7 @@ export function useColorPreview() {
         root.style.removeProperty("--sidebar-foreground");
       }
     };
-  }, [queryClient]); // currentTheme removido das deps — usa ref para evitar closure stale
+  }, [queryClient, unitId]); // currentTheme removido das deps — usa ref para evitar closure stale
 
   // Preview em tempo real — primary
   useEffect(() => {

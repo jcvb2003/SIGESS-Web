@@ -1,13 +1,25 @@
 import { useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Button } from "@/shared/components/ui/button";
 import { Loader2, Save } from "lucide-react";
 import { EntityVisualIdentity } from "./EntityVisualIdentity";
 import { useEntityData } from "@/shared/hooks/useEntityData";
 import { BRANDING_COLORS } from "../../constants/brandingDefaults";
 import type { EntitySettings } from "../../types/settings.types";
-import { entitySchema, EntityFormData } from "../../hooks/useEntityValidation";
+import { toast } from "sonner";
+
+const customizationSchema = z.object({
+  name: z.string().optional(),
+  corPrimaria: z.string().optional(),
+  corSecundaria: z.string().optional(),
+  corSidebar: z.string().optional(),
+  logoUrl: z.string().optional(),
+  logoPath: z.string().optional(),
+});
+
+type CustomizationFormData = z.infer<typeof customizationSchema>;
 
 interface CustomizationFormProps {
   readOnly?: boolean;
@@ -15,8 +27,8 @@ interface CustomizationFormProps {
 
 export function CustomizationForm({ readOnly = false }: Readonly<CustomizationFormProps>) {
   const { entity, isLoading, isSaving, saveEntity } = useEntityData();
-  const methods = useForm<EntityFormData>({
-    resolver: zodResolver(entitySchema),
+  const methods = useForm<CustomizationFormData>({
+    resolver: zodResolver(customizationSchema),
     defaultValues: {
       name: "",
       corPrimaria: BRANDING_COLORS.primary,
@@ -40,7 +52,7 @@ export function CustomizationForm({ readOnly = false }: Readonly<CustomizationFo
     }
   }, [entity]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const onSubmit = async (data: EntityFormData) => {
+  const onSubmit = async (data: CustomizationFormData) => {
     // We only update the color fields and name (required), other fields untouched
     if (!entity) return;
 
@@ -57,7 +69,12 @@ export function CustomizationForm({ readOnly = false }: Readonly<CustomizationFo
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-4">
+      <form
+        onSubmit={methods.handleSubmit(onSubmit, () => {
+          toast.error("Não foi possível salvar a personalização.");
+        })}
+        className="space-y-4"
+      >
         <fieldset disabled={readOnly || isLoading || isSaving} className={readOnly ? "opacity-50 grayscale pointer-events-none" : ""}>
         <div className="flex justify-end gap-2">
           {methods.formState.isDirty && (
