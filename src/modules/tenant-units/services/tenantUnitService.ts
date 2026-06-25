@@ -76,11 +76,36 @@ export const tenantUnitService = {
     try {
       const client = getSupabaseClient() as ReturnType<typeof getSupabaseClient>;
 
-      // Detecta gestor via tenant_users (fonte de verdade do papel)
+      // Resolve o tenant ativo a partir do tenant-code em cache. Sem este ID
+      // não é possível garantir isolamento — retorna vazio sem fallback.
+      const tenantCode = getTenantCode();
+      if (!tenantCode) {
+        return { data: { availableUnits: [], preferredActiveUnitId: null }, error: null };
+      }
+
+      const { data: tenantData, error: tenantError } = await client
+        .from("tenants" as never)
+        .select("id")
+        .eq("code", tenantCode)
+        .maybeSingle();
+
+      if (tenantError) return { data: null, error: tenantError };
+
+      const activeTenantId =
+        (tenantData as unknown as { id: string } | null)?.id ?? null;
+
+      if (!activeTenantId) {
+        return { data: { availableUnits: [], preferredActiveUnitId: null }, error: null };
+      }
+
+      // Detecta gestor via tenant_users (fonte de verdade do papel).
+      // Filtro por tenant_id garante que o vínculo é no tenant ativo, não em outro
+      // tenant do mesmo projeto compartilhado.
       const { data: tenantUserData, error: tenantUserError } = await client
         .from("tenant_users" as never)
         .select("tenant_id")
         .eq("user_id", user.id)
+        .eq("tenant_id", activeTenantId)
         .eq("tenant_role", "owner")
         .eq("is_active", true)
         .maybeSingle();
@@ -134,11 +159,14 @@ export const tenantUnitService = {
           error: null,
         };
       } else {
-        // Operador: lista apenas os polos vinculados
+        // Operador: lista apenas os polos vinculados no tenant ativo.
+        // user_unit_memberships.tenant_id existe — filtro direto evita mistura
+        // entre tenants num projeto compartilhado.
         const { data: memberships, error: membershipsError } = await client
           .from("user_unit_memberships" as never)
           .select("*")
           .eq("user_id", user.id)
+          .eq("tenant_id", activeTenantId)
           .eq("is_active", true);
 
         if (membershipsError) {
@@ -157,7 +185,7 @@ export const tenantUnitService = {
           };
         }
 
-        unitsQuery = unitsQuery.in("id", unitIds);
+        unitsQuery = unitsQuery.eq("tenant_id", activeTenantId).in("id", unitIds);
       }
 
       const { data: units, error: unitsError } = await unitsQuery.order("name", { ascending: true });
