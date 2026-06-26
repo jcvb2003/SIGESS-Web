@@ -1,3 +1,4 @@
+import { useTenantMode } from "@/shared/hooks/useTenantMode";
 import { Input } from "@/shared/components/ui/input";
 import {
   Select,
@@ -30,7 +31,7 @@ export function ReportFilters({
   aposentadoriaFilter = "all",
   onAposentadoriaChange,
 }: ReportFiltersProps) {
-
+  const tenantMode = useTenantMode();
 
   return (
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 md:p-5 bg-muted/20 border-b border-border/40">
@@ -55,8 +56,12 @@ export function ReportFilters({
             <SelectValue placeholder="Tipo de relatório" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="requerimentos">Relatório de Requerimentos</SelectItem>
-            <SelectItem value="nao_assinados">Sócios sem Requerimento</SelectItem>
+            {tenantMode !== "agricultura" && (
+              <SelectItem value="requerimentos">Relatório de Requerimentos</SelectItem>
+            )}
+            {tenantMode !== "agricultura" && (
+              <SelectItem value="nao_assinados">Sócios sem Requerimento</SelectItem>
+            )}
             <SelectItem value="aposentadoria">Aposentadoria</SelectItem>
           </SelectContent>
         </Select>

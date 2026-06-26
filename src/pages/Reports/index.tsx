@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTenantMode } from "@/shared/hooks/useTenantMode";
 import { Card } from "@/shared/components/ui/card";
 import { ReportExportButtons } from "@/modules/reports/components/ReportExportButtons";
 import { ReportFilters } from "@/modules/reports/components/ReportFilters";
@@ -27,7 +28,10 @@ const EXPORT_LABELS: Record<ExportFormat, { loading: string; success: string; er
 };
 
 export default function Reports() {
-  const [selectedReport, setSelectedReport] = useState("requerimentos");
+  const tenantMode = useTenantMode();
+  const [selectedReport, setSelectedReport] = useState(() =>
+    tenantMode === "agricultura" ? "aposentadoria" : "requerimentos"
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const [carenciaFilter, setCarenciaFilter] = useState("all");
   const [aposentadoriaFilter, setAposentadoriaFilter] = useState("aposentados");
