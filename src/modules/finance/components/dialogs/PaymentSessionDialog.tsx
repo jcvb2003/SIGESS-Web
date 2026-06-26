@@ -195,6 +195,15 @@ export function PaymentSessionDialog({
     }
   }, [dispatchPaymentForm, open, socioCpf]);
 
+  useEffect(() => {
+    if (open) {
+      dispatchPaymentForm({
+        type: "setPaymentCategory",
+        category: regime === "mensalidade" ? "mensalidade" : "anuidade",
+      });
+    }
+  }, [open, regime, dispatchPaymentForm]);
+
   const gracePeriodStartDate = useMemo(() => {
     if (!gracePeriodEnabled) return null;
     return buildMonthStartDate(gracePeriodYear, gracePeriodMonth);
