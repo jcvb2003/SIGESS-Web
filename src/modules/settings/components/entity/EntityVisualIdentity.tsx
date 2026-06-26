@@ -119,43 +119,50 @@ function LogoUploadField() {
   return (
     <div className="flex flex-col items-center gap-3">
       {/* Área clicável — abre seletor de arquivo */}
-      <button
-        type="button"
-        className={cn(
-          "relative group w-full overflow-hidden rounded-xl border-2 border-dashed border-muted-foreground/20 bg-muted/30 transition-all hover:border-primary/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-          "flex items-center justify-center",
-          imageUrl ? "h-28" : "h-28"
-        )}
-        onClick={() => fileInputRef.current?.click()}
-        disabled={isUploading}
-        title={imageUrl ? "Alterar logo" : "Enviar logo"}
-      >
-        {isUploading ? (
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        ) : imageUrl ? (
-          <>
-            <img src={imageUrl} alt="Logo" className="h-full w-full object-contain p-3" />
-            {/* Overlay com câmera + remover */}
-            <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl">
-              <Camera className="h-5 w-5 text-white" />
+      <div className="group relative w-full h-28">
+        <div
+          role="button"
+          tabIndex={isUploading ? -1 : 0}
+          aria-disabled={isUploading}
+          className={cn(
+            "w-full h-full overflow-hidden rounded-xl border-2 border-dashed border-muted-foreground/20 bg-muted/30 transition-all hover:border-primary/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer",
+            "flex items-center justify-center",
+            isUploading && "pointer-events-none opacity-70",
+          )}
+          onClick={() => !isUploading && fileInputRef.current?.click()}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); if (!isUploading) fileInputRef.current?.click(); } }}
+          title={imageUrl ? "Alterar logo" : "Enviar logo"}
+        >
+          {isUploading ? (
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          ) : imageUrl ? (
+            <>
+              <img src={imageUrl} alt="Logo" className="h-full w-full object-contain p-3" />
+              {/* Overlay com câmera */}
+              <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl pointer-events-none">
+                <Camera className="h-5 w-5 text-white" />
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center gap-1.5 text-muted-foreground/60">
+              <ImagePlus className="h-7 w-7" />
+              <span className="text-[11px] font-medium">Clique para enviar</span>
+              <span className="text-[10px]">PNG/JPG · máx 2MB</span>
             </div>
-            <button
-              type="button"
-              onClick={handleRemove}
-              className="absolute top-1.5 right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110 z-10"
-              title="Remover logo"
-            >
-              <Trash2 className="h-3 w-3" />
-            </button>
-          </>
-        ) : (
-          <div className="flex flex-col items-center gap-1.5 text-muted-foreground/60">
-            <ImagePlus className="h-7 w-7" />
-            <span className="text-[11px] font-medium">Clique para enviar</span>
-            <span className="text-[10px]">PNG/JPG · máx 2MB</span>
-          </div>
+          )}
+        </div>
+        {/* Botão remover fora do elemento clicável para evitar button>button */}
+        {imageUrl && (
+          <button
+            type="button"
+            onClick={handleRemove}
+            className="absolute top-1.5 right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110 z-10"
+            title="Remover logo"
+          >
+            <Trash2 className="h-3 w-3" />
+          </button>
         )}
-      </button>
+      </div>
 
       {imageUrl && (
         <span className="text-[10px] text-success font-medium flex items-center gap-1">
