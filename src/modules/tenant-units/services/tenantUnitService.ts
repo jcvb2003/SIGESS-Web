@@ -76,14 +76,37 @@ export const tenantUnitService = {
     try {
       const client = getSupabaseClient() as ReturnType<typeof getSupabaseClient>;
 
+      // Resolve o tenant_id do tenant ativo para garantir fronteira entre tenants.
+      // Em topologia shared um único Supabase serve múltiplos tenants — sem esse
+      // filtro, unidades e permissões de tenants distintos vazam para o contexto.
+      // Em topologia isolada a tabela tenants pode não existir; erro é ignorado
+      // e os filtros seguintes são simplesmente omitidos.
+      const tenantCode = getTenantCode();
+      let currentTenantId: string | null = null;
+      if (tenantCode) {
+        const { data: tenantData, error: tenantLookupError } = await client
+          .from("tenants" as never)
+          .select("id")
+          .eq("code", tenantCode)
+          .maybeSingle();
+        if (!tenantLookupError) {
+          currentTenantId = (tenantData as { id: string } | null)?.id ?? null;
+        }
+      }
+
       // Detecta gestor via tenant_users (fonte de verdade do papel)
-      const { data: tenantUserData, error: tenantUserError } = await client
+      let tenantUserQuery = client
         .from("tenant_users" as never)
         .select("tenant_id")
         .eq("user_id", user.id)
         .eq("tenant_role", "owner")
-        .eq("is_active", true)
-        .maybeSingle();
+        .eq("is_active", true);
+
+      if (currentTenantId) {
+        tenantUserQuery = tenantUserQuery.eq("tenant_id", currentTenantId);
+      }
+
+      const { data: tenantUserData, error: tenantUserError } = await tenantUserQuery.maybeSingle();
 
       if (tenantUserError) {
         return { data: null, error: tenantUserError };
@@ -134,12 +157,18 @@ export const tenantUnitService = {
           error: null,
         };
       } else {
-        // Operador: lista apenas os polos vinculados
-        const { data: memberships, error: membershipsError } = await client
+        // Operador: lista apenas os polos vinculados ao tenant ativo
+        let membershipsQuery = client
           .from("user_unit_memberships" as never)
           .select("*")
           .eq("user_id", user.id)
           .eq("is_active", true);
+
+        if (currentTenantId) {
+          membershipsQuery = membershipsQuery.eq("tenant_id", currentTenantId);
+        }
+
+        const { data: memberships, error: membershipsError } = await membershipsQuery;
 
         if (membershipsError) {
           return { data: null, error: membershipsError };

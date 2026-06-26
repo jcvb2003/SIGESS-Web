@@ -3,6 +3,7 @@ import { getCurrentTenantConfig } from "@/config/tenants";
 import { useAuth } from "@/modules/auth/context/authContextStore";
 import { supabase } from "@/shared/lib/supabase/client";
 import { UserRole } from "@/shared/types/auth.types";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 /**
  * Hook para gerenciar as permissões do usuário logado.
  * As permissões são baseadas no `role` presente no `app_metadata` do usuário (Supabase Auth).
@@ -10,21 +11,31 @@ import { UserRole } from "@/shared/types/auth.types";
 export function usePermissions() {
   const { user } = useAuth();
   const tenantConfig = getCurrentTenantConfig();
+  const { tenantId } = useActiveScope();
 
   const authRole = (user?.app_metadata?.role as UserRole) ?? "user";
 
   const tenantAdministrationQuery = useQuery({
-    queryKey: ["permissions", "tenant-administration", user?.id ?? null, tenantConfig?.topology ?? null],
+    queryKey: ["permissions", "tenant-administration", user?.id ?? null, tenantId],
     enabled: Boolean(user?.id),
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("tenant_users" as never)
         .select("tenant_id, tenant_role, operator_type")
         .eq("user_id", user!.id)
-        .eq("is_active", true)
-        .limit(1)
-        .maybeSingle();
+        .eq("is_active", true);
+
+      // Filtra pelo tenant ativo para evitar que permissões de tenants diferentes
+      // vazem em topologias shared. Quando tenantId é null (ex: topologia isolada
+      // sem unidade selecionada), mantém comportamento sem filtro.
+      if (tenantId) {
+        query = query.eq("tenant_id", tenantId);
+      } else {
+        query = query.limit(1);
+      }
+
+      const { data, error } = await query.maybeSingle();
 
       if (error) throw error;
 
