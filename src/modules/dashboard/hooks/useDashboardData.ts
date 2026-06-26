@@ -19,10 +19,10 @@ export function useRecentMembers() {
   });
 }
 export function useBirthdayMembers() {
-  const { unitId, bootstrapped } = useActiveScope();
+  const { unitId, bootstrapped, tenantId } = useActiveScope();
   return useQuery({
     queryKey: ["dashboard-birthday-members", unitId],
-    queryFn: () => dashboardService.getBirthdayMembers(unitId),
+    queryFn: () => dashboardService.getBirthdayMembers(unitId, tenantId),
     enabled: bootstrapped && !!unitId,
   });
 }

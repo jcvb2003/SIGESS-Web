@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { financeService } from "../../services/financeService";
 import { daeService } from "../../services/daeService";
 import { financeQueryKeys } from "../../queryKeys";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 import type {
   FinanceLancamento,
   FinanceDAE,
@@ -11,6 +12,7 @@ import { toast } from "sonner";
 
 export function useUpdateFinanceActions() {
   const queryClient = useQueryClient();
+  const { tenantId } = useActiveScope();
 
   /**
    * Atualizar Lançamento (Modelo A: Cancelar Antigo + Criar Novo)
@@ -22,6 +24,7 @@ export function useUpdateFinanceActions() {
       await financeService.cancelPayment(
         id,
         "Correcao: Registro original substituido por novo lancamento corrigido.",
+        tenantId,
       );
 
       const newData = Object.fromEntries(
@@ -88,7 +91,7 @@ export function useUpdateFinanceActions() {
       year: number;
       items: { mes: number; valor: number }[];
     }) => {
-      await daeService.updateGroupDAE(grupoId, year, items);
+      await daeService.updateGroupDAE(grupoId, year, items, tenantId);
     },
     onSuccess: () => {
       toast.success("Boleto agrupado atualizado com sucesso.");

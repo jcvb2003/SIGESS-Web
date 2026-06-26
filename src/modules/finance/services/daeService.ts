@@ -425,12 +425,14 @@ export const daeService = {
   async updateGroupDAE(
     grupoId: string,
     year: number,
-    items: { mes: number; valor: number }[]
+    items: { mes: number; valor: number }[],
+    tenantId?: string | null,
   ): Promise<void> {
     const { error } = await supabase.rpc("update_dae_group", {
       p_grupo_id: grupoId,
       p_new_year: year,
       p_items: items,
+      p_tenant_id: tenantId ?? null,
     });
 
     if (error) throw error;

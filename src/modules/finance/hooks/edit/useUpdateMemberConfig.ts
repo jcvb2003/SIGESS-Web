@@ -9,6 +9,7 @@ import { useActiveScope } from "@/shared/hooks/useActiveScope";
 
 export function useUpdateMemberConfig() {
   const queryClient = useQueryClient();
+  const { tenantId } = useActiveScope();
 
   const updateConfig = useMutation({
     mutationFn: ({ cpf, updates }: { cpf: string; updates: Partial<FinanceConfig> }) =>
@@ -31,7 +32,7 @@ export function useUpdateMemberConfig() {
       cpf: string;
       regime: string;
       observation?: string;
-    }) => memberFinanceConfigService.updateRegime(cpf, regime, observation),
+    }) => memberFinanceConfigService.updateRegime(cpf, regime, observation, tenantId),
     onSuccess: () => {
       toast.success("Regime atualizado com sucesso.");
       queryClient.invalidateQueries({ queryKey: financeQueryKeys.all });

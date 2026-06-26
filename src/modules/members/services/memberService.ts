@@ -121,7 +121,8 @@ export const memberService = {
       const { data: rpcData, error: rpcError } = await supabase.rpc("get_members_by_birth_month", {
         p_month: monthInt,
         p_limit: pageSize,
-        p_offset: from
+        p_offset: from,
+        p_tenant_id: context?.tenantId ?? null,
       });
 
       if (rpcError) throw rpcError;

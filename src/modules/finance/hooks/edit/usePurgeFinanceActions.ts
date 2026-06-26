@@ -2,9 +2,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/shared/lib/supabase/client";
 import { toast } from "sonner";
 import { financeQueryKeys } from "../../queryKeys";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 
 export function usePurgeFinanceActions() {
   const queryClient = useQueryClient();
+  const { tenantId } = useActiveScope();
 
   const purgePayment = useMutation({
     mutationFn: async (id: string) => {
@@ -25,6 +27,7 @@ export function usePurgeFinanceActions() {
     mutationFn: async (days: number) => {
       const { data, error } = await supabase.rpc("purge_cancelled_bulk_v1", {
         p_older_than_days: days,
+        p_tenant_id: tenantId ?? null,
       });
       if (error) throw error;
       return data;

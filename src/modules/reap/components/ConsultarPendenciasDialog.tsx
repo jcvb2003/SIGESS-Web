@@ -44,7 +44,7 @@ export function ConsultarPendenciasDialog({
   onOpenChange,
 }: Readonly<ConsultarPendenciasDialogProps>) {
   const queryClient = useQueryClient();
-  const { unitId } = useActiveScope();
+  const { unitId, tenantId } = useActiveScope();
   const [step, setStep] = useState<"upload" | "results">("upload");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -106,12 +106,13 @@ export function ConsultarPendenciasDialog({
         selecionados.map((r) => ({
           cpf: r.cpfMatch ?? "",
           anosSimplificado: r.anosPendentes,
-        }))
+        })),
+        tenantId,
       );
 
       if (consolidateOthers) {
         const pendencyCpfs = selecionados.map(r => r.cpfMatch).filter(Boolean) as string[];
-        const count = await reapService.consolidateSimplificadoCompleteness(pendencyCpfs);
+        const count = await reapService.consolidateSimplificadoCompleteness(pendencyCpfs, unitId, tenantId);
         toast.info(`${count} outros sócios marcados como "Em Dia".`);
       }
 

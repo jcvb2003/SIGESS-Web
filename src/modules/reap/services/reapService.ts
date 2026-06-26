@@ -140,7 +140,8 @@ export const reapService = {
   async upsertSimplificadoYear(
     cpf: string,
     ano: number,
-    data: Partial<ReapAnoSimplificado>
+    data: Partial<ReapAnoSimplificado>,
+    tenantId?: string | null,
   ): Promise<void> {
     // Garante que o registro base existe
     await supabase
@@ -154,6 +155,7 @@ export const reapService = {
       p_cpf: cpf,
       p_ano: String(ano),
       p_data: data,
+      p_tenant_id: tenantId ?? null,
     });
 
     if (error) throw error;
@@ -162,7 +164,8 @@ export const reapService = {
   async upsertAnualYear(
     cpf: string,
     ano: number,
-    data: Partial<ReapAnoAnual>
+    data: Partial<ReapAnoAnual>,
+    tenantId?: string | null,
   ): Promise<void> {
     await supabase
 
@@ -174,6 +177,7 @@ export const reapService = {
       p_cpf: cpf,
       p_ano: String(ano),
       p_data: data,
+      p_tenant_id: tenantId ?? null,
     });
 
     if (error) throw error;
@@ -183,7 +187,8 @@ export const reapService = {
     cpf: string,
     simplificado: Reap["simplificado"],
     anual: Reap["anual"],
-    observacoes: string | null
+    observacoes: string | null,
+    tenantId?: string | null,
   ): Promise<void> {
 
     const { error } = await supabase.rpc("reap_upsert_full", {
@@ -191,6 +196,7 @@ export const reapService = {
       p_simplificado: simplificado as unknown as Json,
       p_anual: anual as unknown as Json,
       p_observacoes: observacoes ?? undefined,
+      p_tenant_id: tenantId ?? null,
     });
 
     if (error) throw error;
@@ -207,7 +213,7 @@ export const reapService = {
     if (error) throw error;
   },
 
-  async consolidateSimplificadoCompleteness(pendencyCpfs: string[], unitId?: string | null): Promise<number> {
+  async consolidateSimplificadoCompleteness(pendencyCpfs: string[], unitId?: string | null, tenantId?: string | null): Promise<number> {
     const pendencySet = new Set(pendencyCpfs);
 
     const baseQuery = supabase
@@ -246,7 +252,8 @@ export const reapService = {
       const chunk = entries.slice(i, i + CHUNK_SIZE);
 
       const { error } = await supabase.rpc("reap_batch_upsert_simplificado_v2", {
-        p_entries: chunk
+        p_entries: chunk,
+        p_tenant_id: tenantId ?? null,
       });
 
       if (error) throw error;
@@ -257,24 +264,27 @@ export const reapService = {
   },
 
   async batchMarkSent(
-    entries: { cpf: string; tipo: "simplificado" | "anual"; anos: number[] }[]
+    entries: { cpf: string; tipo: "simplificado" | "anual"; anos: number[] }[],
+    tenantId?: string | null,
   ): Promise<void> {
     const simplificadoRaw = entries.filter((e) => e.tipo === "simplificado");
     const anualRaw = entries.filter((e) => e.tipo === "anual");
 
     if (simplificadoRaw.length > 0) {
       await this.processBatchUpdate(
-        simplificadoRaw, 
-        "simplificado", 
-        "reap_batch_upsert_simplificado_v2"
+        simplificadoRaw,
+        "simplificado",
+        "reap_batch_upsert_simplificado_v2",
+        tenantId,
       );
     }
 
     if (anualRaw.length > 0) {
       await this.processBatchUpdate(
-        anualRaw, 
-        "anual", 
-        "reap_batch_upsert_anual_v2"
+        anualRaw,
+        "anual",
+        "reap_batch_upsert_anual_v2",
+        tenantId,
       );
     }
   },
@@ -282,7 +292,8 @@ export const reapService = {
   async processBatchUpdate(
     rawEntries: { cpf: string; anos: number[] }[],
     field: "simplificado" | "anual",
-    rpcName: string
+    rpcName: string,
+    tenantId?: string | null,
   ): Promise<void> {
     const CHUNK_SIZE = 50;
     const CONCURRENCY = 15;
@@ -306,6 +317,7 @@ export const reapService = {
         promises.push(
           supabase.rpc(rpcName as any, {
             p_entries: batchData.slice(start, start + CHUNK_SIZE),
+            p_tenant_id: tenantId ?? null,
           })
         );
       }
@@ -315,7 +327,8 @@ export const reapService = {
   },
 
   async importComprovantes(
-    entries: { cpf: string; ano: number; dataEnvio: string }[]
+    entries: { cpf: string; ano: number; dataEnvio: string }[],
+    tenantId?: string | null,
   ): Promise<{ found: number; notFound: string[] }> {
     // Pré-carrega CPFs conhecidos e registros REAP existentes em 2 queries totais
     // Elimina N+1 queries sequenciais (era 3 queries por arquivo × 414 = 1.242 requests)
@@ -369,6 +382,7 @@ export const reapService = {
         promises.push(
           supabase.rpc("reap_batch_upsert_anual_v2", {
             p_entries: chunk,
+            p_tenant_id: tenantId ?? null,
           })
         );
       }
@@ -403,7 +417,8 @@ export const reapService = {
   },
 
   async importPendencias(
-    entries: { cpf: string; anosSimplificado: number[] }[]
+    entries: { cpf: string; anosSimplificado: number[] }[],
+    tenantId?: string | null,
   ): Promise<void> {
     const ANOS_SIMPLIFICADO = [2021, 2022, 2023, 2024];
 
@@ -435,6 +450,7 @@ export const reapService = {
         promises.push(
           supabase.rpc("reap_batch_upsert_simplificado_v2", {
             p_entries: batchData.slice(start, start + CHUNK_SIZE),
+            p_tenant_id: tenantId ?? null,
           })
         );
       }

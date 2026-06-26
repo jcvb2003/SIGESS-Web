@@ -20,6 +20,7 @@ export const requirementService = {
     page: number;
     pageSize: number;
     unitId?: string | null;
+    tenantId?: string | null;
   }): Promise<{ items: RequirementWithMember[]; total: number }> {
     const beneficioStatus = filters.beneficio_recebido === 'all'
       ? 'all'
@@ -34,6 +35,7 @@ export const requirementService = {
       p_page: filters.page,
       p_page_size: filters.pageSize,
       p_unit_id: filters.unitId ?? null,
+      p_tenant_id: filters.tenantId ?? null,
     });
 
     if (rpcError) throw rpcError;

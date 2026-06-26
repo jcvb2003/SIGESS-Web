@@ -6,13 +6,13 @@ import { useActiveScope } from "@/shared/hooks/useActiveScope";
 
 export function useBulkContributionLaunch() {
   const queryClient = useQueryClient();
-  const { unitId, bootstrapped } = useActiveScope();
+  const { unitId, bootstrapped, tenantId } = useActiveScope();
   const isReady = bootstrapped && !!unitId;
 
   const mutation = useMutation({
     mutationFn: (chargeTypeId: string) => {
       if (!unitId) throw new Error('Unidade não resolvida');
-      return generatedChargesService.launchBulk(chargeTypeId, unitId);
+      return generatedChargesService.launchBulk(chargeTypeId, unitId, tenantId);
     },
     onSuccess: (count) => {
       toast.success(`${count} pendência(s) gerada(s) com sucesso.`);

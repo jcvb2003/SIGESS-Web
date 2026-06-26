@@ -97,7 +97,7 @@ export const dashboardService = {
       return [];
     }
   },
-  async getBirthdayMembers(unitId?: string | null): Promise<Member[]> {
+  async getBirthdayMembers(unitId?: string | null, tenantId?: string | null): Promise<Member[]> {
     try {
       const today = new Date();
 
@@ -106,6 +106,7 @@ export const dashboardService = {
           p_day: today.getDate(),
           p_month: today.getMonth() + 1,
           p_unit_id: unitId ?? null,
+          p_tenant_id: tenantId ?? null,
         });
 
       if (error) {

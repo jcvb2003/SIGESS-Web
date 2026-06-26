@@ -28,10 +28,11 @@ export const generatedChargesService = {
    * Lançamento em massa via RPC atômico.
    * Nunca iterar sócios no frontend.
    */
-  async launchBulk(chargeTypeId: string, unitId: string | null): Promise<number> {
+  async launchBulk(chargeTypeId: string, unitId: string | null, tenantId?: string | null): Promise<number> {
     const { data, error } = await supabase.rpc("launch_bulk_contribution", {
       p_tipo_cobranca_id: chargeTypeId,
       p_unit_id: unitId,
+      p_tenant_id: tenantId ?? null,
     });
 
     if (error) throw error;

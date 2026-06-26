@@ -283,7 +283,7 @@ export const financeService = {
   /**
    * Registra sessão de pagamento via RPC atômico.
    */
-  async createPaymentSession(payload: PaymentSessionPayload): Promise<void> {
+  async createPaymentSession(payload: PaymentSessionPayload, tenantId?: string | null): Promise<void> {
     const { error } = await supabase.rpc("register_payment_session", {
       p_socio_cpf: payload.socioCpf,
       p_sessao_id: payload.sessaoId,
@@ -291,6 +291,7 @@ export const financeService = {
       p_data_pagamento: payload.paymentDate,
       p_itens: payload.items as unknown as Json,
       p_daes: (payload.daes ?? []) as unknown as Json,
+      p_tenant_id: tenantId ?? null,
     });
     if (error) throw error;
   },
@@ -374,6 +375,7 @@ export const financeService = {
     unitId?: string | null,
     searchTerm = "",
     selectedTypes?: PaymentType[],
+    tenantId?: string | null,
   ): Promise<{ data: (PaymentByPeriod & { id: string })[]; total: number; totalAmount: number }> {
     const from = (page - 1) * pageSize;
 
@@ -388,6 +390,7 @@ export const financeService = {
       p_search: searchTerm || null,
       p_types: selectedTypes?.length ? selectedTypes : null,
       p_unit_id: unitId ?? null,
+      p_tenant_id: tenantId ?? null,
     });
 
     if (error) {
@@ -428,10 +431,11 @@ export const financeService = {
   /**
    * Cancela um lançamento (soft delete atômico via RPC).
    */
-  async cancelPayment(id: string, observation: string): Promise<void> {
+  async cancelPayment(id: string, observation: string, tenantId?: string | null): Promise<void> {
     const { error } = await supabase.rpc("cancel_payment_v1", {
       p_id: id,
       p_obs: observation,
+      p_tenant_id: tenantId ?? null,
     });
 
     if (error) throw error;
@@ -457,6 +461,7 @@ export const financeService = {
     unitId?: string | null,
     searchTerm = "",
     selectedTypes?: PaymentType[],
+    tenantId?: string | null,
   ): Promise<(PaymentByPeriod & { id: string })[]> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.rpc as any)("get_payments_by_period_paginated", {
@@ -469,6 +474,7 @@ export const financeService = {
       p_search: searchTerm || null,
       p_types: selectedTypes?.length ? selectedTypes : null,
       p_unit_id: unitId ?? null,
+      p_tenant_id: tenantId ?? null,
     });
     if (error) throw error;
     return ((data as PaymentByPeriodRow[]) || []).map((item) => ({

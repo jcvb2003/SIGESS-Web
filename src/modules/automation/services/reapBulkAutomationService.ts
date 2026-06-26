@@ -29,6 +29,7 @@ async function processBatchUpdate(
   rawEntries: { cpf: string; anos: number[] }[],
   field: "simplificado" | "anual",
   rpcName: string,
+  tenantId?: string | null,
 ): Promise<void> {
   const chunkSize = 50;
   const concurrency = 15;
@@ -55,10 +56,11 @@ async function processBatchUpdate(
         (
           supabase.rpc as unknown as (
             fn: string,
-            args: { p_entries: unknown[] },
+            args: { p_entries: unknown[]; p_tenant_id?: string | null },
           ) => Promise<{ error: Error | null }>
         )(rpcName, {
           p_entries: batchData.slice(start, start + chunkSize),
+          p_tenant_id: tenantId ?? null,
         }),
       );
     }
@@ -105,7 +107,7 @@ export const reapBulkAutomationService = {
     return { anosSimplificadoPendentes, anosAnualPendentes };
   },
 
-  async batchMarkSent(entries: BatchEntry[]): Promise<void> {
+  async batchMarkSent(entries: BatchEntry[], tenantId?: string | null): Promise<void> {
     const simplificadoEntries = entries.filter((entry) => entry.tipo === "simplificado");
     const anualEntries = entries.filter((entry) => entry.tipo === "anual");
 
@@ -114,6 +116,7 @@ export const reapBulkAutomationService = {
         simplificadoEntries,
         "simplificado",
         "reap_batch_upsert_simplificado_v2",
+        tenantId,
       );
     }
 
@@ -122,6 +125,7 @@ export const reapBulkAutomationService = {
         anualEntries,
         "anual",
         "reap_batch_upsert_anual_v2",
+        tenantId,
       );
     }
   },

@@ -23,6 +23,7 @@ import {
   reapBulkAutomationService,
   type BulkAutomationSearchResult,
 } from "@/modules/automation/services/reapBulkAutomationService";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 
 const REAP_ANUAL_URL = "https://servicos.acesso.gov.br/";
 const MAX_SOCIOS = 5;
@@ -54,6 +55,7 @@ export function ReapBulkSendAutomationDialog({
   onOpenChange,
 }: Readonly<ReapBulkSendAutomationDialogProps>) {
   const queryClient = useQueryClient();
+  const { tenantId } = useActiveScope();
   const [busca, setBusca] = useState("");
   const [selecionados, setSelecionados] = useState<SocioSelecionado[]>([]);
   const [step, setStep] = useState<"select" | "confirm">("select");
@@ -166,7 +168,7 @@ export function ReapBulkSendAutomationDialog({
         }))
         .filter((entry) => entry.anos.length > 0);
 
-      await reapBulkAutomationService.batchMarkSent([...entries, ...entriesAnual]);
+      await reapBulkAutomationService.batchMarkSent([...entries, ...entriesAnual], tenantId);
       toast.success(`${marcados.length} REAP(s) confirmado(s) com sucesso.`);
       queryClient.invalidateQueries({ queryKey: REAP_QUERY_KEY });
       handleClose();

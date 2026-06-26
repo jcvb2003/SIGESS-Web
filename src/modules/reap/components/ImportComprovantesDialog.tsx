@@ -98,7 +98,7 @@ export function ImportComprovantesDialog({
   onOpenChange,
 }: Readonly<ImportComprovantesDialogProps>) {
   const queryClient = useQueryClient();
-  const { unitId } = useActiveScope();
+  const { unitId, tenantId } = useActiveScope();
   const [step, setStep] = useState<"upload" | "results">("upload");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -202,7 +202,7 @@ export function ImportComprovantesDialog({
 
     setIsSaving(true);
     try {
-      await reapService.importComprovantes(paraImportar);
+      await reapService.importComprovantes(paraImportar, tenantId);
       toast.success(`${paraImportar.length} REAP(s) importado(s) com sucesso.`);
       queryClient.invalidateQueries({ queryKey: reapQueryKeys.all });
       handleClose();

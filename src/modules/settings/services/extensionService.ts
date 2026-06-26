@@ -66,7 +66,7 @@ export const extensionService = {
   /**
    * Salva a chave de licença localmente no tenant via RPC segura
    */
-  async saveLicenseKey(key: string, unitId: string): Promise<ServiceResponse<void>> {
+  async saveLicenseKey(key: string, unitId: string, tenantId?: string | null): Promise<ServiceResponse<void>> {
     const rpcClient = supabase as unknown as {
       rpc: (
         n: string,
@@ -77,6 +77,7 @@ export const extensionService = {
     const { error } = await rpcClient.rpc("update_extension_license", {
       p_key: key.trim() || null,
       p_unit_id: unitId ?? null,
+      p_tenant_id: tenantId ?? null,
     });
 
     if (error) {

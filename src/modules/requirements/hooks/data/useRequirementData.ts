@@ -16,6 +16,7 @@ export function useRequirementData(filters: {
   page: number;
   pageSize: number;
   unitId?: string | null;
+  tenantId?: string | null;
   enabled?: boolean;
 }) {
   const query = useQuery({
@@ -56,7 +57,7 @@ export function useRequirementsListController() {
     clearFilters,
   } = useRequirementFilters();
 
-  const { unitId, bootstrapped } = useActiveScope();
+  const { unitId, bootstrapped, tenantId } = useActiveScope();
 
   const queryParams: Parameters<typeof useRequirementData>[0] = useMemo(
     () => ({
@@ -68,9 +69,10 @@ export function useRequirementsListController() {
       ano: yearFilter,
       carenciaFilter: carenciaFilter,
       unitId,
+      tenantId,
       enabled: bootstrapped && !!unitId,
     }),
-    [page, pageSize, debouncedTerm, statusFilter, beneficioFilter, yearFilter, carenciaFilter, unitId, bootstrapped]
+    [page, pageSize, debouncedTerm, statusFilter, beneficioFilter, yearFilter, carenciaFilter, unitId, tenantId, bootstrapped]
   );
 
   const { requirements, total, isLoading, isFetching, error, refetch } =

@@ -12,6 +12,7 @@ import { Textarea } from "@/shared/components/ui/textarea";
 import { Switch } from "@/shared/components/ui/switch";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { useActiveScope } from "@/shared/hooks/useActiveScope";
 import { reapService } from "../services/reapService";
 import {
   ReapWithMember,
@@ -42,6 +43,7 @@ export function ManageReapDialog({
   onOpenChange,
 }: Readonly<ManageReapDialogProps>) {
   const queryClient = useQueryClient();
+  const { tenantId } = useActiveScope();
   const [isSaving, setIsSaving] = useState(false);
 
   // Estado local para edições
@@ -88,7 +90,8 @@ export function ManageReapDialog({
         member.cpf,
         simplificadoState,
         anualState,
-        observacoes
+        observacoes,
+        tenantId,
       );
 
       toast.success("Dados do REAP atualizados com sucesso.");

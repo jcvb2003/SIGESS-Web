@@ -29,7 +29,7 @@ import { Separator } from "@/shared/components/ui/separator";
 import { formatDate } from "@/shared/utils/date";
 
 export function ExtensionSettings() {
-  const { unitId } = useActiveScope();
+  const { unitId, tenantId } = useActiveScope();
   const [licenseKey, setLicenseKey] = useState("");
   const [licenseInfo, setLicenseInfo] = useState<LicenseInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -82,7 +82,7 @@ export function ExtensionSettings() {
 
     setIsSaving(true);
     try {
-      const { error } = await extensionService.saveLicenseKey(licenseKey, unitId);
+      const { error } = await extensionService.saveLicenseKey(licenseKey, unitId, tenantId);
       if (error) throw error;
       
       await refreshLicenseInfo(licenseKey);

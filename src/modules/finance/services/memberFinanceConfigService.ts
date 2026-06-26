@@ -29,11 +29,13 @@ export const memberFinanceConfigService = {
     cpf: string,
     newRegime: string,
     observation?: string,
+    tenantId?: string | null,
   ): Promise<void> {
     const { error } = await supabase.rpc("update_member_regime", {
       p_cpf: cpf,
       p_novo_regime: newRegime,
       p_observacao: observation ?? undefined,
+      p_tenant_id: tenantId ?? null,
     });
 
     if (error) throw error;
