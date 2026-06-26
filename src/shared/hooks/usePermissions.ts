@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { getCurrentTenantConfig } from "@/config/tenants";
 import { useAuth } from "@/modules/auth/context/authContextStore";
 import { supabase } from "@/shared/lib/supabase/client";
 import { UserRole } from "@/shared/types/auth.types";
@@ -10,7 +9,6 @@ import { useActiveScope } from "@/shared/hooks/useActiveScope";
  */
 export function usePermissions() {
   const { user } = useAuth();
-  const tenantConfig = getCurrentTenantConfig();
   const { tenantId } = useActiveScope();
 
   const authRole = (user?.app_metadata?.role as UserRole) ?? "user";
