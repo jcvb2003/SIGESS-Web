@@ -557,9 +557,44 @@ async function handleActivate(admin: SupabaseClient, payload: Record<string, str
   return { success: true, message: "Usuário ativado" };
 }
 
-async function handleDelete(admin: SupabaseClient, payload: Record<string, string>) {
+async function handleDelete(
+  admin: SupabaseClient,
+  scope: AccessScope,
+  payload: Record<string, string>,
+) {
   const { userId } = payload;
   if (!userId) throw new Error("userId é obrigatório para exclusão");
+
+  // Se o usuário pertence a mais de um tenant, apenas desvincula do tenant atual
+  const { data: otherMemberships, error: membErr } = await admin
+    .from("tenant_users")
+    .select("tenant_id")
+    .eq("user_id", userId)
+    .eq("is_active", true);
+
+  if (membErr) throw membErr;
+
+  const activeTenantCount = (otherMemberships ?? []).length;
+
+  if (activeTenantCount > 1 && scope.tenantId) {
+    console.log(`[ManageUser] Usuário ${userId} tem ${activeTenantCount} tenants — desvinculando de ${scope.tenantId} (sem deletar do Auth)`);
+
+    const { error: tuErr } = await admin
+      .from("tenant_users")
+      .update({ is_active: false })
+      .eq("user_id", userId)
+      .eq("tenant_id", scope.tenantId);
+    if (tuErr) throw tuErr;
+
+    const { error: uumErr } = await admin
+      .from("user_unit_memberships")
+      .update({ is_active: false })
+      .eq("user_id", userId)
+      .eq("tenant_id", scope.tenantId);
+    if (uumErr) throw uumErr;
+
+    return { success: true, message: "Usuário desvinculado do tenant (conta mantida em outros tenants)" };
+  }
 
   console.log(`[ManageUser] Excluindo usuário: ${userId}`);
 
@@ -798,6 +833,8 @@ serve(async (req: Request) => {
                 user,
                 payload as Record<string, string | boolean>,
               )
+          : action === "delete"
+            ? await handleDelete(supabaseAdmin, accessScope, payload as Record<string, string>)
             : await handler(supabaseAdmin, payload);
 
     return jsonResponse(result);
