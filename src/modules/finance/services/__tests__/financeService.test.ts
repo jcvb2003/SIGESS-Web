@@ -62,7 +62,7 @@ describe('financeService.cancelPayment', () => {
     vi.mocked(supabase.rpc).mockResolvedValue({ data: null, error: null } as never);
 
     await financeService.cancelPayment('pay-1', 'Cancelado por duplicidade.');
-    expect(supabase.rpc).toHaveBeenCalledWith('cancel_payment_v1', { p_id: 'pay-1', p_obs: 'Cancelado por duplicidade.' });
+    expect(supabase.rpc).toHaveBeenCalledWith('cancel_payment_v1', { p_id: 'pay-1', p_obs: 'Cancelado por duplicidade.', p_tenant_id: null });
   });
 });
 
