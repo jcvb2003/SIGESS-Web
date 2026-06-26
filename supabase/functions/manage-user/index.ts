@@ -110,16 +110,21 @@ async function findAuthUserByEmail(admin: SupabaseClient, email: string) {
   return null;
 }
 
-async function resolveAccessScope(admin: SupabaseClient, currentUser: User): Promise<AccessScope> {
+async function resolveAccessScope(admin: SupabaseClient, currentUser: User, hintTenantId?: string | null): Promise<AccessScope> {
   const isAdmin = currentUser.app_metadata?.role === "admin";
 
-  const { data: tenantUser, error: tenantUserError } = await admin
+  let tenantQuery = admin
     .from("tenant_users")
     .select("tenant_id, tenant_role, operator_type")
     .eq("user_id", currentUser.id)
     .eq("is_active", true)
-    .limit(1)
-    .maybeSingle();
+    .limit(1);
+
+  if (hintTenantId) {
+    tenantQuery = tenantQuery.eq("tenant_id", hintTenantId);
+  }
+
+  const { data: tenantUser, error: tenantUserError } = await tenantQuery.maybeSingle();
 
   if (tenantUserError) throw tenantUserError;
 
@@ -605,7 +610,10 @@ async function handleList(
   currentUser: User,
   payload?: Record<string, unknown>,
 ) {
-  const scope = await resolveAccessScope(admin, currentUser);
+  const hintTenantId = typeof payload?.tenantId === "string" && (payload.tenantId as string).trim() !== ""
+    ? (payload.tenantId as string).trim()
+    : null;
+  const scope = await resolveAccessScope(admin, currentUser, hintTenantId);
   const activeUnitId =
     typeof payload?.activeUnitId === "string" && payload.activeUnitId.trim() !== ""
       ? payload.activeUnitId.trim()
@@ -739,7 +747,10 @@ serve(async (req: Request) => {
     }
 
     const { action, payload = {} } = await req.json();
-    const accessScope = await resolveAccessScope(supabaseAdmin, user);
+    const hintTenantId = typeof payload?.tenantId === "string" && payload.tenantId.trim() !== ""
+      ? payload.tenantId.trim()
+      : null;
+    const accessScope = await resolveAccessScope(supabaseAdmin, user, hintTenantId);
 
     if (action !== "list" && !canManageOtherUsers(accessScope)) {
       console.warn(`[ManageUser] Tentativa de ação proibida (${action}) por usuário sem escopo administrativo: ${user.email}`);

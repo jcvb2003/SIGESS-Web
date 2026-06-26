@@ -26,7 +26,7 @@ const AVATAR_URL_TTL_SECONDS = 60 * 30;
 export function useUserManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
-  const { unitId: activeUnitId, bootstrapped } = useActiveScope();
+  const { unitId: activeUnitId, bootstrapped, tenantId } = useActiveScope();
   const { user: currentUser } = useAuth();
   const tenantCode =
     typeof globalThis === "undefined" ? null : globalThis.localStorage.getItem("sigess_tenant");
@@ -35,8 +35,9 @@ export function useUserManagement() {
     () => ({
       ...(activeUnitId ? { activeUnitId } : {}),
       ...(tenantCode ? { tenantCode } : {}),
+      ...(tenantId ? { tenantId } : {}),
     }),
-    [activeUnitId, tenantCode],
+    [activeUnitId, tenantCode, tenantId],
   );
 
   const sortUsers = useCallback((items: User[]) => (
