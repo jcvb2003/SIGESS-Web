@@ -151,7 +151,6 @@ export function MemberFicha({ member, financialStatement = [] }: MemberFichaProp
   const admissionFormatted = admissionDate
     ? format(admissionDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
     : null;
-  const entityName = entity?.name || "esta entidade";
   const entityCity = member.cidade || "___________";
 
   return (
