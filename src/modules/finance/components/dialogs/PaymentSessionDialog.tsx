@@ -59,6 +59,7 @@ interface PaymentSessionDialogProps {
   readonly dataDeAdmissao?: string | null;
   readonly status?: FinancialStatusType;
   readonly regime?: string;
+  readonly onPaymentSuccess?: (sessaoId: string) => void;
 }
 
 export function PaymentSessionDialog({
@@ -69,6 +70,7 @@ export function PaymentSessionDialog({
   dataDeAdmissao,
   status,
   regime,
+  onPaymentSuccess,
 }: PaymentSessionDialogProps) {
   const { settings } = useFinanceSettings();
   const { lancamentos, isLoading: isLoadingStatement } = useMemberStatement(open ? socioCpf : null);
@@ -438,6 +440,7 @@ export function PaymentSessionDialog({
     });
 
     handleOpenChange(false);
+    onPaymentSuccess?.(sessaoId);
   };
 
   return (

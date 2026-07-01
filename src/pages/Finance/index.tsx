@@ -30,7 +30,11 @@ import { DataTableSearch } from "@/shared/components/layout/DataTableSearch";
 import { SummaryCards } from "@/modules/finance/components/shared/SummaryCards";
 import { MemberStatementModal } from "@/modules/finance/components/modal/MemberStatementModal";
 import { PaymentSessionDialog } from "@/modules/finance/components/dialogs/PaymentSessionDialog";
+import { SessionReceiptDialog } from "@/modules/finance/components/dialogs/SessionReceiptDialog";
 import { DAEDialog } from "@/modules/finance/components/dialogs/DAEDialog";
+import { financeService } from "@/modules/finance/services/financeService";
+import { daeService } from "@/modules/finance/services/daeService";
+import type { FinanceLancamento, FinanceDAE } from "@/modules/finance/types/finance.types";
 import { FinanceSettingsDialog } from "@/modules/finance/components/dialogs/FinanceSettingsDialog";
 import { FinanceFilterPanel } from "@/modules/finance/components/filters/FinanceFilterPanel";
 import { AuditLogDialog } from "@/modules/finance/components/dialogs/AuditLogDialog";
@@ -100,6 +104,27 @@ export default function FinancePage() {
   const [auditOpen, setAuditOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [batchChargeOpen, setBatchChargeOpen] = useState(false);
+
+  // Comprovante pós-pagamento
+  const [receiptOpen, setReceiptOpen] = useState(false);
+  const [receiptLancamentos, setReceiptLancamentos] = useState<FinanceLancamento[]>([]);
+  const [receiptDaes, setReceiptDaes] = useState<FinanceDAE[]>([]);
+  const [receiptMemberName, setReceiptMemberName] = useState<string | undefined>();
+
+  const handlePaymentSuccess = useCallback(async (sessaoId: string) => {
+    try {
+      const [lancamentos, daes] = await Promise.all([
+        financeService.getSessionPayments(sessaoId),
+        daeService.getSessionDAEs(sessaoId),
+      ]);
+      setReceiptLancamentos(lancamentos);
+      setReceiptDaes(daes);
+      setReceiptMemberName(activeMember?.nome);
+      setReceiptOpen(true);
+    } catch {
+      // falha silenciosa — pagamento já foi registrado com sucesso
+    }
+  }, [activeMember?.nome]);
 
   const closeModal = useCallback(() => setActiveModal(null), []);
   const handleOpenStatement = useCallback((cpf: string) => setActiveModal({ type: "statement", cpf }), []);
@@ -346,6 +371,17 @@ export default function FinancePage() {
         dataDeAdmissao={activeMember?.dataDeAdmissao}
         status={activeMember?.status}
         regime={activeMember?.regime}
+        onPaymentSuccess={handlePaymentSuccess}
+      />
+
+      {/* Comprovante automático pós-pagamento */}
+      <SessionReceiptDialog
+        open={receiptOpen}
+        onOpenChange={setReceiptOpen}
+        lancamentos={receiptLancamentos}
+        daes={receiptDaes}
+        memberName={receiptMemberName}
+        memberCpf={receiptLancamentos[0]?.socio_cpf ?? undefined}
       />
 
       {/* DAE Dialog (Repasse) */}
